@@ -319,4 +319,13 @@ class mediamosa_io {
   static public function file_get_contents($filename) {
     return file_get_contents($filename);
   }
+
+  /**
+   * Returns available space on filesystem or disk partition.
+   *
+   * @param string $directory
+   */
+  static public function disk_free_space($directory) {
+    return disk_free_space($directory);
+  }
 }

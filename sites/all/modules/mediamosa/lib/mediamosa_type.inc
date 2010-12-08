@@ -238,7 +238,7 @@ class mediamosa_type {
         if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
-      // FIXME: Mediamosa 1.x doesnt check the input here...
+      // FIXME: MediaMosa 1.x doesnt check the input here...
       case mediamosa_sdk::TYPE_SUPPLEMENT_ID:
       case mediamosa_sdk::TYPE_USER_ID:
       case mediamosa_sdk::TYPE_GROUP_ID:

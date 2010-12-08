@@ -43,7 +43,7 @@ class MediaMosaAutMediafileVisibleTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
 
-  // Testing AUT Master/Slave: mediafiles are visible, see: ticket 232 (Mediamosa track).
+  // Testing AUT Master/Slave: mediafiles are visible, see: ticket 232 (MediaMosa track).
   function testAutMasterSlaveMediafileVisible() {
 
     //

@@ -3,7 +3,7 @@
 name = "FTP batch"
 description = "The FTP batch allows process of multiple uploads using FTP."
 package = "MediaMosa - Modules"
-version = "2.2.0"
+version = "2.3.0"
 core = 7.x
 
 ; Dependencies (module names)

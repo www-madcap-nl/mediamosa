@@ -542,7 +542,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function mkdir($location) {
     // Create the directory first.
-    $this->assertTrue(mediamosa_io::mkdir($location), t('Check if @location can be created by Mediamosa', array('@location' => $location)));
+    $this->assertTrue(mediamosa_io::mkdir($location), t('Check if @location can be created by MediaMosa', array('@location' => $location)));
   }
 
   /**

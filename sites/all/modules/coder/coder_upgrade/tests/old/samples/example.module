@@ -1,5 +1,5 @@
 <?php
-// $Id: example.module,v 1.4 2010/07/03 15:42:24 solotandem Exp $
+// $\Id: example.module,v 1.9 2010/09/08 07:00:00 solotandem Exp $
 
 /*
  * Module Info / Install
@@ -7,19 +7,27 @@
 
 // This function is missing a Doxygen style comment.
 function example_update_7000() {
-
+  $ret = array();
+  return $ret;
+  return /*smoke1*/ $ret /*smoke2*/;
+  if (TRUE) {
+    $ret = array();
+    return /*smoke1*/ $ret /*smoke2*/;
+  }
 }
 
 /* This function is missing a Doxygen style comment. */
 function example_update_7001() {
-
+  $ret = array();
+  return $ret;
 }
 
 /**
  * This function has a Doxygen style comment.
  */
 function example_update_7002() {
-
+  $ret = array();
+  return $ret;
 }
 
 /*
@@ -272,11 +280,43 @@ function example_() {
 /**
  * Implement hook_perm.
  *
+ * Use case 1: returns array directly.
+ *
  * http://drupal.org/node/224333#hook_permission
  * http://drupal.org/node/224333#descriptions_permissions
  */
 function example_perm() {
   return array('administer my module', $perm_1['one'], 'permission two', $perm_2[1]['2']);
+}
+
+/**
+ * Implement hook_perm.
+ *
+ * Use case 2: makes one assignment to array variable; returns variable.
+ */
+function example_perm() {
+  $perm = array(
+    'administer my module',
+    $perm_1['one'],
+    'permission two',
+    $perm_2[1]['2'],
+  );
+  return $perm;
+}
+
+/**
+ * Implement hook_perm.
+ *
+ * Use case 3: makes multiple assignments to array variable; returns variable.
+ */
+function example_perm() {
+  // This use case does not apply as the permission strings do not have any values.
+  $perm = array();
+  $perm['administer my module'] = array();
+  $perm[$perm_1['one']] = array();
+  $perm['permission two'] = array();
+  $perm[$perm_2[1]['2']] = array();
+  return $perm;
 }
 
 /**
@@ -355,6 +395,69 @@ function example_dbtng() {
 
 // Schema descriptions are no longer translated.
 // Function name needs to be the hook name not the html tag on the change.
+
+// Use case 1: returns array directly.
+function example_schema() {
+  return array(
+    'forum' => array(
+      'description' => t('Stores the relationship of nodes to forum terms.'),
+      'fields' => array(
+        'nid' => array(
+          'description' => t('The {node}.nid of the node.'),
+        ),
+      ),
+    ),
+    // This tests the #schema_html upgrade.
+    'foo_url' => array(
+      'description' => t('Stores URLs that appear in &lt;a href=....&gt; tags.'),
+      'fields' => array(
+        'url' => array(
+          'description' => t('The URL.'),
+        ),
+      ),
+    ),
+    // When did the description item come into play between above and below???
+    'example' => array(
+      'fields' => array(
+        'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      ),
+      'primary key' => array('nid'),
+    ),
+  );
+}
+
+// Use case 2: makes one assignment to array variable; returns variable.
+function example_schema() {
+  $schema = array(
+    'forum' => array(
+      'description' => t('Stores the relationship of nodes to forum terms.'),
+      'fields' => array(
+        'nid' => array(
+          'description' => t('The {node}.nid of the node.'),
+        ),
+      ),
+    ),
+    // This tests the #schema_html upgrade.
+    'foo_url' => array(
+      'description' => t('Stores URLs that appear in &lt;a href=....&gt; tags.'),
+      'fields' => array(
+        'url' => array(
+          'description' => t('The URL.'),
+        ),
+      ),
+    ),
+    // When did the description item come into play between above and below???
+    'example' => array(
+      'fields' => array(
+        'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      ),
+      'primary key' => array('nid'),
+    ),
+  );
+  return $schema;
+}
+
+// Use case 3: makes multiple assignments to array variable; returns variable.
 function example_schema() {
   $schema['forum'] = array(
     'description' => t('Stores the relationship of nodes to forum terms.'),
@@ -385,7 +488,10 @@ function example_schema() {
 
 // Database schema (un)installed automatically
 function example_install() {
-  drupal_install_schema('example');
+//   drupal_install_schema('example');
+  if ($results = drupal_install_schema('example')) {
+    // Do something.
+  }
 }
 
 function example_uninstall() {
@@ -873,11 +979,11 @@ function example_drupal_set_title() {
  * Implement hook_filter().
  */
 function example_filter($op, $delta = 0, $format = -1, $text = '', $cache_id = 0) {
-  switch ($op) {
-    case 'list':
+  switch (/*smoke1*/ $op /*smoke2*/) {
+    case /*smoke1*/ 'list' /*smoke2*/:
       return array(0 => t('Limit allowed HTML tags'), 1 => t('Convert line breaks'), 2 => t('Convert URLs into links'), 3 => t('Correct broken HTML'), 4 => t('Escape all HTML'));
 
-    case 'description':
+    case /*smoke1*/ 'description' /*smoke2*/:
       switch ($delta) {
         case 0:
           return t('Allows you to restrict the HTML tags the user can use. It will also remove harmful content such as JavaScript events, JavaScript URLs and CSS styles from those tags that are not removed.');
@@ -1396,7 +1502,7 @@ function theme_example_node_search_admin($form = NULL) {
 function theme_example_user_list($users = NULL, $title = NULL) {
 }
 
-function theme_example_user_list_2($users1 = NULL, $title1 = NULL, $users2 => NULL, $title2 => NULL) {
+function theme_example_user_list_2($users1 = NULL, $title1 = NULL, $users2 = NULL, $title2 = NULL) {
 }
 
 function theme_example_coder_review_warning_msg($error = NULL) {
@@ -1406,6 +1512,11 @@ function theme_example_coder_review_table_cols($form = NULL) {
 }
 
 function theme_example_phpapi($function = NULL) {
+}
+
+function theme_example_missing() {}
+
+function theme_example_undefined($function = NULL) {
 }
 
 // http://drupal.org/node/224333#theme_page
@@ -2426,22 +2537,22 @@ function example_node_type_get_functions() {
 
 // http://drupal.org/node/224333#hook_load_signature
 /**
- * Implementation of hook_theme().
+ * Implementation of hook_load().
  *
  * Use case 1: returns object directly.
  */
 function example_load($node) {
-  $additions = db_fetch_object(db_query('SELECT * FROM {mytable} WHERE vid = %d', $node->vid));
-  return $additions;
+  return db_fetch_object(db_query('SELECT * FROM {mytable} WHERE vid = %d', $node->vid));
 }
 
 /**
- * Implementation of hook_theme().
+ * Implementation of hook_load().
  *
  * Use case 2: makes assignment to variable; returns variable.
  */
 function example_load($node) {
-  return db_fetch_object(db_query('SELECT * FROM {mytable} WHERE vid = %d', $node->vid));
+  $additions = db_fetch_object(db_query('SELECT * FROM {mytable} WHERE vid = %d', $node->vid));
+  return $additions;
 }
 
 /*

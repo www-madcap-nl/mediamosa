@@ -1,15 +1,14 @@
 <?php
-// $Id: devel_node_access.install,v 1.5 2009/10/14 01:28:19 salvis Exp $
+// $Id: devel_node_access.install,v 1.6 2010/09/10 20:58:53 salvis Exp $
 
-function devel_node_access_install() {
-}
-
+/**
+ * Implements hook_uninstall().
+ */
 function devel_node_access_uninstall() {
   variable_del('devel_node_access_debug_mode');
 
-  if (!module_exists('devel')) {
+  if (!module_exists('devel') && ($devel_menu = menu_load('devel'))) {
     // Delete the development menu.
-    $devel_menu = menu_load('devel');
     menu_delete($devel_menu);
   }
 }

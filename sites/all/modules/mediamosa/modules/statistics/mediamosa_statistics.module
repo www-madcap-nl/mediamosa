@@ -31,6 +31,12 @@
  */
 function mediamosa_statistics_cron() {
 
+  // No need to run statistics parsing in simpletest. Will call it directly
+  // inside the test when needed.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
   try {
     $last_run = variable_get('mediamosa_statistics_cron_last_run', 0);
 
@@ -50,8 +56,7 @@ function mediamosa_statistics_cron() {
     }
 
     // Do the statistics cron REST call for streaming statistics.
-    $result = mediamosa_http::do_internal_call_cron('internal/cron/statistics', TRUE);
-
+    mediamosa_http::do_internal_call_cron('internal/cron/statistics', TRUE);
   }
   catch (Exception $e) {
     mediamosa_watchdog::log('Catch exception during cron: mediamosa_statistics_cron(): @msg', array('@msg' => $e->getMessage()));

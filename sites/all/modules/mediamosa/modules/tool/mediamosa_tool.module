@@ -26,10 +26,10 @@
 
  /**
   * @file
-  * Mediamosa tool.
+  * MediaMosa tool.
   */
 
-require_once('params/mediamosa_tool_params.inc');
+require_once 'params/mediamosa_tool_params.inc';
 
 /**
  * Implements hook_help().

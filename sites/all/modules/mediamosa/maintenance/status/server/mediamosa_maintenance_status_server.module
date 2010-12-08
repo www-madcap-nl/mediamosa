@@ -30,9 +30,9 @@
  */
 
 /**
- * Implementation of hook_mediamosa_status_generate().
+ * Generate the information for the status page.
  */
-function mediamosa_maintenance_status_server_mediamosa_status_generate() {
+function _mediamosa_maintenance_status_server_generate() {
   global $conf;
 
   $results = array();
@@ -44,14 +44,12 @@ function mediamosa_maintenance_status_server_mediamosa_status_generate() {
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
   );
 
-  $statuses = array(
+  return array(
     'server' => array(
       'title' => t('Server monitoring'),
       'results' => $results,
     ),
   );
-
-  return $statuses;
 }
 
 /**
@@ -67,12 +65,12 @@ function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = F
 
   $mediamosa_status_server = array();
   if (!$reset) {
-    $mediamosa_status_server = variable_get('mediamosa_status_server_' . $conf['mediamosa_installation_id'], array());
+    $mediamosa_status_server = variable_get('mediamosa_status_solr_' . mediamosa::get_server_id(), array());
   }
 
   if (empty($mediamosa_status_server)) {
-    $mediamosa_status_server = array('time' => REQUEST_TIME, 'statuses' => mediamosa_maintenance_status_server_mediamosa_status_generate());
-    variable_set('mediamosa_status_server_' . $conf['mediamosa_installation_id'], $mediamosa_status_server);
+    $mediamosa_status_server = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_maintenance_status_server_generate());
+    variable_set('mediamosa_status_solr_' . mediamosa::get_server_id(), $mediamosa_status_server);
   }
 
   return $mediamosa_status_server['statuses'];

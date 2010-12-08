@@ -1,5 +1,5 @@
 <?php
-//$Id: devel.pages.inc,v 1.3 2010/01/28 21:27:09 weitzman Exp $
+//$Id: devel.pages.inc,v 1.10 2010/11/08 17:58:09 weitzman Exp $
 
 /**
  * Page callback to display syntax hilighted source code
@@ -100,9 +100,9 @@ function devel_querylog_explain($request_id, $qid) {
 
   $path = "temporary://devel_querylog/$request_id.txt";
   $path = file_stream_wrapper_uri_normalize($path);
-  $queries = unserialize(file_get_contents($path));
+  $queries = json_decode(file_get_contents($path));
   $query = $queries[$qid];
-  $result = db_query('EXPLAIN ' . $query['query'], $query['args'])->fetchAllAssoc('table');
+  $result = db_query('EXPLAIN ' . $query->query, (array)$query->args)->fetchAllAssoc('table');
   $i = 1;
   foreach ($result as $row) {
     $row = (array)$row;
@@ -126,14 +126,14 @@ function devel_querylog_arguments($request_id, $qid) {
 
   $path = "temporary://devel_querylog/$request_id.txt";
   $path = file_stream_wrapper_uri_normalize($path);
-  $queries = unserialize(file_get_contents($path));
+  $queries = json_decode(file_get_contents($path));
   $query = $queries[$qid];
   $conn = Database::getConnection();
   $quoted = array();
-  foreach ((array)$query['args'] as $key => $val) {
+  foreach ((array)$query->args as $key => $val) {
     $quoted[$key] = $conn->quote($val);
   }
-  $output = strtr($query['query'], $quoted);
+  $output = strtr($query->query, $quoted);
 
   // print and return nothing thus avoiding page wrapper.
   print $output;
@@ -189,10 +189,22 @@ function devel_theme_registry() {
   return kprint_r($hooks, TRUE);
 }
 
+// Menu callback. $entity_type argument not currently used in the UI.
+function devel_entity_info_page($entity_type = NULL) {
+  $info = entity_get_info($entity_type);
+  ksort($info);
+  return kprint_r($info, TRUE);
+}
+
 // Menu callback.
 function devel_field_info_page() {
   $info = field_info_fields();
-  return kprint_r($info, TRUE);
+  $output = kprint_r($info, TRUE, t('Fields'));
+  $info = field_info_instances();
+  $output .= kprint_r($info, TRUE, t('Instances'));
+  $info = field_info_bundles();
+  $output .= kprint_r($info, TRUE, t('Bundles'));
+  return $output;
 }
 
 /**
@@ -264,7 +276,9 @@ function devel_variable_form() {
 function devel_variable_form_submit($form, &$form_state) {
   $deletes = array_filter($form_state['values']['variables']);
   array_walk($deletes, 'variable_del');
-  drupal_set_message(format_plural(count($deletes), 'One variable deleted.', '@count variables deleted.'));
+  if (count($deletes)) {
+    drupal_set_message(format_plural(count($deletes), 'One variable deleted.', '@count variables deleted.'));
+  }
 }
 
 function devel_variable_edit($form, &$form_state, $name) {

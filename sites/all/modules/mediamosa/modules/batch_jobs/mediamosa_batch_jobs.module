@@ -72,8 +72,8 @@ function mediamosa_batch_jobs_menu() {
     'weight' => 2
   );
   $items['admin/mediamosa/browse/ftp_batch/queue/delete'] = array(
-    'title' => 'Delete from queue',
-    'description' => 'Delete an item from the queue.',
+    'title' => 'Remove from queue',
+    'description' => 'Remove an item from the queue.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_batch_jobs_delete_confirm', 1),
     'access arguments' => array('view batch job administration'),

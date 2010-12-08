@@ -1,6 +1,6 @@
 
 
-Draft for starting code standard for Mediamosa 2.x and higher.
+Draft for starting code standard for MediaMosa 2.x and higher.
 
 - Misc;
   * Use mediamosa_io for IO related functions like mkdir, unlink, etc.
@@ -54,7 +54,7 @@ Draft for starting code standard for Mediamosa 2.x and higher.
     choice is based on 1.x code base. This does not mean there are no objects in 
     mediamosa. 
 
-- Set up folders Mediamosa map;
+- Set up folders MediaMosa map;
   * Core modules are not drupal modules and are not considered as drupal 
     modules.
   * Core is one drupal module and should not have dependencies (exception is 

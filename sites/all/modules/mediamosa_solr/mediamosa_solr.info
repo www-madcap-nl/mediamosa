@@ -2,7 +2,12 @@
 name = "MediaMosa Apache Solr"
 description = "MediaMosa Apache Solr Search Integration."
 package = "MediaMosa - Search"
-version = "1.0.0"
+version = "2.3.0"
 core = 7.x
 
 configure = admin/mediamosa/config/solr
+
+; Used files.
+files[] = mediamosa_solr.module
+files[] = mediamosa_solr.inc
+files[] = mediamosa_solr.class.inc

@@ -274,7 +274,11 @@ function _mediamosa_profile_php_modules() {
  */
 function _mediamosa_profile_installed_programs() {
 
+  // Just here for notice prev.
+  $ret_val = 0;
+
   // FFmpeg.
+  $exec_output = array();
   exec('ffmpeg -version > /dev/null 2>&1', $exec_output, $ret_val);
   $requirements['ffmpeg'] = array(
     'title' => st('<b>Program FFmpeg:</b>'),
@@ -284,6 +288,7 @@ function _mediamosa_profile_installed_programs() {
   );
 
   // Lua.
+  $exec_output = array();
   exec('lua 2>&1', $exec_output, $ret_val);
   $requirements['lua'] = array(
     'title' => st('<b>Program LUA 5.1:</b>'),
@@ -293,7 +298,8 @@ function _mediamosa_profile_installed_programs() {
   );
 
   // Lpeg.
-  exec('lua profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
+  $exec_output = array();
+  exec('lua ' . escapeshellcmd(DRUPAL_ROOT) . '/profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
 
   $requirements['lpeg'] = array(
     'title' => st('<b>LUA extension Lpeg:</b>'),
@@ -592,7 +598,7 @@ function mediamosa_profile_apache_settings_form() {
       '!mount_point' => $mount_point,
     ));
 
-  $server_name_clean = substr($server_name, -6) == '.local' ? substr($server_name, 0, strlen($server_name) - 6) : $server_name;
+  $server_name_clean = $server_name;
 
   $apache_settings_adv = st("<b>Multiserver setup (advanced)</b><p>
 Multidomain setup with different DNS entries for a production setup.
@@ -601,9 +607,9 @@ Save your original file (if any), then insert this code to your settings file.
 If you just created this file please enable it with the a2ensite command.
     <pre>" . htmlentities("
 <VirtualHost *:80>
-    ServerName !server_name_clean.local
-    ServerAlias admin.!server_name_clean.local www.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName !server_name_clean
+    ServerAlias admin.!server_name_clean www.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -635,8 +641,8 @@ If you just created this file please enable it with the a2ensite command.
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName app1.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName app1.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -651,8 +657,8 @@ If you just created this file please enable it with the a2ensite command.
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName app2.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName app2.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -667,8 +673,8 @@ If you just created this file please enable it with the a2ensite command.
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName upload.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName upload.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -689,8 +695,8 @@ If you just created this file please enable it with the a2ensite command.
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName download.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName download.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -705,8 +711,8 @@ If you just created this file please enable it with the a2ensite command.
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName job1.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName job1.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -721,8 +727,8 @@ If you just created this file please enable it with the a2ensite command.
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName job2.!server_name_clean.local
-    ServerAdmin webmaster@!server_name_clean.local
+    ServerName job2.!server_name_clean
+    ServerAdmin webmaster@!server_name_clean
     DocumentRoot !document_root
     <Directory !document_root>
         Options FollowSymLinks MultiViews
@@ -775,10 +781,10 @@ function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
 }
 
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
+  $server_name = _mediamosa_profile_server_name();
   variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 
   if (variable_get('apache_setting') == 'simple') {
-    $server_name = _mediamosa_profile_server_name();
     db_update('mediamosa_server')
       ->fields(
         array(
@@ -826,8 +832,34 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name);
   }
   else {
-    variable_set('mediamosa_jobscheduler_uri', 'http://job1.mediamosa.local');
-    variable_set('mediamosa_cron_url_app', 'http://app1.mediamosa.local');
+    variable_set('mediamosa_jobscheduler_uri', 'http://job1.'. $server_name);
+    variable_set('mediamosa_cron_url_app', 'http://app1.'. $server_name);
+  }
+
+  if (strcasecmp($server_name, 'mediamosa.local')) {
+    // We need to patch server table then.
+    $results = db_select('mediamosa_server', 'ms')
+      ->fields('ms')
+      ->execute();
+    
+    // Lets save all entries in an array.
+    $rows = array();
+    foreach ($results as $row) {
+      $rows[] = $row;
+    }
+
+    foreach ($rows as $row) {
+      $server_uri = $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $row->server_uri);
+      $uri_upload_progress = $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $row->uri_upload_progress);
+      db_update('mediamosa_server')
+        ->fields(
+            array(
+              'server_uri' => $server_uri,
+              'uri_upload_progress' => $uri_upload_progress,
+            ))
+        ->condition('nid', $row->nid, '=')
+        ->execute();
+    }
   }
 }
 

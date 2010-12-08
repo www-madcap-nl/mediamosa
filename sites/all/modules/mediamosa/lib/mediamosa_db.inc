@@ -804,7 +804,7 @@ class mediamosa_db {
       $hash_62 = mediamosa_unicode::substr($conf_31_to_62, $hi + $lo, 1) . $hash_62;
     }
 
-    // Mediamosa doesn't like ID starting with numbers, so lets attach the 1st one with alpha.
+    // MediaMosa doesn't like ID starting with numbers, so lets attach the 1st one with alpha.
     $hash_62 = $conf_31_to_62{rand(10, 61)} . $hash_62;
 
     // Max length 24.
@@ -822,13 +822,13 @@ class mediamosa_db {
   /**
    * Create a table according to the schema.
    *
-   * @param sting name
+   * @param string name
    *   Name of the table.
    * @param array table
    *   Schema definition.
    */
   static public function db_create_table($name, array $table) {
-    db_create_table($name, $table);
+    return db_create_table($name, $table);
   }
 
   /**
@@ -838,6 +838,33 @@ class mediamosa_db {
    *   Name of the table.
    */
   static public function db_drop_table($name) {
-    db_drop_table($name);
+    return db_drop_table($name);
   }
+
+  /**
+   * Change specific column.
+   *
+   * @param string $table
+   * @param string $field
+   * @param string $field_new
+   * @param array $spec
+   * @param array $keys_new
+   */
+  static public function db_change_field($table, $field, $field_new, array $spec, array $keys_new = array()) {
+    return db_change_field($table, $field, $field_new, $spec, $keys_new);
+  }
+
+  /**
+   * Checks if a table exists.
+   *
+   * @param $table
+   *   The name of the table in drupal (no prefixing).
+   *
+   * @return
+   *   TRUE if the given table exists, otherwise FALSE.
+   */
+  static public function db_table_exists($table) {
+    return db_table_exists($table);
+  }
+
 }

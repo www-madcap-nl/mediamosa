@@ -26,7 +26,7 @@
 
  /**
   * @file
-  * Mediamosa transcode profile function.
+  * MediaMosa transcode profile function.
   */
 
 /**

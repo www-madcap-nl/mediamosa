@@ -35,7 +35,7 @@ function mediamosa_user_mediamosa_register_rest_call_doc() {
   $a_rest_calls['user'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get a list of users.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/user?limit=10&offset=0 [GET] ',
-    mediamosa_rest_call::DESCRIPTION => 'With this call you get a list of all known users. User integrity is not forced in Mediamosa, but rather left to the application builder. There is however some basic knowledge of users. The /user... restcalls can be used to store basic user data. So if you create an asset with a user, this will succeed regardless the user exists in the userlist. The main purpose for the user lists in MediaMosa is the storage of the quotum per user/group.
+    mediamosa_rest_call::DESCRIPTION => 'With this call you get a list of all known users. User integrity is not forced in MediaMosa, but rather left to the application builder. There is however some basic knowledge of users. The /user... restcalls can be used to store basic user data. So if you create an asset with a user, this will succeed regardless the user exists in the userlist. The main purpose for the user lists in MediaMosa is the storage of the quotum per user/group.
 
 This call returns all users which are created with /user/create and searches for all users who created objects (assets, mediafiles, collections). If the user has some quota information, this is added to the output.',
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>

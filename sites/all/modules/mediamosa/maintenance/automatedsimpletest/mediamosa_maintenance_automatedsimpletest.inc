@@ -115,7 +115,7 @@ class mediamosa_maintenance_automatedsimpletest {
     }
 
     // Master switch.
-    if (!variable_get('mediamosa_automatedsimpletest_run_tests', TRUE)) {
+    if (!variable_get('mediamosa_automatedsimpletest_run_tests', FALSE)) {
       return FALSE;
     }
 

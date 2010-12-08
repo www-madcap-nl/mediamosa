@@ -153,7 +153,7 @@ class mediamosa {
    * Return the current defined installation id.
    */
   static public function get_server_id() {
-    return mediamosa::variable_get('mediamosa_installation_id');
+    return mediamosa::variable_get('mediamosa_installation_id', 'default');
   }
 
   /**
@@ -436,7 +436,7 @@ class mediamosa {
       $schema = mediamosa_db::db_install_schema_preprocess($module, $schema);
 
       foreach ($schema as $name => $table) {
-        db_create_table($table_prefix . $name, $table);
+        mediamosa_db::db_create_table($table_prefix . $name, $table);
       }
     }
     catch (Exception $e) {
@@ -513,6 +513,9 @@ class mediamosa {
 
     // Store it.
     variable_set('mediamosa_internal_password', $passwrd);
+
+    // Log it, this should only happen when have a clean install.
+    mediamosa_watchdog::log('Generated new internal password.');
 
     // Return the new passwrd.
     return $passwrd;

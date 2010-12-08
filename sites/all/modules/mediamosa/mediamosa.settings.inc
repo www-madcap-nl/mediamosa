@@ -130,13 +130,13 @@ class mediamosa_settings {
   const JOB_MAX_SLOTS = 5;
 
   // Header item used in internal calls.
-  const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';
+  const X_MEDIAMOSA_INTERNAL_PASS = 'X-MediaMosa-Internal-Pass';
   const X_MEDIAMOSA_VERSION = 'x-MediaMosa-Version';
 
   // Header item during rest call and simpletest. When running in simpletest we
   // can force to disable App on any interface. If not added to header, all
   // REST calls are considered on a REST (app) interface.
-  const X_MEDIAMOSA_DISABLE_APP = 'X-Mediamosa-Disable-App';
+  const X_MEDIAMOSA_DISABLE_APP = 'X-MediaMosa-Disable-App';
 
   // Upload Settings.
   const UPLOAD_PUT_CHUNK_SIZE = 4096;
@@ -228,15 +228,6 @@ class mediamosa_settings {
     }
 
     return $mediamosa_ffmpeg_pad;
-  }
-
-  /**
-   * Return the unique server ID.
-   */
-  static public function get_server_id() {
-    global $conf;
-
-    return $conf['mediamosa_installation_id'];
   }
 
   /**

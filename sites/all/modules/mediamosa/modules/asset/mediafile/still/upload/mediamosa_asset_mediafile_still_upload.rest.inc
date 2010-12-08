@@ -95,7 +95,7 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
         ),
         self::COMPLETED_URL => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
-          self::VAR_DESCRIPTION => "This URL gives opportunity to the APP builder for a status raport; \nupload_ticket\nstatus_code\n\nThe upload_ticket is used to identify the upload. The status_code is a Mediamosa code.\nThe type is URL and not URI, because this parameter http:// or https://.",
+          self::VAR_DESCRIPTION => "This URL gives opportunity to the APP builder for a status raport; \nupload_ticket\nstatus_code\n\nThe upload_ticket is used to identify the upload. The status_code is a MediaMosa code.\nThe type is URL and not URI, because this parameter http:// or https://.",
         ),
       )
     );

@@ -119,7 +119,7 @@ class mediamosa_rest {
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $request_uris[$pos];
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
-          $a_regex[] = "[^\\/]*"; // Mediamosa is completly lose, any char EXCEPT /.
+          $a_regex[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $request_uris[$pos];
         }
         else {

@@ -1,5 +1,5 @@
 <?php
-// $Id: devel_generate.inc,v 1.15 2010/04/03 23:43:07 weitzman Exp $
+// $Id: devel_generate.inc,v 1.27 2010/11/14 00:29:50 weitzman Exp $
 
 /**
  * Generate some random users.
@@ -44,6 +44,7 @@ function devel_create_users($num, $kill, $age = 0, $roles = array()) {
     }
     foreach ($names as $name => $value) {
       $edit = array(
+        'uid'     => NULL,
         'name'    => $name,
         'pass'    => NULL, // No password avoids user_hash_password() which is expensive.
         'mail'    => $name . '@' . $url['host'],
@@ -80,6 +81,7 @@ function devel_create_users($num, $kill, $age = 0, $roles = array()) {
         // Create an empty, managed file where we want the user's picture to
         // be so we can have GD overwrite it with the image.
         $picture_directory =  variable_get('file_default_scheme', 'public') . '://' . variable_get('user_picture_path', 'pictures');
+        file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
         $destination = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '.png');
         $file = file_save_data('', $destination);
 
@@ -142,6 +144,7 @@ function devel_generate_content($form_state) {
 function devel_generate_add_comments($node, $users, $max_comments, $title_length = 8) {
   $num_comments = mt_rand(1, $max_comments);
   for ($i = 1; $i <= $num_comments; $i++) {
+    $comment = new stdClass;
     $comment->nid = $node->nid;
     $comment->cid = NULL;
     $comment->name = 'devel generate';
@@ -159,7 +162,7 @@ function devel_generate_add_comments($node, $users, $max_comments, $title_length
         $comment->pid = 0;
     }
 
-    $comment->subject = devel_create_greeking(mt_rand(1, $title_length), TRUE);
+    $comment->subject = devel_create_greeking(mt_rand(2, $title_length), TRUE);
     $comment->uid = $users[array_rand($users)];
     $comment->language = LANGUAGE_NONE;
     // Populate all core fields on behalf of field.module
@@ -198,30 +201,32 @@ function devel_generate_vocabs($records, $maxlength = 12, $types = array('page',
   return $vocs;
 }
 
-function devel_generate_terms($records, $vocs, $maxlength = 12) {
+function devel_generate_terms($records, $vocabs, $maxlength = 12) {
   $terms = array();
 
   // Insert new data:
-  $max = db_query('SELECT MAX(tid) FROM taxonomy_term_data')->fetchField();
+  $max = db_query('SELECT MAX(tid) FROM {taxonomy_term_data}')->fetchField();
   $start = time();
   for ($i = 1; $i <= $records; $i++) {
     switch ($i % 2) {
       case 1:
         // Set vid and vocabulary_machine_name properties.
-        $vid = array_rand($vocs);
-        $term = $vocs[$vid];
-        // dont set a parent. handled by taxonomy_save_term()
+        $vocab = $vocabs[array_rand($vocabs)];
+        $term->vid = $vocab->vid;
+        $term->vocabulary_machine_name = $vocab->machine_name;
+        // Don't set a parent. Handled by taxonomy_save_term()
         // $term->parent = 0;
         break;
       default:
         while (TRUE) {
+          // Keep trying to find a random parent.
           $candidate = mt_rand(1, $max);
           $query = db_select('taxonomy_term_data', 't');
           $query->innerJoin('taxonomy_vocabulary', 'v', 't.vid = v.vid');
           $parent = $query
                     ->fields('t', array('tid', 'vid'))
                     ->fields('v', array('machine_name'))
-                    ->condition('v.vid', array_keys($vocs), 'IN')
+                    ->condition('v.vid', array_keys($vocabs), 'IN')
                     ->condition('t.tid', $candidate, '>=')
                     ->range(0,1)
                     ->execute()
@@ -257,7 +262,7 @@ function devel_generate_terms($records, $vocs, $maxlength = 12) {
         }
       }
 
-      // Limit memory usage.
+      // Limit memory usage. Only report first 20 created terms.
       if ($i < 20) {
         $terms[] = $term->name;
       }
@@ -268,28 +273,186 @@ function devel_generate_terms($records, $vocs, $maxlength = 12) {
   return $terms;
 }
 
-function devel_generate_get_vocabs() {
-  return db_query("SELECT vid, machine_name AS vocabulary_machine_name FROM {taxonomy_vocabulary}")->fetchAllAssoc('vid');
+// TODO: use taxonomy_get_entries once that exists.
+function devel_generate_get_terms($vids) {
+  return db_select('taxonomy_term_data', 'td')
+           ->fields('td', array('tid'))
+           ->condition('vid', $vids, 'IN')
+           ->orderBy('tid', 'ASC')
+           ->execute()
+           ->fetchCol('tid');
 }
 
-function devel_generate_taxonomy_data($num_vocab, $num_terms, $title_length, $kill) {
+function devel_generate_term_data($vocabs, $num_terms, $title_length, $kill) {
+  if ($kill) {
+    foreach (devel_generate_get_terms(array_keys($vocabs)) as $tid) {
+      taxonomy_term_delete($tid);
+    }
+    drupal_set_message(t('Deleted existing terms.'));
+  }
+
+  $new_terms = devel_generate_terms($num_terms, $vocabs, $title_length);
+  if (!empty($new_terms)) {
+    drupal_set_message(t('Created the following new terms: !terms', array('!terms' => theme('item_list', array('items' => $new_terms)))));
+  }
+}
+
+function devel_generate_vocab_data($num_vocab, $title_length, $kill) {
 
   if ($kill) {
     foreach (taxonomy_get_vocabularies() as $vid => $vocab) {
       taxonomy_vocabulary_delete($vid);
     }
-    drupal_set_message(t('Deleted existing vocabularies and terms.'));
+    drupal_set_message(t('Deleted existing vocabularies.'));
   }
 
   $new_vocs = devel_generate_vocabs($num_vocab, $title_length);
   if (!empty($new_vocs)) {
     drupal_set_message(t('Created the following new vocabularies: !vocs', array('!vocs' => theme('item_list', array('items' => $new_vocs)))));
   }
-  $vocs = devel_generate_get_vocabs();
-  $new_terms = devel_generate_terms($num_terms, $vocs, $title_length);
-  if (!empty($new_terms)) {
-    drupal_set_message(t('Created the following new terms: !terms', array('!terms' => theme('item_list', array('items' => $new_terms)))));
+}
+
+function devel_generate_menu_data($num_menus, $existing_menus, $num_links, $title_length, $link_types, $max_depth, $max_width, $kill) {
+  // Delete menus and menu links.
+  if ($kill) {
+    if (module_exists('menu')) {
+      foreach (menu_get_menus(FALSE) as $menu => $menu_title) {
+        if (strpos($menu, 'devel-') === 0) {
+          $menu = menu_load($menu);
+          menu_delete($menu);
+        }
+      }
+    }
+    // Delete menu links generated by devel.
+    $result = db_select('menu_links', 'm')
+      ->fields('m', array('mlid'))
+      ->condition('m.menu_name', 'devel', '<>')
+      // Look for the serialized version of 'devel' => TRUE.
+      ->condition('m.options', '%' . db_like('s:5:"devel";b:1') . '%', 'LIKE')
+      ->execute();
+    foreach ($result as $link) {
+      menu_link_delete($link->mlid);
+    }
+    drupal_set_message(t('Deleted existing menus and links.'));
   }
+
+  // Generate new menus.
+  $new_menus = devel_generate_menus($num_menus, $title_length);
+  if (!empty($new_menus)) {
+    drupal_set_message(t('Created the following new menus: !menus', array('!menus' => theme('item_list', array('items' => $new_menus)))));
+  }
+
+  // Generate new menu links.
+  $menus = $new_menus + $existing_menus;
+  $new_links = devel_generate_links($num_links, $menus, $title_length, $link_types, $max_depth, $max_width);
+  drupal_set_message(t('Created @count new menu links.', array('@count' => count($new_links))));
+}
+
+/**
+ * Generates new menus.
+ */
+function devel_generate_menus($num_menus, $title_length = 12) {
+  $menus = array();
+
+  if (!module_exists('menu')) {
+    $num_menus = 0;
+  }
+
+  for ($i = 1; $i <= $num_menus; $i++) {
+    $menu = array();
+    $menu['title'] = devel_generate_word(mt_rand(2, $title_length));
+    $menu['menu_name'] = 'devel-' . drupal_strtolower($menu['title']);
+    $menu['description'] = t('Description of @name', array('@name' => $menu['title']));
+    menu_save($menu);
+    $menus[$menu['menu_name']] = $menu['title'];
+  }
+
+  return $menus;
+}
+
+/**
+ * Generates menu links in a tree structure.
+ */
+function devel_generate_links($num_links, $menus, $title_length, $link_types, $max_depth, $max_width) {
+  $links = array();
+  $menus = array_keys(array_filter($menus));
+  $link_types = array_keys(array_filter($link_types));
+
+  $nids = array();
+  for ($i = 1; $i <= $num_links; $i++) {
+    // Pick a random menu.
+    $menu_name = $menus[array_rand($menus)];
+    // Build up our link.
+    $link = array(
+      'menu_name'   => $menu_name,
+      'options'     => array('devel' => TRUE),
+      'weight'      => mt_rand(-50, 50),
+      'mlid'        => 0,
+      'link_title'  => devel_generate_word(mt_rand(2, $title_length)),
+    );
+    $link['options']['attributes']['title'] = t('Description of @title.', array('@title' => $link['link_title']));
+
+    // For the first $max_width items, make first level links.
+    if ($i <= $max_width) {
+      $depth = 0;
+    }
+    else {
+      // Otherwise, get a random parent menu depth.
+      $depth = mt_rand(1, $max_depth - 1);
+    }
+    // Get a random parent link from the proper depth.
+    do {
+      $link['plid'] = db_select('menu_links', 'm')
+        ->fields('m', array('mlid'))
+        ->condition('m.menu_name', $menus, 'IN')
+        ->condition('m.depth', $depth)
+        ->range(0, 1)
+        ->orderRandom()
+        ->execute()
+        ->fetchField();
+      $depth--;
+    } while (!$link['plid'] && $depth > 0);
+    if (!$link['plid']) {
+      $link['plid'] = 0;
+    }
+
+    $link_type = array_rand($link_types);
+    switch ($link_types[$link_type]) {
+      case 'node':
+        // Grab a random node ID.
+        $select = db_select('node', 'n')
+          ->fields('n', array('nid', 'title'))
+          ->condition('n.status', 1)
+          ->range(0, 1)
+          ->orderRandom();
+        // Don't put a node into the menu twice.
+        if (!empty($nids[$menu_name])) {
+          $select->condition('n.nid', $nids[$menu_name], 'NOT IN');
+        }
+        $node = $select->execute()->fetchAssoc();
+        if (isset($node['nid'])) {
+          $nids[$menu_name][] = $node['nid'];
+          $link['link_path'] = $link['router_path'] = 'node/' . $node['nid'];
+          $link['link_title'] = $node['title'];
+          break;
+        }
+      case 'external':
+        $link['link_path'] = 'http://www.example.com/';
+        break;
+      case 'front':
+        $link['link_path'] = $link['router_path'] = '<front>';
+        break;
+      default:
+        $link['devel_link_type'] = $link_type;
+        break;
+    }
+
+    menu_link_save($link);
+
+    $links[$link['mlid']] = $link['link_title'];
+  }
+
+  return $links;
 }
 
 function devel_generate_word($length){
@@ -316,17 +479,18 @@ function devel_create_content($type = NULL) {
 
   $output = "";
   switch($type % 3) {
-    case 1: // html
-      for ($i = 1; $i <= $nparas; $i++) {
-        $output .= devel_create_para(mt_rand(10,60),1);
-      }
-      break;
-
-    case 2: // brs only
-      for ($i = 1; $i <= $nparas; $i++) {
-        $output .= devel_create_para(mt_rand(10,60),2);
-      }
-      break;
+    // MW: This appears undesireable. Was giving <p> in text fields
+    // case 1: // html
+    //       for ($i = 1; $i <= $nparas; $i++) {
+    //         $output .= devel_create_para(mt_rand(10,60),1);
+    //       }
+    //       break;
+    //
+    //     case 2: // brs only
+    //       for ($i = 1; $i <= $nparas; $i++) {
+    //         $output .= devel_create_para(mt_rand(10,60),2);
+    //       }
+    //       break;
 
     default: // plain text
       for ($i = 1; $i <= $nparas; $i++) {
@@ -338,27 +502,23 @@ function devel_create_content($type = NULL) {
 }
 
 function devel_create_para($words, $type = 0) {
-  $output = "";
+  $output = '';
   switch ($type) {
     case 1:
-      $output .= "<p>";
-      $output .= devel_create_greeking($words);
-      $output = trim($output) ."</p>";
+      $output .= "<p>" . devel_create_greeking($words)  . "</p>";
       break;
 
     case 2:
-      $output .= devel_create_greeking($words);
-      $output = trim($output) ."<br />";
+      $output .= devel_create_greeking($words) . "<br />";
       break;
 
     default:
       $output .= devel_create_greeking($words);
-      $output = trim($output);
   }
   return $output;
 }
 
-function devel_create_greeking($words, $title = FALSE) {
+function devel_create_greeking($word_count, $title = FALSE) {
   $dictionary = array("abbas", "abdo", "abico", "abigo", "abluo", "accumsan",
     "acsi", "ad", "adipiscing", "aliquam", "aliquip", "amet", "antehabeo",
     "appellatio", "aptent", "at", "augue", "autem", "bene", "blandit",
@@ -389,36 +549,30 @@ function devel_create_greeking($words, $title = FALSE) {
     "veniam", "venio", "vereor", "vero", "verto", "vicis", "vindico",
     "virtus", "voco", "volutpat", "vulpes", "vulputate", "wisi", "ymo",
     "zelus");
+  $dictionary_flipped = array_flip($dictionary);
 
-  $greeking = "";
+  $greeking = '';
 
   if (!$title) {
-    while ($words > 0) {
-      $sentence_length = mt_rand(3,10);
-
-      $greeking .= ucfirst($dictionary[array_rand($dictionary)]);
-      for ($i = 1; $i < $sentence_length; $i++) {
-        $greeking .= " " . $dictionary[array_rand($dictionary)];
-      }
-
-      $greeking .= ". ";
-      $words -= $sentence_length;
+    $words_remaining = $word_count;
+    while ($words_remaining > 0) {
+      $sentence_length = mt_rand(3, 10);
+      $words = array_rand($dictionary_flipped, $sentence_length);
+      $sentence = implode(' ', $words);
+      $greeking .= ucfirst($sentence) . '. ';
+      $words_remaining -= $sentence_length;
     }
   }
   else {
-    // use different method for titles
-    $title_length = $words;
-    $array = array();
-    for ($i = 0; $i < $words; $i++) {
-      $array[] = $dictionary[array_rand($dictionary)];
-    }
-    $greeking = ucwords(implode(' ', $array));
+    // Use slightly different method for titles.
+    $words = array_rand($dictionary_flipped, $word_count);
+    $greeking = ucwords(implode(' ', $words));
   }
 
   // Work around possible php garbage collection bug. Without an unset(), this
   // function gets very expensive over many calls (php 5.2.11).
-  unset($dictionary);
-  return $greeking;
+  unset($dictionary, $dictionary_flipped);
+  return trim($greeking);
 }
 
 function devel_generate_add_terms(&$node) {
@@ -498,15 +652,15 @@ function devel_generate_content_pre_node(&$results) {
 }
 
 /**
- * Create one node.  This is used by both the batch and non-batch branches of
- * the code.
+ * Create one node. Used by both batch and non-batch code branches.
  *
  * @param $num
  *   array of options obtained from devel_generate_content_form.
  */
 function devel_generate_content_add_node(&$results) {
   global $language;
-  $node = new StdClass();
+  $node = new stdClass();
+  $node->nid = NULL;
 
   // Insert new data:
   $node->type = array_rand($results['node_types']);
@@ -514,7 +668,7 @@ function devel_generate_content_add_node(&$results) {
   $users = $results['users'];
   $node->uid = $users[array_rand($users)];
   $type = node_type_get_type($node);
-  $node->title = $type->has_title ? devel_create_greeking(mt_rand(1, $results['title_length']), TRUE) : '';
+  $node->title = $type->has_title ? devel_create_greeking(mt_rand(2, $results['title_length']), TRUE) : '';
   $node->revision = mt_rand(0,1);
   $node->promote = mt_rand(0, 1);
   // Avoid NOTICE.

@@ -44,3 +44,7 @@ tr.mediamosa-status-ok {
   width: 60px;
   text-align: center;
 }
+
+td.mediamosa-status-part {
+	width: 200px;
+}

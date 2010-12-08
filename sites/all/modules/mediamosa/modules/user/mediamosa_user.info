@@ -1,9 +1,9 @@
 ; $Id $
 
 name = "User"
-description = "This module contains all Mediamosa User related functions."
+description = "This module contains all MediaMosa User related functions."
 package = "MediaMosa - Modules"
-version = "2.2.0"
+version = "2.3.0"
 core = 7.x
 
 ; Dependencies (module names)

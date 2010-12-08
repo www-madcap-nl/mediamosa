@@ -1,6 +1,6 @@
 (function ($) {
 
-Drupal.behaviors.initMediamosaBrowse = {
+Drupal.behaviors.initMediaMosaBrowse = {
   attach: function (context) {
     $('#edit-add-filter-row').click(function () {
       Drupal.settings.mediamosa_maintenance_browse.filter_count++;

@@ -47,7 +47,7 @@ class mediamosa_asset_search {
    * 1.x _media_management_search_asset
    *
    * @param mediamosa_response $mediamosa
-   *  Mediamosa response object.
+   *  MediaMosa response object.
    * @param array $a_app_ids
    *  Application IDs.
    * @param string $cql

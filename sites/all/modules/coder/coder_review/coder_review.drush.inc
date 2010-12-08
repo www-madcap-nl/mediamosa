@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_review.drush.inc,v 1.7 2010/03/23 14:45:37 douggreen Exp $
+// $Id: coder_review.drush.inc,v 1.10 2010/10/31 09:42:47 snpower Exp $
 
 /**
  * @file
@@ -31,6 +31,8 @@ function coder_review_drush_help($section) {
                 . "\n    <name> - review specified module or theme name, i.e. taxonomy"
                 . "\n    no-<name> - exclude named modules and themes, i.e. no-taxonomy"
                 . "\n     combine with active|core|contrib|all|default"
+                . "\n    <patch-url> - URL to patch file"
+                . "\n    <file-path> - path to file or multiple files, relative to Drupal installation"
                );
   }
 }
@@ -112,7 +114,14 @@ function coder_review_drush_review() {
             $settings['coder_includes'] = TRUE;
           }
           else {
-            if (_coder_review_drush_is_patch_arg($arg)) {
+            if (file_exists($arg)) {
+              $settings['coder_files'] = 1;
+              if (empty($settings['coder_file_list'])) {
+                $settings['coder_file_list'] = '';
+              }
+              $settings['coder_file_list'] .= $arg . "\n";
+            }
+            elseif (_coder_review_drush_is_patch_arg($arg)) {
               $settings['coder_patches'] = 1;
               $settings['coder_patch_link'] = $arg;
             }
@@ -179,6 +188,7 @@ function theme_drush_coder_review_warning($variables) {
   $lineno = isset($variables['lineno']) ? $variables['lineno'] : 0;
   $line = isset($variables['line']) ? $variables['line'] : '';
   $output  = $lineno ? '+' . $lineno . ': ' : '';
+  $output .= '[' . $severity_name . '] ';
   $output .= is_array($warning) ? $warning['#warning'] : $warning;
   return _coder_review_drush_output($output);
 }

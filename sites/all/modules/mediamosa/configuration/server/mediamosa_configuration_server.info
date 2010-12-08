@@ -3,7 +3,7 @@
 name = "Servers"
 description = "The mediamosa server settings."
 package = "MediaMosa - Maintenance - Configuration"
-version = "2.2.0"
+version = "2.3.0"
 core = 7.x
 
 ; Dependencies (module names)

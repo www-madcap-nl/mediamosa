@@ -40,26 +40,27 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
 
 
 /**
- * Implements hook_mediamosa_status_generate().
+ * Generate the information of the status page.
  */
-function mediamosa_maintenance_status_component_mediamosa_status_generate() {
+function mediamosa_maintenance_status_component_generate() {
   $results = array();
 
   $mount_point = mediamosa_configuration_storage::mount_point_get();
 
-  $results['mount_is_set'] = array(
+  // ------------------------------------------------------- SANNAS mount point.
+  $results['mount_set'] = array(
     'title' => t('SANNAS'),
-    'value' => t('Mount is set'),
-    'severity' => _mediamosa_maintenance_status_okerror(!$mount_point),
+    'value' => t('Mount set'),
+    'severity' => _mediamosa_maintenance_status_okerror(!empty($mount_point)),
   );
 
-  $results['mount_is_exists'] = array(
+  $results['mount_exists'] = array(
     'title' => t('SANNAS'),
-    'value' => t('Mount is exists'),
-    'severity' => _mediamosa_maintenance_status_okerror(!mediamosa_io::is_dir($mount_point)),
+    'value' => t('Mount exists'),
+    'severity' => _mediamosa_maintenance_status_okerror(mediamosa_io::is_dir($mount_point)),
   );
 
-  // Structure check.
+  // --------------------------------------------------- SANNAS Structure check.
   $checks = array(
     'is_structured' => array(),
     'is_writeable' => array(),
@@ -71,9 +72,9 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   }
 
   $maps = array(
-    '1','2','3','4','5','6','7','8','9',
-    'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
-    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+    '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
   );
   foreach ($maps as $map) {
     _mediamosa_maintenance_status_component_directory($mount_point . '/data/' . $map, $checks);
@@ -81,18 +82,18 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   }
 
   $results['mount_structure'] = array(
-    'title' => t('SANNAS'),
-    'value' => t('Mount has the good structure'),
-    'severity' => _mediamosa_maintenance_status_okerror($checks['is_structured']),
+    'title' => t('SANNAS stucture'),
+    'value' => empty($checks['is_structured']) ? t('Good') : t('Failures'),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['is_structured'])),
   );
   if (!empty($checks['is_structured'])) {
     $results['mount_structure']['description'] = '<pre>' . implode("\n", $checks['is_structured']) . '</pre>';
   }
 
   $results['mount_writeable'] = array(
-    'title' => t('SANNAS'),
-    'value' => t('Mount structure is writeable'),
-    'severity' => _mediamosa_maintenance_status_okerror($checks['is_writeable']),
+    'title' => t('SANNAS writable'),
+    'value' => empty($checks['is_structured']) ? t('Writable') : t('Failures'),
+    'severity' => _mediamosa_maintenance_status_okerror(empty($checks['is_writeable'])),
   );
   if (!empty($checks['is_writeable'])) {
     $results['mount_writeable']['description'] = '<pre>' . implode("\n", $checks['is_writeable']) . '</pre>';
@@ -100,39 +101,41 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
 
   $filename = $mount_point . '/data/transcode/test_' . mt_rand(0, 9999) . '.txt';
   $content = mt_rand(0, 9999);
-  $handle = fopen($filename, 'w');
-  fwrite($handle, $content);
-  fclose($handle);
   $read_content = '';
-  $handle = fopen($filename, 'rb');
+
+  $handle = fopen($filename, 'w');
   if ($handle) {
-    $read_content = fread($handle, filesize($filename));
+    fwrite($handle, $content);
     fclose($handle);
+    $handle = fopen($filename, 'rb');
+    if ($handle) {
+      $read_content = fread($handle, filesize($filename));
+      fclose($handle);
+    }
+
+    unlink($filename);
   }
-  unlink($filename);
+
   $results['mount_rea_write'] = array(
-    'title' => t('SANNAS'),
-    'value' => t('Write and read works fine'),
-    'severity' => _mediamosa_maintenance_status_okerror($content != $read_content),
+    'title' => t('SANNAS read and write'),
+    'value' => t('Readable & writable'),
+    'severity' => _mediamosa_maintenance_status_okerror($content == $read_content),
   );
 
-
-  $available_bytes = disk_free_space($mount_point);
-  $available_mb = floor($available_bytes / 1024 / 1024);
+  $available_bytes = mediamosa_io::disk_free_space($mount_point);
+  $available_mb = floor($available_bytes / (1024 * 1024));
   $results['mount_disk_free'] = array(
-    'title' => t('SANNAS'),
-    'value' => t('Disk free space: @available Mb', array('@available' => $available_mb)),
-    'severity' => ($available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK)),
+    'title' => t('SANNAS current diskspace'),
+    'value' => format_size($available_bytes),
+    'severity' => $available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK),
   );
 
-  $statuses = array(
+  return array(
     'component' => array(
       'title' => t('Component status'),
       'results' => $results,
     ),
   );
-
-  return $statuses;
 }
 
 /**
@@ -167,12 +170,12 @@ function mediamosa_maintenance_status_component_mediamosa_status_collect($reset 
 
   $mediamosa_status_component = array();
   if (!$reset) {
-    $mediamosa_status_component = variable_get('mediamosa_status_component_' . $conf['mediamosa_installation_id'], array());
+    $mediamosa_status_component = variable_get('mediamosa_status_component_' . mediamosa::get_server_id(), array());
   }
 
   if (empty($mediamosa_status_component)) {
-    $mediamosa_status_component = array('time' => REQUEST_TIME, 'statuses' => mediamosa_maintenance_status_component_mediamosa_status_generate());
-    variable_set('mediamosa_status_component_' . $conf['mediamosa_installation_id'], $mediamosa_status_component);
+    $mediamosa_status_component = array('time' => REQUEST_TIME, 'statuses' => mediamosa_maintenance_status_component_generate());
+    variable_set('mediamosa_status_component_' . mediamosa::get_server_id(), $mediamosa_status_component);
   }
 
   return $mediamosa_status_component['statuses'];

@@ -29,3 +29,125 @@
  *
  */
 
+/*
+ * Requirement; need at least revision 22 of the SolrPhpClient lib.
+ */
+define('MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT', 22);
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_solr_requirements($phase) {
+
+  $requirements = array();
+
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  // We need the SolrPhpClient class, so lets make sure we have it installed
+  // or available.
+  $solr_php_client_found = FALSE;
+
+  // When found, this will tell if we have the right revision. For now we will
+  // accept revision 22 or higher.
+  $revision_ok = FALSE;
+
+  // First if its already found then we don't have to enable it.
+  $solr_php_client_found = class_exists('Apache_Solr_Service');
+
+  // Ok not already enabled somewhere else.
+  if (!$solr_php_client_found) {
+    // Now its not found, lets include where we expect it.
+    include_once '3rdparty/SolrPhpClient/Apache/Solr/Service.php';
+
+    // Ok, found it?
+    $solr_php_client_found = class_exists('Apache_Solr_Service');
+  }
+
+  // If found, check the revision.
+  if ($solr_php_client_found) {
+    // Ok found, so check revision.
+    $matches = array();
+    preg_match('/\$Revision:\s?(\d+)\s?\$/', Apache_Solr_Service::SVN_REVISION, $matches);
+
+
+    if (count($matches) == 2) {
+      // Check revision.
+      $matched_revision = reset($matches);
+      $revision = next($matches);
+
+      // Check it.
+      $revision_ok = (int) $revision >= MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT;
+    }
+  }
+
+  switch ($phase) {
+
+    // Already installed?
+    case 'runtime':
+      if ($solr_php_client_found && $revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('Mediamosa Solr PHP Client'),
+          'value' => $t('Found (revision !revision)', array('!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT)),
+          'severity' => REQUIREMENT_OK,
+        );
+      }
+      elseif ($solr_php_client_found && !$revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('Mediamosa Solr PHP Client'),
+          'value' => $t('Found, but wrong revision (!revision)', array('!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT)),
+          'description' => $t("The Mediamosa Solr PHP Client requires the SolrPhpClient library. This library is already been found/installed. However MediaMosa Solr requires revision !revision or higher. You need to replace the current installation of library 'SolrPhpClient'. This library is found at: !here.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+            '!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT,
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+      else {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('Mediamosa Solr PHP Client'),
+          'value' => $t('Not found'),
+          'description' => $t("To properly use the Solr extension for MediaMosa, add the 3rd party library 'SolrPhpClient' under this module under the map 3rdparty. The installation should look like mediamosa_solr/3rdparty/SolrPhpClient/. This library is found at: !here. If you are not using the MediaMosa Solr extension, then disable the MediaMosa Solr module !here_module. Disabling the MediaMosa Solr module will remove this error.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+            '!here_module' => l($t('here'), 'admin/modules'),
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+
+    // During install time.
+    case 'install':
+      if ($solr_php_client_found && !$revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('Mediamosa Solr PHP Client'),
+          'value' => $t('Found, but wrong revision (!revision)', array('!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT)),
+          'description' => $t("The Mediamosa Solr PHP Client requires the SolrPhpClient library. This library is already been found/installed. However MediaMosa Solr requires revision !revision or higher. You need to replace the current installation of library 'SolrPhpClient'. This library is found at: !here.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+            '!revision' => MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT,
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+      elseif (!$solr_php_client_found || !$revision_ok) {
+        $requirements['mediamosa_solr_php_client'] = array(
+          'title' => $t('Mediamosa Solr PHP Client'),
+          'value' => $t('Not found'),
+          'description' => $t("To properly use the Solr extension for MediaMosa, add the 3rd party library 'SolrPhpClient' under this module under the map 3rdparty. The installation should look like mediamosa_solr/3rdparty/SolrPhpClient/. This library is found at: !here.", array(
+            '!here' => l('http://code.google.com/p/solr-php-client/', 'http://code.google.com/p/solr-php-client/'),
+          )),
+          'severity' => REQUIREMENT_ERROR,
+        );
+      }
+      break;
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_solr_uninstall() {
+  // Remove our variable.
+  variable_del('mediamosa_solr_url');
+}

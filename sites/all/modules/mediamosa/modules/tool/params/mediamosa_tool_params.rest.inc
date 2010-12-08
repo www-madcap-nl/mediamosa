@@ -60,7 +60,7 @@ class mediamosa_rest_call_tool_params_search extends mediamosa_rest_call {
 
     // Add to response.
     foreach ($a_transcode_mappings as $transcode_mapping) {
-      // TODO: Mediamosa supports now a ";" separated list, but it is possible, that some allowed values has ";".
+      // TODO: MediaMosa supports now a ";" separated list, but it is possible, that some allowed values has ";".
       $transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE] = implode(';', (array)unserialize($transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE]));
       $transcode_mapping[mediamosa_tool_params_db::CREATED] = mediamosa::utcdate2appdate($transcode_mapping[mediamosa_tool_params_db::CREATED]);
       $transcode_mapping[mediamosa_tool_params_db::CHANGED] = mediamosa::utcdate2appdate($transcode_mapping[mediamosa_tool_params_db::CHANGED]);

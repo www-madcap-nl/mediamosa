@@ -126,7 +126,7 @@ function mediamosa_connector_settings() {
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection settings to MediaMosa REST interface'),
-    '#description' => t("Enter MediaMosa Application login and REST interface URL."),
+    '#description' => t('Enter MediaMosa Application login and REST interface URL.'),
     '#collapsible' => TRUE,
     '#weight' => -5,
   );

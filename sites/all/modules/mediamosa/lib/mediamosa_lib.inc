@@ -30,7 +30,7 @@
   */
 
 /**
- * Core Mediamosa core library.
+ * Core MediaMosa core library.
  */
 class mediamosa_lib {
 

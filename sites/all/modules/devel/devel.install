@@ -1,8 +1,8 @@
 <?php
-// $Id: devel.install,v 1.42 2010/01/26 18:37:05 weitzman Exp $
+// $Id: devel.install,v 1.46 2010/10/27 07:54:03 salvis Exp $
 
 /**
- * Implementation of hook_enable()
+ * Implements hook_enable().
  */
 function devel_enable() {
   $t = get_t();
@@ -24,8 +24,8 @@ function devel_enable() {
   menu_save($menu);
 }
 
- /**
- * Implementation of hook_uninstall().
+/**
+ * Implements hook_uninstall().
  */
 function devel_uninstall() {
   variable_del('devel_form_weights');
@@ -36,6 +36,9 @@ function devel_uninstall() {
   variable_del('devel_api_url');
   variable_del('dev_mem');
   variable_del('devel_error_handler');
+  variable_del('devel_switch_user_list_size');
+  variable_del('devel_switch_user_include_anon');
+  variable_del('devel_switch_user_show_form');
 
   // Delete the development menu.
   $devel_menu = menu_load('devel');
@@ -67,4 +70,13 @@ function devel_update_7001() {
 function devel_update_7002() {
   variable_del('dev_query'); // Sad trombone. http://drupalcode.org/viewvc/drupal/drupal/includes/database.mysql.inc?revision=1.2&view=markup
   variable_del('devel_code_coverage');
+}
+
+/**
+ * As per issue #813132: change schablon.com to white for krumo.
+ */
+function devel_update_7003() {
+  if (variable_get('devel_krumo_skin', 'white') == 'schablon.com') {
+    variable_set('devel_krumo_skin', 'white');
+  }
 }
