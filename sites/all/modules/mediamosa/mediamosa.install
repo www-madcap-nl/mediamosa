@@ -1778,4 +1778,21 @@ function mediamosa_update_7083() {
   }
 }
 
+/**
+ * Add the job_type field to mediamosa_statistics_job table.
+ */
+function mediamosa_update_7084() {
+  db_add_field(
+    mediamosa_statistics_job_db::TABLE_NAME,
+    mediamosa_statistics_job_db::JOB_TYPE,
+    array(
+      'description' => 'The type of the job.',
+      'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+    )
+  );
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

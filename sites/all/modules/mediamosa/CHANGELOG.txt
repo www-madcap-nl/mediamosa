@@ -35,6 +35,7 @@ MediaMosa 2.3.1 (build 1165)
 - Analyse mediafiles with hint parameter developement (See ticket VPCore 207, MM 425).
 - Retranscode mediafiles development (See ticket VPCore 129).
 - UTC / CET date summer-winter time fix (See ticket VPCore 211).
+- Job type was added in mediamosa_statistics_job table.
 
 Other changes (not ticket related).
 - Fixed bug in /collection/$coll_id where owner was not changed of collection.

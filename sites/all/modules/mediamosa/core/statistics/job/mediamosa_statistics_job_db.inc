@@ -37,6 +37,13 @@ class mediamosa_statistics_job_db {
   const ID = 'id';
   const APP_ID = 'app_id';
   const MEDIAFILE_ID = 'mediafile_id';
+  const JOB_TYPE = 'job_type';
+  const JOB_TYPE_TRANSCODE = 'TRANSCODE';
+  const JOB_TYPE_RETRANSCODE = 'RETRANSCODE';
+  const JOB_TYPE_STILL = 'STILL';
+  const JOB_TYPE_UPLOAD = 'UPLOAD';
+  const JOB_TYPE_ANALYSE = 'ANALYSE';
+  const JOB_TYPE_DELETE_MEDIAFILE = 'DELETE_MEDIAFILE';
   const STARTED = 'started';
   const FINISHED = 'finished';
   const TRANSCODE_PROFILE_ID = 'transcode_profile_id';
