@@ -1041,6 +1041,9 @@ function mediamosa_update_7049() {
 
   // Now convert.
   db_query("UPDATE {mediamosa_user_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+
+  // Set the time of update.
+  variable_set('mediamosa_utc_update_time', date('Y-m-d H:i:s'));
 }
 
 /**
@@ -1646,7 +1649,7 @@ function mediamosa_update_7082() {
   ');
 
   foreach ($result as $record) {
-    if ($record->created > '2010-05-01 00:00:01') {
+    if ($record->created > variable_get('mediamosa_utc_update_time', '2010-05-01 00:00:01')) {
       // Skip the date, that is already has the good value.
       continue;
     }
@@ -1677,7 +1680,7 @@ function mediamosa_update_7083() {
   ');
 
   foreach ($result as $record) {
-    if ($record->created > '2010-05-01 00:00:01') {
+    if ($record->created > variable_get('mediamosa_utc_update_time', '2010-05-01 00:00:01')) {
       // Skip the date, that is already has the good value.
       continue;
     }
