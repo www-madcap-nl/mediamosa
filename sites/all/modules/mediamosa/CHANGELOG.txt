@@ -109,6 +109,8 @@ Other changes (not ticket related).
 - Added Solr status page test.
 - Added Solr configuration.
 - Fixed some minor warnings we got from coder module.
+- Removed mediamosa_asset_metadata::search_get_part_where() was no longer used.
+
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

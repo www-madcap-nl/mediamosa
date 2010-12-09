@@ -32,31 +32,49 @@
 // Include my non-hooks.
 module_load_include('inc', 'mediamosa_solr', 'mediamosa_solr');
 
+define('MEDIAMOSA_SOLR_PERM_CONFIGURATION', 'administer mediamosa solr configuration');
+define('MEDIAMOSA_SOLR_PERM_INDEXER', 'administer mediamosa solr indexer');
+
+/**
+ * Implementation of hook_mediamosa_search_engine().
+ */
+function mediamosa_solr_mediamosa_search_engine() {
+
+  // Return the information about the default search engine.
+  return array('mediamosa_solr' => array(
+    'title' => t('MediaMosa Solr search'),
+    'description' => t('The Lucene Solr search allows fast metadata search. This module allows MediaMosa to use Solr.'),
+  ));
+}
+
 /**
  * Implement hook_menu().
  */
 function mediamosa_solr_menu() {
   $items = array();
 
-  $items['admin/config/development/mediamosa/solr'] = array(
+  $items['admin/mediamosa/config/solr'] = array(
     'title' => 'MediaMosa Solr',
-    'description' => 'Lucene Solr allows you to use really fast META data searching for MediaMosa, a lot faster than the default search used on your database.',
+    'description' => 'Lucene Solr allows you to use really fast metadata searching for MediaMosa, a lot faster than the default search used on your database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_solr_settings'),
-    'access arguments' => array('administer mediamosa solr settings'),
+    'access arguments' => array(MEDIAMOSA_SOLR_PERM_CONFIGURATION),
   );
 
-  $items['admin/config/development/mediamosa/solr/list'] = array(
-    'title' => 'MediaMosa Connector',
-    'access arguments' => array('administer mediamosa solr settings'),
+  $items['admin/mediamosa/config/solr/config'] = array(
+    'title' => 'Configuration',
+    'access arguments' => array(MEDIAMOSA_SOLR_PERM_CONFIGURATION),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  // Include in the mediamosa menus too.
-  if (module_exists('mediamosa_maintenance')) {
-    $items['admin/mediamosa/config/solr'] = $items['admin/config/development/mediamosa/solr'];
-    $items['admin/mediamosa/config/solr/list'] = $items['admin/config/development/mediamosa/solr/list'];
-  }
+  $items['admin/mediamosa/config/solr/indexer'] = array(
+    'title' => 'Indexer',
+    'description' => 'Rebuild or reindex the Solr database.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_solr_indexer_form'),
+    'access arguments' => array(MEDIAMOSA_SOLR_PERM_INDEXER),
+    'type' => MENU_LOCAL_TASK,
+  );
 
   return $items;
 }
@@ -67,9 +85,13 @@ function mediamosa_solr_menu() {
 function mediamosa_solr_permission() {
 
   return array(
-    'administer mediamosa solr settings' => array(
-      'title' => t('MediaMosa connector configuration administer permissions'),
-      'description' => t('Manage the configuration of MediaMosa Solr module to be edited.')
+    MEDIAMOSA_SOLR_PERM_CONFIGURATION => array(
+      'title' => t('MediaMosa solr configuration administer permissions'),
+      'description' => t('Manage the configuration of MediaMosa Solr module.')
+    ),
+    MEDIAMOSA_SOLR_PERM_INDEXER => array(
+      'title' => t('MediaMosa solr indexes administer permissions'),
+      'description' => t('Premits to refresh or to rebuild the Solr index.')
     ),
   );
 }
@@ -78,8 +100,6 @@ function mediamosa_solr_permission() {
  * Implement hook_settings().
  */
 function mediamosa_solr_settings() {
-
-  $form = array();
 
   $form['connection'] = array(
     '#type' => 'fieldset',
@@ -93,10 +113,10 @@ function mediamosa_solr_settings() {
     '#title' => t('URL'),
     '#description' => t('Enter the URL of the Solr server. Example; http://solr.mediamosa.local:8983/mediamosa/ (jetty servlet) or http://solr.mediamosa.local:8080/mediamosa/ (tomcat servlet).  Port and path in the URL are required, if you are using the HTTP port (80) then you must supply it in the url (http://solr.mediamosa.local:80/mediamosa/).'),
     '#required' => TRUE,
-    '#default_value' => MediaMosa_Apache_Solr_Service::mediamosaGetUrl(),
+    '#default_value' => MediaMosa_Solr_Apache_Solr_Service::mediamosaGetUrl(),
   );
 
-  if (MediaMosa_Apache_Solr_Service::mediamosaGetUrl() != '') {
+  if (MediaMosa_Solr_Apache_Solr_Service::mediamosaGetUrl() != '') {
     $form['connection']['check_connection'] = array(
       '#type' => 'submit',
       '#value' => t('Check connection Solr'),
@@ -112,9 +132,7 @@ function mediamosa_solr_settings() {
   }
 
   $form['#submit'] = array('mediamosa_solr_settings_submit');
-  $form = system_settings_form($form);
-
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
@@ -127,43 +145,25 @@ function mediamosa_solr_settings_submit(&$form_state, $form) {
 }
 
 /**
- * Generate information for the status page.
+ * Implements hook_cron().
+ *
+ * Calculate used diskspace.
  */
-function _mediamosa_solr_status_generate() {
-  // Make sure this module is enabled.
-  if (!module_exists('mediamosa_maintenance_status')) {
-    return array();
+function mediamosa_solr_cron() {
+
+  // No need to run statistics parsing in simpletest. Will call it directly
+  // inside the test when needed.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
   }
 
-  $ping_success = MediaMosa_Apache_Solr_Service::mediamosaPing();
-
-  if ($ping_success) {
-    $results['solr_ping'] = array(
-      'title' => t('Lucene Solr servlet'),
-      'value' => t('Found'),
-      'severity' => _mediamosa_maintenance_status_okerror($ping_success),
-    );
+  try {
+    // Do the statistics cron REST call for streaming statistics.
+    mediamosa_http::do_internal_call_cron('internal/cron/solr', TRUE);
   }
-  else {
-    $results['solr_ping'] = array(
-      'title' => t('Lucene Solr servlet'),
-      'value' => t('Failed'),
-      'severity' => _mediamosa_maintenance_status_okerror($ping_success),
-      'description' => t('Unable to reach the Solr servlet, either !disable or check !settings.',
-        array(
-          '!disable' => l('disable the Solr module', 'admin/modules'),
-          '!settings' => l('the MediaMosa solr settings', 'admin/mediamosa/config/solr')
-        )
-      ),
-    );
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: @function: @msg', array('@function' => __FUNCTION__, '@msg' => $e->getMessage()));
   }
-
-  return array(
-    'component' => array(
-      'title' => t('Component status'),
-      'results' => $results,
-    ),
-  );
 }
 
 /**
@@ -188,4 +188,72 @@ function mediamosa_solr_mediamosa_status_collect($reset = FALSE) {
   }
 
   return $mediamosa_status_server['statuses'];
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param array $reindex_info
+ *
+ * Keys in array;
+ *  - asset_id:
+ *    The asset to reindex.
+ */
+function mediamosa_solr_mediamosa_asset_reindex($reindex_info) {
+  mediamosa_solr::prepare_reindex($reindex_info['asset_id']);
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_solr_mediamosa_register_rest_call() {
+
+  $rest_calls = array();
+
+  // Trigger for cron run.
+  $rest_calls['solr/cron'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_solr_reindex_run',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_solr',
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Show form for indexer.
+ */
+function _mediamosa_solr_indexer_form() {
+
+  $form['rebuild'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Rebuild '),
+    '#description' => t('Rebuilding the index of Solr will either replace or update the index.'),
+    '#collapsible' => TRUE,
+    '#weight' => -5,
+  );
+
+  $form['rebuild']['rebuild_index'] = array(
+    '#type' => 'submit',
+    '#value' => t('Rebuild index Solr'),
+    //'#submit' => array('_mediamosa_solr_rebuild_submit'),
+    '#weight' => 1,
+  );
+  $form['rebuild']['replace_index'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Completely rebuild the index by throwing away the current.'),
+    '#default_value' => FALSE,
+    '#weight' => 2,
+  );
+
+  return $form;
+}
+
+/**
+ * Implement hook_form_submit().
+ */
+function _mediamosa_solr_indexer_form_submit(&$form_state, $form) {
+  exit('foo');
 }

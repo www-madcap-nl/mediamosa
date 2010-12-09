@@ -29,146 +29,75 @@
  * Our extended classes for Solr connections.
  */
 
-// We need SolrPhpClient class.
-if (!class_exists('Apache_Solr_Service')) {
-  // If we haven't install properly, the requirements hook will tell us.
-  // So ignore if we can't find it here.
-  // Installing the mediamosa_solr module will fail if during install the class
-  // isn't found either. So don't worry about the problem we are not loading
-  // MediamosaApacheSolrService for registry indexing (drupal autoloader).
-  if (!file_exists(dirname(__FILE__) . '/3rdparty/SolrPhpClient/Apache/Solr/Service.php')) {
-    return;
-  }
-
-  include_once dirname(__FILE__) . '/3rdparty/SolrPhpClient/Apache/Solr/Service.php';
-}
-
-assert(class_exists('Apache_Solr_Service'));
-
-/**
- * We will extend on the Apache Solr Service just for future enhancements.
- *
- * All specific MediaMosa functions must start with mediamosa (mediamosaSolr..)
- * to prevent double usage on lower class names in future.
- */
-class MediaMosa_Apache_Solr_Service extends Apache_Solr_Service {
+class mediamosa_solr {
 
   // ------------------------------------------------------------------- Consts.
-  const MEDIAMOSA_SOLR_DEFAULT_HOST = 'solr.mediamosa.local';
-  const MEDIAMOSA_SOLR_DEFAULT_PORT = 8983;
-  const MEDIAMOSA_SOLR_DEFAULT_PATH = '/solr/';
-
-  // -------------------------------------------------------------- Constructor.
-  public function __construct($url) {
-
-    if (!isset($url)) {
-      $url = self::mediamosaGetUrl();
-    }
-
-    // Split up into host, port and path.
-    $host = self::mediamosaGetHost($url);
-    $port = self::mediamosaGetPort($url);
-    $path = self::mediamosaGetPath($url);
-
-    parent::__construct($host, $port, $path);
-  }
 
   // ---------------------------------------------------------------- Functions.
   /**
-   * Return the url for the solr servlet.
+   * Reindex with given asset_ids. Stores it in table, will be reindexed asap.
+   *
+   * @param string $asset_id
    */
-  static public function mediamosaGetUrl() {
-    $url = variable_get('mediamosa_solr_url', 'http://' . self::MEDIAMOSA_SOLR_DEFAULT_HOST . '/');
+  static public function prepare_reindex(array $asset_ids) {
 
-    // Parse the url into parts.
-    $parse_url = parse_url($url);
+    foreach ($asset_ids as $asset_id) {
+      try {
+        // If it fails because of existing primary key, then ignore.
+        mediamosa_db::db_insert(mediamosa_solr_index_db::TABLE_NAME)
+          ->fields(array(
+              mediamosa_solr_index_db::ID => $asset_id,
+              mediamosa_solr_index_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
+          ))
+          ->execute();
+      }
+      catch (PDOException $e) {
+        // Ignore.
+      }
+    }
+  }
 
-    // Path is mandatory.
-    if (isset($parse_url['path']) && $parse_url['path'] == '/') {
-      unset($parse_url['path']);
+  /**
+   * Triggered by REST call.
+   *
+   * Will reindex the solr database as much as its allowed during this call.
+   *
+   */
+  static public function cron_reindex_run() {
+
+    // Number of seconds the cron is running max.
+    $set_time_limit = variable('mediamosa_solr_reindex_time_limit', 50);
+
+    // Get possible current running reindex. Make sure its not running too.
+    $run_last = variable_get('mediamosa_solr_reindex_cron_last', NULL);
+
+    // Now time.
+    $now = round(microtime(TRUE));
+
+    // Make sure we don't run the this twice.
+    // We will give it enough time to timeout.
+    if ($run_last && round($now - $run_last) < 180) {
+      mediamosa_watchdog::log('Unexpected; Solr reindex was still / already running when cron was triggered.');
+      return; // Still running.
     }
 
-    // Add possible missing stuff.
-    $parse_url += array(
-      'host' => self::MEDIAMOSA_SOLR_DEFAULT_HOST,
-      'port' => self::MEDIAMOSA_SOLR_DEFAULT_PORT,
-      'path' => self::MEDIAMOSA_SOLR_DEFAULT_PATH,
-    );
+    // If we get here then we can go.
+    variable_set('mediamosa_solr_reindex_cron_last', $now);
 
-    // Solr only uses host, port and path.
-    return 'http://' . $parse_url['host'] . ':' . $parse_url['port'] . '/' . trim($parse_url['path'], '/') . '/';
-  }
+    // 10 seconds more than we think we need.
+    set_time_limit($set_time_limit + 10);
 
-  /**
-   * Sets the URL in Drupal variable.
-   */
-  static public function mediamosaSetUrl($url) {
-    // Parse the url into parts.
-    $parse_url = parse_url($url);
+    // At where
+    $end_at = $now + $set_time_limit;
 
-    // Path is mandatory.
-    if (isset($parse_url['path']) && $parse_url['path'] == '/') {
-      unset($parse_url['path']);
+    // Get the now time, as long as we under end_at then continue.
+    while (round(microtime(TRUE)) < $end_at) {
+      // Do our stuff until we are done or when we ran out of time.
+
+      break; // when done
     }
 
-    // Add possible missing stuff.
-    $parse_url += array(
-      'host' => self::MEDIAMOSA_SOLR_DEFAULT_HOST,
-      'port' => self::MEDIAMOSA_SOLR_DEFAULT_PORT,
-      'path' => self::MEDIAMOSA_SOLR_DEFAULT_PATH,
-    );
-
-    // Solr only uses host, port and path.
-    variable_set('mediamosa_solr_url', 'http://' . $parse_url['host'] . ':' . $parse_url['port'] . '/' . trim($parse_url['path'], '/') . '/');
-  }
-
-  /**
-   * Return the host for the solr servlet.
-   */
-  static public function mediamosaGetHost($url = NULL) {
-    $url =  isset($url) ? $url : self::mediamosaGetUrl();
-
-    // Parse.
-    return parse_url($url, PHP_URL_HOST);
-  }
-
-  /**
-   * Return the port for the solr servlet.
-   */
-  static public function mediamosaGetPort($url = NULL) {
-    $url = isset($url) ? $url : self::mediamosaGetUrl();
-
-    // Get me the port.
-    $port = (int) parse_url($url, PHP_URL_PORT);
-
-    // Port is optional in the URL.
-    return $port > 0 ? $port : self::MEDIAMOSA_SOLR_DEFAULT_PORT;
-  }
-
-  /**
-   * Return the path for the solr servlet.
-   */
-  static public function mediamosaGetPath($url = NULL) {
-    $url = isset($url) ? $url : self::mediamosaGetUrl();
-
-    // Get me the port.
-    $path = trim(parse_url($url, PHP_URL_PATH), '/');
-
-    // Path must start and end with '/'.
-    return !empty($path) ? '/' . $path . '/' : self::MEDIAMOSA_SOLR_DEFAULT_PATH;
-  }
-
-  /**
-   * Ping Solr with either given params or
-   * @param string $url
-   */
-  static public function mediamosaPing($url = NULL) {
-    $url = isset($url) ? $url : self::mediamosaGetUrl();
-
-    // Create the solr connection.
-    $mediamosa_apache_solr_service = new MediaMosa_Apache_Solr_Service($url);
-
-    // Ping it.
-    return $mediamosa_apache_solr_service->ping() !== FALSE;
+    // Done.
+    variable_set('mediamosa_solr_reindex_cron_last', NULL);
   }
 }

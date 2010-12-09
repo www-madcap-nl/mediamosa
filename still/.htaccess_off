@@ -1,3 +1,6 @@
+# Turned off, Apache creates a 404 when link does not exists, resulting 404 returned, even when the REST call returned the image.
+
+
 # Next part is commented out. You can enable this or copy it to your apache
 # config. However, you have make sure the path used here is as an example and
 # might not be the same for your intallation. The path points to the still_links

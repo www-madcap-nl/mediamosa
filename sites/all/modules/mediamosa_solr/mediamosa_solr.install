@@ -34,6 +34,10 @@
  */
 define('MEDIAMOSA_REQUIREMENT_REVISION_SOLRPHPCLIENT', 22);
 
+
+module_load_include('inc', 'mediamossa');
+require_once 'mediamosa_solr_index_db.inc';
+
 /**
  * Implement hook_requirements().
  */
@@ -145,9 +149,48 @@ function mediamosa_solr_requirements($phase) {
 }
 
 /**
+ * Implements hook_install().
+ */
+function mediamosa_solr_install() {
+  // Create our table(s).
+  mediamosa::drupal_install_schema('mediamosa_solr');
+}
+
+/**
  * Implements hook_unstall().
  */
 function mediamosa_solr_uninstall() {
+  // Drop our table(s).
+  mediamosa::drupal_uninstall_schema('mediamosa_solr');;
+
   // Remove our variable.
   variable_del('mediamosa_solr_url');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_solr_schema() {
+
+  $schema[mediamosa_solr_index_db::TABLE_NAME] = array(
+  'description' => 'The (re)index table.',
+    'fields' => array(
+      mediamosa_solr_index_db::ID => array(
+        'type' => 'varbinary',
+        'mysql_type' => 'varbinary(32)',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => 'The ID to index, for now asset_id by default.',
+      ),
+      mediamosa_solr_index_db::CREATED => array(
+        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE,
+        'description' => 'The date and time when the row was created.',
+      ),
+    ),
+    'primary key' => array(mediamosa_solr_index_db::ID),
+  );
+
+  return $schema;
 }

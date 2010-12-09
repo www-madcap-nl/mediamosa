@@ -59,7 +59,7 @@ function mediamosa_statistics_cron() {
     mediamosa_http::do_internal_call_cron('internal/cron/statistics', TRUE);
   }
   catch (Exception $e) {
-    mediamosa_watchdog::log('Catch exception during cron: mediamosa_statistics_cron(): @msg', array('@msg' => $e->getMessage()));
+    mediamosa_watchdog::log('Catch exception during cron: @function: @msg', array('@function' => __FUNCTION__, '@msg' => $e->getMessage()));
   }
 }
 

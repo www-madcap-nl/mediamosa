@@ -219,22 +219,22 @@ function mediamosa_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the current registered MediaMosa REST calls.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'rest?limit=10',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
-<item id="1">
-  <access>5</access>
-  <behave_as_external></behave_as_external>
-  <class_name>mediamosa_rest_call_asset_search</class_name>
-  <default_params_values>
-    <app_id>0</app_id>
-  </default_params_values>
-  <method>GET</method>
-  <module_name>mediamosa_asset</module_name>
-  <response_type>text/xml</response_type>
-  <status>active</status>
-  <uri>asset</uri>
-  <uri_id>1</uri_id>
-  <version>1.1.0</version>
-</item>
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <access>5</access>
+    <behave_as_external></behave_as_external>
+    <class_name>mediamosa_rest_call_asset_search</class_name>
+    <default_params_values>
+      <app_id>0</app_id>
+    </default_params_values>
+    <method>GET</method>
+    <module_name>mediamosa_asset</module_name>
+    <response_type>text/xml</response_type>
+    <status>active</status>
+    <uri>asset</uri>
+    <uri_id>1</uri_id>
+    <version>1.1.0</version>
+  </item>
 </items>',
 );
 
@@ -475,4 +475,16 @@ function mediamosa_cron() {
   catch (Exception $e) {
     mediamosa_watchdog::log('Catch exception during cron: mediamosa_cron(): @msg', array('@msg' => $e->getMessage()));
   }
+}
+
+/**
+ * Implementation of hook_mediamosa_search_engine().
+ */
+function mediamosa_mediamosa_search_engine() {
+
+  // Return the information about the default search engine.
+  return array('mediamosa' => array(
+    'title' => t('MediaMosa default search'),
+    'description' => t('The default search engine for searching in MediaMosa. This search engine is always available.'),
+  ));
 }
