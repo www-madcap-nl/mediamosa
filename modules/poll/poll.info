@@ -11,8 +11,8 @@ files[] = poll.test
 files[] = poll.tokens.inc
 stylesheets[all][] = poll.css
 
-; Information added by drupal.org packaging script on 2010-12-01
-version = "7.0-rc1"
+; Information added by drupal.org packaging script on 2010-12-11
+version = "7.0-rc2"
 project = "drupal"
-datestamp = "1291190139"
+datestamp = "1292101844"
 

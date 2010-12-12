@@ -1,4 +1,4 @@
-/* $Id: style.css,v 1.40 2010/11/29 05:01:37 webchick Exp $ */
+/* $Id: style.css,v 1.47 2010/12/09 07:48:35 webchick Exp $ */
 
 /* ---------- Overall Specifications ---------- */
 
@@ -49,6 +49,58 @@ tr.odd {
 img {
   outline: 0;
 }
+code,
+pre,
+kbd,
+samp,
+var {
+  padding: 0 0.4em;
+  font-size: 0.77em;
+  font-family: Menlo, Consolas, "Andale Mono", "Lucida Console", "Nimbus Mono L", "DejaVu Sans Mono", monospace, "Courier New";
+}
+code {
+  background-color: #f2f2f2;
+  background-color: rgba(40, 40, 0, 0.06);
+}
+pre code,
+pre kbd,
+pre samp,
+pre var,
+kbd kbd,
+kbd samp,
+code var {
+  font-size: 100%;
+  background-color: transparent;
+}
+pre code,
+pre samp,
+pre var {
+  padding: 0;
+}
+.description code {
+  font-size: 1em;
+}
+kbd {
+  background-color: #f2f2f2;
+  border: 1px outset #575757;
+  margin: 0 3px;
+  color: #666;
+  display: inline-block;
+  padding: 0 6px;
+  -khtml-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+pre {
+  background-color: #f2f2f2;
+  background-color: rgba(40, 40, 0, 0.06);
+  margin: 10px 0px;
+  overflow: hidden;
+  padding: 15px;
+  white-space: pre-wrap;
+}
+
 
 /* ------------------ Fonts ------------------ */
 
@@ -501,6 +553,21 @@ h1#site-name {
   padding: 0;
 }
 
+/* --------------- Highlighted ---------------- */
+
+#highlighted {
+  border-bottom: 1px solid #d3d7d9;
+  font-size: 120%;
+}
+
+/* ------------------- Help ------------------- */
+
+.region-help {
+  border: 1px solid #d3d7d9;
+  padding: 0 1.5em;
+  margin-bottom: 30px;
+}
+
 /* ----------------- Content ------------------ */
 
 .content {
@@ -521,6 +588,10 @@ h1#page-title {
 .node-teaser .content {
   font-size: 1em;
 }
+.node-teaser h2 {
+  margin-top: 0;
+  padding-top: 0.5em;
+}
 .node-teaser h2 a {
   color: #181818;
 }
@@ -529,11 +600,16 @@ h1#page-title {
   margin-bottom: 30px;
   padding-bottom: 15px;
 }
-.node-teaser.node-sticky {
+.node-sticky {
   background: #f9f9f9;
   background: rgba(0, 0, 0, 0.024);
   border: 1px solid #d3d7d9;
   padding: 0 15px 15px;
+}
+.node-full {
+  background: none;
+  border: none;
+  padding: 0;
 }
 .node-teaser .content {
   clear: none;
@@ -549,25 +625,31 @@ h1#page-title {
   height: 20px;
   margin: 1px 5px 0 0; /* LTR */
 }
-.field-type-taxonomy-term-reference .field-label,
-.field-type-taxonomy-term-reference .field-items,
-.field-type-taxonomy-term-reference .field-item {
-  display: inline;
-  float: left; /* LTR */
-  padding-right: 10px; /* LTR */
+.field-type-taxonomy-term-reference {
+  margin: 0 0 1.2em;
+}
+.field-type-taxonomy-term-reference .field-label {
   font-weight: normal;
+  margin: 0;
+  padding-right: 5px; /* LTR */
 }
-.field-type-taxonomy-term-reference div.field-label {
-  font-size: 0.857em;
-  color: #68696b;
+.field-type-taxonomy-term-reference .field-label,
+.field-type-taxonomy-term-reference ul.links {
+  font-size: 0.8em;
 }
-.field-type-taxonomy-term-reference .field-items,
-.field-type-taxonomy-term-reference .field-item {
-  font-size: 0.929em;
+.node-teaser .field-type-taxonomy-term-reference .field-label,
+.node-teaser .field-type-taxonomy-term-reference ul.links {
+  font-size: 0.821em;
 }
-.field-type-taxonomy-term-reference a:hover,
-.field-type-taxonomy-term-reference a:focus {
-  text-decoration: underline;
+.field-type-taxonomy-term-reference ul.links {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.field-type-taxonomy-term-reference ul.links li {
+  float: left; /* LTR */
+  padding: 0 1em 0 0; /* LTR */
+  white-space: nowrap;
 }
 .link-wrapper {
   text-align: right;
@@ -579,6 +661,14 @@ h1#page-title {
 ul.links {
   color: #68696b;
   font-size: 0.821em;
+}
+.node-unpublished {
+  margin: -20px -15px 0;
+  padding: 20px 15px 0;
+}
+.node-unpublished .comment-text .comment-arrow {
+  border-left: 1px solid #fff4f4;
+  border-right: 1px solid #fff4f4;
 }
 
 /* ----------------- Comments ----------------- */
@@ -622,12 +712,14 @@ ul.links {
   line-height: 1.6;
 }
 .comment .comment-arrow {
-  background: url(../images/comment-arrow.png); /* LTR */
+  background: url(../images/comment-arrow.gif) no-repeat 0 center transparent; /* LTR */
+  border-left: 1px solid;
+  border-right: 1px solid;
   height: 40px;
-  width: 20px;
-  margin-left: -45px; /* LTR */
+  margin-left: -47px; /* LTR */
   margin-top: 10px;
   position: absolute;
+  width: 20px;
 }
 .comment .comment-text {
   padding: 10px 25px;
@@ -644,6 +736,14 @@ ul.links {
 }
 .comment ul.links li {
   padding: 0 0.5em 0 0; /* LTR */
+}
+.comment-unpublished {
+  margin-right: 5px; /* LTR */
+  padding: 5px 2px 5px 5px; /* LTR */
+}
+.comment-unpublished .comment-text .comment-arrow {
+  border-left: 1px solid #fff4f4;
+  border-right: 1px solid #fff4f4;
 }
 
 /* ------------------ Sidebar ----------------- */
@@ -939,8 +1039,11 @@ ul.action-links li a {
   padding: 20px 0 5px;
   margin: 0 auto;
 }
+.featured #messages {
+  background: #f0f0f0;
+}
 div.messages {
-  margin: 8px 0;
+  margin: 8px 15px;
 }
 
 /* -------------- Breadcrumbs   -------------- */
@@ -1182,6 +1285,27 @@ fieldset .description {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 }
+
+/* Disabled form elements */
+input.form-button-disabled,
+input.form-button-disabled:hover,
+input.form-button-disabled:focus,
+input.form-button-disabled:active,
+.form-disabled input,
+.form-disabled select,
+.form-disabled textarea {
+  background: #ededed;
+  border-color: #bbb;
+  color: #717171;
+}
+.form-disabled .grippie {
+  background-color: #ededed;
+  border-color: #bbb;
+}
+.form-disabled label {
+  color: #717171;
+}
+
 /* Animated throbber */
 html.js input.form-autocomplete {
   background-position: 100% 4px; /* LTR */

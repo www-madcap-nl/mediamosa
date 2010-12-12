@@ -1,5 +1,5 @@
 <?php
-// $Id: common.inc,v 1.1269 2010/12/01 00:23:36 webchick Exp $
+// $Id: common.inc,v 1.1272 2010/12/11 02:22:37 dries Exp $
 
 /**
  * @file
@@ -3787,7 +3787,7 @@ function drupal_region_class($region) {
  *     array('type' => 'inline', 'scope' => 'footer', 'weight' => 5)
  *   );
  *   drupal_add_js('http://example.com/example.js', 'external');
- *   drupal_add_js(array('myModule', array('key' => 'value')), 'setting');
+ *   drupal_add_js(array('myModule' => array('key' => 'value')), 'setting');
  * @endcode
  *
  * Calling drupal_static_reset('drupal_add_js') will clear all JavaScript added
@@ -6389,10 +6389,6 @@ function drupal_common_theme() {
     'pager_link' => array(
       'variables' => array('text' => NULL, 'page_new' => NULL, 'element' => NULL, 'parameters' => array(), 'attributes' => array()),
     ),
-    // from locale.inc
-    'locale_admin_manage_screen' => array(
-      'render element' => 'form',
-    ),
     // from menu.inc
     'menu_link' => array(
       'render element' => 'element',
@@ -7464,13 +7460,16 @@ function entity_uri($entity_type, $entity) {
 /**
  * Returns the label of an entity.
  *
+ * See the 'label callback' component of the hook_entity_info() return value
+ * for more information.
+ *
  * @param $entity_type
- *   The entity type; e.g. 'node' or 'user'.
+ *   The entity type; e.g., 'node' or 'user'.
  * @param $entity
- *   The entity for which to generate a path.
+ *   The entity for which to generate the label.
  *
  * @return
- *   A string with the entity label (e.g. node title), or FALSE if not found.
+ *   The entity label, or FALSE if not found.
  */
 function entity_label($entity_type, $entity) {
   $label = FALSE;

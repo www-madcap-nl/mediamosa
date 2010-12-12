@@ -1,5 +1,5 @@
 <?php
-// $Id: field.api.php,v 1.98 2010/11/21 19:09:18 dries Exp $
+// $Id: field.api.php,v 1.100 2010/12/07 05:09:58 webchick Exp $
 
 /**
  * @ingroup field_fieldable_type
@@ -392,19 +392,18 @@ function hook_field_prepare_view($entity_type, $entities, $field, $instances, $l
  * @param $items
  *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  * @param $errors
- *   The array of errors, keyed by field name and by value delta, that have
- *   already been reported for the entity. The function should add its errors
- *   to this array. Each error is an associative array, with the following
+ *   The array of errors (keyed by field name, language code, and delta) that
+ *   have already been reported for the entity. The function should add its
+ *   errors to this array. Each error is an associative array with the following
  *   keys and values:
- *   - error: An error code (should be a string, prefixed with the module
- *     name).
+ *   - error: An error code (should be a string prefixed with the module name).
  *   - message: The human readable message to be displayed.
  */
 function hook_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   foreach ($items as $delta => $item) {
     if (!empty($item['value'])) {
       if (!empty($field['settings']['max_length']) && drupal_strlen($item['value']) > $field['settings']['max_length']) {
-        $errors[$field['field_name']][$delta][] = array(
+        $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'text_max_length',
           'message' => t('%name: the value may not be longer than %max characters.', array('%name' => $instance['label'], '%max' => $field['settings']['max_length'])),
         );
@@ -1278,7 +1277,7 @@ function hook_field_attach_purge($entity_type, $entity, $field, $instance) {
 }
 
 /**
- * Perform alterations on field_attach_view().
+ * Perform alterations on field_attach_view() or field_view_field().
  *
  * This hook is invoked after the field module has performed the operation.
  *
@@ -1288,7 +1287,13 @@ function hook_field_attach_purge($entity_type, $entity, $field, $instance) {
  *   An associative array containing:
  *   - entity_type: The type of $entity; for example, 'node' or 'user'.
  *   - entity: The entity with fields to render.
- *   - view_mode: View mode, for example, 'full' or 'teaser'.
+ *   - view_mode: View mode; for example, 'full' or 'teaser'.
+ *   - display: Either a view mode string or an array of display settings. If
+ *     this hook is being invoked from field_attach_view(), the 'display'
+ *     element is set to the view mode string. If this hook is being invoked
+ *     from field_view_field(), this element is set to the $display argument
+ *     and the view_mode element is set to '_custom'. See field_view_field()
+ *     for more information on what its $display argument contains.
  *   - language: The language code used for rendering.
  */
 function hook_field_attach_view_alter(&$output, $context) {

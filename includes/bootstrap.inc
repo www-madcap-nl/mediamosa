@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.449 2010/12/01 07:52:26 webchick Exp $
+// $Id: bootstrap.inc,v 1.452 2010/12/11 20:59:12 webchick Exp $
 
 /**
  * @file
@@ -9,7 +9,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '7.0-rc1');
+define('VERSION', '7.0-rc2');
 
 /**
  * Core API compatibility.
@@ -1429,7 +1429,7 @@ function t($string, array $args = array(), array $options = array()) {
     $string = $custom_strings[$options['langcode']][$options['context']][$string];
   }
   // Translate with locale module if enabled.
-  elseif (function_exists('locale') && $options['langcode'] != 'en') {
+  elseif ($options['langcode'] != 'en' && function_exists('locale')) {
     $string = locale($string, $options['context'], $options['langcode']);
   }
   if (empty($args)) {

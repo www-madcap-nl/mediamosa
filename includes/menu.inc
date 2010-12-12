@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.inc,v 1.425 2010/11/27 20:25:44 dries Exp $
+// $Id: menu.inc,v 1.428 2010/12/08 06:48:39 webchick Exp $
 
 /**
  * @file
@@ -49,8 +49,9 @@
  * Access to the callback functions is also protected by the menu system.
  * The "access callback" with an optional "access arguments" of each menu
  * item is called before the page callback proceeds. If this returns TRUE,
- * then access is granted; if FALSE, then access is denied. Menu items may
- * omit this attribute to use the value provided by an ancestor item.
+ * then access is granted; if FALSE, then access is denied. Default local task
+ * menu items (see next paragraph) may omit this attribute to use the value
+ * provided by the parent item.
  *
  * In the default Drupal interface, you will notice many links rendered as
  * tabs. These are known in the menu system as "local tasks", and they are
@@ -3518,9 +3519,20 @@ function _menu_router_build($callbacks) {
             $item['theme arguments'] = $parent['theme arguments'];
           }
         }
-        // Same for load arguments, if the parent path defines any.
-        if (!isset($item['load arguments']) && !empty($parent['load arguments'])) {
-          $item['_load_functions'] = $parent['_load_functions'];
+        // Same for load arguments: if a loader doesn't have any explict
+        // arguments, try to find arguments in the parent.
+        if (!isset($item['load arguments'])) {
+          foreach ($item['_load_functions'] as $k => $function) {
+            // This loader doesn't have any explict arguments...
+            if (!is_array($function)) {
+              // ... check the parent for a loader at the same position
+              // using the same function name and defining arguments...
+              if (isset($parent['_load_functions'][$k]) && is_array($parent['_load_functions'][$k]) && key($parent['_load_functions'][$k]) === $function) {
+                // ... and inherit the arguments on the child.
+                $item['_load_functions'][$k] = $parent['_load_functions'][$k];
+              }
+            }
+          }
         }
       }
     }
