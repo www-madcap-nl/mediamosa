@@ -23,7 +23,7 @@ Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
 - Searching on mime_type no longer works because of re-write mediafile metadata. 
 
-MediaMosa 2.3.1 (build 1169)
+MediaMosa 2.3.1 (build 1183)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -38,7 +38,6 @@ MediaMosa 2.3.1 (build 1169)
 - Analyse mediafiles with hint parameter developement (See ticket VPCore 207, MM 425).
 - Retranscode mediafiles development (See ticket VPCore 129).
 - UTC / CET date summer-winter time fix (See ticket VPCore 211).
-- Job type was added in mediamosa_statistics_job table.
 
 Other changes (not ticket related).
 - Fixed bug in /collection/$coll_id where owner was not changed of collection.
@@ -132,6 +131,7 @@ Other changes (not ticket related).
 - Added information about the drupal settings file on status page.
 - Settings sections on the configuration page are now in alphabetic order.
 - Settings sections on the configuration page are always collapsed by default.
+- Job type was added in mediamosa_statistics_job table.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
