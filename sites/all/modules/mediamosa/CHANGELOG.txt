@@ -20,7 +20,7 @@ Known issues;
   require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
   study if we need to change our require_once.
 
-MediaMosa 2.3.1 (build 1165)
+MediaMosa 2.3.1 (build 1169)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
