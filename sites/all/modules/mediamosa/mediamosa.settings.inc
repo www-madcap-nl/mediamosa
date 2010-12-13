@@ -31,7 +31,12 @@
 class mediamosa_settings {
 
   // ------------------------------------------------------------------ Consts.
-  const MINIMUM_PHP_VERSION = '5.1.0';
+  const SEARCH_INDEX_TYPE_ASSET_NORMALIZE = 'asset_normalize';
+  const SEARCH_INDEX_TYPE_METADATA = 'metadata';
+  const SEARCH_INDEX_TYPE_ASSET_UPDATE = 'asset_update';
+  const SEARCH_INDEX_TYPE_FAV_USER = 'fav_user';
+
+  const MINIMUM_PHP_VERSION = '5.2.4';
 
   // Length of the unique ID generator, is always this length.
   const UUID_LENGTH = 24;

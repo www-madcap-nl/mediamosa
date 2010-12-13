@@ -94,7 +94,7 @@ class mediamosa_user_favorite {
     if ($fav_type == mediamosa_user_favorite_db::FAV_TYPE_ASSET) {
       // Trigger the reindex hook for external search engines.
       try {
-        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($fav_id)), mediamosa_solr::settingInstantlyUserFav());
+        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($fav_id)), mediamosa_settings::SEARCH_INDEX_TYPE_FAV_USER);
       }
       catch (Exception $e) {
         mediamosa_watchdog::log_asset($fav_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $fav_id, '@message' => $e->getMessage()));
@@ -153,7 +153,7 @@ class mediamosa_user_favorite {
     if ($fav_type == mediamosa_user_favorite_db::FAV_TYPE_ASSET) {
       // Trigger the reindex hook for external search engines.
       try {
-        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($fav_id)), mediamosa_solr::settingInstantlyUserFav());
+        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($fav_id)), mediamosa_settings::SEARCH_INDEX_TYPE_FAV_USER);
       }
       catch (Exception $e) {
         mediamosa_watchdog::log_asset($fav_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $fav_id, '@message' => $e->getMessage()));

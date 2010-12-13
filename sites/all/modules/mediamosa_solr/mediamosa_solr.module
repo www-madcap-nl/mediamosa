@@ -261,7 +261,29 @@ function mediamosa_solr_mediamosa_status_collect_realtime($reset = FALSE) {
  *  - asset_ids: (array)
  *    The assets to reindex.
  */
-function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $instant = TRUE) {
+function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_type) {
+  // Instant is default TRUE.
+  $instant = TRUE;
+
+  switch ($search_index_type) {
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE:
+      $instant = mediamosa_solr::settingInstantlyAssetNormalize();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_METADATA:
+      $instant = mediamosa_solr::settingInstantlyMetadata();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE:
+      $instant = mediamosa_solr::settingInstantlyAssetUpdate();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_FAV_USER:
+      $instant = mediamosa_solr::settingInstantlyUserFav();
+      break;
+  }
+
+
   if ($instant) {
     mediamosa_solr::insert_assets($reindex_info['asset_ids']);
   }
