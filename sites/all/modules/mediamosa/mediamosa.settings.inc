@@ -204,13 +204,17 @@ class mediamosa_settings {
   const MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL = 'UTC';
 
   // Status page check timeout.
-  const MAINTENANCE_STATUS_CRON_TIME = 600; // 10 minutes.
+  const MAINTENANCE_STATUS_CRON_TIME = 60; // 10 minutes.
 
   // Statistics log maximum process time.
   const STATISTICS_LOG_MAX_TIME = 3600; // 1 hour.
 
   // Chunk size.
   const DOWNLOAD_CHUNK_SIZE = 1048576;
+
+  // Client application settings.
+  const APP_ID_MIN = 1;
+  const APP_ID_MAX = 9999;
 
   // ------------------------------------------------------------------ Functions.
   /**

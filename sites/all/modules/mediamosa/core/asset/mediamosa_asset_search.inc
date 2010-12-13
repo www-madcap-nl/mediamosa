@@ -46,15 +46,13 @@ class mediamosa_asset_search {
    * Search for assets with given parameters.
    * 1.x _media_management_search_asset
    *
-   * @param mediamosa_response $mediamosa
-   *  MediaMosa response object.
    * @param array $a_app_ids
    *  Application IDs.
    * @param string $cql
    *  The CQL search string.
    * @param string $aut_user_id
    *  The authentication user.
-   * @param array $a_aut_group_id
+   * @param array $aut_group_ids
    *  The authentication group.
    * @param string $aut_domain
    *  The authentication domain.
@@ -78,12 +76,6 @@ class mediamosa_asset_search {
    *  Don't include empty assets.
    * @param boolean $show_deleted
    *  Include deleted.
-   * @param boolean $return_asset_ids
-   *  Return asset_ids only.
-   * @param boolean $show_stills
-   *  Include stills.
-   * @param boolean $show_collections
-   *  Include collections.
    * @param bool $calculate_total_count
    *  Calculate all found rows.
    * @param integer $limit
@@ -92,12 +84,11 @@ class mediamosa_asset_search {
    *  Offset within the result rows.
    */
   static public function asset_search(
-    mediamosa_response $mediamosa,
     array $a_app_ids,
     $cql = NULL,
 
     $aut_user_id = NULL,
-    array $a_aut_group_id = array(),
+    array $aut_group_ids = array(),
     $aut_domain = NULL,
     $aut_realm = NULL,
 
@@ -111,9 +102,6 @@ class mediamosa_asset_search {
     $is_app_admin = FALSE,
     $hide_empty_assets = FALSE,
     $show_deleted = FALSE,
-    $return_asset_ids = FALSE,
-    $show_stills = FALSE,
-    $show_collections = FALSE,
     $calculate_total_count = TRUE,
 
     $limit = 10,
@@ -361,6 +349,7 @@ class mediamosa_asset_search {
     }
 
     // If coll_id is given, then search within the given collection(s)
+    // coll_id-isprivate-is_unappropriate-owner_id
     if ($coll_id) {
       $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][self::ASSET_COLLECTION] = 'JOIN {mediamosa_asset_collection} AS asset_coll USING(asset_id)';
 
@@ -410,11 +399,11 @@ class mediamosa_asset_search {
     // Also we only do authication here when we need to filter out the results (granted == FALSE)
     // Except we need to do master/slave check, so we set switch only to include master/slave...
     // Add to the where the access check for our original app_id
-    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves_mediafiles, FALSE, $do_master_slave);
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $a_slaves_mediafiles, FALSE, $do_master_slave);
 
     // Asset.
     // Off, not stable.
-    //mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_ASSET, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves_assets, FALSE, $do_master_slave);
+    //mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_ASSET, NULL, $a_app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $a_slaves_assets, FALSE, $do_master_slave);
 
     // Limit, offset stuff
     $a_query[mediamosa_db_query::LIMIT] = $limit;
@@ -444,9 +433,9 @@ class mediamosa_asset_search {
         // Get the number of found rows.
         $i_found_rows = mediamosa_db::db_found_rows();
 
-        $a_asset_ids = array();
+        $asset_ids = array();
         foreach ($result as $a_row) {
-          $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
+          $asset_ids[] = $a_row[mediamosa_asset_db::ID];
         }
       }
       catch (Exception $e) {
@@ -539,13 +528,13 @@ class mediamosa_asset_search {
             $d_ordby = 'a.' . mediamosa_unicode::substr($d_ordby, 5);
           }
           $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {' . $table_name . '} AS a' . ($d_ordby ? ' ORDER BY ' . $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT ' . $d_offset . ',' . $d_limit : ' LIMIT ' . $d_limit) : ''));
-          $a_asset_ids = array();
+          $asset_ids = array();
           foreach ($result as $a_row) {
-            $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
+            $asset_ids[] = $a_row[mediamosa_asset_db::ID];
           }
 
           // How much assets we have globally
-          $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {' . $table_name . '}')->fetchField() : count($a_asset_ids);
+          $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {' . $table_name . '}')->fetchField() : count($asset_ids);
         }
         catch (Exception $e) {
           // Make sure we switch back(!).
@@ -568,7 +557,7 @@ class mediamosa_asset_search {
     // Now create the query that will include all other results that are not included here
     // but only when a order by was present
     // If $calculate_total_count == FALSE, then skip this when we already have the limit full.
-    if (isset($order_by) && $order_by != '' && ($calculate_total_count || count($a_asset_ids) < $a_query[mediamosa_db_query::LIMIT])) {
+    if (isset($order_by) && $order_by != '' && ($calculate_total_count || count($asset_ids) < $a_query[mediamosa_db_query::LIMIT])) {
 
       // The first part of the query got all assets that had values on its order by column. For example,
       // Not every asset has a title, so the assets without title will not be included in the 1st query.
@@ -626,7 +615,7 @@ class mediamosa_asset_search {
         // offset is inside the 1st query.
         $a_query_null[mediamosa_db_query::OFFSET] = 0;
         // make sure limit is at least 1.
-        $a_query_null[mediamosa_db_query::LIMIT] = max(($a_query[mediamosa_db_query::LIMIT] - count($a_asset_ids)), 1);
+        $a_query_null[mediamosa_db_query::LIMIT] = max(($a_query[mediamosa_db_query::LIMIT] - count($asset_ids)), 1);
       }
 
       // Create the query.
@@ -647,11 +636,11 @@ class mediamosa_asset_search {
         $i_found_rows += mediamosa_db::db_found_rows();
 
         foreach ($result as $a_row) {
-          if (count($a_asset_ids) >= $a_query[mediamosa_db_query::LIMIT]) {
+          if (count($asset_ids) >= $a_query[mediamosa_db_query::LIMIT]) {
             break;
           }
 
-          $a_asset_ids[] = $a_row['asset_id'];
+          $asset_ids[] = $a_row['asset_id'];
         }
       }
       catch (Exception $e) {
@@ -669,27 +658,9 @@ class mediamosa_asset_search {
       }
     }
 
-    // Just return.
-    if (!count($a_asset_ids)) {
-      return;
-    }
-
-    // Set the total amount found.
-    $mediamosa->item_count_total = $calculate_total_count ? $i_found_rows : count($a_asset_ids);
-
-    if ($return_asset_ids) {
-      foreach ($a_asset_ids as $asset_id) {
-        $mediamosa->add_item(array('asset_id' => $asset_id));
-      }
-    }
-    else {
-      $add_has_streamable_mediafiles = TRUE;
-
-      $items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
-
-      foreach ($items as $item) {
-        $mediamosa->add_item($item);
-      }
-    }
+    /**
+     * We return the asset_ids.
+     */
+    return array('asset_ids' => $asset_ids, 'total_count' => $calculate_total_count ? $i_found_rows : count($asset_ids));
   }
 }

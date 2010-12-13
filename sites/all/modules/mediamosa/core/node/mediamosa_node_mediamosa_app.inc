@@ -87,7 +87,7 @@ class mediamosa_node_mediamosa_app {
 /**
  * Insert a random app shared key in the text block.
  */
-function _ajax_app_generate_shared_key() {
+function _mediamosa_app_ajax_generate_shared_key() {
 
   // Load the form based upon the $_POST data sent via the ajax call.
   list($form, $form_state) = ajax_get_form();
@@ -683,7 +683,10 @@ function mediamosa_app_validate($node) {
 
   // App Id checks.
   if (!is_numeric($node->{mediamosa_app_db::APP_ID})) {
-    form_set_error(mediamosa_app_db::APP_ID, t('The Application ID must be between 1 and 9999'));
+    form_set_error(mediamosa_app_db::APP_ID, t('The Application ID must be between @app_id_min and @app_id_max', array('@app_id_min' => mediamosa_settings::APP_ID_MIN, '@app_id_max' => mediamosa_settings::APP_ID_MAX)));
+  }
+  elseif ((int) $node->{mediamosa_app_db::APP_ID} < mediamosa_settings::APP_ID_MIN || $node->{mediamosa_app_db::APP_ID} > mediamosa_settings::APP_ID_MAX) {
+    form_set_error(mediamosa_app_db::APP_ID, t('The Application ID must be between @app_id_min and @app_id_max', array('@app_id_min' => mediamosa_settings::APP_ID_MIN, '@app_id_max' => mediamosa_settings::APP_ID_MAX)));
   }
   else {
     // Get all apps to know if app id is already taken.

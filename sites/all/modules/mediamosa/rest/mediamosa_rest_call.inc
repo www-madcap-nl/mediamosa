@@ -71,7 +71,10 @@ abstract class mediamosa_rest_call {
   const METHOD_POST = 'POST';
   const METHOD_PUT = 'PUT';
   const METHOD_DELETE = 'DELETE';
-  const METHOD_HEAD = 'HEAD'; // Can only do GET calls.
+  // Do not use for defining the method of your REST call, use GET. Incoming
+  // HEAD requests are translated to GET and will match any specified GET rest
+  // call.
+  const METHOD_HEAD = 'HEAD';
 
   const CLASS_NAME = 'class_name';
   const CLASS_FILE_NAME = 'class_file_name';
@@ -108,6 +111,11 @@ abstract class mediamosa_rest_call {
   const RESPONSE_FIELDS = 'response_fields';   // Response fields in output.
 
   const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
+
+  // Specify to TRUE will make sure the REST can not be canceled by user and
+  // will still continue to execute even when connection to client has been
+  // lost. This will always be true for POST rest calls.
+  const NO_USER_ABORT = 'no_user_abort';
 
   /**
    * 'alias_for' contains the URI of the REST call that also runs on this rest URI.
@@ -325,7 +333,7 @@ abstract class mediamosa_rest_call {
       self::VAR_DEFAULT_VALUE => 'false',
     );
 
-    // add default parameter descriptions
+    // Add default parameter descriptions
     foreach ($var_setup[mediamosa_rest_call::VARS] as $key => $value) {
       if (!isset($value[self::VAR_DESCRIPTION])) {
         if (isset($this->mediamosa_parameter_docs[$key])) {

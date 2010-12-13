@@ -38,6 +38,15 @@
  */
 define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
 
+/**
+ * When CRON is considered not being updated on time.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_CRON_TIMEOUT', 180);
+
+/**
+ * When simpletest is taking to much space and needs to be cleared.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING', 1024 * 1024 * 512);
 
 /**
  * Generate the information of the status page.
@@ -116,6 +125,7 @@ function mediamosa_maintenance_status_component_generate() {
     unlink($filename);
   }
 
+  // Note; you can not rename the key 'mount_rea_write' (!)
   $results['mount_rea_write'] = array(
     'title' => t('SANNAS read and write'),
     'value' => t('Readable & writable'),
@@ -130,9 +140,19 @@ function mediamosa_maintenance_status_component_generate() {
     'severity' => $available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK),
   );
 
+  if (!empty($mount_point) && is_dir($mount_point)) {
+    $du_simpletest = mediamosa_io::disk_usage_recursive(mediamosa_configuration_storage::mount_point_get(TRUE));
+    $results['du_simpletest'] = array(
+      'title' => t('Simpletest diskusage'),
+      'value' => format_size($du_simpletest),
+      'severity' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
+      'description' => $du_simpletest > MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_DU_SIMPLETEST_WARNING ? t("The diskspace used by simpletest is only used temporary. Crashed tests will not remove there files automaticly. An administrator needs to clean up directory '@simpletest_dir'", array('@simpletest_dir' => mediamosa_configuration_storage::mount_point_get(TRUE))) : '',
+    );
+  }
+
   return array(
-    'component' => array(
-      'title' => t('Component status'),
+    'components' => array(
+      'title' => t('Components'),
       'results' => $results,
     ),
   );
@@ -166,8 +186,6 @@ function _mediamosa_maintenance_status_component_directory($directory, $checks) 
  *   All the statuses in an array
  */
 function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE) {
-  global $conf;
-
   $mediamosa_status_component = array();
   if (!$reset) {
     $mediamosa_status_component = variable_get('mediamosa_status_component_' . mediamosa::get_server_id(), array());
@@ -179,4 +197,40 @@ function mediamosa_maintenance_status_component_mediamosa_status_collect($reset 
   }
 
   return $mediamosa_status_component['statuses'];
+}
+
+/**
+ * Implements hook_mediamosa_status_collect_realtime().
+ *
+ * Collect the information always, no caching. Only for front status page.
+ */
+function mediamosa_maintenance_status_component_mediamosa_status_collect_realtime() {
+
+  // --------------------------------------------------------------- CRON check.
+  $cron_last = variable_get('cron_last');
+  if (!is_numeric($cron_last)) {
+    $cron_last = variable_get('install_time', 0);
+  }
+
+  $cron_running = (REQUEST_TIME - $cron_last < 180);
+  $results['cron'] = array(
+    'title' => t('Cron maintenance tasks'),
+    'value' => $cron_running ? t('Last run %last_run ago', array('%last_run' => format_interval(REQUEST_TIME - $cron_last))) : t('Did not run for %run_for', array('%run_for' => format_interval(REQUEST_TIME - $cron_last))),
+    'severity' => _mediamosa_maintenance_status_okerror($cron_running),
+  );
+
+  // Only when failed and we have administer rights.
+  if (!$cron_running && user_access('administer site configuration')) {
+    global $base_url;
+    $description[] = t('You can <a href="@cron">run cron manually</a>.', array('@cron' => url('admin/reports/status/run-cron')));
+    $description[] = t('To run cron from outside the site, go to <a href="!cron">!cron</a>', array('!cron' => url($base_url . '/cron.php', array('external' => TRUE, 'query' => array('cron_key' => variable_get('cron_key', 'drupal'))))));
+    $results['cron']['description'] = implode(' ', $description);
+  }
+
+  return array(
+    'components' => array(
+      'title' => t('Components'),
+      'results' => $results,
+    ),
+  );
 }

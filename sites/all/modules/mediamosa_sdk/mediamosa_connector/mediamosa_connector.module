@@ -184,12 +184,12 @@ function mediamosa_connector_settings() {
 /**
  * Implement hook_settings_submit().
  */
-function mediamosa_connector_settings_submit(&$form_state, $form) {
-  mediamosa_connector_check_connection_submit($form_state, $form);
+function mediamosa_connector_settings_submit($form, &$form_state) {
+  mediamosa_connector_check_connection_submit($form, $form_state);
 
   //  Save the state of the other stuff.
   foreach (array('mediamosa_connector_debug') as $subject) {
-    variable_set($subject, $form['values'][$subject]);
+    variable_set($subject, $form_state['values'][$subject]);
   }
 }
 
@@ -199,15 +199,15 @@ function mediamosa_connector_settings_submit(&$form_state, $form) {
  * @param array $form_state
  * @param array $form
  */
-function mediamosa_connector_check_connection_submit(&$form_state, $form) {
-  $mediamosa_connector_username = $form['values']['mediamosa_connector_username'];
-  $mediamosa_connector_password = $form['values']['mediamosa_connector_password'];
-  $mediamosa_connector_url = $form['values']['mediamosa_connector_url'];
+function mediamosa_connector_check_connection_submit($form, &$form_state) {
+  $mediamosa_connector_username = $form_state['values']['mediamosa_connector_username'];
+  $mediamosa_connector_password = $form_state['values']['mediamosa_connector_password'];
+  $mediamosa_connector_url = $form_state['values']['mediamosa_connector_url'];
 
   if (_mediamosa_connector_check_connection($mediamosa_connector_username, $mediamosa_connector_password, $mediamosa_connector_url)) {
     drupal_set_message(t('Normal call test successful, settings saved.'));
     foreach (array('mediamosa_connector_url', 'mediamosa_connector_username', 'mediamosa_connector_password') as $subject) {
-      variable_set($subject, $form['values'][$subject]);
+      variable_set($subject, $form_state['values'][$subject]);
     }
   }
   else {

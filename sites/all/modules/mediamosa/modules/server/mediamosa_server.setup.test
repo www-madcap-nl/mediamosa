@@ -53,8 +53,8 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
    */
   public function testSetup() {
     // Get the server status list.
-    // get_status_enabled_job_servers also tests if all job servers return 200 and valid XML.
-    $server_statuses = mediamosa_server::get_status_enabled_job_servers();
+    // get_status_enabled_job_processor also tests if all job servers return 200 and valid XML.
+    $server_statuses = mediamosa_server::get_status_enabled_job_processor();
     $server_hosts = $server_ids = array();
 
     foreach ($server_statuses as $server_status) {

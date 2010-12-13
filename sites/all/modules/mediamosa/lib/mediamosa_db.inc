@@ -866,5 +866,16 @@ class mediamosa_db {
   static public function db_table_exists($table) {
     return db_table_exists($table);
   }
-
+  /**
+   * Escape characters for like.
+   *
+   * @param $string
+   *   The string to escape.
+   *
+   * @return
+   *   The escaped string.
+   */
+   static public function db_like($string) {
+    return db_like($string);
+  }
 }

@@ -294,9 +294,8 @@ class mediamosa_core_cql {
 
 /**
  * @file
- * This file contains non-drupal functions and classes for VPX-CQL
+ * This file contains non-drupal functions and classes for MediaMosa-CQL
  */
-
 abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
   abstract protected function mediamosa_core_cql_context_array_get();
@@ -307,17 +306,17 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   /**
    * Constructor
    */
-  final public function __construct($app_ids) {
+  public function __construct($app_ids) {
     $this->app_ids = $app_ids;
     $this->m_o_prefix_assignment = new mediamosa_cql_prefix_assignment('mediamosa', 'info:srw/cql-context-set/1/,mediamosa-v1.1');
     $this->search_keywords = array();
   }
 
-  final public function mediamosa_core_parse_cql($str_cql) {
+  public function mediamosa_core_parse_cql($str_cql) {
 
     if ($this->mediamosa_cql_parse($str_cql) === FALSE) {
-      $o_cql_exception = $this->mediamosa_cql_last_exception_get();
-      throw new mediamosa_exception_error_cql_error(array('@error' => $o_cql_exception->getMessage()));
+      $cql_exception = $this->mediamosa_cql_last_exception_get();
+      throw new mediamosa_exception_error_cql_error(array('@error' => $cql_exception->getMessage()));
     }
 
     return $this->mediamosa_core_cql_context_cql2sql();
@@ -325,8 +324,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
   // Override... do not support prox.
   public function mediamosa_cql_context_is_boolean($str) {
-    $a_booleans = array('and', 'or', 'not');
-    return (array_search(mediamosa_unicode::strtolower($str), $a_booleans) === FALSE) ? FALSE : TRUE;
+    return (array_search(mediamosa_unicode::strtolower($str), array('and', 'or', 'not')) === FALSE) ? FALSE : TRUE;
   }
 
   /**
@@ -442,7 +440,6 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
   /**
    * converts the cql array into sql
-   *
    */
   protected function mediamosa_core_cql_context_cql2sql() {
 
@@ -610,7 +607,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * @param string $str_index
    * @return array
    */
-  final public function mediamosa_core_cql_context_index2column_finalize(mediamosa_cql_part $o_cql_part, mediamosa_cql_part_relation $o_cql_part_relation, array &$a_result, $str_index, $do_having) {
+  public function mediamosa_core_cql_context_index2column_finalize(mediamosa_cql_part $o_cql_part, mediamosa_cql_part_relation $o_cql_part_relation, array &$a_result, $str_index, $do_having) {
     $o_cql_part_search_term = $o_cql_part->mediamosa_cql_part_search_term_get();
     $o_cql_part_boolean = $o_cql_part->mediamosa_cql_part_boolean_get();
 
@@ -788,14 +785,6 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
         }
-
-        // Fixing search on empty string.
-        // TODO: needs testing.
-        /*
-        if (trim($str_search_term) == '') {
-          continue;
-        }
-         */
 
         if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
           $a_sub_parts[] = sprintf("%s%s %s %s%s%%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 1)), $str_quotes);
@@ -1027,10 +1016,10 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
    * @return array
    */
   protected function mediamosa_core_cql_context_array_get() {
-    static $a_mediamosa_context = NULL;
+    static $mediamosa_context = NULL;
 
-    if (!isset($a_mediamosa_context)) {
-      $a_mediamosa_context = $this->m_a_mediamosa_context;
+    if (!isset($mediamosa_context)) {
+      $mediamosa_context = $this->m_a_mediamosa_context;
 
       $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
@@ -1074,7 +1063,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             break;
         }
 
-        $a_mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$name] = array(
+        $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$name] = array(
           MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $column,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mediamosa_asset_metadata_' . $name,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $table,
@@ -1085,12 +1074,12 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
       }
     }
 
-    return $a_mediamosa_context;
+    return $mediamosa_context;
   }
 
   // The CQL_CONTEXT_KEY_* keys are default and must be used,
   // however all other keys are open for own class specification.
-  private $m_a_mediamosa_context = array(
+  protected $m_a_mediamosa_context = array(
 
     MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION => '=',
     MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS => array('mediamosa.title'),

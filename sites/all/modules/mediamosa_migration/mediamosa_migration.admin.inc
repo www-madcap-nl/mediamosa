@@ -37,12 +37,12 @@ module_load_include('inc', 'mediamosa_migration', 'mediamosa_migration');
 function mediamosa_migration_page_form() {
   $build = array();
 
-  $build['restcall'] = drupal_get_form('mediamosa_migration_form');
+  $build['restcall'] = drupal_get_form('_mediamosa_migration_form');
 
   return $build;
 }
 
-function mediamosa_migration_form() {
+function _mediamosa_migration_form() {
   $form = array();
 
   $form['migration'] = array(
@@ -85,7 +85,7 @@ function mediamosa_migration_form() {
   return $form;
 }
 
-function mediamosa_migration_form_submit($form, &$form_state) {
+function _mediamosa_migration_form_submit($form, &$form_state) {
   switch ($form_state['values']['op']) {
     case t('Start migration'):
       $batch = array(
@@ -159,7 +159,10 @@ function _mediamosa_migration_batch_finished($success, $results, $operations) {
   if ($success) {
     // Here we do something meaningful with the results.
     $message = count($results) . ' processed.';
-    $message .= theme('item_list', $results);
+
+    if (module_exists('mediamosa_solr')) {
+      $message .= t('You now need to re-index the Solr database, you can do that !here.', array('!here' => l('here', '')));
+    }
 
     // Mark that migration was successful.
     variable_set('mediamosa_migration_status', 'done');

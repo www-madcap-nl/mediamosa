@@ -130,18 +130,39 @@ function _mediamosa_maintenance_status_configuration_generate() {
   // FFmpeg.
   // Just here for notice prev.
   $exec_output = array();
-  $ffmpeg_found = _mediamosa_maintenance_status_command_installed('ffmpeg -version', $exec_output);
+  $ffmpeg_found = mediamosa_io::command_installed('ffmpeg -version', $exec_output);
   $version = $ffmpeg_found ? reset($exec_output) : t('FFmpeg not found');
+
+  // Grap the available codecs.
+  if ($ffmpeg_found) {
+    $exec_output_codecs = array();
+    mediamosa_io::command_installed('ffmpeg -codecs', $exec_output_codecs);
+
+    $form_ffmpeg['mediamosa_solr'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Available codecs'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#attached' => array('library' => array('system', 'drupal.collapse')),
+      '#attributes' => array('class' => array('collapsible', 'collapsed')),
+    );
+
+    unset($exec_output_codecs[0]);
+    $form_ffmpeg['mediamosa_solr']['codecs'] = array(
+      '#markup' => '<pre>' . implode("\n", $exec_output_codecs) . '</pre>',
+    );
+
+    $version .= drupal_render($form_ffmpeg);
+  }
+
   $results['app_ffmpeg'] = array(
     'title' => t('FFMpeg'),
     'value' => $version,
     'severity' => _mediamosa_maintenance_status_okerror($ffmpeg_found),
   );
 
-  // Lua.  'more_link' => $is_correct ? NULL : l(t('Help on configure...'), $helper_links['innodb_flush_method']),
-
   $exec_output = array();
-  $lua_found = _mediamosa_maintenance_status_command_installed('lua -v', $exec_output);
+  $lua_found = mediamosa_io::command_installed('lua -v', $exec_output);
   $status_line = $lua_found ? _mediamosa_maintenance_status_search_in_array('copyright', $exec_output) : t('Lua not found');
   $version = $lua_found ? drupal_substr($status_line, drupal_strlen('Lua ')) : '';
   $pos = strpos($version, '.');
@@ -181,16 +202,16 @@ function _mediamosa_maintenance_status_configuration_generate() {
   );
 
   // Yamdi.
-  $yamdi_found = _mediamosa_maintenance_status_command_installed('yamdi -h', $exec_output, array(0, 1));
+  $yamdi_found = mediamosa_io::command_installed('yamdi -h', $exec_output, array(0, 1));
   $results['app_yamdi'] = array(
     'title' => t('Yamdi'),
     'severity' => _mediamosa_maintenance_status_okwarning($yamdi_found),
-    'value' => $yamdi_found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) :t('Not installed'),
+    'value' => $yamdi_found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) : t('Not installed'),
     'description' => $yamdi_found ? '' : t('Yamdi is not installed, but is optional. You can find more information how to install Yamdi !here', array('!here' => $helper_links['yamdi'])),
   );
 
   // MP4Box.
-  $mp4box_found = _mediamosa_maintenance_status_command_installed('MP4Box -version', $exec_output);
+  $mp4box_found = mediamosa_io::command_installed('MP4Box -version', $exec_output);
 
   $results['app_mp4box'] = array(
     'title' => t('MP4Box'),
@@ -200,7 +221,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   );
 
   // Lav2yuv.
-  $lav2yuv_found = _mediamosa_maintenance_status_command_installed('lav2yuv', $exec_output);
+  $lav2yuv_found = mediamosa_io::command_installed('lav2yuv', $exec_output);
   $results['app_lav2yuv'] = array(
     'title' => t('Luv2yuv'),
     'value' => $lav2yuv_found ? t('Installed') : t('Not installed'),
@@ -520,7 +541,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   // Making the report.
   return array(
     'configuration' => array(
-      'title' => t('Configuration settings'),
+      'title' => t('Configuration'),
       'results' => $results,
     ),
   );
@@ -535,7 +556,6 @@ function _mediamosa_maintenance_status_configuration_generate() {
  *   All the statuses in an array
  */
 function mediamosa_maintenance_status_configuration_mediamosa_status_collect($reset = FALSE) {
-
   $mediamosa_status_collect = array();
   if (!$reset) {
     $mediamosa_status_collect = variable_get('mediamosa_status_collect_' . mediamosa::get_server_id(), array());
@@ -547,4 +567,79 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_collect($re
   }
 
   return $mediamosa_status_collect['statuses'];
+}
+
+/**
+ * Implements hook_mediamosa_status_collect_realtime().
+ *
+ * Collect the information always, no caching. Only for front status page.
+ */
+function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_realtime() {
+  $results_drupal = array();
+
+  // ----------------------------------------------- sites/default/settings.php.
+  global $conf;
+
+  $results_drupal['host'] = array(
+    'title' => t('Interface host'),
+    'value' => $_SERVER['SERVER_NAME'],
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['conf'] = array(
+    'title' => t('Settings file used'),
+    'value' => DRUPAL_ROOT . '/' . conf_path() . '/settings.php',
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  // If writable, drupal will create it when needed.
+  $public_writable = file_exists('public://') && is_writable('public://');
+
+  $results_drupal['public_write'] = array(
+    'title' => variable_get('file_public_path', conf_path() . '/files'),
+    'value' => $public_writable ? t('Found & Writable') : t('@dir not writable on @server_name', array('@dir' => DRUPAL_ROOT . '/' . variable_get('file_public_path', conf_path() . '/files'), '@server_name' => $_SERVER['SERVER_NAME'])),
+    'severity' => _mediamosa_maintenance_status_okerror($public_writable),
+  );
+
+  $results_drupal['install_id'] = array(
+    'title' => t('Interface installation ID'),
+    'value' => $conf['mediamosa_installation_id'],
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app'] = array(
+    'title' => t('App interface'),
+    'value' => $conf['mediamosa_app'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app_upload'] = array(
+    'title' => t('Upload interface'),
+    'value' => $conf['mediamosa_app_upload'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app_download'] = array(
+    'title' => t('Download interface'),
+    'value' => $conf['mediamosa_app_download'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['admin'] = array(
+    'title' => t('Admin interface'),
+    'value' => $conf['mediamosa_admin'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  // Get default search engine.
+  $mediamosa_search_engine = mediamosa_search::get_search_engine();
+
+  $results_drupal['search_engine'] = array(
+    'title' => t('Selected search engine'),
+    'value' => $mediamosa_search_engine['title'],
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  return array(
+    'configuration' => array(
+      'title' => t('Configuration'),
+      'results' => $results_drupal,
+      'in_status_output' => TRUE,
+    ),
+  );
 }

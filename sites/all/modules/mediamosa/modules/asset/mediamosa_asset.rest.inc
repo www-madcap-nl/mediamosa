@@ -499,29 +499,58 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
 
     // Now search.
-    mediamosa_asset_search::asset_search(
-      $mediamosa,
-      $app_ids,
-      $cql,
-      $this->get_param_value(self::AUT_USER_ID),
-      $this->get_param_value(self::AUT_GROUP_ID),
-      $this->get_param_value(self::AUT_DOMAIN),
-      $this->get_param_value(self::AUT_REALM),
-      $this->get_param_value(self::BATCH_ID),
-      $this->get_param_value(self::COLL_ID),
-      $this->get_param_value(self::FAV_USER_ID),
-      $this->get_param_value(self::GRANTED),
-      $this->get_param_value(self::IS_PUBLIC_LIST),
-      $this->get_param_value(self::IS_APP_ADMIN),
-      $this->get_param_value(self::HIDE_EMPTY_ASSETS),
-      $this->get_param_value(self::SHOW_DELETED),
-      $this->get_param_value(self::RETURN_ASSET_IDS),
-      $this->get_param_value(self::SHOW_STILLS),
-      $this->get_param_value(self::SHOW_COLLECTIONS),
-      $calculate_total_count,
-      $this->get_param_value_limit(),
-      $this->get_param_value_offset()
-    );
+    $asset_ids = mediamosa_search::asset(array(
+      'app_ids' => $app_ids,
+      'cql' => $cql,
+      'aut_user_id' => $this->get_param_value(self::AUT_USER_ID),
+      'aut_group_ids' => $this->get_param_value(self::AUT_GROUP_ID),
+      'aut_domain' => $this->get_param_value(self::AUT_DOMAIN),
+      'aut_realm' => $this->get_param_value(self::AUT_REALM),
+
+      'batch_id' => $this->get_param_value(self::BATCH_ID),
+      'coll_id' => $this->get_param_value(self::COLL_ID),
+
+      'fav_user_id' => $this->get_param_value(self::FAV_USER_ID),
+
+      'granted' => $this->get_param_value(self::GRANTED),
+      'is_public_list' => $this->get_param_value(self::IS_PUBLIC_LIST),
+      'is_app_admin' => $this->get_param_value(self::IS_APP_ADMIN),
+      'hide_empty_assets' => $this->get_param_value(self::HIDE_EMPTY_ASSETS),
+      'show_deleted' => $this->get_param_value(self::SHOW_DELETED),
+      'calculate_total_count' => $calculate_total_count,
+
+      'limit' => $this->get_param_value_limit(),
+      'offset' => $this->get_param_value_offset()
+    ));
+
+    // Set the total amount found.
+    $mediamosa->item_count_total = $asset_ids['total_count'];
+
+    // Fill response.
+    if ($this->get_param_value(self::RETURN_ASSET_IDS)) {
+      foreach ($asset_ids['asset_ids'] as $asset_id) {
+        $mediamosa->add_item(array('asset_id' => $asset_id));
+      }
+    }
+    else {
+      $items = mediamosa_asset::asset_collect(
+        $asset_ids['asset_ids'],
+        $app_ids,
+        $this->get_param_value(self::AUT_USER_ID),
+        $this->get_param_value(self::GRANTED),
+        $this->get_param_value(self::AUT_GROUP_ID),
+        $this->get_param_value(self::AUT_DOMAIN),
+        $this->get_param_value(self::AUT_REALM),
+        $this->get_param_value(self::IS_APP_ADMIN),
+        $this->get_param_value(self::SHOW_STILLS),
+        $this->get_param_value(self::SHOW_COLLECTIONS),
+        TRUE
+      );
+
+      foreach ($items as $item) {
+        $mediamosa->add_item($item);
+      }
+    }
   }
 }
 

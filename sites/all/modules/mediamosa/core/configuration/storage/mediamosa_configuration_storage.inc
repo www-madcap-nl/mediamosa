@@ -196,9 +196,9 @@ class mediamosa_configuration_storage {
    *
    * @return string
    */
-  static public function mount_point_get() { // vpx_get_san_nas_base_path
+  static public function mount_point_get($in_simpletest_sandbox = FALSE) { // vpx_get_san_nas_base_path
     $path = mediamosa::is_windows_platform() ? self::windows_get() : self::linux_get();
-    return (mediamosa::in_simpletest_sandbox() ? $path . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . 'simpletest' : $path);
+    return (mediamosa::in_simpletest_sandbox() || $in_simpletest_sandbox ? $path . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . 'simpletest' : $path);
   }
 
   /**

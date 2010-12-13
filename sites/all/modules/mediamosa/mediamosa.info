@@ -38,6 +38,7 @@ files[] = lib/mediamosa_gd.inc
 files[] = lib/mediamosa_http.inc
 files[] = lib/mediamosa_io.inc
 files[] = lib/mediamosa_lib.inc
+files[] = lib/mediamosa_search.inc
 files[] = lib/mediamosa_log.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc

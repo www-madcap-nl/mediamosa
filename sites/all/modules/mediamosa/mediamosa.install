@@ -1667,4 +1667,11 @@ function mediamosa_update_7078() {
   }
 }
 
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7079() {
+  registry_rebuild();
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

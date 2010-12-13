@@ -176,7 +176,7 @@ function mediamosa_app_menu() {
   );
 
   $items['admin/mediamosa/config/app/js/form'] = array(
-    'page callback' => '_ajax_app_generate_shared_key',
+    'page callback' => '_mediamosa_app_ajax_generate_shared_key',
     'delivery callback' => 'ajax_deliver',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,

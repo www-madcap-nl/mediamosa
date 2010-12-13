@@ -32,7 +32,6 @@
 // Need these.
 module_load_include('inc', 'simpletest', 'simpletest.pages');
 
-
 /**
  * List tests arranged in groups that can be selected and run.
  */
@@ -76,18 +75,34 @@ function mediamosa_maintenance_browse_test_form($form) {
   );
   $form['clean'] = array(
     '#type' => 'fieldset',
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#title' => t('Clean test environment'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Clean test environment (developers only)'),
     '#description' => t('Remove tables with the prefix "simpletest" and temporary directories that are left over from tests that crashed. This is intended for developers when creating tests.'),
   );
   $form['clean']['op'] = array(
     '#type' => 'submit',
     '#value' => t('Clean environment'),
-    '#submit' => array('simpletest_clean_environment'),
+    '#submit' => array('_mediamosa_maintenance_browse_simpletest_clean_environment'),
   );
 
   return $form;
+}
+
+/**
+ * Clean up simpletest extended to clean up on servers as well.
+ */
+function _mediamosa_maintenance_browse_simpletest_clean_environment() {
+  // For custom clean ups.
+
+  // Cleanup on our servers.
+  mediamosa_server::cleanup_simpletest_enabled_servers();
+
+  // Call our cleanup hook for other stuff.
+  module_invoke_all('mediamosa_simpletest_clean_environment');
+
+  // Run the normal clean up.
+  return simpletest_clean_environment();
 }
 
 /**
@@ -102,7 +117,8 @@ function mediamosa_maintenance_browse_test_form_submit($form, &$form_state) {
       $tests_list[] = $class_name;
     }
   }
-  if (count($tests_list) > 0 ) {
+
+  if (!empty($tests_list)) {
     $test_id = simpletest_run_tests($tests_list, 'drupal');
     $form_state['redirect'] = 'admin/mediamosa/browse/testing/results/' . $test_id;
   }

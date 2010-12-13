@@ -90,6 +90,16 @@ class mediamosa_user_favorite {
       ->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type)
       ->condition(mediamosa_user_favorite_db::FAV_ID, $fav_id)
       ->execute();
+
+    if ($fav_type == mediamosa_user_favorite_db::FAV_TYPE_ASSET) {
+      // Trigger the reindex hook for external search engines.
+      try {
+        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($fav_id)), mediamosa_solr::settingInstantlyUserFav());
+      }
+      catch (Exception $e) {
+        mediamosa_watchdog::log_asset($fav_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $fav_id, '@message' => $e->getMessage()));
+      }
+    }
   }
 
   /**
@@ -123,11 +133,11 @@ class mediamosa_user_favorite {
     }
 
     // Get possible link.
-    $a_fav_relation = mediamosa_user_favorite::get($app_id, $user_id, $fav_type, $fav_id);
+    $fav_relations = mediamosa_user_favorite::get($app_id, $user_id, $fav_type, $fav_id);
 
-    if (!$a_fav_relation) {
+    if (!$fav_relations) {
       // Set these fields.
-      $a_fields = array(
+      $fields = array(
         mediamosa_user_favorite_db::NAME => $user_id,
         mediamosa_user_favorite_db::APP_ID => $app_id,
         mediamosa_user_favorite_db::FAV_TYPE => $fav_type,
@@ -136,8 +146,32 @@ class mediamosa_user_favorite {
 
       // FIXME not master-master save.
       mediamosa_db::db_insert(mediamosa_user_favorite_db::TABLE_NAME)
-        ->fields($a_fields)
+        ->fields($fields)
         ->execute();
     }
+
+    if ($fav_type == mediamosa_user_favorite_db::FAV_TYPE_ASSET) {
+      // Trigger the reindex hook for external search engines.
+      try {
+        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($fav_id)), mediamosa_solr::settingInstantlyUserFav());
+      }
+      catch (Exception $e) {
+        mediamosa_watchdog::log_asset($fav_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $fav_id, '@message' => $e->getMessage()));
+      }
+    }
+  }
+
+  /**
+   * Get list of fav. of this asset.
+   *
+   * @param $asset_id
+   */
+  static public function get_fav_of_asset($asset_id) {
+    return mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME, 'uf')
+      ->fields('uf')
+      ->condition(mediamosa_user_favorite_db::FAV_TYPE, mediamosa_user_favorite_db::FAV_TYPE_ASSET)
+      ->condition(mediamosa_user_favorite_db::FAV_ID, $asset_id)
+      ->execute()
+      ->fetchAssoc();
   }
 }

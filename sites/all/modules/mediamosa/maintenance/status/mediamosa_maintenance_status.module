@@ -109,7 +109,7 @@ function mediamosa_maintenance_status_mediamosa_register_rest_call() {
   $rest_calls['status'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_status',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
@@ -156,13 +156,10 @@ function mediamosa_maintenance_status_cron() {
   }
 
   try {
-    $last_time = variable_get('mediamosa_status_last_time', 0);
-
-    if ($last_time < time() - mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME) {
-      variable_set('mediamosa_status_last_time', time());
-      // Check run-time requirements and status information.
-      module_invoke_all('mediamosa_status_collect', TRUE);
-    }
+    // Update the status page contents.
+    // Normally we won't allow cron stuff that might take precious time from
+    // the cron. But its only every 10 minutes, and only a few seconds.
+    _mediamosa_maintenance_status_update();
   }
   catch (Exception $e) {
     mediamosa_watchdog::log('Catch exception during cron: mediamosa_maintenance_status_cron(): @msg', array('@msg' => $e->getMessage()));
@@ -170,10 +167,34 @@ function mediamosa_maintenance_status_cron() {
 }
 
 /**
+ * Do the update (only when needed).
+ */
+function _mediamosa_maintenance_status_update() {
+  $last_time = variable_get('mediamosa_status_last_time', 0);
+  if ($last_time < REQUEST_TIME - (mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME - 2)) {
+    // We are running.
+    variable_set('mediamosa_status_last_time_is_running', TRUE);
+
+    // Check run-time requirements and status information.
+    module_invoke_all('mediamosa_status_collect', TRUE);
+
+    // Set for next time.
+    variable_set('mediamosa_status_last_time', REQUEST_TIME);
+
+    // Remove that we are running.
+    variable_del('mediamosa_status_last_time_is_running');
+  }
+}
+
+/**
  * Menu callback: displays the MediaMosa status report.
  */
 function _mediamosa_maintenance_status_status() {
-  $output = '';
+  $output = array();
+
+  // For the available codecs fieldset.
+  drupal_add_js('misc/form.js');
+  drupal_add_js('misc/collapse.js');
 
   // If we are set as Home page, the breadcrumb isn't set, let's do it here.
   $breadcrumb = array();
@@ -182,17 +203,80 @@ function _mediamosa_maintenance_status_status() {
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 
-  // Check run-time requirements and status information.
-  // False means the data should come from variable.
-  $statuses = module_invoke_all('mediamosa_status_collect', FALSE);
+  // Just in case we are in the first update that isn't finished.
+  $mediamosa_status_last_time_is_running = variable_set('mediamosa_status_last_time_is_running', FALSE);
 
-  foreach ($statuses as $status) {
-    $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? reset($status['title']) : $status['title']), 'results' => $status['results']));
+  // Get the last time it was updated. 0 = never.
+  $mediamosa_status_last_time = variable_get('mediamosa_status_last_time', 0);
+
+  // Get real time info.
+  $statuses_realtime = module_invoke_all('mediamosa_status_collect_realtime');
+
+  // Add realtime.
+  foreach ($statuses_realtime as $key => $status) {
+    $statuses_realtime[$key]['title'] = (is_array($statuses_realtime[$key]['title']) ? reset($statuses_realtime[$key]['title']) : $statuses_realtime[$key]['title']);
+    $statuses_realtime[$key . '_realtime'] = $statuses_realtime[$key];
+    unset($statuses_realtime[$key]);
   }
 
-  $output .= t('Last run: @last_run. Current time: @current.', array('@last_run' => date('Y-m-d H:i:s', variable_get('mediamosa_status_last_time', 0)), '@current' => date('Y-m-d H:i:s')));
+  // Check run-time requirements and status information.
+  // False means the data should come from variable.
+  $statuses = module_invoke_all('mediamosa_status_collect', !$mediamosa_status_last_time && !$mediamosa_status_last_time_is_running ? TRUE : FALSE);
 
-  return $output;
+  // So we don't run it again when we visit status page.
+  if (!variable_get('mediamosa_status_last_time', 0) && !$mediamosa_status_last_time && !$mediamosa_status_last_time_is_running) {
+    variable_set('mediamosa_status_last_time', REQUEST_TIME);
+  }
+
+  // At this point, its always been run at least once.
+  $mediamosa_status_last_time = variable_get('mediamosa_status_last_time', REQUEST_TIME);
+
+  // Add cached.
+  foreach ($statuses as $key => $status) {
+    $statuses[$key]['title'] = (is_array($statuses[$key]['title']) ? reset($statuses[$key]['title']) : $statuses[$key]['title']) . ' <small>(' . t('cached information') . ')</small>';
+    $statuses[$key . '_cached'] = $statuses[$key];
+    unset($statuses[$key]);
+  }
+
+  $statuses = array_merge_recursive($statuses_realtime, $statuses);
+
+  $planned = $mediamosa_status_last_time ? $mediamosa_status_last_time + mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME : time();
+
+  $last_update = array();
+  $last_update[] = t('The cached information on this page was last updated %last_run ago', array('%last_run' => format_interval(REQUEST_TIME -$mediamosa_status_last_time)));
+  $warning = FALSE;
+
+  if ($mediamosa_status_last_time + mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME + 180 > time()) {
+    if ($mediamosa_status_last_time_is_running) {
+      $last_update[] = t('being updated');
+    }
+    elseif ($planned - REQUEST_TIME <= 0) {
+      $last_update[] = t('next update imminent');
+    }
+    else {
+      $last_update[] = t('next update in %planned (estimate)', array('%planned' => format_interval($planned - REQUEST_TIME)));
+    }
+  }
+  else {
+    $warning = '<p><b>' .t(
+      'Warning: status page is not longer being automaticly updated, check !cron_settings, it should run every minute.',
+      array(
+        '!cron_settings' => l('Cron maintenance tasks', 'admin/reports/status')
+      )
+    ) . '</b></p>';
+  }
+
+  if ($warning) {
+    $output[] = $warning;
+  }
+
+  foreach ($statuses as $status) {
+    $output[] = theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? reset($status['title']) : $status['title']), 'results' => $status['results']));
+  }
+
+  $output[] = '<div align="center">' . implode(', ', $last_update) . '.</div><p>';
+
+  return implode('', $output);
 }
 
 /**
@@ -201,7 +285,11 @@ function _mediamosa_maintenance_status_status() {
 function _mediamosa_maintenance_status_server() {
   $output = '';
 
-  $result = mediamosa_server::get_status_enabled_job_servers(array(
+  // For the available codecs fieldset.
+  drupal_add_js('misc/form.js');
+  drupal_add_js('misc/collapse.js');
+
+  $result = mediamosa_server::get_status_enabled(array(
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
     mediamosa_server_db::SERVER_TYPE_STILL,
     mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
@@ -257,8 +345,7 @@ function _mediamosa_maintenance_status_job() {
     ),
   );
 
-  $output .= t('Jobhandler');
-  $output .= theme('mediamosa_maintenance_table', array('rows' => $results));
+  $output .= theme('mediamosa_maintenance_table', array('rows' => $results, 'title' => t('Jobhandler')));
 
   // Get all the job server.
 
@@ -293,6 +380,7 @@ function _mediamosa_maintenance_status_job() {
       ':server_id' => $row[mediamosa_server_db::NID],
       ':job_type' => $types,
     ))->fetchAllKeyed();
+
     // Collect the result for the theme_table.
     $result_job_array = array();
     foreach ($types as $key) {
@@ -302,11 +390,8 @@ function _mediamosa_maintenance_status_job() {
       );
     }
 
-    // Title of the table.
-    $output .= $row[mediamosa_server_db::DESCRIPTION];
-
     // Create table.
-    $output .= theme('mediamosa_maintenance_table', array('rows' => $result_job_array));
+    $output .= theme('mediamosa_maintenance_table', array('rows' => $result_job_array, 'title' => $row[mediamosa_server_db::DESCRIPTION]));
   }
 
   return $output;
@@ -651,29 +736,4 @@ function _mediamosa_maintenance_status_search_in_array($text, array $container) 
   }
 
   return '';
-}
-
-/**
- * Test if program is installed
- * @param string $command
- *  The command to test, may contain params like -v or --version.
- * @param array $exec_output
- * @param array $allowed_ret_values
- */
-function _mediamosa_maintenance_status_command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
-  $exec_output = array();
-  $ret_val = 0;
-  exec($command, $exec_output, $ret_val);
-
-  // If ret_val is ok, then check if $exec_output is empty.
-  if (in_array($ret_val, $allowed_ret_values)) {
-    if (empty($exec_output)) {
-      // Maybe stderr gave something back.
-      exec($command . ' 2>&1', $exec_output);
-    }
-
-    return TRUE;
-  }
-
-  return FALSE;
 }

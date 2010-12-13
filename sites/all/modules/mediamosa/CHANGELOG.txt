@@ -3,8 +3,7 @@
 START CHANGELOG:
 
 Known issues;
-- MediaMosa 2.2.x is much more compatible with PHP 5.3, although needs more
-  testing.
+- MediaMosa 2.3.x seem to work fine with PHP 5.3, although needs more testing.
 - Servers (processor, download, upload etc) that are installed on a subdir are
   not correctly retrieved on the server status page. (See ticket #367).
 - TODO: Tool params should validate the values, when the user save the node:
@@ -19,6 +18,10 @@ Known issues;
 - All require_once are local path. This works fine, but I'm seeing a lot of
   require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
   study if we need to change our require_once.
+
+Known bugs (no tickets (yet));
+- STILL_URI in object response during play proxy call is broken.
+- Searching on mime_type no longer works because of re-write mediafile metadata. 
 
 MediaMosa 2.3.1 (build 1169)
 ----------------------------
@@ -110,7 +113,21 @@ Other changes (not ticket related).
 - Added Solr configuration.
 - Fixed some minor warnings we got from coder module.
 - Removed mediamosa_asset_metadata::search_get_part_where() was no longer used.
-
+- Added ignore_user_abort(TRUE) once REST call was successfully matched to 
+  ensure the REST call will be executed even when the connection is lost to the 
+  client. Always applies to POST/DELETE rest calls, internal CRON GET calls. 
+- Updated profile to only show the selected setup instead of both during
+  selection.
+- In profile; Removed all TEXT boxes with settings and replaced them with 
+  <pre></pre> making all settings show during profile to be the same format.
+- Fixed: Added code that will restore the Drupal error handler when REST call 
+  was not matched.
+- Status page extended with real time information.
+- Added check for CRON being trigger on status page. Will turn red when CRON 
+  hasn't been triggered for 3 minutes.
+- Added information about the drupal settings file on status page.
+- Settings sections on the configuration page are now in alphabetic order.
+- Settings sections on the configuration page are always collapsed by default.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
