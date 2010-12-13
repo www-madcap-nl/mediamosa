@@ -35,7 +35,8 @@ MediaMosa 2.3.1 (build 1185)
   admin/reports/status (See ticket #20).
 - Added transcode link to profile when using asset browser in maintenance (See
   ticket #33).
-- Analyse mediafiles with hint parameter developement (See ticket VPCore 207, MM 425).
+- Analyse mediafiles with hint parameter development (See ticket VPCore #207, 
+  MediaMosa #425).
 - Retranscode mediafiles development (See ticket VPCore 129).
 - UTC / CET date summer-winter time fix (See ticket VPCore 211).
 
@@ -71,7 +72,7 @@ Other changes (not ticket related).
 - Fixed table creation wrapper, add flag not to remove schema descriptions. This
   fixed the notices on the status page which was caused by the latest Drupal
   version upgrade.
-- Added install hook to fix changes made on database schemas related to
+- Added install hook to fix changes made on database schema's related to
   comments.
 - Fixed ticket mec. unit test, was disabled.
 - Renamed table 'mediamosa_log_integrity_check' to 'mediamosa_integrity_check'.

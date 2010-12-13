@@ -31,10 +31,11 @@
 class mediamosa_settings {
 
   // ------------------------------------------------------------------ Consts.
+  const SEARCH_INDEX_TYPE_ASSET_CREATE = 'asset_create';
   const SEARCH_INDEX_TYPE_ASSET_NORMALIZE = 'asset_normalize';
   const SEARCH_INDEX_TYPE_METADATA = 'metadata';
-  const SEARCH_INDEX_TYPE_ASSET_UPDATE = 'asset_update';
   const SEARCH_INDEX_TYPE_FAV_USER = 'fav_user';
+  const SEARCH_INDEX_TYPE_MASTER_SLAVE = 'master_slave';
 
   const MINIMUM_PHP_VERSION = '5.2.4';
 
@@ -209,7 +210,7 @@ class mediamosa_settings {
   const MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL = 'UTC';
 
   // Status page check timeout.
-  const MAINTENANCE_STATUS_CRON_TIME = 60; // 10 minutes.
+  const MAINTENANCE_STATUS_CRON_TIME = 600; // 10 minutes.
 
   // Statistics log maximum process time.
   const STATISTICS_LOG_MAX_TIME = 3600; // 1 hour.

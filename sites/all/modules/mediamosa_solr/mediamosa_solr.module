@@ -251,6 +251,16 @@ function mediamosa_solr_mediamosa_status_collect_realtime($reset = FALSE) {
   );
 }
 
+/**
+ * Implementation of hook_mediamosa_asset_index_delete().
+ *
+ * @param array $reindex_info
+ */
+function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
+
+  // Delete the asset.
+  mediamosa_solr::delete_assets(array($asset_id));//$asset_id);
+}
 
 /**
  * Implementation of hook_mediamosa_asset_reindex().
@@ -274,13 +284,22 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       $instant = mediamosa_solr::settingInstantlyMetadata();
       break;
 
-    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE:
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_CREATE:
       $instant = mediamosa_solr::settingInstantlyAssetUpdate();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE:
+      $instant = mediamosa_solr::settingInstantlyAssetCreate();
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_FAV_USER:
       $instant = mediamosa_solr::settingInstantlyUserFav();
       break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE:
+      $instant = mediamosa_solr::settingInstantlyMasterSlave();
+      break;
+
   }
 
 
@@ -384,6 +403,12 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#default_value' => mediamosa_solr::settingInstantlyMetadata(),
   );
 
+  $form['mediamosa_solr']['queue']['mediamosa_solr_asset_create_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process asset create instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAssetCreate(),
+  );
+
   $form['mediamosa_solr']['queue']['mediamosa_solr_asset_update_instantly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Process asset updates instantly'),
@@ -394,6 +419,12 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#type' => 'checkbox',
     '#title' => t('Process user favorites of assets instantly'),
     '#default_value' => mediamosa_solr::settingInstantlyUserFav(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_master_slave_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process master/slave changes of assets instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyMasterSlave(),
   );
 
   return $form;

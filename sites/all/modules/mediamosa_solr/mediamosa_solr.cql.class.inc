@@ -41,11 +41,14 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     if (!isset($mediamosa_context)) {
       $mediamosa_context = $this->m_a_mediamosa_context;
 
-      foreach ($mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $context_set => $lvl1) {
-        foreach ($lvl1[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS] as $name => &$column) {
+      foreach ($mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $context_set => &$lvl1) {
+        foreach ($lvl1[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS] as $column_name => $column) {
+
+          if ($column_name == 'mime_type') {
+            $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['column'] = 'mime_type';
+          }
         }
       }
-
 
       $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
@@ -163,6 +166,8 @@ mediamosa_debug::log_export($index2column);
         break;
 
       case mediamosa_sdk::TYPE_DATETIME:
+        $str = '0000-01-01T00:00:00Z';
+        $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
         break;
 
       case mediamosa_sdk::TYPE_DOMAIN:
@@ -215,6 +220,18 @@ mediamosa_debug::log($has_not ? "has not" : 'no not');
         $has_not = !$has_not;
         $sub_parts = array($str_table_column . ':"' . $str_search_term . '"');
         break;
+
+      case '>':
+        break;
+      case '>=':
+        break;
+      case '<':
+        break;
+      case '<=':
+        break;
+      case 'within':
+        break;
+
     }
 mediamosa_debug::log_export($sub_parts);
     // Into one.
