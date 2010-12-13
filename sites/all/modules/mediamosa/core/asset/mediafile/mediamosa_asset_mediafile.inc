@@ -56,13 +56,37 @@ class mediamosa_asset_mediafile {
   }
 
   /**
-   * returns the parent asset id of mediafile.
+   * Returns the parent asset id of mediafile.
+   *
+   * @param string $mediafile_id
    */
   static public function get_my_parent_assetid($mediafile_id) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     return $query->execute()->fetchField();
+  }
+
+  /**
+   * Returns the size of mediafile.
+   *
+   * @param string $mediafile_id
+   *
+   * @return string
+   *   Size of the mediafile, or FALSE.
+   */
+  static public function get_size($mediafile_id) {
+    $width = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'width');
+    if (!$width) {
+      return FALSE;
+    }
+
+    $height = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'height');
+    if (!$height) {
+      return FALSE;
+    }
+
+    return $width . 'x' . $height;
   }
 
   /**
