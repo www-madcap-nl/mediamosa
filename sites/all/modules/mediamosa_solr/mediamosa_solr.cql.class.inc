@@ -153,8 +153,8 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     $str_search_term = $cql_part_search_term->mediamosa_cql_part_str_get();
 
-    // Export data.
-    mediamosa_watchdog::log_export($index2column);
+// Export data.
+mediamosa_debug::log_export($index2column);
 
     $parts_or = $parts = $sub_parts = array();
 
@@ -184,9 +184,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     $str_sub_parts_glue = ' OR ';
     $str_relation = $cql_part_relation->mediamosa_cql_part_str_get();
     $has_not = $cql_part->mediamosa_cql_part_has_not();
-mediamosa_watchdog::log($str_search_term);
-mediamosa_watchdog::log($str_relation);
-mediamosa_watchdog::log($has_not ? "has not" : 'no not');
+mediamosa_debug::log($str_search_term);
+mediamosa_debug::log($str_relation);
+mediamosa_debug::log($has_not ? "has not" : 'no not');
 
     switch ($str_relation) {
       case 'all':
@@ -215,12 +215,11 @@ mediamosa_watchdog::log($has_not ? "has not" : 'no not');
         $has_not = !$has_not;
         $sub_parts = array($str_table_column . ':"' . $str_search_term . '"');
         break;
-
     }
-mediamosa_watchdog::log_export($sub_parts);
+mediamosa_debug::log_export($sub_parts);
     // Into one.
     $parts[] = (count($sub_parts) < 2 ? '' : '(') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) < 2 ? '' : ')');
-mediamosa_watchdog::log_export($parts);
+mediamosa_debug::log_export($parts);
 
     return ($has_not ? '-' : '') . (count($parts) < 2 ? '' : '(') . implode (' OR ', $parts) . (count($parts) < 2 ? '' : ')');
 

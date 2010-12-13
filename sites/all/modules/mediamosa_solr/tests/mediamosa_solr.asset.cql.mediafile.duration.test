@@ -26,10 +26,10 @@
 
 /**
  * @file
- * Solr version of MediaMosaAssetCQLTestCaseEga
+ * Solr version of MediaMosaAssetCQLMediafileDurationTestCaseEga
  */
 
-class MediaMosaSolrAssetCQLTestCaseEga extends MediaMosaAssetCQLTestCaseEga {
+class MediaMosaSolrAssetCQLMediafileDurationTestCaseEga extends MediaMosaAssetCQLMediafileDurationTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.

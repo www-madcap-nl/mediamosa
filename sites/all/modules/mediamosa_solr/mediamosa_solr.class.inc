@@ -103,9 +103,9 @@ class mediamosa_solr {
 
 
     if (!empty($parameters['cql'])) {
-mediamosa_watchdog::log($parameters['cql']);
+mediamosa_debug::log($parameters['cql']);
       $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['app_ids']);
-mediamosa_watchdog::log_export($result);
+mediamosa_debug::log_export($result);
 
       // We got something from cql?
       if (!empty($result['str_where'])) {
@@ -177,7 +177,7 @@ mediamosa_watchdog::log_export($result);
     // Do query.
     $query = self::where($solr_query);
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query);
-mediamosa_watchdog::log_export($mediamosa_solr_apache_solr_response);
+mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
     // Done.
     return array('asset_ids' => $mediamosa_solr_apache_solr_response->getAssetIds(), 'total_count' => $mediamosa_solr_apache_solr_response->getNumFound());
   }
@@ -393,7 +393,7 @@ mediamosa_watchdog::log_export($mediamosa_solr_apache_solr_response);
    * @return
    *  Returns the Solr Response object.
    */
-  static public function search($query) {
+  static public function search($query, $offset = 0, $limit = 10, $params = array(), $method = self::METHOD_GET) {
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
 
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->search($query));

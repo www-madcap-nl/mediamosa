@@ -44,6 +44,19 @@ class mediamosa_debug {
   }
 
   /**
+   * Log all types.
+   *
+   * @param miced $data
+   * @param string $severity
+   * @param string $type
+   */
+  static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
+    if (self::is_debug()) {
+      mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
+    }
+  }
+
+  /**
    * Log asset ids.
    */
   static public function log_asset($asset_id, $message, array $variables = array(), $type = NULL) {

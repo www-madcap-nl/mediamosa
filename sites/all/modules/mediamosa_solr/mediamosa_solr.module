@@ -36,8 +36,6 @@ module_load_include('batch.inc', 'mediamosa_solr', 'mediamosa_solr');
 define('MEDIAMOSA_SOLR_PERM_CONFIGURATION', 'administer mediamosa solr configuration');
 define('MEDIAMOSA_SOLR_PERM_INDEXER', 'administer mediamosa solr indexer');
 
-define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_SOLR', 'MediaMosa Solr');
-
 /**
  * Implementation of hook_mediamosa_search_engine().
  */
