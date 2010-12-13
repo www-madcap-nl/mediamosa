@@ -90,6 +90,7 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_TRUE,
     );
     $job_id_1_1_1 = $this->createJob($a_fields_1_1_1);
 
@@ -131,6 +132,7 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
       mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_TRUE,
     );
     $job_id_1_2_1 = $this->createJob($a_fields_1_2_1);
 
@@ -151,6 +153,7 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
       mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::HINT => mediamosa_job_db::HINT_TRUE,
     );
     $job_id_1_2_2 = $this->createJob($a_fields_1_2_2);
 
