@@ -361,6 +361,29 @@ class mediamosa_asset_mediafile_metadata {
     // Store in error description.
     mediamosa_job::store_error_description($job_id, $ffmpeg_output);
 
+    $job = mediamosa_job::get($job_id, array(mediamosa_job_db::MEDIAFILE_DEST));
+    // Is it a retranscode job?
+    if ($job[mediamosa_job_db::MEDIAFILE_DEST]) {
+      $mediafile_dest = $job[mediamosa_job_db::MEDIAFILE_DEST];
+      // Delete the original.
+      mediamosa_asset_mediafile::delete($mediafile_dest);
+      // Move the file.
+      mediamosa_io::move(
+        mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id),
+        mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_dest)
+      );
+
+      mediamosa_db::db_query("SET foreign_key_checks = 0");
+      // Update mediamosa_asset_mediafile table.
+      mediamosa_asset_mediafile::update_mediafile_id($mediafile_id, $mediafile_dest);
+      // Update mediamosa_asset_mediafile_metadata table.
+      self::update_mediafile_id($mediafile_id, $mediafile_dest);
+      mediamosa_db::db_query("SET foreign_key_checks = 1");
+
+      // Update the mediafile_id.
+      $mediafile_id = $mediafile_dest;
+    }
+
     // Normalize to asset.
     mediamosa_asset::update_asset_info_with_mediafileid($mediafile_id);
 
@@ -368,6 +391,22 @@ class mediamosa_asset_mediafile_metadata {
     mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
   }
 
+  /**
+   * Update the mediafile_id.
+   *
+   * @param mediafile_id
+   * @param mediafile_dest
+   */
+  static public function update_mediafile_id($mediafile_id, $mediafile_dest) {
+    $fields = array(
+      mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $mediafile_dest,
+    );
+    // Build the query.
+    mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->fields($fields)
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+  }
 
   /**
    * Create mediafile metadata value.

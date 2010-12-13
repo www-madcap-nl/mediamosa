@@ -41,6 +41,8 @@ class mediamosa_job_db {
   const ASSET_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
   const MEDIAFILE_ID = 'mediafile_id';
   const MEDIAFILE_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
+  const MEDIAFILE_DEST = 'mediafile_dest';
+  const MEDIAFILE_DEST_LENGTH = mediamosa_db::HASH_ID_LENGTH;
   const OWNER_ID = 'owner';
   const OWNER_ID_LENGTH = 255;
   const JOB_STATUS = 'status';
@@ -55,6 +57,7 @@ class mediamosa_job_db {
   const PRIORITY = 'priority';
   const JOB_TYPE = 'job_type';
   const JOB_TYPE_TRANSCODE = 'TRANSCODE';
+  const JOB_TYPE_RETRANSCODE = 'RETRANSCODE';
   const JOB_TYPE_STILL = 'STILL';
   const JOB_TYPE_UPLOAD = 'UPLOAD';
   const JOB_TYPE_ANALYSE = 'ANALYSE';
@@ -68,6 +71,10 @@ class mediamosa_job_db {
   const CREATE_STILL_TRUE = 'TRUE';
   const CREATE_STILL_FALSE = 'FALSE';
   const STILL_PARAMETERS = 'still_parameters';
+  const HINT = 'hint';
+  const HINT_TRUE = 'TRUE';
+  const HINT_FALSE = 'FALSE';
+  // TODO: Remove on the next release.
   const NO_HINT = 'no_hint';
   const NO_HINT_TRUE = 'TRUE';
   const NO_HINT_FALSE = 'FALSE';

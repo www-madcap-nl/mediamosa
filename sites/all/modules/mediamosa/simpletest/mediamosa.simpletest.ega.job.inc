@@ -143,6 +143,45 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
   }
 
   /**
+   * Create retranscode.
+   * Based on REST call /mediafile/$mediafile_id/retranscode (POST)
+   */
+  protected function createMediafileRetranscode($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_job_create_still_for_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set the URI.
+    $uri = strtr('mediafile/@mediafile_id/retranscode', array('@mediafile_id' => $mediafile_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Started retranscode job for mediafile ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get the job_id.
+    $job_id = $response['xml']->items->item[0]->job_id;
+
+    // Must have job id.
+    $this->assertTrue($job_id, strtr('Got valid job ID @job_id.', array('@job_id' => $job_id)));
+
+    // Return the job_id.
+    return array('job_id' => $job_id);
+  }
+
+  /**
    * Run and execute the current jobs (one cycle).
    */
   protected function doQueueCycle() {

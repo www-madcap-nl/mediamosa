@@ -81,6 +81,37 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
       }
     }
 
+    // Make a retranscode job.
+
+    // Get the transcoded mediafile_id.
+    $mediafile_id_transcoded = NULL;
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          if ($mediafile_child['mediafile_id'] != $mediafile_id) {
+            $mediafile_id_transcoded = $mediafile_child['mediafile_id'];
+            break;
+          }
+        }
+      }
+    }
+    if ($mediafile_id_transcoded) {
+      $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_transcoded);
+      // Delete the transcoded file.
+      mediamosa_io::unlink($filename);
+
+      // Create transcode job.
+      $job_id = $this->createMediafileRetranscode($mediafile_id_transcoded);
+
+      // Parse the queue.
+      $this->doQueueCycleAll();
+
+      $this->assertTrue(
+        mediamosa_io::is_file($filename),
+        strtr("The mediafile was successfuly retranscoded: @filename", array('@filename' => $filename))
+      );
+    }
+
     // TODO: Windows transcoding
   }
 

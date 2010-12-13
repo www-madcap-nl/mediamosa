@@ -775,6 +775,7 @@ class mediamosa_job_scheduler {
    * @param $server_id
    * @param $uri
    * @param $mediafile_id
+   * @param $mediafile_dest
    */
   static public function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
     self::log_mediafile($mediafile_id, 'Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));

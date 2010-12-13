@@ -41,13 +41,16 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function get($mediafile_id, $app_id = NULL, $fields = array()) {
+  static public function get($mediafile_id, $app_id = NULL, $fields = array(), $is_still = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', $fields);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     if (isset($app_id)) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+    }
+    if (isset($is_still)) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, $is_still);
     }
     return $query->execute()->fetchAssoc();
   }
@@ -568,6 +571,23 @@ class mediamosa_asset_mediafile {
 
     // Set the empty asset.
     mediamosa_asset::update_asset_info_is_empty_asset($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+  }
+
+  /**
+   * Update the mediafile_id.
+   *
+   * @param mediafile_id
+   * @param mediafile_dest
+   */
+  static public function update_mediafile_id($mediafile_id, $mediafile_dest) {
+    $fields = array(
+      mediamosa_asset_mediafile_db::ID => $mediafile_dest,
+    );
+    // Build the query.
+    mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields($fields)
+      ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
+      ->execute();
   }
 
   /**

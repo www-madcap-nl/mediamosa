@@ -273,6 +273,7 @@ class mediamosa_statistics {
         mediamosa_statistics_job_db::ID => NULL,
         mediamosa_statistics_job_db::APP_ID => $job[mediamosa_job_db::APP_ID],
         mediamosa_statistics_job_db::MEDIAFILE_ID => $mediafile_id,
+        mediamosa_statistics_job_db::JOB_TYPE => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
         mediamosa_statistics_job_db::STARTED => $job[mediamosa_job_db::STARTED],
         mediamosa_statistics_job_db::FINISHED => $job[mediamosa_job_db::FINISHED],
         mediamosa_statistics_job_db::TRANSCODE_PROFILE_ID => $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID],

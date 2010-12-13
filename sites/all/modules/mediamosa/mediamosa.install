@@ -1103,6 +1103,9 @@ function mediamosa_update_7049() {
 
   // Now convert.
   db_query("UPDATE {mediamosa_user_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+
+  // Set the time of update.
+  variable_set('mediamosa_utc_update_time', date('Y-m-d H:i:s'));
 }
 
 /**
@@ -1668,10 +1671,135 @@ function mediamosa_update_7078() {
 }
 
 /**
- * Rebuild the registry.
+ * Introduction retranscode job.
  */
 function mediamosa_update_7079() {
+  // Mediafile destination id.
+  db_query("ALTER TABLE {mediamosa_job} ADD mediafile_dest VARBINARY(32) DEFAULT NULL COMMENT 'The mediafile destination ID in case of retranscode.' AFTER mediafile_id");
+}
+
+/**
+ * Change the mediamosa_job table no_hint column to hint: null is available then (See ticket VPCore 211).
+ */
+function mediamosa_update_7080() {
+  db_change_field(
+    mediamosa_job_db::TABLE_NAME,
+    mediamosa_job_db::NO_HINT,
+    mediamosa_job_db::HINT,
+    array(
+        'description' => 'Hinting.',
+        'type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+    )
+  );
+}
+
+/**
+ * Change the mediamosa_job table no_hint values to hint.
+ */
+function mediamosa_update_7081() {
+  // Change the values.
+  db_query("UPDATE {mediamosa_job} SET hint = IF(hint = 'FALSE', NULL, 'FALSE')");
+}
+
+/**
+ * UTC / CET date summer-winter time fix.
+ * TODO: Known bug: mediamosa_datetime::app_date2utc_date('1923-11-11 22:00:00', 'Europe/Amsterdam') === '1923-11-11 21:40:28'
+ */
+function mediamosa_update_7082() {
+  $result = db_query('
+    SELECT
+      DATE_ADD(val_datetime, INTERVAL 2 HOUR) AS val_datetime_cet,
+      val_datetime AS val_datetime_wrong,
+      metadata_id,
+      created
+    FROM {mediamosa_asset_metadata}
+    WHERE
+      val_datetime IS NOT NULL
+  ');
+
+  foreach ($result as $record) {
+    if ($record->created > variable_get('mediamosa_utc_update_time', '2010-05-01 00:00:01')) {
+      // Skip the date, that is already has the good value.
+      continue;
+    }
+
+    $val_datetime_utc = mediamosa_datetime::app_date2utc_date($record->val_datetime_cet, 'Europe/Amsterdam');
+    if ($record->val_datetime_wrong != $val_datetime_utc) {
+      db_query('UPDATE {mediamosa_asset_metadata} SET val_datetime = :val_datetime_utc WHERE metadata_id = :metadata_id', array(
+        ':val_datetime_utc' => $val_datetime_utc,
+        ':metadata_id' => $record->metadata_id,
+      ));
+    }
+  }
+}
+
+/**
+ * UTC / CET date summer-winter time fix.
+ */
+function mediamosa_update_7083() {
+  $result = db_query('
+    SELECT
+      DATE_ADD(videotimestamp, INTERVAL 2 HOUR) AS videotimestamp_cet,
+      videotimestamp AS videotimestamp_wrong,
+      DATE_ADD(videotimestampmodified, INTERVAL 2 HOUR) AS videotimestampmodified_cet,
+      videotimestampmodified AS videotimestampmodified_wrong,
+      asset_id,
+      created
+    FROM {mediamosa_asset}
+  ');
+
+  foreach ($result as $record) {
+    if ($record->created > variable_get('mediamosa_utc_update_time', '2010-05-01 00:00:01')) {
+      // Skip the date, that is already has the good value.
+      continue;
+    }
+
+    // Skip the NULL values.
+    if ($record->videotimestamp_cet) {
+      $videotimestamp_utc = mediamosa_datetime::app_date2utc_date($record->videotimestamp_cet, 'Europe/Amsterdam');
+      if ($record->videotimestamp_wrong != $videotimestamp_utc) {
+        db_query('UPDATE {mediamosa_asset} SET videotimestamp = :videotimestamp_utc WHERE asset_id = :asset_id', array(
+          ':videotimestamp_utc' => $videotimestamp_utc,
+          ':asset_id' => $record->asset_id,
+        ));
+      }
+    }
+    if ($record->videotimestampmodified_cet) {
+      $videotimestampmodified_utc = mediamosa_datetime::app_date2utc_date($record->videotimestampmodified_cet, 'Europe/Amsterdam');
+      if ($record->videotimestampmodified_wrong != $videotimestampmodified_utc) {
+        db_query('UPDATE {mediamosa_asset} SET videotimestampmodified = :videotimestampmodified_utc WHERE asset_id = :asset_id', array(
+          ':videotimestampmodified_utc' => $videotimestampmodified_utc,
+          ':asset_id' => $record->asset_id,
+        ));
+      }
+    }
+  }
+}
+
+/**
+ * Add the job_type field to mediamosa_statistics_job table.
+ */
+function mediamosa_update_7084() {
+  db_add_field(
+    mediamosa_statistics_job_db::TABLE_NAME,
+    mediamosa_statistics_job_db::JOB_TYPE,
+    array(
+      'description' => 'The type of the job.',
+      'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+      'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+    )
+  );
+}
+
+/**
+ * Rebuild the registry.
+ */
+function mediamosa_update_7085() {
   registry_rebuild();
 }
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

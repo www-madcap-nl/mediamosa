@@ -73,6 +73,13 @@ function mediamosa_statistics_job_schema() {
         'default' => NULL,
         'description' => 'The mediafile ID.',
       ),
+      mediamosa_statistics_job_db::JOB_TYPE => array(
+        'description' => 'The type of the job.',
+        'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+      ),
       mediamosa_statistics_job_db::STARTED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',

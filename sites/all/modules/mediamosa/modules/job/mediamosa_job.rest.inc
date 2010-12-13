@@ -200,6 +200,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   const MEDIAFILE_ID = 'mediafile_id';
 
   const USER_ID = 'user_id';
+  const HINT = 'hint';
   const NO_HINT = 'no_hint';
 
   // ------------------------------------------------------------ Get Var Setup.
@@ -218,9 +219,14 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The user id, must be the owner of the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
+        self::HINT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Setting to TRUE or FALSE overrules the global ega-setting. possible values: TRUE, FALSE, NULL. Default: NULL',
+          self::VAR_DEFAULT_VALUE => NULL,
+        ),
         self::NO_HINT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'when true then, regardless of the ega setting, do not add hinting to the mediafile.',
+          self::VAR_DESCRIPTION => 'When true and "hint" parameter is not defined then, regardless of the ega setting, do not add hinting to the mediafile. Deprecated.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       )
@@ -241,10 +247,16 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     // Get params.
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);
+
+    $hint = $this->get_param_value(self::HINT);
     $no_hint = $this->get_param_value(self::NO_HINT);
+    // If hint is null, and no_hint is true, then do the old way.
+    if (is_null($hint) && $no_hint === TRUE) {
+      $hint = FALSE;
+    }
 
     // Create it.
-    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
+    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $hint);
 
     // Add job_id.
     $mediamosa->add_item(array('job_id' => $job_id));
@@ -554,6 +566,10 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
         $job_id = mediamosa_job::create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
+        break;
+
+      case mediamosa_job_db::JOB_TYPE_RETRANSCODE:
+        $job_id = mediamosa_job::create_job_retranscode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
         break;
 
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
@@ -958,6 +974,53 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
 }
 
 /**
+ * URI: /mediafile/$mediafile_id/retranscode
+ *
+ * Method: POST
+ *
+ * Create a retranscode job.
+ */
+class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job_create {
+  // ------------------------------------------------------------------- Consts.
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = parent::get_var_setup();
+
+    unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
+
+    return $a_var_setup;
+  }
+
+  // ------------------------------------------------------- Progress Rest Args.
+  /**
+   * Process the supplied parameters.
+   *
+   * @param array $a_var_setup
+   */
+  protected function process_rest_args(array $a_var_setup) {
+
+    // Set job type and give it fixed value.
+    $a_var_setup[self::VARS][self::JOB_TYPE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
+      self::VAR_DESCRIPTION => 'The job type.',
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_OVERRIDE_VALUE => mediamosa_job_db::JOB_TYPE_RETRANSCODE,
+    );
+
+    // GET / POST to array.
+    $a_var_setup = parent::process_rest_args($a_var_setup);
+
+    return $a_var_setup;
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    parent::do_call();
+  }
+}
+
+/**
  * URI: /asset/$asset_id/still/create
  *
  * Method: POST
@@ -1045,7 +1108,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
     $end_time = $this->get_param_value(self::END_TIME);
     if (!$end_frame && $end_time) {
-      $this->set_param_value(self::START_FRAME, $end_time);
+      $this->set_param_value(self::END_FRAME, $end_time);
     }
 
     // If size is not given, but width and height are, use width, height.

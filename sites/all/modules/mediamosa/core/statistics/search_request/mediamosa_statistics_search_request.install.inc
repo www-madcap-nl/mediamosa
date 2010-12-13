@@ -80,7 +80,7 @@ function mediamosa_statistics_search_request_schema() {
         'description' => 'The time and date of the search.',
       ),
     ),
-    'primary key' => array(mediamosa_statistics_rest_log_db::ID),
+    'primary key' => array(mediamosa_statistics_search_request_db::ID),
     'indexes' => array(
       'idx_keyword' => array(array(mediamosa_statistics_search_request_db::KEYWORD, 255))
     ),

@@ -108,6 +108,12 @@ function mediamosa_job_schema() {
         'default' => NULL,
         'description' => 'The mediafile ID.',
       ),
+      mediamosa_job_db::MEDIAFILE_DEST => array(
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'default' => NULL,
+        'description' => 'The mediafile destination ID in case of retranscode.',
+      ),
       mediamosa_job_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_job_db::OWNER_ID_LENGTH,
@@ -136,7 +142,7 @@ function mediamosa_job_schema() {
         'default' => 0,
       ),
       mediamosa_job_db::JOB_TYPE => array(
-        'description' => 'The status of the job.',
+        'description' => 'The type of the job.',
         'type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_STILL, mediamosa_job_db::JOB_TYPE_UPLOAD, mediamosa_job_db::JOB_TYPE_ANALYSE, mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
@@ -161,12 +167,10 @@ function mediamosa_job_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::CREATE_STILL_FALSE, mediamosa_job_db::CREATE_STILL_TRUE)) . "')",
         'default' => mediamosa_job_db::CREATE_STILL_FALSE,
       ),
-      mediamosa_job_db::NO_HINT => array(
-        'description' => 'Not hinting.',
-        'type' => "enum('" . implode("','", array(mediamosa_job_db::NO_HINT_FALSE, mediamosa_job_db::NO_HINT_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::NO_HINT_FALSE, mediamosa_job_db::NO_HINT_TRUE)) . "')",
-        'default' => mediamosa_job_db::NO_HINT_FALSE,
+      mediamosa_job_db::HINT => array(
+        'description' => 'Hinting.',
+        'type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
       ),
       mediamosa_job_db::STILL_PARAMETERS => array(
         'type' => 'text',
