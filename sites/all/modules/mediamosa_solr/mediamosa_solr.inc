@@ -35,15 +35,19 @@
  * @param array $form_state
  * @param array $form
  */
-function _mediamosa_solr_ping_submit(&$form_state, $form) {
-  $mediamosa_solr_url = $form['values']['mediamosa_solr_url'];
-  $check_connection_save = $form['values']['check_connection_save'];
+function _mediamosa_solr_ping_submit($form, &$form_state) {
+  $mediamosa_solr_url = $form_state['values']['mediamosa_solr_url'];
+  $check_connection_save = $form_state['values']['mediamosa_solr_check_connection_save'];
 
-  if (MediaMosa_Solr_Apache_Solr_Service::mediamosaPing($mediamosa_solr_url)) {
+  // Don't want to save this in a variable.
+  $_SESSION['mediamosa_solr_check_connection_save'] = $form_state['values']['mediamosa_solr_check_connection_save'];
+  unset($form_state['values']['mediamosa_solr_check_connection_save']);
+
+  if (mediamosa_solr_apache_solr_service::mediamosaPing($mediamosa_solr_url)) {
     if ($check_connection_save) {
       drupal_set_message(t('Connection test successful, URL saved.'));
 
-      MediaMosa_Solr_Apache_Solr_Service::mediamosaSetUrl($mediamosa_solr_url);
+      mediamosa_solr_apache_solr_service::mediamosaSetUrl($mediamosa_solr_url);
     }
     else {
       drupal_set_message(t('Connection test successful. Warning: URL was not saved.'));
@@ -63,7 +67,7 @@ function _mediamosa_solr_status_generate() {
     return array();
   }
 
-  $ping_success = MediaMosa_Solr_Apache_Solr_Service::mediamosaPing();
+  $ping_success = mediamosa_solr_apache_solr_service::mediamosaPing();
 
   if ($ping_success) {
     $results['solr_ping'] = array(
@@ -87,8 +91,8 @@ function _mediamosa_solr_status_generate() {
   }
 
   return array(
-    'component' => array(
-      'title' => t('Component status'),
+    'components' => array(
+      'title' => t('Components'),
       'results' => $results,
     ),
   );

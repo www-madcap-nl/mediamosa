@@ -219,10 +219,10 @@ class mediamosa_job_scheduler {
    * 1.x: _vpx_jobhandler_check_status_all_servers
    */
   static public function check_status_all_servers() {
-    $a_transcoding_servers = mediamosa_server::get_enabled_transcode();
+    $job_processor_servers = mediamosa_server::get_enabled_job_processor();
 
-    foreach ($a_transcoding_servers as $a_transcoding_server) {
-      self::update_server_job_status($a_transcoding_server[mediamosa_server_db::SERVER_URI]);
+    foreach ($job_processor_servers as $job_processor_server) {
+      self::update_server_job_status($job_processor_server[mediamosa_server_db::SERVER_URI]);
     }
   }
 
@@ -234,6 +234,7 @@ class mediamosa_job_scheduler {
    * @param $uri
    */
   static public function update_server_job_status($uri) {
+
     // Get response.
     $response = mediamosa_http::do_internal_call($uri, 'server/joblist');
     if ($response->code != '200') {

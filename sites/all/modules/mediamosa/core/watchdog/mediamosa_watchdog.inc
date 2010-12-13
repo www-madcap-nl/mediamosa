@@ -41,7 +41,7 @@ class mediamosa_watchdog {
       $logging = TRUE;
 
       // We'll use the drupal watchdog.
-      watchdog('MediaMosa' . (!isset($type) ? '' : ' - ' . $type), $message, $variables, $severity, $link);
+      watchdog('MediaMosa' . (empty($type) ? '' : ' - ' . $type), $message, $variables, $severity, $link);
     }
 
     $logging = FALSE;
@@ -60,7 +60,7 @@ class mediamosa_watchdog {
     // Get the watchdog id.
     $query = mediamosa_db::db_select('watchdog', 'w')
       ->fields('w', array('wid'))
-      ->condition('w.link', $link, 'LIKE');
+      ->condition('w.link', mediamosa_db::db_like($link), 'LIKE');
     $wid = $query->execute()->fetchField();
 
     // Cleant the link of watchdog.

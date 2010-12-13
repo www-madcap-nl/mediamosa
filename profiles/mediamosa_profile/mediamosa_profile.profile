@@ -320,28 +320,10 @@ function _mediamosa_profile_installed_programs() {
 
 /**
  * Checking the PHP Settings.
+ *
+ * Only possible warnings for now.
  */
 function _mediamosa_profile_php_settings() {
-
-  $php_error_reporting = ini_get('error_reporting');
-  $e_notice = ($php_error_reporting & E_NOTICE);
-
-  $php_error_reporting = exec("php -r \"print(ini_get('error_reporting'));\"");
-  $e_notice = ($php_error_reporting & E_NOTICE);
-
-  $requirements['error_reporting_cle'] = array(
-    'title' => st('<b>error_reporting (PHP cli):</b>'),
-    'value' => !$e_notice ? 'Off' : 'E_NOTICE is on.' ,
-    'severity' => !$e_notice ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-    'description' => !$e_notice ? '' : st('Warning: You should to turn off E_NOTICE flag to prevent PHP warnings in your PHP cli output. We advice E_ALL & ~E_NOTICE in your php.ini cli file.'),
-  );
-
-  $errors = 0;
-  foreach ($requirements as $requirement) {
-    if ($requirement['severity'] == REQUIREMENT_ERROR) {
-      $errors++;
-    }
-  }
 
   $php_upload_max_filesize = ini_get('upload_max_filesize');
   $too_low = (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
@@ -370,7 +352,7 @@ function _mediamosa_profile_php_settings() {
     'description' => !$too_low ? '' : st('Warning: post_max_size should be at least 100M.'),
   );
 
-  return array('errors' => $errors, 'requirements' => $requirements);
+  return array('errors' => 0, 'requirements' => $requirements);
 }
 
 /**
@@ -548,9 +530,7 @@ function mediamosa_profile_cron_settings_form() {
   );
 
   $form['cron']['crontab'] = array(
-    '#type' => 'textarea',
-    '#attributes' => array('class' => array('mm-profile-textarea')),
-    '#default_value' => '* * * * * /usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost' . url('') . 'cron.php?cron_key=' . variable_get('cron_key', ''),
+    '#markup' => '<p><pre>* * * * * /usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost' . url('') . 'cron.php?cron_key=' . variable_get('cron_key', '') . '</pre></p>',
     '#rows' => 6,
   );
 
@@ -577,8 +557,9 @@ function mediamosa_profile_apache_settings_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '');
   $document_root = _mediamosa_profile_document_root();
 
-  $apache_settings_local = st("<b>Localhost setup (simple)</b><p>Single server setup with http://localhost/ for demonstration purposes. Add the following lines to your basic localhost apache definition:
-    <pre>".htmlentities("
+  $apache_settings_local = st("Single-server setup with http://localhost/ for demonstration or testing purposes.
+  <p><li>Add the following lines to your default localhost apache definition:</p>
+    <pre>" . htmlentities("
     # ticket
     Alias /ticket !mount_point/links
     <Directory !mount_point/links>
@@ -592,20 +573,18 @@ function mediamosa_profile_apache_settings_form() {
         php_admin_value post_max_size 2008M
         php_admin_value upload_max_filesize 2000M
         php_admin_value memory_limit 128M
-    </IfModule>") ."</pre>
-    The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p><br /><br />
-", array(
+    </IfModule>") . '</pre>
+<p>The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p>
+<p><li>Restart your Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>
+', array(
       '!mount_point' => $mount_point,
     ));
 
   $server_name_clean = $server_name;
 
-  $apache_settings_adv = st("<b>Multiserver setup (advanced)</b><p>
-Multidomain setup with different DNS entries for a production setup.
-First change your site settings in /etc/apache2/sites-available/your-site.
-Save your original file (if any), then insert this code to your settings file.
-If you just created this file please enable it with the a2ensite command.
-    <pre>" . htmlentities("
+  $apache_settings_adv = st("Multi-server setup with different DNS entries for a production or development setup.
+<p><li>Insert the vhost setup below into the new file /etc/apache2/sites-available/<b>your-site</b>, where <b>your-site</b> is the name of your MediaMosa site:</p>
+<pre>" . htmlentities("
 <VirtualHost *:80>
     ServerName !server_name_clean
     ServerAlias admin.!server_name_clean www.!server_name_clean
@@ -740,31 +719,57 @@ If you just created this file please enable it with the a2ensite command.
     ErrorLog /var/log/apache2/job2.!server_name_clean_error.log
     CustomLog /var/log/apache2/job2.!server_name_clean_access.log combined
     ServerSignature On
-</VirtualHost>") ."</pre></p><br />", array(
+</VirtualHost>") . '
+</pre><p><li>Enable the website:</p><p><code>sudo a2ensite <b>your-site</b></code></p>
+<p><li>Restart Apache:</p><p><code>sudo /etc/init.d/apache2 restart</code></p>',
+    array(
       '!server_name_clean' => $server_name_clean,
       '!document_root' => $document_root,
       '!mount_point' => $mount_point,
-    ));
+    )
+  );
 
   $form['apache'] = array(
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Apache settings'),
-    '#description' => t("Choose a server setup. We recommend the Multiserver setup for production websites."),
+    '#title' => t('Apache HTTP server setup'),
+    '#description' => t("Choose a server setup. We recommend the Multiserver setup for production websites. The simple setup should only be used for testing purposes."),
   );
 
   $form['apache']['localhost'] = array(
     '#type' => 'radios',
     '#options' => array(
-      'simple' => ($apache_settings_local),
-      'advanced' => ($apache_settings_adv))
+      'simple' => '<b>' . t("Simple setup, I'm testing") . '</b>',
+      'advanced' => '<b>' . t("Multi server setup, I'm setting up production or development") . '</b>',
+    ),
   );
 
-  $form['apache']['multisetup_postinstall'] = array(
-    '#markup' => t("
-<li>Restart your Apache:<br />
-<code>sudo /etc/init.d/apache2 restart</code><br />"));
+  $form['apache']['local'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Localhost setup (testing)'),
+    '#states' => array(
+      'visible' => array(   // action to take.
+        ':input[name="localhost"]' => array('value' => 'simple'),
+      ),
+    ),
+  );
+  $form['apache']['local']['local_text'] = array(
+    '#markup' => $apache_settings_local,
+  );
+
+  $form['apache']['multi'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Multiserver setup (production / development)'),
+    '#states' => array(
+      'visible' => array(   // action to take.
+        ':input[name="localhost"]' => array('value' => 'advanced'),
+      ),
+    ),
+  );
+  $form['apache']['multi']['multi_text'] = array(
+    '#markup' => $apache_settings_adv,
+  );
 
   $form['continue'] = array(
     '#type' => 'submit',
@@ -775,8 +780,8 @@ If you just created this file please enable it with the a2ensite command.
 }
 
 function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
-  if ($form_state['values']['localhost'] == '') {
-    form_set_error('', t('You must choose an Apache setup.'));
+  if (!in_array($form_state['values']['localhost'], array('simple', 'advanced'))) {
+    form_set_error('', t('You must choose an setup.'));
   }
 }
 
@@ -832,8 +837,8 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name);
   }
   else {
-    variable_set('mediamosa_jobscheduler_uri', 'http://job1.'. $server_name);
-    variable_set('mediamosa_cron_url_app', 'http://app1.'. $server_name);
+    variable_set('mediamosa_jobscheduler_uri', 'http://job1.' . $server_name);
+    variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name);
   }
 
   if (strcasecmp($server_name, 'mediamosa.local')) {
@@ -841,7 +846,7 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
     $results = db_select('mediamosa_server', 'ms')
       ->fields('ms')
       ->execute();
-    
+
     // Lets save all entries in an array.
     $rows = array();
     foreach ($results as $row) {
@@ -898,10 +903,7 @@ function mediamosa_profile_migration_form() {
   );
 
   $form['migration']['settings'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Migration setup for sites/default/settings.php'),
-    '#attributes' => array('class' => array('mm-profile-textarea')),
-    '#default_value' => "\$databases['mig_memo']['default'] = array(
+    '#markup' => '<p><b>' . t('Migration setup for sites/default/settings.php') . '</b><pre>' . htmlentities("\$databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
   'database' => 'your_old_database',
   'username' => 'your_user_name',
@@ -914,9 +916,7 @@ function mediamosa_profile_migration_form() {
   'username' => 'your_user_name',
   'password' => 'your_password',
   'host' => 'localhost'
-);",
-    '#cols' => 60,
-    '#rows' => 15,
+);") . '</pre></p>',
   );
 
   $form['continue'] = array(

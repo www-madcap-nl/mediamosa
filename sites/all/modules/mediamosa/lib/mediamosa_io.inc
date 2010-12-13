@@ -308,4 +308,73 @@ class mediamosa_io {
   static public function disk_free_space($directory) {
     return disk_free_space($directory);
   }
+
+  /**
+   * Test if given command is install / found.
+   *
+   * Also returns its default stdio / strerr output in $exec_output
+   *
+   * @param $command
+   *  Command to test.
+   * @param $exec_output
+   *  Gets the output of stdio/stderr
+   * @param $allowed_ret_values
+   *  List of return values that indicate command is installed. Most programs
+   *  will use exit(0) as indication that it was run. Some use exit(1) or higher
+   *  as exit value.
+   */
+  static public function command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
+    $exec_output = array();
+    $ret_val = 0;
+    exec($command, $exec_output, $ret_val);
+
+    // If ret_val is ok, then check if $exec_output is empty.
+    if (in_array($ret_val, $allowed_ret_values)) {
+      if (empty($exec_output)) {
+        // Maybe stderr gave something back.
+        exec($command . ' 2>&1', $exec_output);
+      }
+
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Calculate the space used by a directory.
+   */
+  static public function disk_usage($directory, $recursive = FALSE) {
+    if (is_file($directory)) {
+      return filesize($directory);
+    }
+
+    $disk_usage = 0;
+    if (is_dir($directory)) {
+      $dir = dir($directory);
+      while (($entry = $dir->read()) !== FALSE) {
+        if ($entry == '.' || $entry == '..') {
+          continue;
+        }
+
+        $entry_path = $directory . '/' . $entry;
+        if (is_file($entry_path)) {
+          $disk_usage += filesize($entry_path);
+        }
+        elseif ($recursive && is_dir($entry_path)) {
+          $disk_usage += self::disk_usage($entry_path, TRUE);
+        }
+      }
+      $dir->close();
+    }
+
+    return $disk_usage;
+  }
+
+  /**
+   * Calculate the space used by a directory.
+   */
+  static public function disk_usage_recursive($directory) {
+    return self::disk_usage($directory, TRUE);
+  }
 }

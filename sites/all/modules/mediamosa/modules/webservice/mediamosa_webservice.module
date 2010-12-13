@@ -171,11 +171,11 @@ function mediamosa_webservice_form($form, $form_state) {
  * @param array $form_state
  * @param array $form
  */
-function mediamosa_webservice_form_submit(&$form_state, $form) {
+function mediamosa_webservice_form_submit($form, &$form_state) {
 
   mediamosa_db::db_update(mediamosa_webservice_db::TABLE_NAME)
-    ->fields(array(mediamosa_webservice_db::STATUS => $form['values'][mediamosa_webservice_db::STATUS]))
-    ->condition(mediamosa_webservice_db::ID, $form['values'][mediamosa_webservice_db::ID])
+    ->fields(array(mediamosa_webservice_db::STATUS => $form_state['values'][mediamosa_webservice_db::STATUS]))
+    ->condition(mediamosa_webservice_db::ID, $form_state['values'][mediamosa_webservice_db::ID])
     ->execute();
 
   drupal_set_message(t("Webservice was updated succesfully."));

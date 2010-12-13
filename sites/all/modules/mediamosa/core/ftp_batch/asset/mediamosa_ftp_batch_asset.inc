@@ -33,6 +33,7 @@ class mediamosa_ftp_batch_asset {
 
   /**
    * Get the asset relations.
+   *
    * @param integer $app_id
    *  The application ID.
    * @param integer $batch_id
@@ -71,20 +72,20 @@ class mediamosa_ftp_batch_asset {
    *
    * @param integer $app_id
    *  Application ID.
-   * @param array $a_asset_ids
+   * @param array $asset_ids
    *  The asset IDs.
    * @param integer $batch_id
    *  The batch ID.
    */
-  static public function add_asset_relation($app_id, array $a_asset_ids, $batch_id) {
+  static public function add_asset_relation($app_id, array $asset_ids, $batch_id) {
 
     // Make sure all assets exist.
-    foreach ($a_asset_ids as $asset_id) {
+    foreach ($asset_ids as $asset_id) {
       mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::APP_ID => $app_id));
     }
 
     // Now create relations.
-    foreach ($a_asset_ids as $asset_id) {
+    foreach ($asset_ids as $asset_id) {
       try {
         // Add this asset as row in {ftp_batch_asset} with [$asset_id, $batch_id].
         mediamosa_db::db_query('INSERT INTO {#mediamosa_ftp_batch_asset} SET #asset_id = :asset_id, #batch_id = :batch_id',
@@ -121,5 +122,18 @@ class mediamosa_ftp_batch_asset {
         ':batch_id' => $batch_id
       )
     );
+  }
+
+  /**
+   * Get the batches of given asset.
+   *
+   * @param string $asset_id
+   */
+  static public function get_batch_relation($asset_id) {
+    return mediamosa_db::db_select(mediamosa_ftp_batch_asset_db::TABLE_NAME, 'ftp')
+      ->fields('ftp', array(mediamosa_ftp_batch_asset_db::BATCH_ID))
+      ->condition(mediamosa_ftp_batch_asset_db::ASSET_ID, $asset_id)
+      ->execute()
+      ->fetchCol();
   }
 }

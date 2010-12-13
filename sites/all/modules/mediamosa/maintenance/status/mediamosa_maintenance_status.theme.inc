@@ -57,7 +57,7 @@ function theme_mediamosa_maintenance_status_report($variables) {
   $output = '';
   $i = 0;
 
-  $output .= '<h1>' . $table_name . '</h1>';
+  $output .= '<h2>' . $table_name . '</h2>';
   $output .= '<table class="system-status-report">';
   foreach ($results as $result) {
     $class = ++$i % 2 == 0 ? 'even' : 'odd';
@@ -75,7 +75,7 @@ function theme_mediamosa_maintenance_status_report($variables) {
       $output .= '<tr class="' . $class . '"><td class="mediamosa-status-part">' . $result['title'] . '</td><td>' . $result['value'];
     }
     else {
-      $output .= '<tr class="' . $class . ' merge-down"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
+      $output .= '<tr class="' . $class . ' merge-down"><td class="mediamosa-status-part">' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
       $output .= '<tr class="' . $class . ' merge-up"><td colspan="2">' . $result['description'];
     }
     $output .= '</td></tr>';

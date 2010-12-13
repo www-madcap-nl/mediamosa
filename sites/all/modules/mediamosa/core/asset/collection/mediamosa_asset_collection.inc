@@ -259,4 +259,17 @@ class mediamosa_asset_collection {
     $query->join(mediamosa_asset_collection_db::TABLE_NAME, 'ac', 'ac.coll_id = c.coll_id');
     return $query->execute();
   }
+
+  /**
+   * Get list of collections of given asset_id.
+   *
+   * @param $asset_id
+   */
+  static public function get_collections($asset_id) {
+    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
+    $query->join(mediamosa_asset_collection_db::TABLE_NAME, 'ac', 'ac.coll_id = c.coll_id');
+    $query->fields('c');
+    $query->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id);
+    return $query->execute()->fetchAllAssoc(mediamosa_asset_collection_db::COLL_ID);
+  }
 }

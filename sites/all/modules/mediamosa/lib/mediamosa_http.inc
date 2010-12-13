@@ -289,6 +289,10 @@ class mediamosa_http {
     $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
     $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
 
+    $options += array(
+      'method' => 'GET',
+    );
+
     $urls = mediamosa_http::parse_url($url);
     if ($use_localhost) {
       $options['headers']['Host'] = $urls['host'];

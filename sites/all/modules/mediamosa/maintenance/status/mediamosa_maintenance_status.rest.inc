@@ -47,7 +47,8 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $statuses = module_invoke_all('mediamosa_status_collect', FALSE, FALSE);
+    // Get status from cache.
+    $statuses = module_invoke_all('mediamosa_status_collect', FALSE);
 
     // Get only what we need.
     foreach ($statuses as $section_part => $section) {
@@ -74,9 +75,8 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
       // we add runtime (unixtimestamp) to verify if cron is still running.
       $last_time = variable_get('mediamosa_status_last_time', 0);
       $item['time'] = $last_time;
-      
+
       $mediamosa->add_item($item);
     }
-
   }
 }

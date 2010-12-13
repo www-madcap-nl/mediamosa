@@ -1133,7 +1133,7 @@ class mediamosa_aut {
    *  Specify NULL for non-direct matching.
    * @param integer $app_id
    * @param string $aut_user_id
-   * @param array $a_aut_group_id
+   * @param array $aut_group_ids
    * @param string $aut_domain
    * @param string $aut_realm
    * @param array $a_aut_ids
@@ -1146,7 +1146,7 @@ class mediamosa_aut {
    *  In some cases we want another table being used for app_id prefix.
    *
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1165,9 +1165,9 @@ class mediamosa_aut {
     }
 
     // Get of this current user the aut_name/aut_group ids so we know his/her access.
-    $a_aut_ids = mediamosa_aut::build_access($a_app_ids_tmp, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $slaves);
+    $a_aut_ids = mediamosa_aut::build_access($a_app_ids_tmp, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves);
 
-    if (!is_null($aut_user_id) || (!is_null($a_aut_group_id) && !empty($a_aut_group_id)) || count($a_aut_ids) || count($slaves)) {
+    if (!is_null($aut_user_id) || (!is_null($aut_group_ids) && !empty($aut_group_ids)) || count($a_aut_ids) || count($slaves)) {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
 
@@ -1224,10 +1224,10 @@ class mediamosa_aut {
                 $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['user_id'] = "mf.owner_id = '" . mediamosa_db::escape_string($aut_user_id) . "'";
               }
               // group_id
-              if (!is_null($a_aut_group_id)) {
-                assert(is_array($a_aut_group_id));
+              if (!is_null($aut_group_ids)) {
+                assert(is_array($aut_group_ids));
 
-                foreach ($a_aut_group_id as $s_group_id) {
+                foreach ($aut_group_ids as $s_group_id) {
                   if (!empty($s_group_id)) {
                     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['group_id'][] = "mf.group_id = '" . mediamosa_db::escape_string($s_group_id) . "'";
                   }
@@ -1364,10 +1364,10 @@ class mediamosa_aut {
               }
 
               // group_id
-              if (!is_null($a_aut_group_id)) {
-                assert(is_array($a_aut_group_id));
+              if (!is_null($aut_group_ids)) {
+                assert(is_array($aut_group_ids));
 
-                foreach ($a_aut_group_id as $s_group_id) {
+                foreach ($aut_group_ids as $s_group_id) {
                   if (!empty($s_group_id)) {
                     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['group_id'][] = "a.group_id = '" . mediamosa_db::escape_string($s_group_id) . "'";
                   }
@@ -1505,13 +1505,13 @@ class mediamosa_aut {
    * @param array $a_asset_ids
    * @param integer $app_id
    * @param string $aut_user_id
-   * @param array $a_aut_group_id
+   * @param array $aut_group_ids
    * @param string $s_aut_domain
    * @param string $s_aut_realm
    * @return array
    *  returns the array with asset_id(s) on which we have access on
    */
-  static public function access_check_media($a_asset_ids, $mixed_app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
+  static public function access_check_media($a_asset_ids, $mixed_app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
 
     if (!is_array($mixed_app_id)) {
       $mixed_app_id = array($mixed_app_id);
@@ -1526,7 +1526,7 @@ class mediamosa_aut {
     $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
 
     // Build the access where.
-    mediamosa_aut::build_access_where($query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $mixed_app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+    mediamosa_aut::build_access_where($query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $mixed_app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
 
     $query_sql = mediamosa_db_query::query_select($query);
 
@@ -1548,13 +1548,13 @@ class mediamosa_aut {
    * @param string $object_id
    * @param integer $app_id
    * @param string $aut_user_id
-   * @param array $a_aut_group_id
+   * @param array $aut_group_ids
    * @param string $s_aut_domain
    * @param string $s_aut_realm
    *
    * Throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
-  static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
+  static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
 
     if ($is_app_admin) {
       return;
@@ -1570,7 +1570,7 @@ class mediamosa_aut {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id = '%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
@@ -1603,7 +1603,7 @@ class mediamosa_aut {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id ='%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";

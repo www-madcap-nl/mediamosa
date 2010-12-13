@@ -648,10 +648,18 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Generate the name.
     $name = $this->randomName();
 
+    // Apps are now always > APP_ID_MAX so we are outside the scope of existing
+    // apps. This will enable testing for Solr extension (or other code that is
+    // ouside the sandbox.
+    $app_id_max = max(mediamosa_settings::APP_ID_MIN, mediamosa_settings::APP_ID_MAX) + 1;
+
     // Add defaults.
     $fields += array(
-      mediamosa_app_db::APP_ID => rand(1, 1000),
+      mediamosa_app_db::APP_ID => rand($app_id_max, $app_id_max + 1000),
     );
+
+    // Make sure its not in normal app id range.
+    assert($fields[mediamosa_app_db::APP_ID] >= $app_id_max);
 
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $name);
 

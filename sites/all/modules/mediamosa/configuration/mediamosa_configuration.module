@@ -65,7 +65,7 @@ function mediamosa_configuration_menu() {
     'title' => 'Configure',
     'description' => 'The configuration of global MediaMosa settings.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_configuration'),
+    'page arguments' => array('_mediamosa_configuration_form'),
     'access arguments' => array('administer mediamosa config global'),
     'file' => 'mediamosa_configuration.inc',
   );
@@ -115,13 +115,38 @@ function mediamosa_configuration_menu_block_page() {
  *
  * @return array
  */
-function mediamosa_configuration() {
+function _mediamosa_configuration_form() {
 
   // Build the settings form and enrich it with our settings collect hook.
   $form = system_settings_form(module_invoke_all('mediamosa_configuration_collect'));
 
+  // Sort the form on its fieldsets.
+  $titles = array();
+
+  // Collect the titles.
+  foreach ($form as $name => $item) {
+    if (empty($item['#type']) || $item['#type'] != 'fieldset') {
+      continue;
+    }
+
+    // Make sure the fieldset is collapsed.
+    $form[$name]['#collapsed'] = TRUE;
+
+    // Get the title for sorting.
+    $titles[$item['#title']] = $name;
+  }
+
+  // Now sort on key.
+  ksort($titles, SORT_STRING);
+
+  // Now add weights.
+  $weight = -count($titles);
+  foreach ($titles as $title => $name) {
+    $form[$name]['#weight'] = $weight++;
+  }
+
   // Add our submit hook.
-  $form['#submit'][] = 'mediamosa_configuration_submit';
+  $form['#submit'][] = '_mediamosa_configuration_form_submit';
   return $form;
 }
 
@@ -137,7 +162,7 @@ function mediamosa_configuration_validate($form, &$form_state) {
 /**
  * Submit the form.
  */
-function mediamosa_configuration_submit($form, $form_state) {
+function _mediamosa_configuration_form_submit($form, $form_state) {
 
   // Now call our (optional) submit hooks, remember that variables are saved automaticly.
   module_invoke_all('mediamosa_configuration_submit', $form, $form_state);

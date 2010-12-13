@@ -38,6 +38,7 @@ function mediamosa_configuration_storage_mediamosa_configuration_collect() {
     '#title' => t('Mount point / storage settings'),
     '#description' => t('Set the current mount point for storage point of your files. The Windows and Linux moint point must point to the same directory, they must share the same files. Although the windows mount point is not always required, only if you intend to support windows specific codex for transcoding on windows servers. You can enter \\\\ for windows mountpoint as default if you aren\'t using a windows server for transcoding.'),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
   $form['settings_mountpount']['mediamosa_current_mount_point'] = array(

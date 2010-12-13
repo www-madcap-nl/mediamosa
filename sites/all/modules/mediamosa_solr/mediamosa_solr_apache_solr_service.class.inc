@@ -51,7 +51,7 @@ assert(class_exists('Apache_Solr_Service'));
  * All specific MediaMosa functions must start with mediamosa (mediamosaSolr..)
  * to prevent double usage on lower class names in future.
  */
-class MediaMosa_Solr_Apache_Solr_Service extends Apache_Solr_Service {
+class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
 
   // ------------------------------------------------------------------- Consts.
   const MEDIAMOSA_SOLR_DEFAULT_HOST = 'solr.mediamosa.local';
@@ -74,6 +74,15 @@ class MediaMosa_Solr_Apache_Solr_Service extends Apache_Solr_Service {
   }
 
   // ---------------------------------------------------------------- Functions.
+  /**
+   * We use ^ and ~ for delimeters, we need to filter them out for content
+   * (sometimes).
+   */
+
+  static public function filterDelimeters($value) {
+    return str_replace(array('^','~'), '', $value);
+  }
+
   /**
    * Return the url for the solr servlet.
    */
@@ -151,7 +160,7 @@ class MediaMosa_Solr_Apache_Solr_Service extends Apache_Solr_Service {
   static public function mediamosaGetPath($url = NULL) {
     $url = isset($url) ? $url : self::mediamosaGetUrl();
 
-    // Get me the port.
+    // Get me the path.
     $path = trim(parse_url($url, PHP_URL_PATH), '/');
 
     // Path must start and end with '/'.
@@ -159,16 +168,62 @@ class MediaMosa_Solr_Apache_Solr_Service extends Apache_Solr_Service {
   }
 
   /**
-   * Ping Solr with either given params or
+   * Get the Solr object.
+   *
+   * Will ping the first time if it is created the first time.
+   *
    * @param string $url
+   *
+   * @return mediamosa_solr_apache_solr_service
+   *
+   * @throws mediamosa_solr_exception
    */
-  static public function mediamosaPing($url = NULL) {
-    $url = isset($url) ? $url : self::mediamosaGetUrl();
+  static public function mediamosaGetSolrObject($url = NULL, $reset = FALSE) {
+    $mediamosa_apache_solr_service = &drupal_static(__FUNCTION__);
 
-    // Create the solr connection.
-    $mediamosa_apache_solr_service = new MediaMosa_Solr_Apache_Solr_Service($url);
+    $url = !empty($url) ? $url : self::mediamosaGetUrl();
 
-    // Ping it.
-    return $mediamosa_apache_solr_service->ping() !== FALSE;
+    // Put in static for reuse.
+    if (empty($mediamosa_apache_solr_service[$url]) || $reset) {
+      $mediamosa_apache_solr_service[$url] = new mediamosa_solr_apache_solr_service($url);
+
+      if (empty($mediamosa_apache_solr_service[$url])) {
+        throw new mediamosa_solr_exception('Unable to create Solr object');
+      }
+
+      // Ping it, will throw exception when failed.
+      $pinged = $mediamosa_apache_solr_service[$url]->ping() !== FALSE;
+
+      if (!$pinged) {
+        throw new mediamosa_solr_exception('Unable to reach Lucene Solr database');
+      }
+    }
+
+    // Now return the object.
+    return $mediamosa_apache_solr_service[$url];
+  }
+
+
+  /**
+   * Ping Solr with either given params or use default.
+   *
+   * @param string $url
+   *
+   * @throws mediamosa_solr_exception (when $fatal == TRUE)
+   */
+  static public function mediamosaPing($url = NULL, $fatal = FALSE) {
+    // Get the solr connection.
+    try {
+      self::mediamosaGetSolrObject($url);
+    }
+    catch (Exception $e) {
+      if ($fatal) {
+        throw $e;
+      }
+
+      return FALSE;
+    }
+
+    return TRUE;
   }
 }

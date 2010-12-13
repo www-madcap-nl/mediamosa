@@ -2,10 +2,10 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -26,15 +26,12 @@
 
 /**
  * @file
- * Database file for mediamosa_solr.
+ * Installer file for MediaMosa Configuration.
  */
 
-class mediamosa_solr_index_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_solr_index';
-
-  // Database fields;
-  const ID = 'id';  // For now its always the asset_id.
-  const CREATED = 'created';
+/**
+ * Flush the Drupal Cache, menu's have been changed.
+ */
+function mediamosa_configuration_update_7000() {
+  drupal_flush_all_caches();
 }

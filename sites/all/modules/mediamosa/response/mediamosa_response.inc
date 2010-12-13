@@ -93,7 +93,7 @@ class mediamosa_response extends mediamosa {
 
     try {
       // Set the response handler.
-      set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
+      $previous_handler = set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
 
       // Create the REST interface class.
       $this->mediamosa_rest = new mediamosa_rest();
@@ -101,18 +101,26 @@ class mediamosa_response extends mediamosa {
       // Find the rest call.
       $rest_call = $this->mediamosa_rest->match_call();
 
-      // If we return here, try to let Drupal handle the output.
-      if (!$rest_call) {
-        return;
+      // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user/login or /user/logout.
+      if (!$rest_call || mediamosa::show_drupal_login()) {
+        // Put back previous (drupal) handler.
+        if (!empty($previous_handler)) {
+          set_error_handler($previous_handler, E_ALL);
+        }
+
+        return; // At this point we override for (drupal) interface mode.
       }
 
-      // Check if the REST and Admin interface are enabled and if we conflict with admin /user/login or /user/logout.
-      if (mediamosa::show_drupal_login()) {
-        return; // At this point we override for interface mode.
-      }
-
-      // At this point we take over the output from Drupal.
+      // At this point we take over the output from Drupal and will no longer
+      // return to drupal.
       header(mediamosa_settings::X_MEDIAMOSA_VERSION . ': ' . mediamosa_version::get_current_version_str(TRUE));
+
+      // Allow execution to continue even if the request gets canceled.
+      // This might happen if the client is waiting for response and cancels.
+      // Is enabled by default for POST rest calls.
+      if ($rest_call[mediamosa_rest_call::NO_USER_ABORT]) {
+        @ignore_user_abort(TRUE);
+      }
 
       // Enable sessions.
       if (!drupal_session_started()) {

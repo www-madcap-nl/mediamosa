@@ -156,7 +156,7 @@ function theme_mediamosa_maintenance_table($variables) {
     $build['description'] = '<p>' . check_plain($variables['description']) . '</p>';
   }
 
-  // Total used diskspace.
+  // Show summary.
   if (isset($variables['summary']) && is_array($variables['summary']) && !empty($variables['summary'])) {
     foreach ($variables['summary'] as $summary_item) {
       if (isset($summary_item['title']) && isset($summary_item['data'])) {

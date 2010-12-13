@@ -93,8 +93,8 @@ class mediamosa_asset_metadata {
    * @param $action
    *  The action; append, replace, update.
    */
-  static public function metadata_create($asset_id, array $a_metadata_definitions_full, array $a_params, $action) {
-    $a_value_set = array();
+  static public function metadata_create($asset_id, array $a_metadata_definitions_full, array $params, $action) {
+    $values_set = array();
 
     // Transaction in.
     $transaction = mediamosa_db::db_transaction();
@@ -116,7 +116,7 @@ class mediamosa_asset_metadata {
             break;
 
           case 'update':
-            if (isset($a_params[$name])) {
+            if (isset($params[$name])) {
               $do_delete = TRUE;
             }
             break;
@@ -135,13 +135,13 @@ class mediamosa_asset_metadata {
           );
         }
 
-        if (!isset($a_params[$name])) {
+        if (!isset($params[$name])) {
           continue;
         }
 
         // Get the value.
-        $a_values = $a_params[$name];
-        foreach ($a_values as $value) {
+        $values = $params[$name];
+        foreach ($values as $value) {
 
           // We do not store empty values.
           if (trim($value) == '') {
@@ -149,30 +149,33 @@ class mediamosa_asset_metadata {
           }
 
           $query = mediamosa_db::db_insert(mediamosa_asset_metadata_db::TABLE_NAME);
-          // FIXME: changed date will never be right if we just delete, and then replace.
-          //        really should rewrite this properly with updating the metadata instead of deleting it.
-          $a_fields = array(
+          // FIXME: changed date will never be right if we just delete, and then
+          //        replace. Really should rewrite this properly with updating
+          //        the metadata instead of deleting it.
+          $fields = array(
             mediamosa_asset_metadata_db::ASSET_ID => $asset_id,
             mediamosa_asset_metadata_db::PROP_ID => $prop_id,
           );
 
           // Add created value.
-          $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+          $fields = mediamosa_db::db_insert_enrich($fields);
 
-          // Change from 1.x, we don't store all values in every val_[char/int/datetime] type. No more int value also in val_char etc.
+          // Change from 1.x, we don't store all values in every
+          // val_[char/int/datetime] type. No more int value also in val_char
+          // etc.
           switch ($a_definition['propdef_type']) {
             case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-              $a_fields[mediamosa_asset_metadata_db::VAL_DATETIME] = $value;
+              $fields[mediamosa_asset_metadata_db::VAL_DATETIME] = $value;
               break;
 
             case mediamosa_asset_metadata_property_db::TYPE_INT:
-              $a_fields[mediamosa_asset_metadata_db::VAL_INT] = $value;
+              $fields[mediamosa_asset_metadata_db::VAL_INT] = $value;
               break;
 
             case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-              $a_fields[mediamosa_asset_metadata_db::VAL_CHAR] = $value;
-              $a_fields[mediamosa_asset_metadata_db::VAL_CHAR_LFT] = mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH);
-              $a_fields[mediamosa_asset_metadata_db::VAL_CHAR_RGHT] = mediamosa_unicode::strrev(mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH));
+              $fields[mediamosa_asset_metadata_db::VAL_CHAR] = $value;
+              $fields[mediamosa_asset_metadata_db::VAL_CHAR_LFT] = mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH);
+              $fields[mediamosa_asset_metadata_db::VAL_CHAR_RGHT] = mediamosa_unicode::strrev(mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH));
               break;
 
             default:
@@ -182,9 +185,9 @@ class mediamosa_asset_metadata {
           }
 
           // Insert it.
-          $query->fields($a_fields)->execute();
+          $query->fields($fields)->execute();
 
-          $a_value_set[$name] = $value;
+          $values_set[$name] = $value;
         }
       }
 
@@ -198,23 +201,23 @@ class mediamosa_asset_metadata {
 
     // Trigger the reindex hook for external search engines.
     try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_id' => $asset_id));
+      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_solr::settingInstantlyMetadata());
     }
     catch (Exception $e) {
       mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
     }
 
     // Return whats been changed.
-    return $a_value_set;
+    return $values_set;
   }
 
   /**
    * Collect the metadata of the asset.
-   * In array -> [groupname][propertyname] = array(values).
+   * In array -> [groupname][propertyname] = array('values' => array(value, value), 'type' => type).
    *
    * @param $asset_id
    */
-  function metadata_get($asset_id) {
+  static public function metadata_get($asset_id) {
     $result = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_asset_metadata} AS am
        JOIN {#mediamosa_asset_metadata_property} AS amp ON amp.#prop_id = am.#prop_id
@@ -231,25 +234,27 @@ class mediamosa_asset_metadata {
       )
     );
 
-    $a_result = array();
-    foreach ($result as $a_metadata) {
+    $result_metadata = array();
+    foreach ($result as $metadata) {
       // Choose the value.
-      $asset_property_value = NULL;
-      switch ($a_metadata[mediamosa_asset_metadata_property_db::TYPE]) {
+      $value = NULL;
+      switch ($metadata[mediamosa_asset_metadata_property_db::TYPE]) {
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-          $asset_property_value = $a_metadata[mediamosa_asset_metadata_db::VAL_CHAR];
+          $value = $metadata[mediamosa_asset_metadata_db::VAL_CHAR];
           break;
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-          $asset_property_value = $a_metadata[mediamosa_asset_metadata_db::VAL_DATETIME];
+          $value = $metadata[mediamosa_asset_metadata_db::VAL_DATETIME];
           break;
         case mediamosa_asset_metadata_property_db::TYPE_INT:
-          $asset_property_value = $a_metadata[mediamosa_asset_metadata_db::VAL_INT];
+          $value = $metadata[mediamosa_asset_metadata_db::VAL_INT];
           break;
       }
+
       // Collect the value.
-      $a_result[$a_metadata[mediamosa_asset_metadata_property_group_db::NAME]][$a_metadata[mediamosa_asset_metadata_property_db::NAME]][] = $asset_property_value;
+      $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['type'] =  $metadata[mediamosa_asset_metadata_property_db::TYPE];
+      $result_metadata[$metadata[mediamosa_asset_metadata_property_group_db::NAME]][$metadata[mediamosa_asset_metadata_property_db::NAME]]['values'][] = $value;
     }
 
-    return $a_result;
+    return $result_metadata;
   }
 }

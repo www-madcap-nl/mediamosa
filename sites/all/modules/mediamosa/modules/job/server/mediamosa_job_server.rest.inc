@@ -44,23 +44,23 @@ class mediamosa_rest_call_jobserver_job_search extends mediamosa_rest_call {
   // Rest vars;
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
-    $a_jobs = mediamosa_job_server::search();
+    $jobs = mediamosa_job_server::search();
 
-    foreach ($a_jobs as $a_item) {
-      $o_mediamosa->add_item($a_item);
+    foreach ($jobs as $job) {
+      $mediamosa->add_item($job);
     }
   }
 }

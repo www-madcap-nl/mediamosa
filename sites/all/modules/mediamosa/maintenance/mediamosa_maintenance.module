@@ -38,6 +38,7 @@ function mediamosa_maintenance_menu() {
   // Maintenance / Configuration pages.
   $items['admin/mediamosa'] = array(
     'title' => 'MediaMosa',
+    'description' => 'MediaMosa is open source software to build a Full Featured, Webservice Oriented Media Management and Distribution platform.',
     'page callback' => '_mediamosa_maintenance_status_status',
     'access arguments' => array('access mediamosa'),
     'weight' => -20,

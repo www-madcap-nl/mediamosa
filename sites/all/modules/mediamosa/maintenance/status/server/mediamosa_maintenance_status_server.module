@@ -61,8 +61,6 @@ function _mediamosa_maintenance_status_server_generate() {
  *   All the statuses in an array
  */
 function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE) {
-  global $conf;
-
   $mediamosa_status_server = array();
   if (!$reset) {
     $mediamosa_status_server = variable_get('mediamosa_status_solr_' . mediamosa::get_server_id(), array());

@@ -43,15 +43,12 @@ class mediamosa_exception extends Exception {
   const MEDIAMOSA_EXCEPTION_SEVERITY_LOW = 20;
 
   public function __construct($errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
-    $msg = ($msg == '' ? sprintf("MediaMosa exception was thrown: %d", $errorcode) : $msg);
+    $msg = empty($msg) ? sprintf("MediaMosa exception was thrown: %d", $errorcode) : $msg;
 
     if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
-      $log_serverity = WATCHDOG_NOTICE;
+      $log_serverity = $severity >= MEDIAMOSA_EXCEPTION_SEVERITY_HIGH ? WATCHDOG_CRITICAL : WATCHDOG_NOTICE;
 
-      if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_HIGH) {
-        $log_serverity = WATCHDOG_CRITICAL;
-      }
-
+      // Get backtrace when you can.
       $backtrace = $this->getTraceAsString();
 
       if ($log_error) {
@@ -61,14 +58,14 @@ class mediamosa_exception extends Exception {
             '@message' => $msg,
             '@line' => $this->getLine(),
             '@file' => $this->getFile(),
-            '@backtrace' => $backtrace === FALSE ? 'not available' : $backtrace,
+            '@backtrace' => empty($backtrace) ? 'not available' : $backtrace,
           ),
           $log_serverity
         );
       }
     }
 
-    parent::__construct($msg, intval($errorcode));
+    parent::__construct($msg, (int) $errorcode);
   }
 
   public function mediamosa_exception_rest_response() {

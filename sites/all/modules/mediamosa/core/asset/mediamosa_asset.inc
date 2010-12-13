@@ -333,6 +333,14 @@ class mediamosa_asset {
 
     // Set the empty asset.
     mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
+
+    // Trigger the reindex hook for external search engines.
+    try {
+      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_solr::settingInstantlyAssetNormalize());
+    }
+    catch (Exception $e) {
+      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
+    }
   }
 
   /**
@@ -473,6 +481,12 @@ class mediamosa_asset {
     $show_collections = FALSE,
     $add_has_streamable_mediafiles = FALSE
   ) {
+
+    // Something to collect?
+    if (empty($asset_ids)) {
+      return array();
+    }
+
     $prop_ids = array();
     $metadata_definitions_fulls = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
     foreach ($metadata_definitions_fulls as $metadata_definitions_full) {
@@ -480,7 +494,6 @@ class mediamosa_asset {
     }
 
     $s_ids = implode("','", $asset_ids);
-
     $query = array();
     $query[mediamosa_db_query::A_SELECT_EXPR][] = "a.*";
     $query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_val_char";
@@ -1136,6 +1149,17 @@ class mediamosa_asset {
         }
       }
     }
+
+    // Call reindex asset.
+    // Trigger the reindex hook for external search engines.
+    try {
+      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_solr::settingInstantlyAssetUpdate());
+    }
+    catch (Exception $e) {
+      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
+    }
+
+
   }
 
   /**
@@ -1170,5 +1194,41 @@ class mediamosa_asset {
     foreach ($result as $row) {
       mediamosa_asset::delete($row["asset_id"]);
     }
+  }
+
+  /**
+   * Retrieve all data for asset needed to index for external database.
+   *
+   * @param $asset_id
+   *
+   * @return
+   *  Returns FALSE if asset does not exists.
+   */
+  static public function get_asset_for_index($asset_id) {
+
+    // Get asset.
+    $result['asset'] = self::get($asset_id);
+
+    // Found asset?
+    if (empty($result['asset'])) {
+      return FALSE;
+    }
+
+    // Get metadata.
+    $result['asset_metadata'] = mediamosa_asset_metadata::metadata_get($asset_id);
+
+    // Get possible batch links.
+    $result['batch_ids'] = mediamosa_ftp_batch_asset::get_batch_relation($asset_id);
+
+    // Get mediafiles and metadata.
+    $result['mediamosa_asset_mediafile_metadata'] = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata_for_asset($asset_id);
+
+    // Get possible collection links.
+    $result['collections'] = mediamosa_asset_collection::get_collections($asset_id);
+
+    // Get all fav. of this asset.
+    $result['user_favorites'] = mediamosa_user_favorite::get_fav_of_asset($asset_id);
+
+    return $result;
   }
 }

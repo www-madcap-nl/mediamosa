@@ -167,8 +167,8 @@ class mediamosa_rest {
       mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_XML,
       mediamosa_rest_call::BEHAVE_AS_EXTERNAL => FALSE,
       mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT,
+      mediamosa_rest_call::NO_USER_ABORT => in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_DELETE)) || $_SERVER['REQUEST_METHOD'] == mediamosa_rest_call::METHOD_HEAD,
     );
-
 
     return $rest_call;
   }

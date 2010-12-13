@@ -318,9 +318,6 @@ class mediamosa_asset_mediafile_play_proxy {
     // Not an array here.
     assert(!is_array($app_id));
 
-    // Expecting array here, even when empty.
-    assert(is_array($stills));
-
     $content_type = '';
     if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
       $streaming_server_uri = trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]);
@@ -394,30 +391,29 @@ class mediamosa_asset_mediafile_play_proxy {
             break;
 
           case self::CONTAINER_TYPE_MP3:
-            $content_type = "audio/mpeg";
+            $content_type = 'audio/mpeg';
             $output = "<asx version=\"3.0\">\n\t<entry>\n";
-            $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
-            if (isset($asset_metadata['dublin_core'])) {
-              foreach ($a_subjects as $tag => $subject) {
-                if (is_array($asset_metadata['dublin_core'][$subject]) && count($asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
+
+            if (!empty($asset_metadata['dublin_core'])) {
+              foreach (array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator') as $tag => $subject) {
+                if (!empty($asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]['values']) . '</' . $tag . ">\n";
                 }
               }
             }
 
             $output .= sprintf("\t\t<ref href=\"%s\" />\n", $streaming_server_ticket_uri);
             $output .= "\t</entry>\n</asx>\n";
-
             break;
 
           case self::CONTAINER_TYPE_WMV:
-            $content_type = "video/x-ms-asf";
+            $content_type = 'video/x-ms-asf';
             $output = "<asx version=\"3.0\">\n\t<entry>\n";
-            $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
-            if (isset($asset_metadata['dublin_core'])) {
-              foreach ($a_subjects as $tag => $subject) {
-                if (!empty($asset_metadata['dublin_core'][$subject]) && is_array($asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
+
+            if (!empty($asset_metadata['dublin_core'])) {
+              foreach (array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator') as $tag => $subject) {
+                if (!empty($asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]['values']) . '</' . $tag . ">\n";
                 }
               }
             }
@@ -523,7 +519,7 @@ class mediamosa_asset_mediafile_play_proxy {
           'HEIGHT_PLUS_20' => $video_size['height'] > 0 ? $video_size['height'] + 20 : '',
           'MEDIAFILE_ID' => $mediafile_ext['mediafile_id'],
           'TICKET_URI' => $streaming_server_ticket_uri,
-          'STILL_URI' => isset($asset_metadata['vpx_still_url']) ? $asset_metadata['vpx_still_url'] : '',
+          'STILL_URI' => isset($asset_metadata['vpx_still_url']) ? $asset_metadata['vpx_still_url'] : '', // Broken, needs ticket.
           'AUTOPLAY' => $autostart ? 'true' : 'false',
           'AUTOPLAY_NUM' => $autostart ? '1' : '0',
           'AUTOPLAY_TEXT' => $autostart ? 'autoplay' : '',
