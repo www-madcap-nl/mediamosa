@@ -719,7 +719,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::ERROR_DESCRIPTION => '',
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
-      mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );
     $fields = mediamosa_db::db_insert_enrich($fields);
 

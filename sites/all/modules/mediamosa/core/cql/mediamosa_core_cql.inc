@@ -1528,8 +1528,8 @@ class mediamosa_job_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_BOOL,
               ),
-              'no_hint' => array(
-                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'no_hint',
+              'hint' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'hint',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_BOOL,

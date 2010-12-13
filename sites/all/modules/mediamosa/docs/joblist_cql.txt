@@ -22,5 +22,5 @@ CQL usage examples:
   * create_still == "TRUE"
     It searches the jobs where the create_still parameter is TRUE.
 
-  * no_hint == "FALSE"
-    It searches the jobs where the no_hint parameter is FALSE.
+  * hint == "TRUE"
+    It searches the jobs where the hint parameter is TRUE.
