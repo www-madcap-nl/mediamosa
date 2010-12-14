@@ -23,7 +23,7 @@ Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
 - Searching on mime_type no longer works because of re-write mediafile metadata. 
 
-MediaMosa 2.3.1 (build 1196)
+MediaMosa 2.3.1 (build 1198)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -133,6 +133,7 @@ Other changes (not ticket related).
 - Settings sections on the configuration page are now in alphabetic order.
 - Settings sections on the configuration page are always collapsed by default.
 - Job type was added in mediamosa_statistics_job table.
+- Fixed range search for Solr.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
