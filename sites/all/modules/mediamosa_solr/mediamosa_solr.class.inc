@@ -814,6 +814,10 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
             // Dates from mediamosa are not completely comp. with Solr.
             foreach ($metadata['values'] as $key => $date) {
+              if ($date == '0000-00-00 00:00:00' || empty($date)) {
+                continue;
+              }
+
               $metadata['values'][$key] = drupal_substr($metadata['values'][$key], 0, 10) . 'T' . drupal_substr($metadata['values'][$key], 11, 8) . 'Z';
 
               // Do not index invalid dates(!).

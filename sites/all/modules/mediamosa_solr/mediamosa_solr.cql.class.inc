@@ -212,12 +212,12 @@ mediamosa_debug::log($has_not ? "has not" : 'no not');
           $sub_parts[] = $word;
         }
 
-        $sub_parts = array($str_table_column . ':"' . implode(' ', $sub_parts) . '"');
+        $sub_parts = array($str_table_column . ':' . mediamosa_solr_apache_solr_service::phrase(implode(' ', $sub_parts)) );
         break;
 
       case '==':
       case 'adj':
-        $sub_parts = array($str_table_column . ':"' . $str_search_term . '"');
+        $sub_parts = array($str_table_column . ':' . mediamosa_solr_apache_solr_service::phrase($str_search_term));
         break;
 
       case '<>':
@@ -226,14 +226,22 @@ mediamosa_debug::log($has_not ? "has not" : 'no not');
         break;
 
       case '>':
+        $sub_parts = array(strtr('@field:[@value TO *]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
       case '>=':
+        $sub_parts = array(strtr('@field:[@value TO *]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
       case '<':
+        $sub_parts = array(strtr('@field:[* TO @value]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
       case '<=':
+        $sub_parts = array(strtr('@field:[* TO @value]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
       case 'within':
+        // Split up.
+        $values = explode(' ', $str_search_term);
+
+        $sub_parts = array(strtr('@field:[@value_1 TO @value_2]', array('@field' => $str_table_column, '@value_1' => mediamosa_solr_apache_solr_service::escape($values[0]), '@value_2' => mediamosa_solr_apache_solr_service::escape($values[1]))));
         break;
 
     }
