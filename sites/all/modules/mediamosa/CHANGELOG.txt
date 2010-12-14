@@ -23,7 +23,7 @@ Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
 - Searching on mime_type no longer works because of re-write mediafile metadata. 
 
-MediaMosa 2.3.1 (build 1185)
+MediaMosa 2.3.1 (build 1196)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
