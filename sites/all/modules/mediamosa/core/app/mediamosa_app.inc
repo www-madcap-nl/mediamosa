@@ -190,15 +190,23 @@ class mediamosa_app {
    * Return the default value of the still, depending of the application id.
    *
    * @param integer $app_id
+   *
+   * @return string
+   *   Still default size.
    */
   static public function get_still_default_value($app_id) {
     if (!$app_id) {
-      return mediamosa_settings::STILL_DEFAULT_SIZE;
+      return NULL;
     }
 
     // Get the default size of still of application.
     $app = self::get_by_appid($app_id);
-    return (!empty($app[mediamosa_app_db::STILL_DEFAULT_SIZE]) ? $app[mediamosa_app_db::STILL_DEFAULT_SIZE] : mediamosa_settings::STILL_DEFAULT_SIZE);
+
+    if (!empty($app[mediamosa_app_db::STILL_DEFAULT_SIZE])) {
+      return $app[mediamosa_app_db::STILL_DEFAULT_SIZE];
+    }
+
+    return NULL;
   }
 
   /**

@@ -1180,17 +1180,14 @@ class mediamosa_job_scheduler {
               // Check the size.
               preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
               if (!is_array($matches) || count($matches) != 3) {
-                $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
+                // Get the video size.
+                $target_size = mediamosa_asset_mediafile::get_size($mediafile_id);
+
+                // If there is a still default size for the client app, then use that.
                 $still_default_size = mediamosa_app::get_still_default_value($app_id);
                 if ($still_default_size) {
                   $target_size =  $still_default_size;
                 }
-                else {
-                  // Get the video size.
-                  $target_size = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'width') . 'x' . mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'height');
-                }
-                //$a_result['h_padding'] = 0;
-                //$a_result['v_padding'] = 0;
               }
               break;
           }
