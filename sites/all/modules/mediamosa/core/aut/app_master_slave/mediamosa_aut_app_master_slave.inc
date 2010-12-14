@@ -134,17 +134,19 @@ class mediamosa_aut_app_master_slave {
       // ignore, double row.
     }
 
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE);
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
+    if ($aut_object_type == mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET) {
+      // Trigger the reindex hook for external search engines.
+      try {
+        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($aut_object_id)), mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE);
+      }
+      catch (Exception $e) {
+        mediamosa_watchdog::log_asset($aut_object_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $aut_object_id, '@message' => $e->getMessage()));
+      }
     }
   }
 
   /**
-   * Return the app_id(s) of EGAs that are slaves of my supplied EGA (master)
+   * Return the app_id(s) of EGAs that have slaves of my supplied EGA (master)
    *
    * @param array/integer $mixed_app_id
    *  The app ID array or integer.

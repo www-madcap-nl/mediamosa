@@ -43,10 +43,11 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       foreach ($mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $context_set => &$lvl1) {
         foreach ($lvl1[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS] as $column_name => $column) {
-
           if ($column_name == 'mime_type') {
             $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['column'] = 'mime_type';
           }
+
+          $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['table_for_sort'] = $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['column'];
         }
       }
 
@@ -75,11 +76,13 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         switch ($a_def['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_INT:
             $column = $name . '_vi';
+            $sort_column = $name . '_svc';
             $type = mediamosa_sdk::TYPE_INT;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
             $column = $name . '_vd';
+            $sort_column = $name . '_svc';
             $type = mediamosa_sdk::TYPE_DATETIME;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
@@ -87,6 +90,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             assert(0);
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
             $column = $name . '_vc';
+            $sort_column = $name . '_svc';
             $type = mediamosa_sdk::TYPE_STRING;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
@@ -94,10 +98,10 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
         $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$name] = array(
           MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $column,
+          MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $sort_column,
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'unused',
-          MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $table,
           MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
-//          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $a_def['propdef_id'],
+          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $a_def['propdef_id'], // indication its a asset metadata field.
 //          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN {mediamosa_asset_metadata} AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.asset_id = a.asset_id AND mediamosa_asset_metadata_%s.prop_id = %d', $name, $name, $name, $a_def['propdef_id']),
         );
       }

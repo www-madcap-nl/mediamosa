@@ -103,6 +103,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
     $upload_1 = $this->uploadTestFile();
     $upload_2 = $this->uploadTestFile($this->getTestVideo_ogg());
     $upload_3 = $this->uploadTestFile($this->getTestVideo_BlackStill());
+    $upload_4 = $this->uploadTestFile();
 
     // Create transcode for all.
 
@@ -117,13 +118,13 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Create asset metadata.
     $this->createAssetMetadata($upload_1['asset_id'],
       array(
-        'title' => 'aap noot mies',
+        'title' => 'bicycle',
         'description' => 'asset number 1',
       )
     );
     $this->createAssetMetadata($upload_2['asset_id'],
       array(
-        'title' => 'bicycle',
+        'title' => 'aap noot mies',
         'description' => 'asset number 2',
       )
     );
@@ -134,21 +135,32 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
       )
     );
 
-    $this->cql_do_search_test_assets_1('title = aap', array($upload_1['asset_id'] => TRUE));
+    $this->cql_do_search_test_assets_1('title = aap', array($upload_2['asset_id'] => TRUE));
 
-    $a_search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
-
-    // May not find anything.
-    $this->cql_do_search_test_assets_1('is_unappropriate == "TRUE"', array(), $a_search_params);
-
-    // Find all 3.
-    $this->cql_do_search_test_assets_1('is_unappropriate <> "TRUE"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $a_search_params);
+    $search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
 
     // May not find anything.
-    $this->cql_do_search_test_assets_1('NOT is_unappropriate == "TRUE"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $a_search_params);
+    $this->cql_do_search_test_assets_1('is_unappropriate == "TRUE"', array(), $search_params);
 
     // Find all 3.
-    $this->cql_do_search_test_assets_1('NOT is_unappropriate <> "TRUE"', array(), $a_search_params);
+    $this->cql_do_search_test_assets_1('is_unappropriate <> "TRUE"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
 
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('NOT is_unappropriate == "TRUE"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // Find all 3.
+    $this->cql_do_search_test_assets_1('NOT is_unappropriate <> "TRUE"', array(), $search_params);
+
+    // Test sorting.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby title/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // ASC.
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    // Test sorting.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby title/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // DESC.
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
   }
 }

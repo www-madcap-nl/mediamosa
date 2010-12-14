@@ -3139,6 +3139,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Now see if we got what we wanted.
     $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $found_ids), '@expected' => implode(', ', array_keys($expected_asset_ids)))));
+
+    // Return the asset IDs in order of the items.
+    return $found_ids;
   }
 
   public function cql_do_search_test_collections($cql, $expected_collection_ids, array $parameters = array()) {
@@ -3273,7 +3276,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
+      $found_ids = $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3282,6 +3285,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Switch back.
     $this->switch_to_app = $old_switch_to_app;
+
+    return $found_ids;
   }
 
   // Search for app 2.
@@ -3295,7 +3300,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
+      $found_ids = $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3304,6 +3309,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Switch back.
     $this->switch_to_app = $old_switch_to_app;
+
+    return $found_ids;
   }
 
   // Search for app 3.
@@ -3317,7 +3324,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
+      $found_ids = $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3326,6 +3333,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Switch back.
     $this->switch_to_app = $old_switch_to_app;
+
+    return $found_ids;
   }
 
   public function cql_do_search_test_collections_1($cql = '', array $expected_collection_ids = array(), array $parameters = array()) {
@@ -3386,5 +3395,28 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Switch back.
     $this->switch_to_app = $old_switch_to_app;
+  }
+
+  public function correct_sorting($got, $expected) {
+    $sorting_ok = count($got) ==  count($expected);
+
+
+    if ($sorting_ok) {
+      $got2 = $got;
+      $expected2 = $expected;
+
+      while (count($got2)) {
+        if (array_shift($got2) != array_shift($expected2)) {
+          $sorting_ok = FALSE;
+          break;
+        }
+      }
+    }
+
+    $this->assertTrue($sorting_ok, 'Items are sorted in the right order.');
+
+    if (!$sorting_ok) {
+      $this->pass('Got IDs in order; ' . implode(', ', $got) . '; expecting in order;' .  implode(', ', $expected));
+    }
   }
 }
