@@ -266,11 +266,11 @@ class mediamosa {
       return isset($_SERVER[$disable_app]) ? FALSE : TRUE;
     }
 
-    return (mediamosa::variable_get('mediamosa_app', FALSE) || self::is_app_upload_enabled() || self::is_app_download_enabled());
+    return (mediamosa::variable_get('mediamosa_app', FALSE) || self::is_app_upload_enabled() || self::is_app_download_enabled() || self::is_app_openapi_enabled());
   }
 
   /**
-   * Is the APP upload REST Interface enabled?
+   * Is the APP download REST Interface enabled?
    *
    * @return bool
    */
@@ -279,12 +279,21 @@ class mediamosa {
   }
 
   /**
-   * Is the APP download REST Interface enabled?
+   * Is the APP upload REST Interface enabled?
    *
    * @return bool
    */
   static public function is_app_upload_enabled() {
     return mediamosa::variable_get('mediamosa_app_upload', FALSE);
+  }
+
+  /**
+   * Is the APP Open API REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_openapi_enabled() {
+    return mediamosa::variable_get('mediamosa_app_openapi', FALSE);
   }
 
   /**
