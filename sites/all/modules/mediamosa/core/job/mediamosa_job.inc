@@ -562,7 +562,6 @@ class mediamosa_job {
       mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
-      mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
       mediamosa_job_db::STILL_PARAMETERS => serialize($still_parameters),
       mediamosa_job_db::ERROR_DESCRIPTION => $error_description,
     );

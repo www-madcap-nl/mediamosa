@@ -151,14 +151,14 @@ function mediamosa_job_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_retranscode',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
   );
 
-  $a_rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_still',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
@@ -235,7 +235,7 @@ function mediamosa_job_mediamosa_register_rest_call_doc() {
 The response returns a job_id. The job_id can be used to obtain information about the status of the job, or its detailed results. When the job is finished, the mediafile metadata is updated. If the file is the original file of an asset, the duration of the video (in case of a video or audio) and mimetype is updated in the asset information.
 
 The analyse process also determines if the file needs to be hinted. If the ega setting (see admin interface), defines that unhinted videofiles must be hinted, this proces is added after the analyse. Hinting is currently implemented for mp4, and flv (metadata).',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/analyse [POST] user_id=foo&no_hint=TRUE',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/analyse [POST] user_id=foo&hint=FALSE',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'job_id' => 'The unique job id of the analyse job. Can be used to obtain the status/result of a job.'
     ),
@@ -459,7 +459,7 @@ At least one output file must be specified</error_description>
 </items>',
   );
 
-  $a_rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a retranscode job.',
     mediamosa_rest_call::DESCRIPTION => 'Create a retranscode job.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/retranscode',
@@ -471,7 +471,7 @@ At least one output file must be specified</error_description>
 </items>',
   );
 
-  $a_rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create still job.',
     mediamosa_rest_call::DESCRIPTION => 'Create a process job for creating a still from a mediafile.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/Cd2WoNCzHX14mfLwbxbPgowc/still/create',
