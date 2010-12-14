@@ -26,7 +26,7 @@
 
 /**
  * @file
- * Example settings file for job interface.
+ * Example settings file for upload interface.
  */
 
 // Load default.
@@ -39,7 +39,7 @@ require_once getcwd() . '/sites/default/settings.php';
  * for this URL / Location, disabling all REST calls; except upload/download
  * REST calls, which is controlled by mediamosa_app_upload.
  */
-$conf['mediamosa_app'] = TRUE;
+$conf['mediamosa_app'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -70,7 +70,7 @@ $conf['mediamosa_app_download'] = FALSE;
  * as an OpenAPI interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_openapi' to TRUE.
  */
-$conf['mediamosa_app_openapi'] = FALSE;
+$conf['mediamosa_app_openapi'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -88,4 +88,4 @@ $conf['mediamosa_admin'] = FALSE;
  * installation ID here. 'admin.mediamosa.example' would be 'admin' as
  * installation ID, etc, etc. Max length is 16 chars.
  */
-$conf['mediamosa_installation_id'] = 'job1';
+$conf['mediamosa_installation_id'] = 'openapi';
