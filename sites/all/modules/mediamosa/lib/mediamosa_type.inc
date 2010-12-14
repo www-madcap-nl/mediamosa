@@ -271,6 +271,10 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case mediamosa_sdk::TYPE_RESPONSE_ALT:
+        $checked_param_value = str_replace(' ', '+', (string)$mixed_param_value);
+        break;
+
       case mediamosa_sdk::TYPE_CQL_ASSET:
       case mediamosa_sdk::TYPE_CQL_COLLECTION:
       case mediamosa_sdk::TYPE_CQL_JOB:

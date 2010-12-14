@@ -329,6 +329,8 @@ class mediamosa_rest {
     if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
       $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
+
+    return $the_rest_call->get_param_value(mediamosa_rest_call::RESPONSE_ALT);
   }
 
   /**

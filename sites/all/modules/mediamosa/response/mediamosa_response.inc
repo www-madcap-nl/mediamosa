@@ -139,7 +139,11 @@ class mediamosa_response extends mediamosa {
       $response_type = $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Now execute the call.
-      $this->mediamosa_rest->process_call($rest_call);
+      $alt = $this->mediamosa_rest->process_call($rest_call);
+
+      if ($alt) {
+        $response_type = $alt;
+      }
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.
@@ -202,6 +206,21 @@ class mediamosa_response extends mediamosa {
           else {
             $output = '';
           }
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_JSON:
+          header('Content-Type: ' . $response_type . '; charset=utf-8');
+          $output = $this->generate_json();
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
+          header('Content-Type: ' . $response_type . '; charset=utf-8');
+          $output = $this->generate_atom();
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_RSS:
+          header('Content-Type: ' . $response_type . '; charset=utf-8');
+          $output = $this->generate_rss();
           break;
 
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
@@ -413,6 +432,35 @@ class mediamosa_response extends mediamosa {
 
     // This return response, which is a array.
     return $this->response;
+  }
+
+  /**
+   * Generate the JSON output.
+   *
+   * @return string
+   */
+  public function generate_json() {
+    return drupal_json_encode($this->response['items']);
+  }
+
+  /**
+   * Generate the Atom output.
+   *
+   * @return string
+   */
+  public function generate_atom() {
+    // TODO
+    return 'Atom: ' . $this->generate_xml();
+  }
+
+  /**
+   * Generate the RSS output.
+   *
+   * @return string
+   */
+  public function generate_rss() {
+    // TODO
+    return 'RSS: ' . $this->generate_xml();
   }
 
   /**

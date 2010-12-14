@@ -232,6 +232,7 @@ class mediamosa_sdk {
   const TYPE_SERIAL                      = 'SERIAL'; // Like autoinc. in db
   const TYPE_ALPHA                       = 'ALPHA'; // [A-Za-z]
   const TYPE_PRINTABLE                   = 'STRING_PRINTABLE';// only printable chars
+  const TYPE_RESPONSE_ALT                = 'RESPONSE_ALT';
 
   const TYPE_ALPHA_NUM                   = 'ALPHA_NUM'; // [A-Za-z0-9]
   const TYPE_ALPHA_NUM_UNDERSCORE        = 'ALPHA_NUM_UNDERSCORE'; // [A-Za-z0-9_]
