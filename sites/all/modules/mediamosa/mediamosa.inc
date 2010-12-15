@@ -270,6 +270,15 @@ class mediamosa {
   }
 
   /**
+   * Is the APP REST Interface restricted to OpenAPI?
+   *
+   * @return bool
+   */
+  static public function is_app_restricted_openapi() {
+    return self::is_app_openapi_enabled() && !mediamosa::variable_get('mediamosa_app', FALSE) && !self::is_app_upload_enabled() && !self::is_app_download_enabled();
+  }
+
+  /**
    * Is the APP download REST Interface enabled?
    *
    * @return bool
