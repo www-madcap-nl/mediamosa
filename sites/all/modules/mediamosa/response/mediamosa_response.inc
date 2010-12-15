@@ -209,17 +209,17 @@ class mediamosa_response extends mediamosa {
           break;
 
         case mediamosa_rest_call::RESPONSE_TYPE_JSON:
-          header('Content-Type: ' . $response_type . '; charset=utf-8');
+          header('Content-Type: application/json; charset=utf-8');
           $output = $this->generate_json();
           break;
 
         case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
-          header('Content-Type: ' . $response_type . '; charset=utf-8');
+          header('Content-Type: application/atom+xml; charset=utf-8');
           $output = $this->generate_atom();
           break;
 
         case mediamosa_rest_call::RESPONSE_TYPE_RSS:
-          header('Content-Type: ' . $response_type . '; charset=utf-8');
+          header('Content-Type: application/rss+xml; charset=utf-8');
           $output = $this->generate_rss();
           break;
 

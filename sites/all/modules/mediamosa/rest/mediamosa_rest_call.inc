@@ -57,11 +57,11 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE = 'response_type';
   const RESPONSE_ALT = 'alt';
   // Types.
-  const RESPONSE_TYPE_XML = 'text/xml';
-  const RESPONSE_TYPE_ATOM = 'application/atom+xml';
-  const RESPONSE_TYPE_RSS = 'application/rss+xml';
-  const RESPONSE_TYPE_JSON = 'application/json';
-  const RESPONSE_TYPE_PLAIN = 'text/plain';
+  const RESPONSE_TYPE_XML = 'mediamosa';
+  const RESPONSE_TYPE_ATOM = 'atom';
+  const RESPONSE_TYPE_RSS = 'rss';
+  const RESPONSE_TYPE_JSON = 'json';
+  const RESPONSE_TYPE_PLAIN = 'plain';
 
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';
@@ -339,7 +339,7 @@ abstract class mediamosa_rest_call {
     );
 
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::RESPONSE_ALT] = array(
-      self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_ALT,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_ALLOWED_VALUES => array(
         mediamosa_rest_call::RESPONSE_TYPE_XML,
