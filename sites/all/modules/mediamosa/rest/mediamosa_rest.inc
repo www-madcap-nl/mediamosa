@@ -208,6 +208,8 @@ class mediamosa_rest {
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
 
+      // TODO Upload, Download restriction.
+
       // OpenAPI restriction.
       if ($is_app_restricted_openapi && drupal_substr($uri, 0, drupal_strlen(mediamosa_openapi::CALL_URI_PREFIX . '/')) != mediamosa_openapi::CALL_URI_PREFIX . '/') {
         continue;
