@@ -1,0 +1,82 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The OpenAPI module.
+ */
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_openapi_mediamosa_register_rest_call_doc() {
+  $rest_calls = array();
+
+  // Open API search.
+  $rest_calls['openapi/search'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search by OpenAPI.',
+    mediamosa_rest_call::DESCRIPTION => 'Search by OpenAPI (eg. RSS feed, Atom, JSON).',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/search?query=news',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>MediaMosa Atom Feed</title>
+  <link href="http://mediamosa.org/"/>
+  <updated>2010-12-13T18:30:02Z</updated>
+  <author>
+    <name>MediaMosa</name>
+  </author>
+  <id>MediaMosa:feed:atom:search</id>
+  <entry>
+    <title>Morning news</title>
+    <link href="http://yourise.org/2003/12/13/news"/>
+    <id>asset_id:Q2DQJjCMIfPejfnkM8mjekw6</id>
+    <updated>2010-10-13T18:03:25Z</updated>
+    <summary>Chrismas in Amsterdam.</summary>
+  </entry>
+</feed>',
+  );
+
+  return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_openapi_mediamosa_register_rest_call() {
+  $rest_calls = array();
+
+  // Open API search.
+  $rest_calls['openapi/search'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+  );
+
+  return $rest_calls;
+}
