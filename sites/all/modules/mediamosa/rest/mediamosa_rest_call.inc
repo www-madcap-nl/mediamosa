@@ -190,6 +190,22 @@ abstract class mediamosa_rest_call {
   const PARAM_IS_REQUIRED = 'is_required';
   const PARAM_ALLOWED_VALUES = 'allowed_values';
 
+  // Filter options.
+  const FILTEROP_CONTAINS = 'contains';
+  const FILTEROP_EQUALS = 'equals';
+  const FILTEROP_STARTSWITH = 'startsWith';
+  const FILTEROP_PRESENT = 'present';
+
+  // Sort order.
+  const SORTORDER_ASCENDING = 'ascending';
+  const SORTORDER_DESCENDING = 'descending';
+
+  // MediaItem.
+  const USER_OWNER = '@owner';
+  const USER_VIEWER = '@viewer';
+  const USER_ME = '@me';
+  const GROUP_SELF = '@self';
+
   /**
    * Main constructor.
    *

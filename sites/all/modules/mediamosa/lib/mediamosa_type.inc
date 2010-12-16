@@ -37,7 +37,9 @@ class mediamosa_type {
 
   // Default fixed values.
   const ORDER_DIRECTION_ASC = 'asc';
+  const ORDER_DIRECTION_ASCENDING = 'ascending';
   const ORDER_DIRECTION_DESC = 'desc';
+  const ORDER_DIRECTION_DESCENDING = 'descending';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
