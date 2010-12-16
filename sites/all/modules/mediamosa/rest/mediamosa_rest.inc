@@ -202,8 +202,19 @@ class mediamosa_rest {
       $limit = -1; // get all.
     }
 
+    // OpenAPI restriction for just a few specific calls.
+    $is_app_restricted_openapi = mediamosa::is_app_restricted_openapi();
+
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
+
+      // TODO Upload, Download restriction.
+
+      // OpenAPI restriction.
+      if ($is_app_restricted_openapi && drupal_substr($uri, 0, drupal_strlen(mediamosa_openapi::CALL_URI_PREFIX . '/')) != mediamosa_openapi::CALL_URI_PREFIX . '/') {
+        continue;
+      }
+
       foreach ($rest_call_2 as $method => $rest_call) {
         if ($offset && $offset--) {
           $pos++;
@@ -329,6 +340,8 @@ class mediamosa_rest {
     if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
       $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
+
+    return $the_rest_call->get_param_value(mediamosa_rest_call::RESPONSE_ALT);
   }
 
   /**
