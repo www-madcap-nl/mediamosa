@@ -41,6 +41,8 @@ class mediamosa_type {
   const ORDER_DIRECTION_DESC = 'desc';
   const ORDER_DIRECTION_DESCENDING = 'descending';
 
+  const ISO_639_3_LENGTH = 3;
+
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Check the input based on type.
@@ -89,7 +91,16 @@ class mediamosa_type {
     // Now based on type, check contents when needed.
     switch ($param_type) {
       case mediamosa_sdk::TYPE_LANGUAGE_CODE_ISO_639_3:
-        // TODO Fix it.
+        if (drupal_strlen($mixed_param_value) != self::ISO_639_3_LENGTH) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+        // TODO Fix it for all languages.
+        $mixed_param_value = strtr($mixed_param_value, array(
+          'eng' => 'en',
+          'fra' => 'fr',
+          'hun' => 'hu',
+          'nld' => 'nl',
+        ));
       case mediamosa_sdk::TYPE_LANGUAGE_CODE:
         // ISO 639-1.
         $a_language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
