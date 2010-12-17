@@ -21,7 +21,14 @@ Known issues;
 
 Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
-- Searching on mime_type no longer works because of re-write mediafile metadata. 
+
+TODO: (v2.3.1)
+- ACL layer
+- Range fix for date and numbers.
+- OAI delete support.
+- Fix bug FTP ' FTP User - common tests' unit-test.
+- ^ support CQL->Solr
+- Granted query.
 
 MediaMosa 2.3.1 (build 1198)
 ----------------------------

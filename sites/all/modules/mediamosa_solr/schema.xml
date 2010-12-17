@@ -303,6 +303,19 @@
     <field name="is_external" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
 
     <!--
+      Aut. rules.
+      
+      aut_object;
+      app_id~is_protected~aut_type~aut_id~[owner_id|group_id]~
+      
+      aut_app_master_slave;
+      app_id_slave~app_id_master~is_protected~aut_type~aut_id~ 
+      -->
+    <field name="aut_object" type="string_id" indexed="true" stored="true" required="true" multiValued="true" /> 
+    <field name="aut_app_master_slave" type="string_id" indexed="true" stored="true" required="true" multiValued="true" /> 
+
+
+    <!--
       Because mediamosa supports custom metadata, we must use dynamic fields for
       all metadata, including dc, qdc and czp. 
       

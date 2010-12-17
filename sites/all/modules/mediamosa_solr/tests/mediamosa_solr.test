@@ -121,6 +121,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
         'title' => 'bicycle',
         'description' => 'asset number 1',
         'issued' => '2010-01-01 00:00:00',
+        'titel' => '2010-01-01 00:00:00',
       )
     );
     $this->createAssetMetadata($upload_2['asset_id'],
@@ -128,6 +129,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
         'title' => 'aap noot mies',
         'description' => 'asset number 2',
         'issued' => '2009-01-01 00:00:00',
+        'titel' => '2009-01-01 00:00:00',
       )
     );
     $this->createAssetMetadata($upload_3['asset_id'],
@@ -135,6 +137,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
         'title' => 'car',
         'description' => 'asset number 3',
         'issued' => '2010-08-01 00:00:00',
+        'titel' => '2010-08-01 00:00:00',
       )
     );
 
@@ -179,6 +182,18 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
     // DESC.
     $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
 
+
+    // Test sorting dates, but then stored in text.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby titel/ascending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // ASC.
+    $this->correct_sorting($asset_ids, array($upload_2['asset_id'], $upload_1['asset_id'], $upload_3['asset_id'], $upload_4['asset_id']));
+
+    // Test sorting dates.
+    $asset_ids = $this->cql_do_search_test_assets_1('sortby titel/descending', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE, $upload_4['asset_id'] => TRUE), $search_params);
+
+    // DESC.
+    $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
 
     // Range check.
     $asset_ids = $this->cql_do_search_test_assets_1('issued > "2010"', array($upload_1['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);

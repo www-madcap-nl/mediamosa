@@ -104,4 +104,59 @@ class mediamosa_aut_object {
       // ignore, double row.
     }
   }
+
+  /**
+   * Get the aut information for given asset.
+   */
+  function get_for_asset($asset_id) {
+
+    // Collection of aut rules on asset/mediafiles.
+    $asset_aut_info = array(
+      'aut_object' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
+      'aut_app_master_slave' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
+    );
+
+    // Get aut_object rules for asset_mediafiles.
+    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
+    $query->leftJoin(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', strtr('mf.@asset_id = a.@asset_id', array('@asset_id' => mediamosa_asset_mediafile_db::ASSET_ID)));
+    $query->leftJoin(mediamosa_aut_object_db::TABLE_NAME, 'aut_obj', array("aut_obj.@aut_object_type = '@aut_object_type_mediafile'", array('@aut_object_type' => mediamosa_aut_object_db::AUT_OBJECT_TYPE, '@aut_object_type_mediafile' => mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE)));
+    $query->fields('mf', array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+    $query->fields('aut_obj', array(mediamosa_aut_object_db::AUT_TYPE, mediamosa_aut_object_db::AUT_ID));
+    $query->condition(dbor()->condition('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, '')->isNull('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE));
+    $result = $query->execute();
+
+    // Now get all rules.
+    foreach ($result as $aut_object) {
+      $asset_aut_info['aut_object']['mediafile'][] = array(
+        mediamosa_asset_mediafile_db::IS_PROTECTED => $aut_object[mediamosa_asset_mediafile_db::IS_PROTECTED],
+        mediamosa_aut_object_db::AUT_TYPE => $aut_object[mediamosa_aut_object_db::AUT_TYPE],
+        mediamosa_aut_object_db::AUT_ID => $aut_object[mediamosa_aut_object_db::AUT_ID],
+      );
+    }
+
+    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
+    $query->leftJoin(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', strtr('mf.@asset_id = a.@asset_id', array('@asset_id' => mediamosa_asset_mediafile_db::ASSET_ID)));
+    $query->leftJoin(mediamosa_aut_app_master_slave_db::TABLE_NAME, 'aut_app', array("aut_app.@aut_object_type = '@aut_object_type_mediafile'", array('@aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE, '@aut_object_type_mediafile' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE)));
+    $query->fields('mf', array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+    $query->fields('aut_app', array(mediamosa_aut_app_master_slave_db::APP_ID_MASTER, mediamosa_aut_app_master_slave_db::APP_ID_SLAVE));
+    $query->condition(dbor()->condition('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, '')->isNull('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE));
+    $result = $query->execute();
+
+    // Now get all rules.
+    foreach ($result as $aut_object) {
+      $asset_aut_info['aut_app_master_slave']['mediafile'][] = array(
+        mediamosa_asset_mediafile_db::IS_PROTECTED => $aut_object[mediamosa_asset_mediafile_db::IS_PROTECTED],
+        mediamosa_aut_app_master_slave_db::APP_ID_MASTER => $aut_object[mediamosa_aut_app_master_slave_db::APP_ID_MASTER],
+        mediamosa_aut_app_master_slave_db::APP_ID_SLAVE => $aut_object[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE],
+      );
+    }
+
+    return $asset_aut_info;
+  }
 }

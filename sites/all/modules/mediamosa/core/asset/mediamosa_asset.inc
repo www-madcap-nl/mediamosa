@@ -1264,6 +1264,9 @@ class mediamosa_asset {
     // Get all fav. of this asset.
     $result['user_favorites'] = mediamosa_user_favorite::get_fav_of_asset($asset_id);
 
+    // Get AUT rules.
+    $result['aut_object'] = mediamosa_aut_object::get_for_asset($asset_id);
+
     return $result;
   }
 }
