@@ -409,7 +409,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     // Call related paramters.
     $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
     $group_id = addslashes($this->get_param_value(self::GROUP_ID));
-    $coll_id = addslashes($this->get_param_value(self::ALBUM_ID));
+    $album_id = addslashes($this->get_param_value(self::ALBUM_ID));
     $appid_parameter = addslashes($this->get_param_value(self::APPID));
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
 
@@ -446,8 +446,10 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       }
     }
 
-    if ($coll_id) {
-      $cql .= ($cql ? ' AND ' : '') . 'coll_id="' . $coll_id . '"';
+    if ($album_id) {
+      // We skip this.
+      // TODO: $album_id is the title of the collection, or the coll_id?
+      //$cql .= ($cql ? ' AND ' : '') . 'coll_id="' . $album_id . '"';
     }
 
     if ($appid_parameter) {
@@ -723,7 +725,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     // Call related paramters.
     $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
     $group_id = addslashes($this->get_param_value(self::GROUP_ID));
-    $coll_id = addslashes($this->get_param_value(self::ALBUM_ID));
+    $album_id = addslashes($this->get_param_value(self::ALBUM_ID));
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
 
     // Data parameters.
@@ -761,9 +763,99 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       $this->set_param_value(self::RESPONSE_ALT, $alt);
     }
 
-    //$mediamosa->add_item(get_defined_vars());
-    // TODO
+    //
+    // Create collection.
+    //
+
+    // TODO: $album_id is the title of the collection, or the coll_id?
+
+    //
     // Create asset.
+    //
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
+
+    // See the call definition.
+    $group_id = NULL;
+    $reference_id = NULL;
+    $provider_id = NULL;
+    $parent_id = NULL;
+
+    // Create the asset.
+    $asset_id = mediamosa_asset::create($app_id, $user_id_parameter, $group_id, $reference_id, $provider_id, $parent_id);
+
+    //
     // Create mediafile.
+    //
+
+    // Set mediafile ID to something if not present.
+    if (!$mediafile_id) {
+      $mediafile_id = mediamosa_db::uuid($app_id);
+    }
+
+    // Fields to insert.
+    $fields = array(
+      mediamosa_asset_mediafile_db::GROUP_ID => NULL,
+      mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE,
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => NULL,
+      mediamosa_asset_mediafile_db::FILENAME => NULL,
+      mediamosa_asset_mediafile_db::URI => $url,
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
+      mediamosa_asset_mediafile_db::TAG => $tags,
+    );
+
+    // Insert the mediafile.
+    $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id_parameter, $fields);
+
+    //
+    // Create metadata.
+    //
+
+    // Metadata function call parameters.
+    $action = 'replace';
+    // Get full definitions.
+    $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
+    // Mapping metadata parameters.
+    $params = array(
+      'created' => $created,
+      'description' => $description,
+      'language' => $language,
+      'title' => $title,
+      // Skipped fields, because we don't have metadata equivalients.
+      //'' => $duration,
+      //'' => $file_size,
+      //'' => $last_updated,
+      //'' => $location,
+      //'' => $mime_type,
+      //'' => $num_comments,
+      //'' => $num_views,
+      //'' => $num_votes,
+      //'' => $rating,
+      //'' => $start_time,
+      //'' => $tagged_people,
+      //'' => $thumbnail_url,
+      //'' => $type,
+    );
+
+    // Create the metadata.
+    $a_value_set = mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $params, $action);
+
+    //
+    // Create response.
+    //
+
+    $mediamosa->add_item(array('asset_id' => $asset_id));
+    $mediamosa->add_item(array('mediafile_id' => $mediafile_id));
+    // Return what has been inserted into the metadata.
+    foreach ($a_value_set as $name => $value) {
+      $o_mediamosa->add_item(array($name => $value));
+    }
+
+    // TODO: Remove:
+    // Variables (for testing purpose):
+    $mediamosa->add_item(get_defined_vars());
+
   }
 }
