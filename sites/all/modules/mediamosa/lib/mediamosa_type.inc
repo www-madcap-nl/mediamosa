@@ -94,15 +94,8 @@ class mediamosa_type {
         if (drupal_strlen($mixed_param_value) != self::ISO_639_3_LENGTH) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
+
         // TODO Fix this.
-        /*
-        $mixed_param_value = strtr((string)mediamosa_unicode::strtolower($mixed_param_value), array(
-          'eng' => 'en',
-          'fra' => 'fr',
-          'hun' => 'hu',
-          'nld' => 'nl',
-        ));
-         */
         // In this solution, we suppose, the ISO 639 1 is subset of ISO 639 3, and the first characters are same.
         $mixed_param_value = (string)mediamosa_unicode::strtolower($mixed_param_value);
         // Eg. "eng" => "en" and "eg".
