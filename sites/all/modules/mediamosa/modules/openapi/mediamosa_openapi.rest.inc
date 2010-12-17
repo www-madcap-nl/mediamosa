@@ -517,12 +517,13 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
 }
 
 /**
- * URI: /openapi/mediaItems/$items_user_id/$group_id
+ * URI: /openapi/mediaItems/$items_user_id/$group_id/$album
  * Method: POST
  */
 class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
+  const USER_ID = 'user_id';
 
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
@@ -740,12 +741,16 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $rating = $this->get_param_value(self::RATING);
     $start_time = $this->get_param_value(self::START_TIME);
     $tagged_people = $this->get_param_value(self::TAGGED_PEOPLE);
-    foreach ($tagged_people as $key => $value) {
-      $tagged_people[$key] = addslashes($value);
+    if ($tagged_people) {
+      foreach ($tagged_people as $key => $value) {
+        $tagged_people[$key] = addslashes($value);
+      }
     }
     $tags = $this->get_param_value(self::TAGS);
-    foreach ($tags as $key => $value) {
-      $tags[$key] = addslashes($value);
+    if ($tags) {
+      foreach ($tags as $key => $value) {
+        $tags[$key] = addslashes($value);
+      }
     }
     $thumbnail_url = addslashes($this->get_param_value(self::THUMBNAIL_URL));
     $title = addslashes($this->get_param_value(self::TITLE));
@@ -756,6 +761,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       $this->set_param_value(self::RESPONSE_ALT, $alt);
     }
 
+    //$mediamosa->add_item(get_defined_vars());
     // TODO
     // Create asset.
     // Create mediafile.

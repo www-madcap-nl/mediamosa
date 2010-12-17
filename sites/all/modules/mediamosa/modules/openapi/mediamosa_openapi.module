@@ -90,10 +90,10 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
   $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id/$mediaitem_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET];
 
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['openapi/mediaItem/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'OpenSocial create media items.',
     mediamosa_rest_call::DESCRIPTION => 'The MediaItems Service support requests to create a mediafile for the currently authenticated user and app.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/mediaItems/owner/group',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/mediaItems/owner/@self/album',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -147,7 +147,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
   $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id/$mediaitem_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET];
 
   // MediaItem POST.
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls['openapi/mediaItem/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_mediaitems_post',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
