@@ -88,7 +88,7 @@ class mediamosa_asset_metadata {
    *  The asset ID.
    * @param $a_metadata_definitions_full
    *  The allowed metadata properties.
-   * @param $a_params
+   * @param $params
    *  The values for metadata array(name => value)
    * @param $action
    *  The action; append, replace, update.
