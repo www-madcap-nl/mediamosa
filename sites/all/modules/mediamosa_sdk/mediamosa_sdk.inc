@@ -268,6 +268,7 @@ class mediamosa_sdk {
   const TYPE_REALM                       = 'REALM';
   const TYPE_FILENAME                    = 'FILENAME';
   const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
+  const TYPE_LANGUAGE_CODE_ISO_639_3     = 'LANGUAGE_CODE_ISO_639_3';
 
   const TYPE_CQL_ASSET                   = 'CQL_ASSET';
   const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';

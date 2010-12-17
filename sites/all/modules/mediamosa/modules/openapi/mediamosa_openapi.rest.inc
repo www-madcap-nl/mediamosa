@@ -558,9 +558,145 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
 
             // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User id.',
+        ),
 
-    // TODO
+        // Standard Request Parameters.
+        self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::REQUEST_PARAMETER_FORMET_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_rest_call::RESPONSE_TYPE_XML,
+            mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+            mediamosa_rest_call::RESPONSE_TYPE_RSS,
+            mediamosa_rest_call::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
+        ),
+
+        // Call related paramters.
+        self::ITEMS_USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The person whose MediaItems are to be returned. Defaults to "@me", indicating the currently authenticated user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
+          self::VAR_DEFAULT_VALUE => self::USER_ME,
+        ),
+        self::GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+          self::VAR_DESCRIPTION => 'The group ID of the group of users whose MediaItems are to be returned. Defaults to "@self".',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
+          self::VAR_DEFAULT_VALUE => self::GROUP_SELF,
+        ),
+        self::ALBUM_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
+          self::VAR_DESCRIPTION => 'Album to which the media item belongs. ',
+        ),
+
+        // Data parameters.
+        self::MEDIAITEM_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'Id Associated with the media item.',
+        ),
+        //
+        self::CREATED => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'Creation datetime associated with the media item - assigned by container in UTC (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::DESCRIPTION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Description of the media item.',
+        ),
+        self::DURATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'For audio/video clips - playtime length in seconds. set to -1/not defined if unknown.',
+          self::VAR_DEFAULT_VALUE => -1,
+        ),
+        self::FILE_SIZE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Number of bytes (set to -1/undefined if unknown).',
+          self::VAR_DEFAULT_VALUE => -1,
+        ),
+        self::LANGUAGE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_LANGUAGE_CODE_ISO_639_3,
+          self::VAR_DESCRIPTION => 'Language associated with the media item in ISO 639-3 format.',
+        ),
+        self::LAST_UPDATED => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'Update datetime associated with the media item - assigned by container in UTC (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::LOCATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Location corresponding to the media item.',
+        ),
+        self::MIME_TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MIMETYPE,
+          self::VAR_DESCRIPTION => 'The MIME type of media, specified as a string.',
+        ),
+        self::NUM_COMMENTS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Number of comments on the media item.',
+        ),
+        self::NUM_VIEWS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Number of views for the media item.',
+        ),
+        self::NUM_VOTES => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Number of votes received for voting.',
+        ),
+        self::RATING => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Average rating of the media item on a scale of 0-10.',
+          self::VAR_RANGE_START => 0,
+          self::VAR_RANGE_END => 10,
+        ),
+        self::START_TIME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'For streaming/live content, datetime when the content is available (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::TAGGED_PEOPLE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Array of string (IDs) of people tagged in the media item.',
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::TAGS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Tags associated with this media item.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::THUMBNAIL_URL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'URL to a thumbnail image of the media item.',
+        ),
+        self::TITLE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Describing the media item.',
+        ),
+        self::TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
+          self::VAR_DESCRIPTION => 'The type of media, specified as a MediaItem.Type object.',
+          self::VAR_ALLOWED_VALUES => array(
+            // We don't support others, just video type.
+            mediamosa_rest_call::MEDIAITEM_TYPE,
+          ),
+        ),
+        self::URL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Specifying the URL where the media can be found.',
+        ),
+
+      )
+    );
 
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup);

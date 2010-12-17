@@ -205,6 +205,7 @@ abstract class mediamosa_rest_call {
   const USER_VIEWER = '@viewer';
   const USER_ME = '@me';
   const GROUP_SELF = '@self';
+  const MEDIAITEM_TYPE = 'video';
 
   /**
    * Main constructor.
