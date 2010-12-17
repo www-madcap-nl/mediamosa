@@ -210,7 +210,7 @@ class mediamosa_rest_call_user_create extends mediamosa_rest_call {
 }
 
 /**
- * URI: /user/$user_id
+ * URI: /user/$user_id/delete
  *
  * Method: GET
  *
