@@ -386,6 +386,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $cql = '';
 
@@ -420,15 +421,29 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>"' . $since . '"';
     }
 
+    // We don't know, who the owner the page (USER_OWNER), that the current user visit.
+    // The klient application should change it to the appropriate user.
     if ($user_id_parameter && $user_id_parameter != self::USER_OWNER) {
+      // Me and viewer is the current user.
       if ($user_id_parameter == self::USER_ME || $user_id_parameter == self::USER_VIEWER) {
         $user_id_parameter = $user_id;
       }
       $cql .= ($cql ? ' AND ' : '') . 'owner_id="' . $user_id_parameter . '"';
     }
 
-    if ($group_id && $group_id != self::GROUP_SELF) {
-      $cql .= ($cql ? ' AND ' : '') . 'group_id="' . $group_id . '"';
+    if ($group_id) {
+      if ($user_id_parameter && $user_id_parameter!= self::USER_OWNER && $group_id == self::GROUP_SELF) {
+        // Get the group_id.
+        $a_user = mediamosa_user::get($user_id_parameter, $app_id, array(mediamosa_user_db::GROUP_ID));
+
+        if (isset($a_user['group_id']) && $a_user['group_id']) {
+          $group_id = $a_user['group_id'];
+          $cql .= ($cql ? ' AND ' : '') . 'group_id="' . $group_id . '"';
+        }
+      }
+      if ($group_id != self::GROUP_SELF) {
+        $cql .= ($cql ? ' AND ' : '') . 'group_id="' . $group_id . '"';
+      }
     }
 
     if ($coll_id) {
