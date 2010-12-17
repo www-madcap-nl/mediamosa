@@ -844,9 +844,6 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       $response[$name] = $value;
     }
 
-    // TODO: Remove: Variables (for testing purpose).
-    $response['vars'] = get_defined_vars();
-
     $mediamosa->add_item($response);
   }
 }
