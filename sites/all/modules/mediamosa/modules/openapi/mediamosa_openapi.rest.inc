@@ -595,6 +595,9 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The group ID of the group of users whose MediaItems are to be returned. Defaults to "@self".',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
           self::VAR_DEFAULT_VALUE => self::GROUP_SELF,
+          self::VAR_ALLOWED_VALUES => array(
+            self::GROUP_SELF,
+          ),
         ),
         self::ALBUM_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
@@ -703,6 +706,58 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
   }
 
   public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
+    // Get params.
+
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    // Standard Request Parameters.
+    $since = $this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE);
+    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMET_VALUE);
+
+    // Call related paramters.
+    $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
+    $group_id = addslashes($this->get_param_value(self::GROUP_ID));
+    $coll_id = addslashes($this->get_param_value(self::ALBUM_ID));
+    $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
+
+    // Data parameters.
+    $created = $this->get_param_value(self::CREATED);
+    $description = addslashes($this->get_param_value(self::DESCRIPTION));
+    $duration = $this->get_param_value(self::DURATION);
+    $file_size = $this->get_param_value(self::FILE_SIZE);
+    $language = $this->get_param_value(self::LANGUAGE);
+    $last_updated = $this->get_param_value(self::LAST_UPDATED);
+    $location = addslashes($this->get_param_value(self::LOCATION));
+    $mime_type = addslashes($this->get_param_value(self::MIME_TYPE));
+    $num_comments = $this->get_param_value(self::NUM_COMMENTS);
+    $num_views = $this->get_param_value(self::NUM_VIEWS);
+    $num_votes = $this->get_param_value(self::NUM_VOTES);
+    $rating = $this->get_param_value(self::RATING);
+    $start_time = $this->get_param_value(self::START_TIME);
+    $tagged_people = $this->get_param_value(self::TAGGED_PEOPLE);
+    foreach ($tagged_people as $key => $value) {
+      $tagged_people[$key] = addslashes($value);
+    }
+    $tags = $this->get_param_value(self::TAGS);
+    foreach ($tags as $key => $value) {
+      $tags[$key] = addslashes($value);
+    }
+    $thumbnail_url = addslashes($this->get_param_value(self::THUMBNAIL_URL));
+    $title = addslashes($this->get_param_value(self::TITLE));
+    $type = $this->get_param_value(self::TYPE);
+    $url = addslashes($this->get_param_value(self::URL));
+
+    if ($alt) {
+      $this->set_param_value(self::RESPONSE_ALT, $alt);
+    }
+
     // TODO
+    // Create asset.
+    // Create mediafile.
   }
 }
