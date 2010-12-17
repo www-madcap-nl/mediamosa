@@ -730,13 +730,13 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
 
     // Data parameters.
     $created = $this->get_param_value(self::CREATED);
-    $description = addslashes($this->get_param_value(self::DESCRIPTION));
+    $description = strip_tags(addslashes($this->get_param_value(self::DESCRIPTION)));
     $duration = $this->get_param_value(self::DURATION);
     $file_size = $this->get_param_value(self::FILE_SIZE);
     $language = $this->get_param_value(self::LANGUAGE);
     $last_updated = $this->get_param_value(self::LAST_UPDATED);
-    $location = addslashes($this->get_param_value(self::LOCATION));
-    $mime_type = addslashes($this->get_param_value(self::MIME_TYPE));
+    $location = strip_tags(addslashes($this->get_param_value(self::LOCATION)));
+    $mime_type = strip_tags(addslashes($this->get_param_value(self::MIME_TYPE)));
     $num_comments = $this->get_param_value(self::NUM_COMMENTS);
     $num_views = $this->get_param_value(self::NUM_VIEWS);
     $num_votes = $this->get_param_value(self::NUM_VOTES);
@@ -745,19 +745,19 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $tagged_people = $this->get_param_value(self::TAGGED_PEOPLE);
     if ($tagged_people) {
       foreach ($tagged_people as $key => $value) {
-        $tagged_people[$key] = addslashes($value);
+        $tagged_people[$key] = strip_tags(addslashes($value));
       }
     }
     $tags = $this->get_param_value(self::TAGS);
     if ($tags) {
       foreach ($tags as $key => $value) {
-        $tags[$key] = addslashes($value);
+        $tags[$key] = strip_tags(addslashes($value));
       }
     }
-    $thumbnail_url = addslashes($this->get_param_value(self::THUMBNAIL_URL));
-    $title = addslashes($this->get_param_value(self::TITLE));
+    $thumbnail_url = strip_tags(addslashes($this->get_param_value(self::THUMBNAIL_URL)));
+    $title = strip_tags(addslashes($this->get_param_value(self::TITLE)));
     $type = $this->get_param_value(self::TYPE);
-    $url = addslashes($this->get_param_value(self::URL));
+    $url = strip_tags(addslashes($this->get_param_value(self::URL)));
 
     if ($alt) {
       $this->set_param_value(self::RESPONSE_ALT, $alt);
@@ -803,7 +803,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       mediamosa_asset_mediafile_db::FILENAME => NULL,
       mediamosa_asset_mediafile_db::URI => $url,
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
-      mediamosa_asset_mediafile_db::TAG => $tags,
+      mediamosa_asset_mediafile_db::TAG => implode(', ', $tags),
     );
 
     // Insert the mediafile.
@@ -819,24 +819,12 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
     // Mapping metadata parameters.
     $params = array(
-      'created' => $created,
-      'description' => $description,
-      'language' => $language,
-      'title' => $title,
+      'created' => array($created),
+      'description' => array($description),
+      'language' => array($language),
+      'title' => array($title),
       // Skipped fields, because we don't have metadata equivalients.
-      //'' => $duration,
-      //'' => $file_size,
-      //'' => $last_updated,
-      //'' => $location,
-      //'' => $mime_type,
-      //'' => $num_comments,
-      //'' => $num_views,
-      //'' => $num_votes,
-      //'' => $rating,
-      //'' => $start_time,
-      //'' => $tagged_people,
-      //'' => $thumbnail_url,
-      //'' => $type,
+      // $duration, $file_size, $last_updated, $location, $mime_type, $num_comments, $num_views, $num_votes, $rating, $start_time, $tagged_people, $thumbnail_url, $type,
     );
 
     // Create the metadata.
@@ -846,16 +834,19 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     // Create response.
     //
 
-    $mediamosa->add_item(array('asset_id' => $asset_id));
-    $mediamosa->add_item(array('mediafile_id' => $mediafile_id));
+    $response = array();
+
+    $response['asset_id'] = $asset_id;
+    $response['mediafile_id'] = $mediafile_id;
+
     // Return what has been inserted into the metadata.
     foreach ($a_value_set as $name => $value) {
-      $o_mediamosa->add_item(array($name => $value));
+      $response[$name] = $value;
     }
 
-    // TODO: Remove:
-    // Variables (for testing purpose):
-    $mediamosa->add_item(get_defined_vars());
+    // TODO: Remove: Variables (for testing purpose).
+    $response['vars'] = get_defined_vars();
 
+    $mediamosa->add_item($response);
   }
 }

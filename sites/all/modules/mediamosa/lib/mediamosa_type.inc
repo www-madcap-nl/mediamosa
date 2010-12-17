@@ -99,7 +99,7 @@ class mediamosa_type {
         // In this solution, we suppose, the ISO 639 1 is subset of ISO 639 3, and the first characters are same.
         $mixed_param_value = (string)mediamosa_unicode::strtolower($mixed_param_value);
         // Eg. "eng" => "en" and "eg".
-        $lang2 = $mixed_param_value{0} . $mixed_param_value{1};
+        $lang1 = $mixed_param_value{0} . $mixed_param_value{1};
         $lang2 = $mixed_param_value{0} . $mixed_param_value{2};
 
         // ISO 639-1.
