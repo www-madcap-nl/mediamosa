@@ -37,6 +37,7 @@ class mediamosa_settings {
   const SEARCH_INDEX_TYPE_METADATA = 'metadata';
   const SEARCH_INDEX_TYPE_FAV_USER = 'fav_user';
   const SEARCH_INDEX_TYPE_MASTER_SLAVE = 'master_slave';
+  const SEARCH_INDEX_TYPE_AUT = 'aut';
 
   const MINIMUM_PHP_VERSION = '5.2.4';
 

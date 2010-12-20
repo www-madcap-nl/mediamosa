@@ -275,13 +275,7 @@ class mediamosa_asset {
       $query->execute();
 
       // Call delete index on external database.
-      // Trigger the reindex hook for external search engines.
-      try {
-        module_invoke_all('mediamosa_asset_index_delete', array('asset_ids' => array($asset_id)));
-      }
-      catch (Exception $e) {
-        mediamosa_watchdog::log_asset($asset_id, "Index delete for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-      }
+      mediamosa_asset::mediamosa_asset_delete(array($asset_id));
     }
     catch (Exception $e) {
       $transaction->rollback();
@@ -343,13 +337,8 @@ class mediamosa_asset {
     // Set the empty asset.
     mediamosa_asset::update_asset_info_is_empty_asset($asset_id, FALSE);
 
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-    }
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
   }
 
   /**
@@ -411,13 +400,8 @@ class mediamosa_asset {
     );
 
     if ($do_reindex) {
-      // Trigger the reindex hook for external search engines.
-      try {
-        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
-      }
-      catch (Exception $e) {
-        mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-      }
+      // Reindex the asset.
+      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
     }
   }
 
@@ -461,13 +445,8 @@ class mediamosa_asset {
     }
 
     if ($do_reindex) {
-      // Trigger the reindex hook for external search engines.
-      try {
-        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
-      }
-      catch (Exception $e) {
-        mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-      }
+      // Reindex the asset.
+      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE);
     }
   }
 
@@ -651,7 +630,7 @@ class mediamosa_asset {
     $items['granted'] = array(); // must exist, else granted flag is not included on the non-granted
 
     if ($granted) {
-      $asset_ids_access = mediamosa_aut::access_check_media($asset_ids, $app_ids, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $is_app_admin);
+      $asset_ids_access = mediamosa_aut::access_check_assets($asset_ids, $app_ids, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $is_app_admin);
 
       foreach ($asset_ids_access as $asset_id) {
         $items['granted'][$asset_id] = $asset_id;
@@ -1073,15 +1052,11 @@ class mediamosa_asset {
       ->fields($fields)
       ->execute();
 
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_CREATE);
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-    }
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_CREATE);
 
-    return $asset_id; // previously generated above.
+    // previously generated above.
+    return $asset_id;
   }
 
   /**
@@ -1187,14 +1162,8 @@ class mediamosa_asset {
       }
     }
 
-    // Call reindex asset.
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE);
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-    }
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE);
   }
 
   /**
@@ -1264,9 +1233,48 @@ class mediamosa_asset {
     // Get all fav. of this asset.
     $result['user_favorites'] = mediamosa_user_favorite::get_fav_of_asset($asset_id);
 
+    // Get mediafiles.
+    $result['mediafiles'] = mediamosa_asset_mediafile::get_by_asset_id($asset_id);
+
     // Get AUT rules.
-    $result['aut_object'] = mediamosa_aut_object::get_for_asset($asset_id);
+    $result['aut'] = mediamosa_aut_object::get_for_asset($asset_id);
 
     return $result;
+  }
+
+  /**
+   * Reindex the asset.
+   *
+   * Triggers hook(s) for reindexing external databases.
+   *
+   * @param array $asset_id
+   *  Asset ID.
+   * @param string $search_index_type
+   *  @see mediamosa_settings::search_index_type_*
+   */
+  static public function mediamosa_asset_reindex(array $asset_ids, $search_index_type) {
+    // Trigger the reindex hook for external search engines.
+    try {
+      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => $asset_ids), $search_index_type);
+    }
+    catch (Exception $e) {
+      mediamosa_watchdog::log_asset(reset($asset_ids), "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => reset($asset_ids), '@message' => $e->getMessage()));
+    }
+  }
+
+  /**
+   * Remove asset from external databases.
+   *
+   * @param array $asset_ids
+   *  The assets to remove.
+   */
+  static public function mediamosa_asset_delete(array $asset_ids) {
+    // Trigger the reindex hook for external search engines.
+    try {
+      module_invoke_all('mediamosa_asset_index_delete', array('asset_ids' => $asset_ids));
+    }
+    catch (Exception $e) {
+      mediamosa_watchdog::log_asset(reset($asset_ids), "Index delete for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => reset($asset_ids), '@message' => $e->getMessage()));
+    }
   }
 }

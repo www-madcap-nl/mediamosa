@@ -41,8 +41,7 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function get($mediafile_id, $app_id = NULL, $fields = array(), $is_still = NULL) {
-
+  static public function get($mediafile_id, $app_id = NULL, array $fields = array(), $is_still = NULL) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', $fields);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
@@ -56,7 +55,34 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Get the asset_id of the mediafile.
+   *
+   * @param string $mediafile_id
+   */
+  static public function get_asset_id($mediafile_id) {
+    $mediafile = self::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID));
+    return empty($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]) ? FALSE : $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+  }
+
+  /**
+   * Get all mediafiles of given asset_id.
+   *
+   * Warning; will also get stills, which are also mediafiles.
+   *
+   * @param string $mediafile_id
+   */
+  static public function get_by_asset_id($asset_id, $fields = array()) {
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->fields('mf', $fields);
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+    return $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
+  }
+
+
+  /**
    * Returns the parent asset id of mediafile.
+   *
+   * FIXME: parent_ids no longer exists.
    *
    * @param string $mediafile_id
    */
@@ -665,4 +691,24 @@ class mediamosa_asset_mediafile {
     // Return the mediafile ID.
     return $mediafile_id;
   }
+
+  /**
+   * Reindex the asset.
+   *
+   * Triggers hook(s) for reindexing external databases.
+   *
+   * @param string $asset_id
+   *  Asset ID.
+   * @param string $search_index_type
+   *  @see mediamosa_settings::search_index_type_*
+   */
+  static public function mediamosa_asset_reindex($mediafile_id, $search_index_type) {
+    $asset_id = self::get_asset_id($mediafile_id);
+    if (empty($asset_id)) {
+      return;
+    }
+
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), $search_index_type);
+  }
+
 }

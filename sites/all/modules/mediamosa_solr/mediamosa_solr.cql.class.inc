@@ -165,13 +165,40 @@ mediamosa_debug::log_export($index2column);
 
     $parts_or = $parts = $sub_parts = array();
 
+    // Default is OR.
+    $str_sub_parts_glue = ' OR ';
+    $str_relation = $cql_part_relation->mediamosa_cql_part_str_get();
+    $has_not = $cql_part->mediamosa_cql_part_has_not();
+mediamosa_debug::log($str_search_term);
+mediamosa_debug::log($str_relation);
+mediamosa_debug::log($has_not ? "has not" : 'no not');
+
     switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
       case mediamosa_sdk::TYPE_INT:
+        switch ($str_relation) {
+          case '>=':
+            $str_search_term -= 1;
+            break;
+
+          case '<=':
+            $str_search_term += 1;
+            break;
+        }
         break;
 
       case mediamosa_sdk::TYPE_DATETIME:
         $str = '0000-01-01T00:00:00Z';
         $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
+
+        switch ($str_relation) {
+          case '>=':
+            $str_search_term .= '-1MINUTES';
+            break;
+
+          case '<=':
+            $str_search_term .= '+1MINUTES';
+            break;
+        }
         break;
 
       case mediamosa_sdk::TYPE_DOMAIN:
@@ -189,13 +216,6 @@ mediamosa_debug::log_export($index2column);
         throw new mediamosa_solr_exception('Type TYPE_JOB_PROGRESS is not supported by asset SOLR, job context.');
     }
 
-    // Default is OR.
-    $str_sub_parts_glue = ' OR ';
-    $str_relation = $cql_part_relation->mediamosa_cql_part_str_get();
-    $has_not = $cql_part->mediamosa_cql_part_has_not();
-mediamosa_debug::log($str_search_term);
-mediamosa_debug::log($str_relation);
-mediamosa_debug::log($has_not ? "has not" : 'no not');
 
     switch ($str_relation) {
       case 'all':

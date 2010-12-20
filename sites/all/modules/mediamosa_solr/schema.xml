@@ -304,16 +304,24 @@
 
     <!--
       Aut. rules.
-      
-      aut_object;
-      app_id~is_protected~aut_type~aut_id~[owner_id|group_id]~
-      
-      aut_app_master_slave;
-      app_id_slave~app_id_master~is_protected~aut_type~aut_id~ 
-      -->
-    <field name="aut_object" type="string_id" indexed="true" stored="true" required="true" multiValued="true" /> 
-    <field name="aut_app_master_slave" type="string_id" indexed="true" stored="true" required="true" multiValued="true" /> 
+      mf_org:[TRUE|FALSE] (has a original mf)
 
+      mf_org_aut_obj_aut_[name|group][]: 
+
+      mf_org_aut_obj_[owner|group][]: 
+
+      mf_aut_master_slave[]: 
+      is_protected; TRUE: TRUE or DOMAIN_REALM. FALSE: FALSE or USER_USERGROUP
+      aut_type~aut_id~; is only set when is_protected is != FALSE.
+      app_id_slave~app_id_master~is_protected~[aut_type~aut_id~]
+      
+      -->
+    <field name="mf_org" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
+    <field name="mf_org_aut_obj_aut_name" type="string_id" indexed="true" stored="true" required="false" multiValued="true" /> 
+    <field name="mf_org_aut_obj_aut_group" type="string_id" indexed="true" stored="true" required="false" multiValued="true" /> 
+    <field name="mf_org_owner" type="string_id" indexed="true" stored="true" required="false" multiValued="false" /> 
+    <field name="mf_org_group" type="string_id" indexed="true" stored="true" required="false" multiValued="false" /> 
+    <field name="mf_aut_master_slave" type="string_id" indexed="true" stored="true" required="false" multiValued="true" /> 
 
     <!--
       Because mediamosa supports custom metadata, we must use dynamic fields for

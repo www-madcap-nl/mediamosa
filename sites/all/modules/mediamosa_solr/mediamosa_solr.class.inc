@@ -36,7 +36,7 @@ class mediamosa_solr {
   const TIME_TO_PROCESS_QUEUE = 55;
   // when having x number assets, then commit. Be careful with memory when
   // increasing.
-  const COMMIT_BULK_PER = 25;
+  const COMMIT_BULK_PER = 50;
   // Only store 50 chars max for sorting text.
   const VAR_CHAR_SORT_LENGTH = 50;
   // Number of runs we remember the # index during run.
@@ -47,6 +47,7 @@ class mediamosa_solr {
 
   // array name for search in where
   const CQL = 'cql';
+  const M_APPS = 'm_apps';
   const APPS = 'apps';
   const MF = 'mf';
   const ASSET = 'asset';
@@ -55,21 +56,20 @@ class mediamosa_solr {
   const BATCH = 'batch';
   const USER_FAV = 'user_fav';
   const ORG = 'original';
+  const IS_PROTECTED = 'is_protected';
   const IS_PROTECTED_FALSE = 'is_protected_false';
   const IS_PROTECTED_TRUE = 'is_protected_true';
   const AUT = 'aut';
   const AUT_NAME = 'name';
   const AUT_GRP = 'group';
 
-
-
   //  const ORDER_BY = 'order_by';
 //  const ASSET_COLLECTION = 'asset_coll';
 //  const COLLECTION = 'collection';
-
+//{!prefix f=asset_id}[iets]*
   // ---------------------------------------------------------------- Functions.
   static public function asset_search($parameters) {
-//{!prefix f=asset_id}[iets]*
+
     mediamosa_watchdog::log_export($parameters);
 
     // Make sure its unique.
@@ -87,7 +87,7 @@ class mediamosa_solr {
     $app_ids_all = array_unique(array_merge($parameters['app_ids'], array_keys($slave_mediafiles), array_keys($slave_assets)));
     sort($app_ids_all);
 
-    // Add app_ids.
+    // Get all assets of our app(s) and slave apps.
     foreach ($app_ids_all as $app_id) {
       $solr_query[self::WHERE_AND][self::ASSET][self::APPS][self::WHERE_OR] = 'app_id:' . (int) $app_id;
     }
@@ -96,13 +96,13 @@ class mediamosa_solr {
     // Is outside the ACL check, else we would have problems with 'granted'.
     if (!$parameters['is_app_admin']) {
       if ($parameters['is_public_list'] && $parameters['aut_user_id']) {
-        $solr_query[self::WHERE_AND][self::ASSET][self::AUT][self::WHERE_AND][] = strtr('(isprivate:FALSE AND (is_unappropriate:FALSE OR owner_id:"@owner_id"))', array('@owner_id' => mediamosa_solr_apache_solr_service::escapePhrase($parameters['aut_user_id'])));
+        $solr_query[self::WHERE_AND][self::ASSET][self::AUT][self::WHERE_AND][] = strtr('(isprivate:FALSE AND (is_unappropriate:FALSE OR owner_id:@owner_id))', array('@owner_id' => mediamosa_solr_apache_solr_service::phrase($parameters['aut_user_id'])));
       }
       elseif ($parameters['is_public_list']) {
         $solr_query[self::WHERE_AND][self::ASSET][self::AUT][self::WHERE_AND][] = '(isprivate:FALSE AND is_unappropriate:FALSE)'; // Must both be FALSE
       }
       elseif ($parameters['aut_user_id']) { // if provided, then we only have access to unappropate when owner.
-        $solr_query[self::WHERE_AND][self::ASSET][self::AUT][self::WHERE_AND][] = strtr('(is_unappropriate:FALSE OR owner_id:"@owner_id")', array('@owner_id' => mediamosa_solr_apache_solr_service::escapePhrase($parameters['aut_user_id'])));
+        $solr_query[self::WHERE_AND][self::ASSET][self::AUT][self::WHERE_AND][] = strtr('(is_unappropriate:FALSE OR owner_id:@owner_id)', array('@owner_id' => mediamosa_solr_apache_solr_service::phrase($parameters['aut_user_id'])));
       }
       else {
         // No public list, no aut_user_id
@@ -110,16 +110,14 @@ class mediamosa_solr {
       }
     }
 
-    // Switch to hide assets that have no mediafiles
+    // Switch to hide assets that have no mediafiles and no metadata.
     if ($parameters['hide_empty_assets']) {
       // exclude empty assets
       $solr_query[self::WHERE_AND][self::ASSET][self::AUT][self::WHERE_AND][] = 'is_empty_asset:FALSE';
     }
 
     if (!empty($parameters['cql'])) {
-mediamosa_debug::log($parameters['cql']);
       $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['app_ids']);
-mediamosa_debug::log_export($result);
 
       // We got something from cql?
       if (!empty($result['str_where'])) {
@@ -127,16 +125,12 @@ mediamosa_debug::log_export($result);
       }
 
       $order_bys = reset($result['a_order_by']);
-mediamosa_debug::log_export($order_bys);
 
       $order_by = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
       $order_direction = drupal_strtolower($order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION]);
       $order_type = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE];
       $order_table = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
       $is_metadata = $order_bys[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID] > 0;
-
-      // Create the seach CQL.
-      //$result_cql2sql = mediamosa_core_cql::parse_asset($cql, $a_app_ids);
     }
 
     // If coll_id is given, then search within the given collection(s)
@@ -144,217 +138,54 @@ mediamosa_debug::log_export($order_bys);
       assert(is_array($parameters['coll_id']));
 
       foreach ($parameters['coll_id'] as $coll_id) {
-//{!prefix f=asset_id}[iets]*
         // Not a app_admin, then rules apply.
         // ^coll_id-isprivate-is_unappropriate-owner_id
         // ^coll_id-owner_id
         if (!$parameters['is_app_admin']) {
-          $isprivate_false_false = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@coll_id~FALSE~FALSE^', array('@coll_id' => $coll_id)));
-          $isprivate_false_true = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@coll_id~FALSE~TRUE^', array('@coll_id' => $coll_id)));
-          $is_unappropriate_false_false = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@coll_id~FALSE~FALSE^', array('@coll_id' => $coll_id)));
-          $is_unappropriate_true_false = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@coll_id~TRUE~FALSE^', array('@coll_id' => $coll_id)));
-          $owner = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@coll_id~@owner^', array('@coll_id' => $coll_id, '@owner' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['aut_user_id']))));
+          $isprivate_false_false = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id~FALSE~FALSE~', array('@coll_id' => $coll_id)));
+          $isprivate_false_true = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id~FALSE~TRUE~', array('@coll_id' => $coll_id)));
+          $is_unappropriate_false_false = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id~FALSE~FALSE~', array('@coll_id' => $coll_id)));
+          $is_unappropriate_true_false = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id~TRUE~FALSE~', array('@coll_id' => $coll_id)));
+          $owner = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id~@owner~', array('@coll_id' => $coll_id, '@owner' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['aut_user_id']))));
 
           if ($parameters['is_public_list'] && $parameters['aut_user_id']) {
-            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('((coll_id:"@isprivate_1" OR coll_id:"@isprivate_2") AND (coll:"@unappropriate_1" OR coll:"@unappropriate_2" OR coll_id_owner:"@owner"))' , array('@isprivate_1' => $isprivate_false_false, '@isprivate_2' => $isprivate_false_true, '@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false, '@owner' => $owner));
+            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('((coll_id:@isprivate_1 OR coll_id:@isprivate_2) AND (coll:@unappropriate_1 OR coll:@unappropriate_2 OR coll_id_owner:@owner))' , array('@isprivate_1' => $isprivate_false_false, '@isprivate_2' => $isprivate_false_true, '@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false, '@owner' => $owner));
             //("(c.isprivate = 'FALSE' AND (c.is_unappropriate = 'FALSE' OR c.owner_id = '%s'))",
           }
           elseif ($parameters['is_public_list']) {
-            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('((coll_id:"@isprivate_1" OR coll_id:"@isprivate_2") AND (coll:"@unappropriate_1" OR coll:"@unappropriate_2"))' , array('@isprivate_1' => $isprivate_false_false, '@isprivate_2' => $isprivate_false_true, '@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false));
+            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('((coll_id:@isprivate_1 OR coll_id:@isprivate_2) AND (coll:@unappropriate_1 OR coll:@unappropriate_2))' , array('@isprivate_1' => $isprivate_false_false, '@isprivate_2' => $isprivate_false_true, '@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false));
             //"c.isprivate = 'FALSE' AND c.is_unappropriate = 'FALSE'";
           }
           elseif ($parameters['aut_user_id']) { // if provided, then we only have access to unappropate when owner.
-            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('(coll:"@unappropriate_1" OR coll:"@unappropriate_2" OR coll_id_owner:"@owner")' , array('@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false, '@owner' => $owner));
+            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('(coll:@unappropriate_1 OR coll:@unappropriate_2 OR coll_id_owner:@owner)' , array('@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false, '@owner' => $owner));
             //"(c.is_unappropriate = 'FALSE' OR c.owner_id = '%s')", mediamosa_solr_apache_solr_service::escapePhrase($parameters['aut_user_id']));
           }
           else {
-            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('(coll:"@unappropriate_1" OR coll:"@unappropriate_2")' , array('@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false));
+            $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('(coll:@unappropriate_1 OR coll:@unappropriate_2)' , array('@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false));
             //"c.is_unappropriate = 'FALSE'"; // is_unappropriate must be TRUE
           }
         }
         else {
-          $coll_id = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@coll_id~*^', array('@coll_id' => $coll_id)));
-          $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR] = strtr('coll_id:"@coll_id"', array('@coll_id' => $coll_id));
+          $coll_id = mediamosa_solr_apache_solr_service::escapeForFunction(strtr('@coll_id~', array('@coll_id' => $coll_id)));
+          $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR] = strtr('{!prefix f=coll_id}@coll_id', array('@coll_id' => $coll_id));
         }
       }
     }
 
     // FTP Batch.
     if (!empty($parameters['batch_id'])) {
-      $solr_query[self::WHERE_AND][self::BATCH] = strtr('batch_id:"@batch_id"', array('@batch_id' => mediamosa_solr_apache_solr_service::escapePhrase($parameters['batch_id'])));
+      $solr_query[self::WHERE_AND][self::BATCH] = strtr('batch_id:@batch_id', array('@batch_id' => mediamosa_solr_apache_solr_service::phrase($parameters['batch_id'])));
     }
 
     if (!empty($parameters['fav_user_id'])) {
       foreach ($parameters['app_ids'] as $app_id) {
-        $user_fav = mediamosa_solr_apache_solr_service::escapePhrase(strtr('^@app_id~@name^', array('@app_id' => $app_id, '@name' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['fav_user_id']))));
-        $solr_query[self::WHERE_AND][self::USER_FAV][self::WHERE_OR][] = strtr('user_fav:"@user_fav"', array('@user_fav' => $user_fav));
+        $user_fav = mediamosa_solr_apache_solr_service::phrase(strtr('^@app_id~@name^', array('@app_id' => $app_id, '@name' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['fav_user_id']))));
+        $solr_query[self::WHERE_AND][self::USER_FAV][self::WHERE_OR][] = strtr('user_fav:@user_fav', array('@user_fav' => $user_fav));
       }
     }
 
     // AUT layer.
-//mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $parameters['aut_user_id'], $parameters['aut_group_ids'], $aut_domain, $aut_realm, $a_slaves_mediafiles, FALSE, $do_master_slave);
-              // build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $parameters['aut_user_id'], $parameters['aut_group_ids'], $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
-
-    $build_access_app_ids = array_unique(array_merge($parameters['app_ids'], array_keys($slave_mediafiles)));
-    sort($build_access_app_ids);
-
-    // Get of this current user the aut_name/aut_group ids so we know his/her access.
-    $aut_ids = mediamosa_aut::build_access($build_access_app_ids, $parameters['aut_user_id'], $parameters['aut_group_ids'], $parameters['aut_domain'], $parameters['aut_realm'], $slave_mediafiles);
-
-    if (!is_null($parameters['aut_user_id']) || (!is_null($parameters['aut_group_ids']) && !empty($parameters['aut_group_ids'])) || count($aut_ids) || count($slave_mediafiles)) {
-      // Even if we return all stuff where we have access to, we must still grant only access to master/slave apps
-
-      if (!$parameters['granted']) {
-        // If $parameters['granted'] is TRUE, granted is TRUE, meaning we need to return all assets
-        // even if we dont have access. This switch prevents returning all assets of the other
-        // slave apps.
-        foreach ($parameters['app_ids'] as $app_id) {
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::NO_MF][$app_id][self::WHERE_AND][] = 'app_id:' . (int) $app_id;
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::NO_MF][$app_id][self::WHERE_AND][] = 'mf:FALSE';
-        }
-
-        // If we have aut id for the master app, check them
-        foreach ($parameters['app_ids'] as $app_id) {
-          if (!empty($parameters['aut_user_id']) && !empty($parameters['aut_group_ids'])) {
-          }
-          else {
-            if (!empty($parameters['aut_user_id'])) {
-              $solr = array();
-              $solr['app_id'] = $app_id;
-              $solr['is_protected'] = 'FALSE';
-              $solr['aut_user_id'] = mediamosa_solr_apache_solr_service::filterDelimeters($parameters['aut_user_id']);
-
-              // Generate solr.
-              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][$app_id][self::WHERE_OR][] = '{!prefix f=mf_aut_obj_owner}' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('~', $solr) . '~');
-            }
-
-            // group_id
-            if (!empty($parameters['aut_group_ids'])) {
-              $solr = array();
-              $solr['app_id'] = $app_id;
-              $solr['is_protected'] = 'FALSE';
-
-              foreach ($parameters['aut_group_ids'] as $aut_group_id) {
-                if (!empty($aut_group_id)) {
-                  $solr['aut_group_id'] = mediamosa_solr_apache_solr_service::filterDelimeters($aut_group_id);
-
-                  // Generate solr.
-                  $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][$app_id][self::WHERE_OR][] = '{!prefix f=mf_aut_obj_group}' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('~', $solr) . '~');
-                }
-              }
-            }
-          }
-        }
-
-        foreach ($parameters['app_ids'] as $app_id) {
-
-          if (!empty($aut_ids[$app_id]['a_name'])) {
-            $solr = array();
-            $solr['app_id'] = $app_id;
-            $solr['is_protected'] = 'TRUE';
-
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['name'][self::WHERE_AND][] = "aut_obj.aut_type = 'NAME'";
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['name'][self::WHERE_AND][] = "aut_obj.aut_id IN(" . implode(",", $aut_ids[$app_id]['a_name']) . ")";
-          }
-
-          if (!empty($aut_ids[$app_id]['a_group']) || (isset($aut_ids['slaves']) && isset($aut_ids['slaves']['a_group'][$app_id]))) {
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['group'][self::WHERE_AND][] = "aut_obj.aut_type = 'GROUP'";
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['group'][self::WHERE_AND][] = "aut_obj.aut_id IN(" . implode(",", $aut_ids[$app_id]['a_group']) . ")";
-          }
-
-          if (!empty($parameters['aut_user_id'])) {
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND]["is_protected"][self::WHERE_OR]['user_id'] = "mf.owner_id = '" . mediamosa_db::escape_string($parameters['aut_user_id']) . "'";
-          }
-
-          // group_id
-          if (!empty($parameters['aut_group_ids'])) {
-            foreach ($parameters['aut_group_ids'] as $aut_group_id) {
-              if (!empty($aut_group_id)) {
-                $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND]["is_protected"][self::WHERE_OR]['group_id'][] = "mf.group_id = '" . mediamosa_db::escape_string($aut_group_id) . "'";
-              }
-            }
-          }
-        }
-
-      }
-      else {
-        // When $parameters['granted'] is TRUE, we have always access to media of our own app_id(s)
-
-        // Master app_id checks
-        // Because the $parameters['app_ids'] is in the app_id selection of assets, this one is a bit useles...
-        if (!empty($parameters['app_ids'])) {
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR]['master_app_id'][self::WHERE_AND]['ms'] = strtr('@app_id_table_prefix.app_id IN(@app_ids)', array('@app_id_table_prefix' => $app_id_table_prefix, '@app_ids' => implode(',', $parameters['app_ids'])));
-        }
-      }
-
-      // possible slaves
-      if (count($slave_mediafiles)) {
-        $solr_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave'] = mediamosa_aut_app_master_slave::join_aut_app_master_slave_get($aut_type);
-
-        // If we need to check aut_object
-        if (count($aut_ids)) {
-          $solr_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get($aut_type);
-        }
-
-        foreach ($slave_mediafiles as $app_id_slave => $slave) {
-          assert($app_id_slave);// should not happen
-          // Only for app_ids that are present
-
-          // Must be same app_id for slaves
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][] = $app_id_table_prefix . '.app_id=' . mediamosa_db::escape_string($app_id_slave);
-
-          // Any case, a link to app must be present if we allow access to the MF
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][] = sprintf("aut_ms.app_id_master IN(%s)", implode(",", $parameters['app_ids']));
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][] = sprintf("aut_ms.app_id_slave = %d", $app_id_slave);
-
-          if ($parameters['granted']) {
-            // If we only do master/slave, we include all that has been slaved and protected
-            continue;
-          }
-
-          // 2 cases;
-          // 1. The object is protected only app_id (is_protected == FALSE)
-          //   then only access if app_id == slave_app_id
-          // 2. The object is protected by other rights (is_protected == TRUE)
-          //   then only access if app_id == slave_app_id and rights match with other rights
-
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_aut::MEDIAFILE_IS_PROTECTED_FALSE, mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP);
-
-          if (isset($aut_ids[$app_id_slave]) && count($aut_ids[$app_id_slave])) {
-            if (count($aut_ids[$app_id_slave]['a_name'])) {
-              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
-            }
-
-            // Even if we dont have access we still want it in our result when granted == TRUE, so skip it when granted is TRUE
-            if (count($aut_ids[$app_id_slave]['a_name'])) {
-              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['name'][self::WHERE_AND][] = "aut_obj.aut_type='NAME'";
-              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['name'][self::WHERE_AND][] = "aut_obj.aut_id IN(" . implode(",", $aut_ids[$app_id_slave]['a_name']) . ")";
-            }
-          }
-
-          if (isset($aut_ids['slaves_convert']) && isset($aut_ids['slaves_convert']['a_group'][$app_id_slave])) {
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
-
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['group'][self::WHERE_AND][] = "aut_obj.aut_type='GROUP'";
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND]["is_protected"][self::WHERE_OR]["is_protected_TRUE"][self::WHERE_AND][self::WHERE_OR]['group'][self::WHERE_AND][] = "aut_obj.aut_id IN(" . implode(",", $aut_ids['slaves_convert']['a_group'][$app_id_slave]) . ")";
-          }
-        }
-      }
-
-    }
-    else {
-      $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::NO_MF] = 'mf:FALSE';
-
-      if (!$parameters['granted']) { // Only where we have access on, this case when no protection.
-        $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::APPS][self::WHERE_AND][] = 'mf_is_protected:FALSE';
-      }
-
-      // No M/S, only include assets from own app(s).
-      foreach ($parameters['app_ids'] as $app_id) {
-        $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::APPS][self::WHERE_AND]['app_id'][self::WHERE_OR][] = 'app_id:' . (int) $app_id;
-      }
-    }
-
+   // self::build_access_where($solr_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['aut_user_id'], $parameters['aut_group_ids'], $parameters['aut_domain'], $parameters['aut_realm'], $slave_mediafiles, FALSE, $parameters['granted']);
 
     // Do query.
     $query = self::where($solr_query);
@@ -366,10 +197,121 @@ mediamosa_debug::log_export($order_bys);
     }
 
     $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, $parameters['offset'], $parameters['limit'], $query_params);
-mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
+
     // Done.
     return array('asset_ids' => $mediamosa_solr_apache_solr_response->getAssetIds(), 'total_count' => $mediamosa_solr_apache_solr_response->getNumFound());
   }
+
+  /**
+   * Our solr version of mediamosa_aut::build_access_where().
+   */
+  static public function build_access_where(&$solr_query, $aut_type, $object_id, $master_app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $granted = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+
+    // Only supports mediamosa_aut::AUT_TYPE_MEDIAFILE.
+    if ($aut_type != mediamosa_aut::AUT_TYPE_MEDIAFILE) {
+      return mediamosa_aut::build_access_where($solr_query, $aut_type, $object_id, $master_app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves, $is_app_admin, $granted, $do_master_slave_null, $app_id_table_prefix);
+    }
+
+    // These must be true.
+    assert(is_null($object_id));
+    assert($do_master_slave_null === FALSE);
+    assert($app_id_table_prefix == 'a');
+
+    $build_access_app_ids = array_unique(array_merge($master_app_ids, array_keys($slaves)));
+    sort($build_access_app_ids);
+
+    // Get of this current user the aut_name/aut_group ids so we know his/her access.
+    $aut_ids = mediamosa_aut::build_access($build_access_app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves);
+
+    // Include all assets without original mediafile for master app_id
+    foreach ($master_app_ids as $app_id) {
+      $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::NO_MF][self::WHERE_AND][] = 'app_id:' . (int) $app_id;
+      $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::NO_MF][self::WHERE_AND][] = 'mf_org:FALSE';
+    }
+
+    if (!empty($aut_user_id) || !empty($aut_group_ids) || count($aut_ids) || count($slaves)) {
+      // Even if we return all stuff where we have access to, we must still grant only access to master/slave apps
+
+      if (!$granted) {
+
+        // If we have aut id for the master app, check them
+        foreach ($master_app_ids as $app_id) {
+          // Master app_id checks
+          $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND][] = 'app_id:' . (int) $app_id;
+          $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND][self::IS_PROTECTED][self::WHERE_OR][] = 'is_protected:FALSE';
+
+          if (!empty($aut_ids[$app_id])) {
+
+            // App_id is the same AND [is_protected != FALSE AND] one of the aut_rules match.
+            foreach ($aut_ids[$app_id]['a_name'] as $aut_id) {
+              $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND][self::IS_PROTECTED][self::WHERE_OR][self::IS_PROTECTED_TRUE][self::WHERE_AND][self::WHERE_OR]['name'][] = 'mf_org_aut_obj_aut_name:' . mediamosa_solr_apache_solr_service::escape($aut_id);
+            }
+
+            // App_id is the same AND [is_protected != FALSE AND] one of the aut_rules match.
+            foreach ($aut_ids[$app_id]['a_group'] as $aut_id) {
+              $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND][self::IS_PROTECTED][self::WHERE_OR][self::IS_PROTECTED_TRUE][self::WHERE_AND][self::WHERE_OR]['group'][] = 'mf_org_aut_obj_aut_group:' . mediamosa_solr_apache_solr_service::escape($aut_id);
+            }
+          }
+
+          if (!empty($aut_user_id)) {
+            $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND][self::IS_PROTECTED][self::WHERE_OR]['owner'] = strtr('mf_org_owner:@owner_id', array('@owner_id' => mediamosa_solr_apache_solr_service::phrase($aut_user_id)));
+          }
+
+          // group_id
+          foreach ($aut_group_ids as $aut_group_id) {
+            if (!empty($aut_group_id)) {
+              $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id][self::WHERE_AND][self::IS_PROTECTED][self::WHERE_OR]['group'][] = strtr('mf_org_group:@group_id', array('@group_id' => mediamosa_solr_apache_solr_service::phrase($aut_group_id)));
+            }
+          }
+        }
+      }
+      else {
+        // When $do_master_slave_only is TRUE, we have always access to media of our own app_id(s)
+        foreach ($master_app_ids as $app_id) {
+          $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR]['master_app_id'][self::WHERE_AND]['ms'][] = 'app_id:' . (int) $app_id;
+        }
+      }
+
+      // possible slaves
+      foreach (array_keys($slaves) as $app_id_slave) {
+        assert($app_id_slave);// should not happen
+
+        // Must be same app_id for slaves.
+        $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][] = 'app_id:' . (int) $app_id_slave;
+
+        // Check if master/slave exists.
+        if ($granted) {
+          foreach ($master_app_ids as $master_app_id) {
+            $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = '{!prefix f=mf_aut_master_slave}' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('~', array($app_id_slave, $master_app_id))) . '~';
+          }
+
+          continue;
+        }
+
+        // 2 cases;
+        // 1. The object is protected only app_id (is_protected == FALSE)
+        //   then only access if app_id == slave_app_id
+        // 2. The object is protected by other rights (is_protected == TRUE)
+        //   then only access if app_id == slave_app_id and rights match with other rights
+
+        if (!empty($aut_ids[$app_id_slave])) {
+
+          // Allow any master/slave without AUT rights.
+          $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = '{!prefix f=mf_aut_master_slave}' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('~', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_FALSE))) . '~';
+
+          // Only DOMAIN_REALM require AUT.
+          foreach ($aut_ids[$app_id_slave]['a_name'] as $aut_id) {
+            $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = '{!prefix f=mf_aut_master_slave}' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('~', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_id))) . '~';
+          }
+
+          foreach ($aut_ids['slaves_convert']['a_group'][$app_id_slave] as $aut_id) {
+            $solr_query[self::WHERE][self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = '{!prefix f=mf_aut_master_slave}' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('~', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut_object_db::AUT_TYPE_GROUP, $aut_id))) . '~';
+          }
+        }
+      }
+    }
+  }
+
 
   /**
    * Instant update on metadata?
@@ -414,7 +356,21 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
     return variable_get('mediamosa_solr_master_slave_instantly', TRUE);
   }
 
+  /**
+   * Instant update on ACL rules?
+   */
+  static public function settingInstantlyAUT() {
+    return variable_get('mediamosa_solr_aut_instantly', TRUE);
+  }
 
+  /**
+   * Common log function.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   * @param string $link
+   */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
     mediamosa_watchdog::log($message, $variables, $severity, 'Solr');
   }
@@ -530,7 +486,7 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
     // We will give it enough time to timeout.
     if ($run_last && round(REQUEST_TIME - $run_last) < (mediamosa_solr::TIME_TO_PROCESS_QUEUE * 3)) {
       self::log('Unexpected; Solr reindex was still / already running when cron was triggered.');
-      return;
+      //return;
     }
 
     // If we get here then we can go.
@@ -805,13 +761,13 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
     $document->is_unappropriate = $asset_for_index['asset'][mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE ? mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE : mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE;
     $document->is_external = $asset_for_index['asset'][mediamosa_asset_db::IS_EXTERNAL] == mediamosa_asset_db::IS_EXTERNAL_TRUE ? mediamosa_asset_db::IS_EXTERNAL_TRUE : mediamosa_asset_db::IS_EXTERNAL_FALSE;
 
-    // Collection ids. ^coll_id~isprivate~is_unappropriate^
+    // Collection ids. coll_id~isprivate~is_unappropriate~
     if (!empty($asset_for_index['collections'])) {
       foreach ($asset_for_index['collections'] as $coll_id => $collection) {
         $isprivate = $collection[mediamosa_collection_db::ISPRIVATE] == mediamosa_collection_db::ISPRIVATE_TRUE ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
         $is_unappropriate = $collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
-        $coll_ids[] = '^' . implode('~', array($coll_id, $isprivate, $is_unappropriate)) . '^';
-        $coll_id_owners[] = '^' . implode('~', array($coll_id, mediamosa_solr_apache_solr_service::filterDelimeters($collection[mediamosa_collection_db::OWNER_ID]))) . '^';
+        $coll_ids[] = implode('~', array($coll_id, $isprivate, $is_unappropriate)) . '~';
+        $coll_id_owners[] = implode('~', array($coll_id, mediamosa_solr_apache_solr_service::filterDelimeters($collection[mediamosa_collection_db::OWNER_ID]))) . '~';
       }
 
       $document->coll_id = $coll_ids;
@@ -821,8 +777,9 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
     // User fav.
     if (!empty($asset_for_index['user_favorites'])) {
       foreach ($asset_for_index['user_favorites'] as $user_favorite) {
-        $user_favorites[] = '^' . implode('~', array($user_favorite[mediamosa_user_favorite_db::APP_ID], mediamosa_solr_apache_solr_service::filterDelimeters($user_favorite[mediamosa_user_favorite_db::NAME]))) . '^';
+        $user_favorites[] = implode('~', array($user_favorite[mediamosa_user_favorite_db::APP_ID], mediamosa_solr_apache_solr_service::filterDelimeters($user_favorite[mediamosa_user_favorite_db::NAME]))) . '~';
       }
+
       $document->user_fav = $user_favorites;
     }
 
@@ -881,6 +838,88 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
           default:
             throw new mediamosa_solr_exception('Unsupported metadata type detected!');
         }
+      }
+    }
+
+    // No original mediafiles?
+    $document->mf_org = 'FALSE';
+
+    // Walk through the mediafiles.
+    foreach ($asset_for_index['mediafiles'] as $mediafile_id => $mediafile) {
+
+      // Only originals.
+      if ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE) {
+        continue;
+      }
+
+      $document->mf_org = 'TRUE';
+
+      // Owner / group.
+      $document->mf_org_owner = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
+      $document->mf_org_group = $mediafile[mediamosa_asset_mediafile_db::GROUP_ID];
+
+      // Has aut_object rules for mediafile?
+      if (!empty($asset_for_index['aut']['aut_object']['mediafile'][$mediafile_id])) {
+        $mf_org_aut_obj_aut_name = $mf_org_aut_obj_aut_group = array();
+
+        foreach ($asset_for_index['aut']['aut_object']['mediafile'][$mediafile_id] as $aut_object) {
+          // Is protected has 2 values here.
+          $is_protected = in_array($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED], array(mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM)) ? mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE : mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
+
+          switch ($aut_object[mediamosa_aut_object_db::AUT_TYPE]) {
+            case mediamosa_aut_object_db::AUT_TYPE_NAME:
+              $mf_org_aut_obj_aut_name[] = $aut_object[mediamosa_aut_object_db::AUT_ID];
+              break;
+
+            case mediamosa_aut_object_db::AUT_TYPE_GROUP:
+              $mf_org_aut_obj_aut_group[] = $aut_object[mediamosa_aut_object_db::AUT_ID];
+              break;
+
+            default:
+              assert(0);
+              break;
+          }
+        }
+
+        if (!empty($mf_org_aut_obj_aut_name)) {
+          $document->mf_org_aut_obj_aut_name = $mf_org_aut_obj_aut_name;
+        }
+        if (!empty($mf_org_aut_obj_aut_group)) {
+          $document->mf_org_aut_obj_aut_group = $mf_org_aut_obj_aut_group;
+        }
+      }
+
+      if (!empty($asset_for_index['aut']['aut_app_master_slave']['mediafile'][$mediafile_id])) {
+        $mf_aut_master_slave = array();
+
+        // Add master/slave rules.
+        foreach ($asset_for_index['aut']['aut_app_master_slave']['mediafile'][$mediafile_id] as $aut_app_master_slave) {
+
+          // Is protected has 2 values here.
+          $is_protected = in_array($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED], array(mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM)) ? mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE : mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
+
+          $master_slave = array();
+          $master_slave[] = $aut_app_master_slave[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE];
+          $master_slave[] = $aut_app_master_slave[mediamosa_aut_app_master_slave_db::APP_ID_MASTER];
+          $master_slave[] = $is_protected;
+
+          if ($is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE) {
+            // Make sure is_protected and aut rules are matching.
+            assert(!empty($asset_for_index['aut']['aut_object']['mediafile'][$mediafile_id]));
+            foreach ($asset_for_index['aut']['aut_object']['mediafile'][$mediafile_id] as $aut_object) {
+              $master_slave_2 = $master_slave;
+              $master_slave_2[] = $aut_object[mediamosa_aut_object_db::AUT_TYPE];
+              $master_slave_2[] = $aut_object[mediamosa_aut_object_db::AUT_ID];
+              $mf_aut_master_slave[] = implode('~', $master_slave_2) . '~';
+            }
+
+          }
+          else {
+            $mf_aut_master_slave[] = implode('~', $master_slave) . '~';
+          }
+        }
+
+        $document->mf_aut_master_slave = $mf_aut_master_slave;
       }
     }
 
@@ -957,18 +996,18 @@ mediamosa_debug::log_export($mediamosa_solr_apache_solr_response);
     }
 
     $result = array();
-    foreach ($where as $type => $a_statements) {
+    foreach ($where as $type => $statements) {
       if ($type == self::WHERE_AND) {
         $glue = " AND \n";
-        $a_statements = self::where_2($a_statements, '(', ')', " AND \n");
-        $result[] = $l . implode(" AND \n", $a_statements) . $r;
+        $statements = self::where_2($statements, '(', ')', " AND \n");
+        $result[] = $l . implode(" AND \n", $statements) . $r;
       }
       elseif ($type == self::WHERE_OR) {
-        $a_statements = self::where_2($a_statements, '(', ')', ' OR ');
-        $result[] = $l . implode(' OR ', $a_statements) . $r;
+        $statements = self::where_2($statements, '(', ')', ' OR ');
+        $result[] = $l . implode(' OR ', $statements) . $r;
       }
       else {
-        $result[] = implode($glue, self::where_2($a_statements, '(', ')', $glue));
+        $result[] = implode($glue, self::where_2($statements, '(', ')', $glue));
       }
     }
 

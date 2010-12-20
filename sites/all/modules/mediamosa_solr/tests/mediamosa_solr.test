@@ -196,9 +196,21 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->correct_sorting($asset_ids, array($upload_3['asset_id'], $upload_1['asset_id'], $upload_2['asset_id'], $upload_4['asset_id']));
 
     // Range check.
-    $asset_ids = $this->cql_do_search_test_assets_1('issued > "2010"', array($upload_1['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+    $asset_ids = $this->cql_do_search_test_assets_1('issued > "2010"', array($upload_3['asset_id'] => TRUE), $search_params);
 
     // Range check.
-    $asset_ids = $this->cql_do_search_test_assets_1('issued > "2009"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+    $asset_ids = $this->cql_do_search_test_assets_1('issued > "2009"', array($upload_1['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued >= "2010"', array($upload_1['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued >= "2009"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued <= "2010"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE), $search_params);
+
+    // Range check.
+    $asset_ids = $this->cql_do_search_test_assets_1('issued <= "2009"', array($upload_2['asset_id'] => TRUE), $search_params);
   }
 }

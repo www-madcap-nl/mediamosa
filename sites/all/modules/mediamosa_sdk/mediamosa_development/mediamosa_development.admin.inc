@@ -164,9 +164,9 @@ function _ajax_execute_rest_call() {
     $form['rest_result']['output']['#value'] = implode("\n", $errors);
   }
 
-  $form = form_builder('', $form, $form_state);
-  $commands[] = ajax_command_replace('', drupal_render($form['rest_result']));
+  $form['rest_result']['output']['#attributes'] = array('class' => array('edit-output'));
 
+  $commands[] = ajax_command_replace('', drupal_render($form['rest_result']));
   return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
 }
 

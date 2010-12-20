@@ -199,13 +199,8 @@ class mediamosa_asset_metadata {
       throw $e;
     }
 
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($asset_id)), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset($asset_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $asset_id, '@message' => $e->getMessage()));
-    }
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_METADATA);
 
     // Return whats been changed.
     return $values_set;
