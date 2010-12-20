@@ -702,13 +702,19 @@ class mediamosa_asset_mediafile {
    * @param string $search_index_type
    *  @see mediamosa_settings::search_index_type_*
    */
-  static public function mediamosa_asset_reindex($mediafile_id, $search_index_type) {
-    $asset_id = self::get_asset_id($mediafile_id);
-    if (empty($asset_id)) {
-      return;
+  static public function mediamosa_asset_reindex(array $mediafile_ids, $search_index_type) {
+    $asset_ids = array();
+
+    foreach ($mediafile_ids as $mediafile_id) {
+      $asset_id = self::get_asset_id($mediafile_id);
+      if (!empty($asset_id)) {
+        $asset_ids[] = $asset_id;
+      }
     }
 
-    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), $search_index_type);
+    if (!empty($asset_ids)) {
+      mediamosa_asset::mediamosa_asset_reindex($asset_ids, $search_index_type);
+    }
   }
 
 }

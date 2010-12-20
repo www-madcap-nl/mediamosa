@@ -264,7 +264,7 @@
 
     <!--
       User fav.
-      stored as; ^app_id~username^
+      stored as; app_id~username~
       -->
     <field name="user_fav" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
 

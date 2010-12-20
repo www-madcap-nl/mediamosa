@@ -140,6 +140,9 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
         self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES, // always array.
       );
     }
+    // FIXME:
+    //$_POST['issued'] = '1999-11-30 00:00:00';
+
 
     return self::get_var_setup_default($a_var_setup);
   }

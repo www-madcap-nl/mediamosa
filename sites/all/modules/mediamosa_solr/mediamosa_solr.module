@@ -257,9 +257,10 @@ function mediamosa_solr_mediamosa_status_collect_realtime($reset = FALSE) {
  * @param array $reindex_info
  */
 function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
-
   // Delete the asset.
-  mediamosa_solr::delete_assets(array($asset_id));//$asset_id);
+  if (mediamosa_solr::is_enabled()) {
+    mediamosa_solr::delete_assets(array($asset_id));
+  }
 }
 
 /**
@@ -274,6 +275,10 @@ function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
 function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_type) {
   // Instant is default TRUE.
   $instant = TRUE;
+
+  if (!mediamosa_solr::is_enabled()) {
+    return;
+  }
 
   switch ($search_index_type) {
     case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE:
@@ -304,7 +309,6 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       $instant = mediamosa_solr::settingInstantlyAUT();
       break;
   }
-
 
   if ($instant) {
     mediamosa_solr::insert_assets($reindex_info['asset_ids']);

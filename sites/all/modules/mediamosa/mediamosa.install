@@ -1704,41 +1704,9 @@ function mediamosa_update_7081() {
 
 /**
  * UTC / CET date summer-winter time fix.
- * TODO: Known bug: mediamosa_datetime::app_date2utc_date('1923-11-11 22:00:00', 'Europe/Amsterdam') === '1923-11-11 21:40:28'
  */
 function mediamosa_update_7082() {
-  $result = db_query('
-    SELECT
-      DATE_ADD(val_datetime, INTERVAL 2 HOUR) AS val_datetime_cet,
-      val_datetime AS val_datetime_wrong,
-      metadata_id,
-      created
-    FROM {mediamosa_asset_metadata}
-    WHERE
-      val_datetime IS NOT NULL
-  ');
-
-  foreach ($result as $record) {
-    if ($record->created > variable_get('mediamosa_utc_update_time', '2010-05-01 00:00:01')) {
-      // Skip the date, that is already has the good value.
-      continue;
-    }
-
-    $val_datetime_utc = mediamosa_datetime::app_date2utc_date($record->val_datetime_cet, 'Europe/Amsterdam');
-    if ($record->val_datetime_wrong != $val_datetime_utc) {
-      db_query('UPDATE {mediamosa_asset_metadata} SET val_datetime = :val_datetime_utc WHERE metadata_id = :metadata_id', array(
-        ':val_datetime_utc' => $val_datetime_utc,
-        ':metadata_id' => $record->metadata_id,
-      ));
-    }
-  }
-}
-
-/**
- * UTC / CET date summer-winter time fix.
- */
-function mediamosa_update_7083() {
-  $result = db_query('
+  $result = db_query("
     SELECT
       DATE_ADD(videotimestamp, INTERVAL 2 HOUR) AS videotimestamp_cet,
       videotimestamp AS videotimestamp_wrong,
@@ -1746,15 +1714,12 @@ function mediamosa_update_7083() {
       videotimestampmodified AS videotimestampmodified_wrong,
       asset_id,
       created
-    FROM {mediamosa_asset}
-  ');
+     FROM {mediamosa_asset}
+     WHERE
+      created < '2010-05-01 00:00:01'
+  ");
 
   foreach ($result as $record) {
-    if ($record->created > variable_get('mediamosa_utc_update_time', '2010-05-01 00:00:01')) {
-      // Skip the date, that is already has the good value.
-      continue;
-    }
-
     // Skip the NULL values.
     if ($record->videotimestamp_cet) {
       $videotimestamp_utc = mediamosa_datetime::app_date2utc_date($record->videotimestamp_cet, 'Europe/Amsterdam');
@@ -1778,20 +1743,53 @@ function mediamosa_update_7083() {
 }
 
 /**
+ * UTC / CET date summer-winter time fix.
+ */
+function mediamosa_update_7083() {
+  $result = db_query("
+    SELECT
+      DATE_ADD(val_datetime, INTERVAL 2 HOUR) AS val_datetime_cet,
+      val_datetime AS val_datetime_wrong,
+      metadata_id,
+      created
+    FROM {mediamosa_asset_metadata}
+    WHERE
+      val_datetime IS NOT NULL
+      AND
+      created < '2010-05-01 00:00:01'
+  ");
+
+  foreach ($result as $record) {
+    $val_datetime_utc = mediamosa_datetime::app_date2utc_date($record->val_datetime_cet, 'Europe/Amsterdam');
+    // Fix problems with '1923-11-11 22:00:00' -> '1923-11-11 21:40:28'
+    $val_datetime_utc = substr($val_datetime_utc, 0, 14) . substr($record->val_datetime_cet, 14, 5);
+
+    if ($record->val_datetime_wrong != $val_datetime_utc) {
+      db_query('UPDATE {mediamosa_asset_metadata} SET val_datetime = :val_datetime_utc WHERE metadata_id = :metadata_id', array(
+        ':val_datetime_utc' => $val_datetime_utc,
+        ':metadata_id' => $record->metadata_id,
+      ));
+    }
+  }
+}
+
+/**
  * Add the job_type field to mediamosa_statistics_job table.
  */
 function mediamosa_update_7084() {
-  db_add_field(
-    mediamosa_statistics_job_db::TABLE_NAME,
-    mediamosa_statistics_job_db::JOB_TYPE,
-    array(
-      'description' => 'The type of the job.',
-      'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
-      'not null' => TRUE,
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
-      'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
-    )
-  );
+  if (!db_field_exists(mediamosa_statistics_job_db::TABLE_NAME, mediamosa_statistics_job_db::JOB_TYPE)) {
+    db_add_field(
+      mediamosa_statistics_job_db::TABLE_NAME,
+      mediamosa_statistics_job_db::JOB_TYPE,
+      array(
+        'description' => 'The type of the job.',
+        'type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE, mediamosa_statistics_job_db::JOB_TYPE_STILL, mediamosa_statistics_job_db::JOB_TYPE_UPLOAD, mediamosa_statistics_job_db::JOB_TYPE_ANALYSE, mediamosa_statistics_job_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
+        'default' => mediamosa_statistics_job_db::JOB_TYPE_TRANSCODE,
+      )
+    );
+  }
 }
 
 /**

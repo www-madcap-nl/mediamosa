@@ -763,7 +763,7 @@ class mediamosa_aut {
           mediamosa_io::unlink($file);
 
           // Reindex the asset using the mediafile ID.
-          mediamosa_asset_mediafile::mediamosa_asset_reindex($aut_object_id, mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+          mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
           break;
 
         case mediamosa_aut::AUT_TYPE_ASSET:
@@ -801,7 +801,7 @@ class mediamosa_aut {
           }
 
           // Reindex the asset.
-          mediamosa_asset::mediamosa_asset_reindex($aut_object_id, mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+          mediamosa_asset::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
           break;
 
         case mediamosa_aut::AUT_TYPE_COLLECTION:
@@ -909,12 +909,12 @@ class mediamosa_aut {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         // Reindex the asset using the mediafile ID.
-        mediamosa_asset_mediafile::mediamosa_asset_reindex($aut_object_id, mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+        mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
         // Reindex the asset using the mediafile ID.
-        mediamosa_asset::mediamosa_asset_reindex($aut_object_id, mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+        mediamosa_asset::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
         break;
     }
   }
@@ -1112,7 +1112,7 @@ class mediamosa_aut {
         ));
 
         // Reindex the asset using the mediafile ID.
-        mediamosa_asset_mediafile::mediamosa_asset_reindex($aut_id_dest, mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+        mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_id_dest), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
@@ -1122,7 +1122,7 @@ class mediamosa_aut {
         ));
 
         // Reindex the asset using the mediafile ID.
-        mediamosa_asset::mediamosa_asset_reindex($aut_id_dest, mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+        mediamosa_asset::mediamosa_asset_reindex(array($aut_id_dest), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
         break;
 
       default:

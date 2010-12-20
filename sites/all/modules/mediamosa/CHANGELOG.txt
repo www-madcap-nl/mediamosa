@@ -19,6 +19,8 @@ Known issues;
   require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
   study if we need to change our require_once.
 
+update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
+update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR) where val_datetime is not null and val_char is not null;
 
 Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
@@ -36,6 +38,9 @@ MediaMosa 2.3.2 (build 1201)
 - Fixed output of REST using the correct CSS class, making the REST call result
   better to read. 
 - Finished version of ACL in Solr, needs debugging though.
+- Fixed UTF8 problem during indexing of Solr.
+- Added switch for debugging and logging REST calls.
+- Rewrote update hook for summer/winter time fix.
 
 MediaMosa 2.3.1 (build 1198)
 ----------------------------
