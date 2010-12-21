@@ -173,7 +173,7 @@ class mediamosa_solr {
 
     if (!empty($parameters['fav_user_id'])) {
       foreach ($parameters['app_ids'] as $app_id) {
-        $user_fav = mediamosa_solr_apache_solr_service::phrase(strtr('^@app_id~@name^', array('@app_id' => $app_id, '@name' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['fav_user_id']))));
+        $user_fav = mediamosa_solr_apache_solr_service::phrase(strtr('@app_id~@name~', array('@app_id' => $app_id, '@name' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['fav_user_id']))));
         $solr_query[self::WHERE_AND][self::USER_FAV][self::WHERE_OR][] = strtr('user_fav:@user_fav', array('@user_fav' => $user_fav));
       }
     }
@@ -435,17 +435,25 @@ class mediamosa_solr {
 
     foreach ($asset_ids as $asset_id) {
       try {
-        // If it fails because of existing primary key, then ignore.
-        mediamosa_db::db_insert(mediamosa_solr_queue_db::TABLE_NAME)
-          ->fields(array(
-              mediamosa_solr_queue_db::ID => $asset_id,
-              mediamosa_solr_queue_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
-          ))
-          ->execute();
+        if (mediamosa_db::db_select(mediamosa_solr_queue_db::TABLE_NAME, 'sq')
+          ->condition(mediamosa_solr_queue_db::ID, $asset_id)
+          ->countQuery()->execute()->fetchField() == 0) {
+
+          // If it fails because of existing primary key, then ignore.
+          mediamosa_db::db_insert(mediamosa_solr_queue_db::TABLE_NAME)
+            ->fields(array(
+                mediamosa_solr_queue_db::ID => $asset_id,
+                mediamosa_solr_queue_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
+            ))
+            ->execute();
+          }
       }
       catch (PDOException $e) {
         // Ignore, we have no way to lock the table in drupal db layer, so no
-        // select or update will work here.
+        // select or update will not work here.
+      }
+      catch (Exception $e) {
+        mediamosa_watchdog::log($e->getMessage());
       }
     }
   }
