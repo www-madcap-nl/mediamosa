@@ -35,7 +35,7 @@ TODO: (v2.3.1)
 - Upgrade to RC2 drupal 7
 - CQL aut search (low prio).
 
-MediaMosa 2.3.2 (build 1203)
+MediaMosa 2.3.2 (build 1205)
 ----------------------------
 - Fixed output of REST using the correct CSS class, making the REST call result
   better to read. 
