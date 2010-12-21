@@ -481,7 +481,7 @@ class mediamosa_asset {
     array $app_ids,
     $aut_user_id,
     $granted,
-    array $aut_group_id,
+    array $aut_group_ids,
     $aut_domain,
     $aut_realm,
     $is_app_admin = FALSE,
@@ -630,7 +630,15 @@ class mediamosa_asset {
     $items['granted'] = array(); // must exist, else granted flag is not included on the non-granted
 
     if ($granted) {
-      $asset_ids_access = mediamosa_aut::access_check_assets($asset_ids, $app_ids, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $is_app_admin);
+      $asset_ids_access = mediamosa_search::asset_access(array(
+        'asset_ids' => $asset_ids,
+        'app_ids' => $app_ids,
+        'aut_user_id' => $aut_user_id,
+        'aut_group_ids' => $aut_group_ids,
+        'aut_domain' => $aut_domain,
+        'aut_realm' => $aut_realm,
+        'is_app_admin' => $is_app_admin,
+      ));
 
       foreach ($asset_ids_access as $asset_id) {
         $items['granted'][$asset_id] = $asset_id;

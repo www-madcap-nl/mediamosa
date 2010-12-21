@@ -815,6 +815,16 @@ class mediamosa_db {
       $uuid .= $conf_31_to_62{rand(0, 61)};
     }
 
+    // Simpletest box IDs must be different because we might share IDs between
+    // sandbox and real live databases like Solr which don't have same level of
+    // sandboxing. We prevent this by giving simpletest IDs always end with X.
+    if (mediamosa::in_simpletest_sandbox()) {
+      $uuid = substr($uuid, 0, mediamosa_settings::UUID_LENGTH - 1) . 'X';
+    }
+    else {
+      $uuid = substr($uuid, -1) == 'X' ? substr($uuid, 0, mediamosa_settings::UUID_LENGTH - 1) . 'Y' : $uuid;
+    }
+
     // Return the new ID.
     return $uuid;
   }

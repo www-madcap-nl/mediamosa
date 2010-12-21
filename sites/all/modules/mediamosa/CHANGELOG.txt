@@ -32,6 +32,8 @@ TODO: (v2.3.1)
 - Fix bug FTP ' FTP User - common tests' unit-test.
 - ^ support CQL->Solr
 - Granted query.
+- Upgrade to RC2 drupal 7
+- CQL aut search (low prio).
 
 MediaMosa 2.3.2 (build 1203)
 ----------------------------
@@ -41,6 +43,8 @@ MediaMosa 2.3.2 (build 1203)
 - Fixed UTF8 problem during indexing of Solr.
 - Added switch for debugging and logging REST calls.
 - Rewrote update hook for summer/winter time fix.
+- Fixed watchdog problem printing %message instead of message in watchdog. Fix
+  is in current dev. trunk of Drupal 7, but not in current version.
 
 MediaMosa 2.3.1 (build 1198)
 ----------------------------

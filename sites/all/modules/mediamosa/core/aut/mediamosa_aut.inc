@@ -1168,7 +1168,7 @@ class mediamosa_aut {
    *  In some cases we want another table being used for app_id prefix.
    *
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1530,33 +1530,28 @@ class mediamosa_aut {
    * @return array
    *  returns the array with asset_id(s) on which we have access on
    */
-  static public function access_check_assets($a_asset_ids, $mixed_app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
-
-    if (!is_array($mixed_app_id)) {
-      $mixed_app_id = array($mixed_app_id);
-    }
+  static public function access_check_assets($asset_ids, array $app_ids, $aut_user_id, array $aut_group_ids, $aut_domain, $aut_realm, $is_app_admin = FALSE) {
 
     $query = array();
 
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'a.asset_id';
     $query[mediamosa_db_query::A_FROM][] = '{mediamosa_asset} AS a';
 
-    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id IN('%s')", implode("','", $a_asset_ids));
-    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
+    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id IN('%s')", implode("','", $asset_ids));
 
     // Build the access where.
-    mediamosa_aut::build_access_where($query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $mixed_app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+    mediamosa_aut::build_access_where($query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, array(), $is_app_admin);
 
     $query_sql = mediamosa_db_query::query_select($query);
 
     $db_result = mediamosa_db::db_query($query_sql);
 
-    $a_result = array();
-    foreach ($db_result as $a_row) {
-      $a_result[$a_row['asset_id']] = $a_row['asset_id'];
+    $asset_ids = array();
+    foreach ($db_result as $row) {
+      $asset_ids[$row['asset_id']] = $row['asset_id'];
     }
 
-    return $a_result;
+    return $asset_ids;
   }
 
   /**
@@ -1589,7 +1584,7 @@ class mediamosa_aut {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, array(), $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id = '%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
@@ -1622,7 +1617,7 @@ class mediamosa_aut {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, array(), $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id ='%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";

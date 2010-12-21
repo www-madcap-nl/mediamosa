@@ -100,11 +100,42 @@ class mediamosa_search {
   }
 
   /**
+   * Wrapper for access_check_assets function.
+   */
+  static public function asset_access($parameters) {
+
+    // Nothing to find?
+    if (empty($parameters['asset_ids'])) {
+      return array();
+    }
+
+    // Fill up default.
+    $parameters += array(
+      'is_app_admin' => FALSE,
+    );
+
+    // Get the search engine.
+    $mediamosa_search_engine = self::get_search_engine();
+
+    // Get name.
+    $name = $mediamosa_search_engine['name'];
+
+    // If the function does not exists, fail back to default.
+    if (!method_exists($name, 'access_check_assets')) {
+      $name = 'mediamosa_search';
+    }
+
+    // Call function.
+    return call_user_func($name . '::access_check_assets', $parameters);
+  }
+
+  /**
    * Search the asset_search function
    *
    * @param $parameters
    */
-  static public function asset_search($parameters) {
+  static public function asset_search(array $parameters) {
+
     // Call our function.
     return mediamosa_asset_search::asset_search(
       $parameters['app_ids'],
@@ -128,6 +159,23 @@ class mediamosa_search {
 
       $parameters['limit'],
       $parameters['offset']
+    );
+  }
+
+  /**
+   * Does access check on selected assets.
+   *
+   * @param array $parameters
+   */
+  static public function access_check_assets(array $parameters) {
+    return mediamosa_aut::access_check_assets(
+      $parameters['asset_ids'],
+      $parameters['app_ids'],
+      $parameters['aut_user_id'],
+      $parameters['aut_group_ids'],
+      $parameters['aut_domain'],
+      $parameters['aut_realm'],
+      $parameters['is_app_admin']
     );
   }
 }

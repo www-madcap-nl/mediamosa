@@ -3132,13 +3132,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     $expected = $this->cql_expected_ids($found, $expected_asset_ids, 'asset_id', $granted);
 
-    $found_ids = array();
+    $found_ids_2 = $found_ids = array();
     foreach ($found as $key_item => $item) {
+      $found_ids_2[] = $item['asset_id'] . ($granted ? ($item['granted'] ? ' (granted)' : ' (not granted)') : ' [always granted]');
       $found_ids[] = $item['asset_id'];
     }
 
     // Now see if we got what we wanted.
-    $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $found_ids), '@expected' => implode(', ', array_keys($expected_asset_ids)))));
+    $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $found_ids_2), '@expected' => implode(', ', array_keys($expected_asset_ids)))));
 
     // Return the asset IDs in order of the items.
     return $found_ids;

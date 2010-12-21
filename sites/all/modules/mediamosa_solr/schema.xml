@@ -36,7 +36,8 @@
 
     <!--
       String ID is for owner, group and other string related sortable data (sortable).
-      Search is exact, can't use wildcards(!)
+      Its also used for exact searching with wildcards. Unit test will test this
+      type if it still conform what it needs to do.
       -->
     <fieldType name="string_id" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true"/>
 
@@ -304,11 +305,13 @@
 
     <!--
       Aut. rules.
-      mf_org:[TRUE|FALSE] (has a original mf)
+      mf: [TRUE|FALSE] (TRUE: has mediafiles)
+
+      mf_org:[TRUE|FALSE] (TRUE: has 1 or more original mf)
 
       mf_org_aut_obj_aut_[name|group][]: 
 
-      mf_org_aut_obj_[owner|group][]: 
+      mf_org_aut_obj_[owner|group][]:
 
       mf_aut_master_slave[]: 
       is_protected; TRUE: TRUE or DOMAIN_REALM. FALSE: FALSE or USER_USERGROUP
@@ -316,12 +319,18 @@
       app_id_slave~app_id_master~is_protected~[aut_type~aut_id~]
       
       -->
+    <field name="mf" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
     <field name="mf_org" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
-    <field name="mf_org_aut_obj_aut_name" type="string_id" indexed="true" stored="true" required="false" multiValued="true" /> 
-    <field name="mf_org_aut_obj_aut_group" type="string_id" indexed="true" stored="true" required="false" multiValued="true" /> 
-    <field name="mf_org_owner" type="string_id" indexed="true" stored="true" required="false" multiValued="false" /> 
-    <field name="mf_org_group" type="string_id" indexed="true" stored="true" required="false" multiValued="false" /> 
-    <field name="mf_aut_master_slave" type="string_id" indexed="true" stored="true" required="false" multiValued="true" /> 
+    <field name="mf_org_is_protected" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_org_aut_obj_aut_name" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_org_aut_obj_aut_group" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    
+    <!--
+      string_id type on these are very important.
+      -->
+    <field name="mf_org_owner" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_org_group" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_aut_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
 
     <!--
       Because mediamosa supports custom metadata, we must use dynamic fields for
@@ -349,7 +358,7 @@
 
    <!-- Uncommenting the following will create a "timestamp" field using
         a default value of "NOW" to indicate when each document was indexed.
-     <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
+     <field name="timestamp" type="date" indexed="true" stored="false" default="NOW" multiValued="false"/>
      -->
   </fields>
 

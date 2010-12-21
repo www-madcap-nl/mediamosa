@@ -210,7 +210,7 @@ class mediamosa {
         // Unlike drupal, we don't treat recoverable errors as fatal, preventing Drupal to display error page.
         _drupal_log_error(array(
           '%type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
-          '%message' => $message,
+          '!message' => check_plain($message),
           '%function' => $caller['function'],
           '%file' => $caller['file'],
           '%line' => $caller['line'],
