@@ -31,7 +31,7 @@ TODO: (v2.3.3)
 - ^ support CQL->Solr
 - Upgrade to RC2 drupal 7
 
-MediaMosa 2.3.2 (build 1205)
+MediaMosa 2.3.2 (build 1210)
 ----------------------------
 (no ticket related issues).
 
