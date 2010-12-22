@@ -1258,12 +1258,14 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
           'mediamosa:aut' => array(
             MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS => array(
               'aut_app' => array(
+                // All mediafiles.
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_ms',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_INT,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_APP_MASTER_SLAVE',// Trick to include the join of this table.
               ),
               'is_master_slaved' => array(
+                // All mediafiles.
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_is_ms',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_BOOL_IS_SLAVED,
@@ -1271,6 +1273,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
               ),
               'is_protected' => array(
+                // All mediafiles.
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'is_protected',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mf',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_BOOL,

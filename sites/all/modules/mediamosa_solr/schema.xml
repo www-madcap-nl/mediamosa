@@ -12,7 +12,7 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="mediamosa-2.3-asset" version="1.2">
+<schema name="mediamosa-2.3.2-asset" version="1.2">
 
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        Applications should change this to reflect the nature of the search collection.
@@ -41,7 +41,9 @@
       -->
     <fieldType name="string_id" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true"/>
 
+
     <!--
+    <fieldType name="strtest" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="false"/>
       Not intended for full text searching. More technical data. (sortable).
       -->
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true"/>
@@ -68,7 +70,7 @@
       MediaMosa metadata types; (unsorted)
       -->
     <fieldType name="val_int" class="solr.TrieIntField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
-    <fieldType name="val_date" class="solr.TrieDateField" precisionStep="6" omitNorms="true" positionIncrementGap="0"/>
+    <fieldType name="val_date" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
     <fieldType name="val_char" class="solr.TextField" positionIncrementGap="100">
       <!-- A text field that uses WordDelimiterFilter to enable splitting and matching of
         words on case-change, alpha numeric boundaries, and non-alphanumeric chars,
@@ -293,7 +295,7 @@
       The batch_id is optional. Asset can be in 0 or more batches. 
       (searchable, sortable)
       -->
-    <field name="batch_id" type="int_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="batch_id" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
 
     <!-- 
       Is empty asset flag.
@@ -331,6 +333,25 @@
     <field name="mf_org_owner" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
     <field name="mf_org_group" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
     <field name="mf_aut_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+
+    <!--
+      AUT CQL context set.
+      The AUT CQL context set supports allows EGAs to search on their aut settings.
+      
+      mf_aut_user: mediamosa_aut_name.USER
+      mf_aut_user_group: mediamosa_aut_name.USER_GROUP
+      mf_aut_domain: mediamosa_aut_name.DOMAIN
+      mf_aut_realm: mediamosa_aut_name.REALM
+      mf_aut_realm_prefix: mediamosa_aut_name.REALM_PREFIX
+      -->
+    <field name="mf_app_id_master" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="asset_is_master_slaved" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
+    <field name="mf_is_protected" type="boolean" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_aut_user" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_aut_user_group" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_aut_domain" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_aut_realm" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_aut_realm_prefix" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
 
     <!--
       Because mediamosa supports custom metadata, we must use dynamic fields for

@@ -58,6 +58,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   // file to unlink on teardown.
   protected $unlinks = array();
 
+  // Change if your test needs different timezone.
+  protected $default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
+
   // ------------------------------------------------------------------ Consts.
   // Default old user/group.
   const SIMPLETEST_USER_ID = 'Simpletest user id';
@@ -656,6 +659,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Add defaults.
     $fields += array(
       mediamosa_app_db::APP_ID => rand($app_id_max, $app_id_max + 1000),
+      mediamosa_app_db::TIMEZONE => $this->default_timezone,
     );
 
     // Make sure its not in normal app id range.
@@ -671,7 +675,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::QUOTA} = 0;
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
-    $node->{mediamosa_app_db::TIMEZONE} = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
+    $node->{mediamosa_app_db::TIMEZONE} = $fields[mediamosa_app_db::TIMEZONE];
 
     node_save($node);
 

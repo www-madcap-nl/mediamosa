@@ -165,10 +165,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         // Might already been deleted.
         if ($mediafile) {
           // Delete uploaded file by deleting the mediafile.
-          mediamosa_asset_mediafile::delete($mediafile_id);
+         // mediamosa_asset_mediafile::delete($mediafile_id);
 
           // Check if the file has been deleted.
-          $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been deleted.');
+       //   $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been deleted.');
         }
       }
     }

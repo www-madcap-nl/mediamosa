@@ -120,6 +120,26 @@ class mediamosa_aut_object {
         'asset' => array(), // future.
         'mediafile' => array(),
       ),
+      'aut_domain' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
+      'aut_realm' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
+      'aut_realm_prefix' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
+      'aut_user' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
+      'aut_user_group' => array(
+        'asset' => array(), // future.
+        'mediafile' => array(),
+      ),
     );
 
     // Get aut_object rules for all asset mediafiles.
@@ -130,9 +150,48 @@ class mediamosa_aut_object {
     $query->fields('aut_obj', array(mediamosa_aut_object_db::AUT_TYPE, mediamosa_aut_object_db::AUT_ID));
     $result = $query->execute();
 
+    $aut_name_ids = array();
+    $aut_group_ids = array();
+
     // Now get all rules.
     foreach ($result as $aut_object) {
       $asset_aut_info['aut_object']['mediafile'][$aut_object[mediamosa_asset_mediafile_db::ID]][] = $aut_object;
+
+      if ($aut_object[mediamosa_aut_object_db::AUT_TYPE] == mediamosa_aut_object_db::AUT_TYPE_NAME) {
+        $aut_name_ids[] = $aut_object[mediamosa_aut_object_db::AUT_ID];
+      }
+      else {
+        $aut_group_ids[] = $aut_object[mediamosa_aut_object_db::AUT_ID];
+      }
+    }
+
+    if (!empty($aut_name_ids)) {
+      // Now use the aut_object info and collect the data for aut_user.
+      $query = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME, 'an');
+      $query->fields('an');
+      $query->condition('an.aut_name_id', $aut_name_ids, 'IN');
+      $result = $query->execute();
+
+      foreach ($result as $aut_group) {
+        switch ($aut_group[mediamosa_aut_name_db::AUT_TYPE]) {
+          case mediamosa_aut_name_db::AUT_TYPE_DOMAIN:
+            $asset_aut_info['aut_domain']['mediafile'][] = $aut_group[mediamosa_aut_name_db::AUT_NAME];
+            break;
+
+          case mediamosa_aut_name_db::AUT_TYPE_REALM:
+            $asset_aut_info['aut_realm']['mediafile'][] = $aut_group[mediamosa_aut_name_db::AUT_NAME];
+            $asset_aut_info['aut_realm_prefix']['mediafile'][] = (string) $aut_group[mediamosa_aut_name_db::AUT_PREFIX];
+            break;
+
+          case mediamosa_aut_name_db::AUT_TYPE_USER:
+            $asset_aut_info['aut_user']['mediafile'][] = $aut_group[mediamosa_aut_name_db::AUT_NAME];
+            break;
+
+          case mediamosa_aut_name_db::AUT_TYPE_USER_GROUP:
+            $asset_aut_info['aut_user_group']['mediafile'][] = $aut_group[mediamosa_aut_name_db::AUT_NAME];
+            break;
+        }
+      }
     }
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');

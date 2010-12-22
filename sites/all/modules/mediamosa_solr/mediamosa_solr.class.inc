@@ -387,6 +387,13 @@ class mediamosa_solr {
   }
 
   /**
+   * Instant update on mediafile update?
+   */
+  static public function settingInstantlyMediafileUpdate() {
+    return variable_get('mediamosa_solr_mediafile_update_instantly', TRUE);
+  }
+
+  /**
    * Instant update on normalize asset?
    */
   static public function settingInstantlyAssetNormalize() {
@@ -488,8 +495,14 @@ class mediamosa_solr {
     $documents = array();
     foreach ($asset_ids as $asset_id) {
       try {
+        $document = self::create_asset_document($asset_id);
+        if (empty($document)) {
+          $documents['asset_ids'][] = $asset_id; // So its removed from queue.
+          continue; // Not found.
+        }
+
         // Create the document.
-        $documents['documents'][] = self::create_asset_document($asset_id);
+        $documents['documents'][] = $document;
         $documents['asset_ids'][] = $asset_id;
 
         if (count($documents) == self::COMMIT_BULK_PER) {
@@ -580,8 +593,14 @@ class mediamosa_solr {
 
         $documents = array();
         foreach ($asset_ids as $asset_id) {
+          $document = self::create_asset_document($asset_id);
+          if (empty($document)) {
+            $documents['asset_ids'][] = $asset_id; // So its removed from queue.
+            continue; // Not found.
+          }
+
           // Create the document.
-          $documents['documents'][] = self::create_asset_document($asset_id);
+          $documents['documents'][] = $document;
           $documents['asset_ids'][] = $asset_id;
 
           $indexed++;
@@ -641,7 +660,6 @@ class mediamosa_solr {
    */
   static public function search($query, $offset = 0, $limit = 10, $params = array(), $method = 'GET') {
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
-
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->search($query, $offset, $limit, $params, $method));
   }
 
@@ -742,6 +760,10 @@ class mediamosa_solr {
     // Get all the data needed for indexing.
     $asset_for_index = mediamosa_asset::get_asset_for_index($asset_id);
 
+    if (empty($asset_for_index)) {
+      return FALSE;
+    }
+
     // Create empty document object asset;
     $document = new Apache_Solr_Document();
 
@@ -768,10 +790,20 @@ class mediamosa_solr {
       }
     }
 
-    // Get all technical metadata of all mediafiles.
+    // Some metadata of mediafiles.
     foreach ($asset_for_index['mediamosa_asset_mediafile_metadata'] as $mediafile_id => $mediafile_metadata) {
+      // Technical metadata.
+      foreach (array(mediamosa_asset_mediafile_metadata::MIME_TYPE) as $name) {
+        if (!empty($mediafile_metadata['metadata'][$name])) {
+          $document->{$name} = $mediafile_metadata['metadata'][$name];
+        }
+      }
+    }
+
+    // Get a mediafiles.
+    foreach ($asset_for_index['mediafiles'] as $mediafile_id => $mediafile) {
       // Skip stills.
-      if ($mediafile_metadata['mediafile'][mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_FALSE) {
+      if ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
         continue;
       }
 
@@ -781,15 +813,8 @@ class mediamosa_solr {
         mediamosa_asset_mediafile_db::ID,
         mediamosa_asset_mediafile_db::URI,
         ) as $name) {
-        if (!empty($mediafile_metadata['mediafile'][$name])) {
-          $document->{$name} = $mediafile_metadata['mediafile'][$name];
-        }
-      }
-
-      // Technical metadata.
-      foreach (array(mediamosa_asset_mediafile_metadata::MIME_TYPE) as $name) {
-        if (!empty($mediafile_metadata['metadata'][$name])) {
-          $document->{$name} = $mediafile_metadata['metadata'][$name];
+        if (!empty($mediafile[$name])) {
+          $document->{$name} = $mediafile[$name];
         }
       }
     }
@@ -1009,7 +1034,9 @@ class mediamosa_solr {
           }
         }
 
-        $document->mf_aut_master_slave = $mf_aut_master_slave;
+        if (!empty($mf_aut_master_slave)) {
+          $document->mf_aut_master_slave = $mf_aut_master_slave;
+        }
       }
     }
 
@@ -1021,6 +1048,55 @@ class mediamosa_solr {
     }
     if (!empty($mf_org_is_protected)) {
       $document->mf_org_is_protected = $mf_org_is_protected;
+    }
+
+    // Default is not slaved.
+    $is_master_slaved = FALSE;
+    $is_protected = array();
+
+    // Walk through the mediafiles, including all non-originals.
+    foreach ($asset_for_index['mediafiles'] as $mediafile_id => $mediafile) {
+
+      $is_protected[] = $mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED];
+
+      // Has aut_object rules for mediafile?
+      if (!empty($asset_for_index['aut']['aut_app_master_slave']['mediafile'][$mediafile_id])) {
+        $is_master_slaved = TRUE;
+
+        // Add master/slave rules.
+        foreach ($asset_for_index['aut']['aut_app_master_slave']['mediafile'][$mediafile_id] as $aut_app_master_slave) {
+          // For AUT CQL context.
+          $app_id_masters[] = $aut_app_master_slave[mediamosa_aut_app_master_slave_db::APP_ID_MASTER];
+        }
+      }
+    }
+
+    // Either the asset is master slaved, or not.
+    $document->asset_is_master_slaved = $is_master_slaved;
+
+    if (!empty($asset_for_index['aut']['aut_user']['mediafile'])) {
+      $document->mf_aut_user = $asset_for_index['aut']['aut_user']['mediafile'];
+    }
+    if (!empty($asset_for_index['aut']['aut_user_group']['mediafile'])) {
+      $document->mf_aut_user_group = $asset_for_index['aut']['aut_user_group']['mediafile'];
+    }
+    if (!empty($asset_for_index['aut']['aut_domain']['mediafile'])) {
+      $document->mf_aut_domain = $asset_for_index['aut']['aut_domain']['mediafile'];
+    }
+    if (!empty($asset_for_index['aut']['aut_realm']['mediafile'])) {
+      $document->mf_aut_realm = $asset_for_index['aut']['aut_realm']['mediafile'];
+    }
+    if (!empty($asset_for_index['aut']['aut_realm_prefix']['mediafile'])) {
+      $document->mf_aut_realm_prefix = $asset_for_index['aut']['aut_realm_prefix']['mediafile'];
+    }
+
+    // AUT CQL.
+    if (!empty($app_id_masters)) {
+      $document->mf_app_id_master = $app_id_masters;
+    }
+
+    if (!empty($is_protected)) {
+      $document->mf_is_protected = $is_protected;
     }
 
     // Done.

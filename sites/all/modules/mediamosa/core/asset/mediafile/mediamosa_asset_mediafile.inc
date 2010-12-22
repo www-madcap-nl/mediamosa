@@ -617,10 +617,13 @@ class mediamosa_asset_mediafile {
       ->execute();
 
     // Set the external.
-    mediamosa_asset::update_asset_info_is_external($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+    mediamosa_asset::update_asset_info_is_external($mediafile[mediamosa_asset_mediafile_db::ASSET_ID], FALSE);
 
     // Set the empty asset.
-    mediamosa_asset::update_asset_info_is_empty_asset($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+    mediamosa_asset::update_asset_info_is_empty_asset($mediafile[mediamosa_asset_mediafile_db::ASSET_ID], FALSE);
+
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]), mediamosa_settings::SEARCH_INDEX_TYPE_MEDIAFILE_UPDATE);
   }
 
   /**
