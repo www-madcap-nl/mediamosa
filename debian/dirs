@@ -1,1 +1,4 @@
-opt/www/vpcore/htdocs
+etc/mediamosa/sites/default
+var/lib/mediamosa/files
+usr/share/doc/mediamosa
+usr/share/lintian/overrides
