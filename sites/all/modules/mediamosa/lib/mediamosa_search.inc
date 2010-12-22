@@ -67,7 +67,8 @@ class mediamosa_search {
     $name = $mediamosa_search_engine['name'];
 
     // If the function does not exists, fail back to default.
-    if (!method_exists($name, 'asset_search')) {
+    // Fixme: show deleted OAI will run using MySQL.
+    if (!method_exists($name, 'asset_search') || $parameters[self::SHOW_DELETED]) {
       $name = 'mediamosa_search';
     }
 
