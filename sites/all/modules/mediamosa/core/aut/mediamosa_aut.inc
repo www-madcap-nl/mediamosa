@@ -734,33 +734,42 @@ class mediamosa_aut {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
           if (!$rights_set_domain_realm && $rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP,
             );
           }
           elseif ($rights_set_domain_realm && !$rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM,
             );
           }
           else {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE,
             );
           }
 
           // Add changed value.
-          $a_fields = mediamosa_db::db_update_enrich($a_fields);
+          $fields = mediamosa_db::db_update_enrich($fields);
 
           // Update it.
           mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
-            ->fields($a_fields)
+            ->fields($fields)
             ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
             ->execute();
 
-          // Remove the permanent still link.
-          $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($aut_object_id);
-          mediamosa_io::unlink($file);
+          // If its a still then remove the possible link to still.
+          if (mediamosa_asset_mediafile::is_still($object)) {
+            mediamosa_asset_mediafile_still::remove_permanent_link($aut_object_id);
+          }
+          else {
+            // Remove all perm. still links to stills.
+            $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($object[mediamosa_asset_mediafile_db::ASSET_ID]);
+
+            foreach ($still_ids as $still_id) {
+              mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
+            }
+          }
 
           // Reindex the asset using the mediafile ID.
           mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
@@ -768,36 +777,34 @@ class mediamosa_aut {
 
         case mediamosa_aut::AUT_TYPE_ASSET:
           if (!$rights_set_domain_realm && $rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP,
             );
           }
           elseif ($rights_set_domain_realm && !$rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM,
             );
           }
           else {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE,
             );
           }
 
           // Add changed value.
-          $a_fields = mediamosa_db::db_update_enrich($a_fields);
+          $fields = mediamosa_db::db_update_enrich($fields);
 
           // Update it.
           mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
-            ->fields($a_fields)
+            ->fields($fields)
             ->condition(mediamosa_asset_db::ID, $aut_object_id)
             ->execute();
 
           // Remove the permanent still links.
           $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($aut_object_id);
-
           foreach ($still_ids as $still_id) {
-            $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
-            mediamosa_io::unlink($file);
+            mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
           }
 
           // Reindex the asset.
@@ -853,31 +860,31 @@ class mediamosa_aut {
 
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        $a_fields = array(
+        $fields = array(
           mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE,
         );
 
         // Add changed value.
-        $a_fields = mediamosa_db::db_update_enrich($a_fields);
+        $fields = mediamosa_db::db_update_enrich($fields);
 
         // Update it.
         mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
-          ->fields($a_fields)
+          ->fields($fields)
           ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
           ->execute();
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        $a_fields = array(
+        $fields = array(
           mediamosa_asset_db::IS_PROTECTED => mediamosa_asset_db::IS_PROTECTED_FALSE,
         );
 
         // Add changed value.
-        $a_fields = mediamosa_db::db_update_enrich($a_fields);
+        $fields = mediamosa_db::db_update_enrich($fields);
 
         // Update it.
         mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
-          ->fields($a_fields)
+          ->fields($fields)
           ->condition(mediamosa_asset_db::ID, $aut_object_id)
           ->execute();
         break;
@@ -1168,7 +1175,7 @@ class mediamosa_aut {
    *  In some cases we want another table being used for app_id prefix.
    *
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, array $aut_group_ids, $aut_domain, $aut_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1566,9 +1573,9 @@ class mediamosa_aut {
    * @param string $s_aut_domain
    * @param string $s_aut_realm
    *
-   * Throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
+   * @throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
-  static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
+  static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, array $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
 
     if ($is_app_admin) {
       return;

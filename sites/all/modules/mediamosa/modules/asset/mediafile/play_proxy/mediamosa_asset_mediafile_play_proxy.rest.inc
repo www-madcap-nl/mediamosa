@@ -290,25 +290,33 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $ticket = mediamosa_db::uuid($app_id);
 
     // Create ticket.
-    if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
+    if (empty($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
       if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
         $still_id_tmp = ($still_id ? $still_id : mediamosa_asset_mediafile_still::find_default($asset_id));
 
-        // Check the protection.
-        $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
-        if ($asset[mediamosa_asset_db::IS_PROTECTED] == mediamosa_asset_db::IS_PROTECTED_FALSE) {
-          $response = mediamosa_asset_mediafile::get($still_id_tmp, NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
-          if ($response) {
-            $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
-          }
+        // Check access.
+        mediamosa_aut::access_check_on_object(
+          mediamosa_aut::AUT_TYPE_MEDIAFILE,
+          $asset_id,
+          $still_id_tmp,
+          $app_id,
+          $user_id,
+          $group_id,
+          $aut_domain,
+          $aut_realm,
+          $is_app_admin
+        );
+
+        $is_permanent = TRUE;
+        try {
+          mediamosa_aut::mediafile_is_protected($still_id_tmp);
+        }
+        catch (mediamosa_exception $e) {
+          $is_permanent = FALSE;
         }
 
-        if ($asset[mediamosa_asset_db::IS_PROTECTED] == mediamosa_asset_db::IS_PROTECTED_FALSE && $still_is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
-          $ticket = $still_id_tmp;
-        }
-        else {
-          $ticket = mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id_tmp);
-        }
+        // Generate ticket or perm link?
+        $ticket = $is_permanent ? $still_id_tmp : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id_tmp);
       }
       else {
         $ticket = mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id);

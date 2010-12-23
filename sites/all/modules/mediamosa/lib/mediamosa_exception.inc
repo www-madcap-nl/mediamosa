@@ -226,6 +226,20 @@ class mediamosa_exception_error_job_not_found extends mediamosa_exception_error 
   }
 }
 
+class mediamosa_exception_error_asset_not_found extends mediamosa_exception_error {
+  public function __construct($tags = array()) {
+    assert(isset($tags['@asset_id']));
+    parent::__construct(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, $tags);
+  }
+}
+
+class mediamosa_exception_error_mediafile_not_found extends mediamosa_exception_error {
+  public function __construct($tags = array()) {
+    assert(isset($tags['@mediafile_id']));
+    parent::__construct(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, $tags);
+  }
+}
+
 class mediamosa_exception_error_userman_invalid_user extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
     assert(isset($a_tags['@user_id']));
@@ -299,6 +313,20 @@ class mediamosa_exception_error_masterslave_disallowed extends mediamosa_excepti
   public function __construct($a_tags = array()) {
     assert(isset($a_tags['@aut_id']));
     parent::__construct(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED, $a_tags);
+  }
+}
+
+// Forbidden
+class mediamosa_exception_error_403 extends mediamosa_exception_error {
+  public function __construct() {
+    parent::__construct(mediamosa_error::HTTP_FORBIDDEN);
+  }
+}
+
+// Not found.
+class mediamosa_exception_error_404 extends mediamosa_exception_error {
+  public function __construct() {
+    parent::__construct(mediamosa_error::HTTP_NOT_FOUND);
   }
 }
 

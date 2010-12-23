@@ -624,4 +624,15 @@ class mediamosa_asset_mediafile_still {
       )
     );
   }
+
+  /**
+   * Remove the permanent symlink to a still.
+   *
+   * @param string $still_id
+   */
+  static public function remove_permanent_link($still_id) {
+    // Remove the permanent still link.
+    $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
+    mediamosa_io::unlink($file);
+  }
 }

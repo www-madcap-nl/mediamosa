@@ -67,14 +67,32 @@ class mediamosa_asset_mediafile {
   /**
    * Get all mediafiles of given asset_id.
    *
-   * Warning; will also get stills, which are also mediafiles.
+   * Warning; will also get stills, which are also mediafiles, use
+   * exclude_stills to exclude.
    *
    * @param string $mediafile_id
    */
-  static public function get_by_asset_id($asset_id, $fields = array()) {
+  static public function get_by_asset_id($asset_id, $fields = array(), $options = array()) {
+
+    $options += array(
+      'get_originals_only' => FALSE,
+      'exclude_stills' => FALSE,
+    );
+
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', $fields);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+
+    // Need only originals?
+    if ($options['get_originals_only']) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+    }
+
+    // Skip stills?
+    if ($options['exclude_stills']) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    }
+
     return $query->execute()->fetchAllAssoc(mediamosa_asset_mediafile_db::ID);
   }
 
@@ -567,11 +585,19 @@ class mediamosa_asset_mediafile {
    *
    * @param array $mediafile
    */
-  static public function is_original($mediafile) {
+  static public function is_original(array $mediafile) {
     // FIXME: will need to convert into mediafile_id_source.
     return ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
   }
 
+  /**
+   * Returns TRUE/FALSE if the mediafile is an still.
+   *
+   * @param array $mediafile
+   */
+  static public function is_still(array $mediafile) {
+    return ($mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+  }
 
   /**
    * Update the mediafile.
@@ -720,4 +746,42 @@ class mediamosa_asset_mediafile {
     }
   }
 
+  /**
+   * Returns when still has no ACL rules or when parent asset has no ACL or
+   * when asset is not set on unappropriate.
+   *
+   * @param string $still_id
+   *
+   * @throws exception when asset or mediafiles where not found or access
+   *         denied.
+   */
+  static public function mediafile_is_protected($mediafile_id) {
+
+    // Get the mediafile_id, asset_id.
+    $still = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::IS_PROTECTED));
+    if (!$still) {
+      throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id)); // not found?
+    }
+    // Forbidden when protected. We dont have enough information to do a play proxy call here.
+    if ($still[mediamosa_asset_mediafile_db::IS_PROTECTED] != mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
+      throw new mediamosa_exception_error_access_denied(array('@reason' => 'still is protected'));
+    }
+
+    // Get the asset.
+    $asset = mediamosa_asset::get($still[mediamosa_asset_mediafile_db::ASSET_ID]);
+    if (!$asset) {
+      throw new mediamosa_exception_error_asset_not_found(array('@asset' => $still[mediamosa_asset_mediafile_db::ASSET_ID])); // not found?
+    }
+
+    // Forbidden when protected. We dont have enough information to do a play proxy call here.
+    if ($asset[mediamosa_asset_db::IS_PROTECTED] != mediamosa_asset_db::IS_PROTECTED_FALSE) {
+      throw new mediamosa_exception_error_access_denied(array('@reason' => 'asset is protected'));
+    }
+
+    // Check asset is_unappropriate flag.
+    if ($asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE) {
+      throw new mediamosa_exception_error_access_denied(array('@reason' => 'asset is set to not appropriate'));
+    }
+    mediamosa_watchdog::log_export($asset);
+  }
 }

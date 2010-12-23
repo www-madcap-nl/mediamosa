@@ -1046,17 +1046,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Get response.
-    $a_response = mediamosa_lib::responsexml2array($response['xml']);
-    $a_stills = $a_response['items']['item'];
+    $response = mediamosa_lib::responsexml2array($response['xml']);
+    $stills = $response['items']['item'];
 
     // Did we get something?
     $this->assertTrue(
-      count($a_stills),
+      count($stills),
       'Got the mediafile stills'
     );
 
     // Return data.
-    return $a_stills;
+    return $stills;
   }
 
 

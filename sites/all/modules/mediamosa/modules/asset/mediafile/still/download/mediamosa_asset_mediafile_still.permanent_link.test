@@ -46,9 +46,9 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
   public function testStillPermanentLink() {
 
     // Create upload file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);
@@ -57,25 +57,24 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     $this->doQueueCycleAll();
 
     // Get the stills.
-    $a_stills = $this->getMediafileStill($mediafile_id);
-    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
 
     // Get first array.
-    $a_stills = $a_stills[0];
+    $stills = $stills[0];
 
     // Some tests.
-    $this->assertTrue(isset($a_stills['stills']), 'Found the still.');
-    $this->assertTrue(!empty($a_stills['output']), 'Found the output url.');
-    $this->assertTrue(!empty($a_stills['ticket_id']), 'Found the ticket ID.');
+    $this->assertTrue(isset($stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
 
-    $still_id = $a_stills['stills']['still_id'];
+    $still_id = $stills['stills']['still_id'];
 
 
     // Permanent still url without protection.
 
     // Test the output, do output call.
-    $permanent_still_url = str_replace('/still/', '/simpletest/still/', $a_stills['output']);
-    //$permanent_still_url = $a_stills['output'];
+    $permanent_still_url = str_replace('/still/', '/simpletest/still/', $stills['output']);
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -99,10 +98,10 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Permanent still url with protection.
 
     // Add ACL rule.
-    $a_parameters = array(
+    $parameters = array(
       'aut_user' => 'some_user',
     );
-    $a_xml = $this->setMediafileAut($still_id, $a_parameters);
+    $xml = $this->setMediafileAut($still_id, $parameters);
 
 
     // Get the file.
@@ -110,7 +109,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Check response.
     $this->assertTrue(
-      $result->code == 404,
+      $result->code == 403,
       t("Download the test image from permanent link after ACL rule '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
@@ -118,15 +117,14 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Temporary still url with protection.
 
     // Get the stills.
-    $a_stills = $this->getMediafileStill($mediafile_id);
-    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
 
     // Get first array.
-    $a_stills = $a_stills[0];
+    $still = reset($stills);
 
     // Test the output, do output call.
-    $still_url = str_replace('/still/', '/simpletest/still/', $a_stills['output']);
-    //$still_url = $a_stills['output'];
+    $still_url = str_replace('/still/', '/simpletest/still/', $still['output']);
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($still_url);
@@ -149,10 +147,9 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Permanent still url without protection.
 
     // Remove ACL rule.
-    $a_parameters = array(
+    $parameters = array(
     );
-    $a_xml = $this->setMediafileAut($still_id, $a_parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-
+    $xml = $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -163,5 +160,74 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       t("Download the test image from permanent link without ACL rule'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
+    // If one of the mediafiles has protection, then the still can still be accessed.
+    $mediafile = mediamosa_asset_mediafile::get($still_id);
+    $mediafile_id_original = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+
+    // Add ACL rule.
+    $parameters = array(
+      'aut_user' => 'some_user',
+    );
+    $xml = $this->setMediafileAut($mediafile_id_original, $parameters);
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from permanent link after ACL rule '@url' on original mediafile (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+    // Remove ACL rule.
+    $parameters = array(
+    );
+    $xml = $this->setMediafileAut($mediafile_id_original, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from permanent link without ACL rule'@url' on original mediafile (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+    // Not make asset unappropriate
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $xml = $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == TRUE');
+
+    // Dump the asset.
+    $asset = mediamosa_asset::get($asset_id);
+    $this->var_export($asset);
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 403,
+      t("Download the test image from permanent link with unappropriate == TRUE'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+    // Not make asset unappropriate
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'FALSE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $xml = $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == FALSE');
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from permanent link with unappropriate == TRUE'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
   }
 }
