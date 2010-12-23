@@ -1,0 +1,3 @@
+#!/bin/sh
+
+wget -O - -q -t 1 --header="Host: localhost" http://localhost/mediamosa/cron.php?cron_key=<CHANGE>
