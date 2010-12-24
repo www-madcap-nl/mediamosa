@@ -31,7 +31,7 @@ TODO: (v2.3.3)
 - ^ support CQL->Solr
 - Upgrade to RC2 drupal 7
 
-MediaMosa 2.3.3 (build 1210)
+MediaMosa 2.3.3 (build 1214)
 ----------------------------
 - Fixed permanent still link (#291).
   * Stills that are protected by ACL:
