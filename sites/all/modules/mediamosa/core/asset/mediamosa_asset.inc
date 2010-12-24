@@ -826,61 +826,61 @@ class mediamosa_asset {
         }
 
         if ($show_stills) {
-          try {
-            $mediafile_ext['asset_id'] = $asset[mediamosa_asset_db::ID];
+          // Can happen more than once, don't do it again when vpx_still_url is already set.
+          if (empty($items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'])) {
 
-            // Get the still_id.
-            if (!isset($items['stills'][$asset[mediamosa_asset_db::ID]])) {
-              $items['stills'][$asset[mediamosa_asset_db::ID]] = mediamosa_asset_mediafile_still::find_default($asset[mediamosa_asset_db::ID]);
-            }
+            // Empty by default.
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = '';
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = '';
 
-            // Found a still?
-            if (!empty($items['stills'][$asset[mediamosa_asset_db::ID]])) {
+            // Process still.
+            try {
+              $mediafile_ext['asset_id'] = $asset[mediamosa_asset_db::ID];
 
-              $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
-
-              // Check access.
-              mediamosa_aut::access_check_on_object(
-                mediamosa_aut::AUT_TYPE_MEDIAFILE,
-                $asset[mediamosa_asset_db::ID],
-                $still_id,
-                $app_id,
-                $aut_user_id,
-                $aut_group_ids,
-                $aut_domain,
-                $aut_realm,
-                $is_app_admin
-              );
-
-              $is_permanent = TRUE;
-              try {
-                mediamosa_asset_mediafile::mediafile_is_protected($still_id);
-              }
-              catch (mediamosa_exception $e) {
-                $is_permanent = FALSE;
+              // Get the still_id.
+              if (!isset($items['stills'][$asset[mediamosa_asset_db::ID]])) {
+                $items['stills'][$asset[mediamosa_asset_db::ID]] = mediamosa_asset_mediafile_still::find_default($asset[mediamosa_asset_db::ID]);
               }
 
-              if ($is_permanent) {
-                $response = mediamosa_asset_mediafile_play_proxy::create_response_still($items['stills'][$asset[mediamosa_asset_db::ID]], $app_id);
-                $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
-                $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
-              }
-              else {
-                $ticket = mediamosa_db::uuid($app_id);
-                $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $still_id);
+              // Found a still?
+              if (!empty($items['stills'][$asset[mediamosa_asset_db::ID]])) {
 
-                if ($ticket_id) {
-                  // Create still response.
-                  $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = mediamosa_ticket::TICKET_PATH . mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+                $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
+
+                // Check access.
+                mediamosa_aut::access_check_on_object(
+                  mediamosa_aut::AUT_TYPE_MEDIAFILE,
+                  $asset[mediamosa_asset_db::ID],
+                  $still_id,
+                  $app_id,
+                  $aut_user_id,
+                  $aut_group_ids,
+                  $aut_domain,
+                  $aut_realm,
+                  $is_app_admin
+                );
+
+                if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
+                  $response = mediamosa_asset_mediafile_play_proxy::create_response_still($still_id, $app_id);
+                  $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
+                }
+                else {
+                  $ticket = mediamosa_db::uuid($app_id);
+                  $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $still_id);
+
+                  if ($ticket_id) {
+                    // Create still response.
+                    $response = mediamosa_asset_mediafile_play_proxy::create_response_still(mediamosa_ticket::TICKET_PATH . $ticket, $app_id);
+                    $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
+                    $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
+                  }
                 }
               }
             }
-          }
-          catch (mediamosa_exception $e) {
-            // Ignore.
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = '';
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = '';
+            catch (mediamosa_exception $e) {
+              // Ignore.
+            }
           }
         }
       }
@@ -1039,7 +1039,7 @@ class mediamosa_asset {
     // If play call, then even if we are owner, then we can only play it when
     // is_app_admin is TRUE.
     if ($play_call && !$is_app_admin) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
+      throw new mediamosa_exception_error_is_unappropriate();
     }
 
     // Must be owner or admin.
@@ -1048,7 +1048,7 @@ class mediamosa_asset {
     }
     catch (mediamosa_exception_error_access_denied $e) {
       assert($e);
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
+      throw new mediamosa_exception_error_is_unappropriate();
     }
   }
 

@@ -1175,7 +1175,7 @@ class mediamosa_aut {
    *  In some cases we want another table being used for app_id prefix.
    *
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, array $aut_group_ids, $aut_domain, $aut_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1575,7 +1575,7 @@ class mediamosa_aut {
    *
    * @throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
-  static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, array $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
+  static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
 
     if ($is_app_admin) {
       return;
@@ -1611,6 +1611,7 @@ class mediamosa_aut {
         $db_result = mediamosa_db::db_query($query_sql);
 
         if ($db_result->fetchAssoc() === FALSE) {
+          // FIXME: will always be thrown, even when unappropriate was the reason.
           throw new mediamosa_exception_error_access_denied(array('@reason' => 'mediafile is protected'));
         }
 

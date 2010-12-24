@@ -710,7 +710,6 @@ class mediamosa_asset_mediafile_metadata {
       }
       else {
         // Shouldn't be here.
-        mediamosa_watchdog::log_export($row);
         assert(0);
       }
 

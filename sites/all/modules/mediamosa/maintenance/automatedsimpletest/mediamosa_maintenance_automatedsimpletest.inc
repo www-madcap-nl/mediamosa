@@ -382,7 +382,7 @@ class mediamosa_maintenance_automatedsimpletest {
       $response->xml = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
-      mediamosa_watchdog::log_export($response->data);
+      mediamosa_debug::log_export($response->data);
     }
 
     if (isset($response->xml) && isset($response->xml->header) && $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY) {

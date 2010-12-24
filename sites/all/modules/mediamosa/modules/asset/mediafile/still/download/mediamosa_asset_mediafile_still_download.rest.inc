@@ -109,7 +109,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
         // Check access.
         try {
-          mediamosa_asset_mediafile::mediafile_is_protected($still_id);
+          mediamosa_asset_mediafile::is_mediafile_protected($still_id);
         }
         catch (mediamosa_exception_error_asset_not_found $e) {
           throw new mediamosa_exception_error_404();

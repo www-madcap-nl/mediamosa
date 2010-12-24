@@ -748,29 +748,36 @@ class mediamosa_asset_mediafile {
 
   /**
    * Returns when still has no ACL rules or when parent asset has no ACL or
-   * when asset is not set on unappropriate.
+   * when asset is not set on unappropriate (FALSE)
+   *
+   * Will return TRUE when its protected, but you have access.
    *
    * @param string $still_id
    *
    * @throws exception when asset or mediafiles where not found or access
    *         denied.
    */
-  static public function mediafile_is_protected($mediafile_id) {
+  static public function is_mediafile_protected($mediafile_id, $is_app_admin = FALSE) {
+
+    // Conditions;
+    // Mediafile may not be protected.
+    // Asset may not be protected.
+    // Asset may not be set to unappropriate.
 
     // Get the mediafile_id, asset_id.
-    $still = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::IS_PROTECTED));
-    if (!$still) {
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::IS_PROTECTED));
+    if (!$mediafile) {
       throw new mediamosa_exception_error_mediafile_not_found(array('@mediafile_id' => $mediafile_id)); // not found?
     }
     // Forbidden when protected. We dont have enough information to do a play proxy call here.
-    if ($still[mediamosa_asset_mediafile_db::IS_PROTECTED] != mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
+    if ($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] != mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
       throw new mediamosa_exception_error_access_denied(array('@reason' => 'still is protected'));
     }
 
     // Get the asset.
-    $asset = mediamosa_asset::get($still[mediamosa_asset_mediafile_db::ASSET_ID]);
+    $asset = mediamosa_asset::get($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
     if (!$asset) {
-      throw new mediamosa_exception_error_asset_not_found(array('@asset' => $still[mediamosa_asset_mediafile_db::ASSET_ID])); // not found?
+      throw new mediamosa_exception_error_asset_not_found(array('@asset' => $mediafile[mediamosa_asset_mediafile_db::ASSET_ID])); // not found?
     }
 
     // Forbidden when protected. We dont have enough information to do a play proxy call here.
@@ -778,10 +785,16 @@ class mediamosa_asset_mediafile {
       throw new mediamosa_exception_error_access_denied(array('@reason' => 'asset is protected'));
     }
 
-    // Check asset is_unappropriate flag.
-    if ($asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE) {
-      throw new mediamosa_exception_error_access_denied(array('@reason' => 'asset is set to not appropriate'));
+    // Check asset is_unappropriate flag, access only when $is_app_admin == TRUE.
+    if ($asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE && !$is_app_admin) {
+      throw new mediamosa_exception_error_is_unappropriate();
     }
-    mediamosa_watchdog::log_export($asset);
+
+    if ($asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE && $is_app_admin) {
+      // Is protected, but you have access. (not fatal).
+      return TRUE;
+    }
+
+    return FALSE;
   }
 }

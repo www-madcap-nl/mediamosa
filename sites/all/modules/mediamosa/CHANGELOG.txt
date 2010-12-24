@@ -33,7 +33,28 @@ TODO: (v2.3.3)
 
 MediaMosa 2.3.3 (build 1210)
 ----------------------------
-- Fixed permanent still link (#).
+- Fixed permanent still link (#291).
+  * Stills that are protected by ACL:
+    - Will now generate a ticket link when access is granted.
+    - Will not generate a link at all when access is denied.
+    - Will now generate a ticket link when access was denied, but is_app_admin
+      was TRUE (allowing access).
+  * Still without ACL will always generate a permanent link which will always
+    be the same (based on the still ID).
+  * Ticket URL has been changed to /still/ticket/[ticket_id] and will be
+    returned when still URL is generated.
+  * /still/[still_id] will always be a permanent still link. But is only allowed
+    when no ACL is set.
+
+(no ticket related issues).
+- Downgraded number of exceptions, so those will only end up in watchdog when 
+  debug is set on normal or high.
+- Fixed problem with WLE browsing with Solr enabled; Solr API does not support
+  queries that are longer than 1024 bytes, making the WLE browse with 200 assets
+  to cause problems. Hot fixed by splitting up into chunks of 35 assets per 
+  call. Solr API needs fixing to use fopen calls instead of file_contents calls.
+  Maybe time for Drupal 7 version of the API instead of the Google code version.
+  
 
 MediaMosa 2.3.2 (build 1210)
 ----------------------------

@@ -3027,7 +3027,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do Post call.
     $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
-
+$this->var_export($response['xml']);
     // Test return status.
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),

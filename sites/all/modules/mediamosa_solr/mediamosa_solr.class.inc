@@ -338,27 +338,36 @@ class mediamosa_solr {
    *  returns the array with asset_id(s) on which we have access on
    */
   static public function access_check_assets(array $parameters) {
-    $solr_query = array();
-
-    foreach ($parameters['asset_ids'] as $asset_id) {
-      $solr_query[self::WHERE_AND][self::ASSET][self::WHERE_OR][] = 'asset_id:' . mediamosa_solr_apache_solr_service::escapePhrase($asset_id);
-    }
-
-    // AUT layer.
-    self::build_access_where($solr_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['aut_user_id'], $parameters['aut_group_ids'], $parameters['aut_domain'], $parameters['aut_realm'], array(), $parameters['is_app_admin']);
-
-    // Build query.
-    $query = self::where($solr_query);
-
-    // Do query.
-    $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query, 0, count($parameters['asset_ids']));
-
-    // Get the asset_ids.
-    $result = $mediamosa_solr_apache_solr_response->getAssetIds();
 
     $asset_ids = array();
-    foreach ($result as $asset_id) {
-      $asset_ids[$asset_id] = $asset_id;
+
+    $solr_query_access = array();
+
+    // AUT layer.
+    self::build_access_where($solr_query_access, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['aut_user_id'], $parameters['aut_group_ids'], $parameters['aut_domain'], $parameters['aut_realm'], array(), $parameters['is_app_admin']);
+
+    while (!empty($parameters['asset_ids'])) {
+
+      $solr_query = $solr_query_access;
+
+      $limit = 35; // 35 per time, else Solr query will fail.
+      while (!empty($parameters['asset_ids']) && $limit--) {
+        $asset_id = array_pop($parameters['asset_ids']);
+        $solr_query[self::WHERE_AND][self::ASSET][self::WHERE_OR][] = 'asset_id:' . mediamosa_solr_apache_solr_service::escapePhrase($asset_id);
+      }
+
+      // Build query.
+      $query = self::where($solr_query);
+
+      // Do query.
+      $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query);
+
+      // Get the asset_ids.
+      $result = $mediamosa_solr_apache_solr_response->getAssetIds();
+
+      foreach ($result as $asset_id) {
+        $asset_ids[$asset_id] = $asset_id;
+      }
     }
 
     return $asset_ids;
@@ -446,18 +455,19 @@ class mediamosa_solr {
           ->condition(mediamosa_solr_queue_db::ID, $asset_id)
           ->countQuery()->execute()->fetchField() == 0) {
 
-          // If it fails because of existing primary key, then ignore.
-          mediamosa_db::db_insert(mediamosa_solr_queue_db::TABLE_NAME)
-            ->fields(array(
-                mediamosa_solr_queue_db::ID => $asset_id,
-                mediamosa_solr_queue_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
-            ))
-            ->execute();
+            // If it fails because of existing primary key, then ignore.
+            mediamosa_db::db_insert(mediamosa_solr_queue_db::TABLE_NAME)
+              ->fields(array(
+                  mediamosa_solr_queue_db::ID => $asset_id,
+                  mediamosa_solr_queue_db::CREATED => mediamosa_datetime::db_current_timestamp_now()
+              ))
+              ->execute();
           }
       }
       catch (PDOException $e) {
         // Ignore, we have no way to lock the table in drupal db layer, so no
         // select or update will not work here.
+        mediamosa_watchdog::log($e->getMessage());
       }
       catch (Exception $e) {
         mediamosa_watchdog::log($e->getMessage());

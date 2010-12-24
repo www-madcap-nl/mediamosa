@@ -101,7 +101,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     $parameters = array(
       'aut_user' => 'some_user',
     );
-    $xml = $this->setMediafileAut($still_id, $parameters);
+    $this->setMediafileAut($still_id, $parameters);
 
 
     // Get the file.
@@ -144,12 +144,19 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       t("Download the test image second time from '@url' (code = @code), ticket url must still be there.", array('@url' => $still_url, '@code' => $result->code))
     );
 
+
+    // If one of the mediafiles has protection, then the still can still be accessed.
+    $mediafile = mediamosa_asset_mediafile::get($still_id);
+    $mediafile_id_original = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+
+
     // Permanent still url without protection.
 
     // Remove ACL rule.
     $parameters = array(
     );
-    $xml = $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -160,16 +167,11 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       t("Download the test image from permanent link without ACL rule'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
 
-    // If one of the mediafiles has protection, then the still can still be accessed.
-    $mediafile = mediamosa_asset_mediafile::get($still_id);
-    $mediafile_id_original = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
-    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
-
     // Add ACL rule.
     $parameters = array(
       'aut_user' => 'some_user',
     );
-    $xml = $this->setMediafileAut($mediafile_id_original, $parameters);
+    $this->setMediafileAut($mediafile_id_original, $parameters);
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -183,7 +185,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Remove ACL rule.
     $parameters = array(
     );
-    $xml = $this->setMediafileAut($mediafile_id_original, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAut($mediafile_id_original, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -199,11 +201,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
     );
-    $xml = $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == TRUE');
-
-    // Dump the asset.
-    $asset = mediamosa_asset::get($asset_id);
-    $this->var_export($asset);
+    $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == TRUE');
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -219,7 +217,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'FALSE',
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
     );
-    $xml = $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == FALSE');
+    $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == FALSE');
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -229,5 +227,191 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
       $result->code == 200,
       t("Download the test image from permanent link with unappropriate == TRUE'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
     );
+
+
+
+    //
+    // Now same test but on asset/$asset_id/play.
+    //
+
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+
+    // Check response.
+    // Perm. link means ticket is same as still ID.
+    $this->assert($response['items']['item']['stills']['still_id'] == $response['items']['item']['stills']['ticket'], 'permanent still check');
+
+    // Add ACL rule.
+    $parameters = array(
+      'aut_domain' => 'foo.nl',
+    );
+    $this->setMediafileAut($still_id, $parameters);
+
+    // Again.
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'Not owner!',
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Again with owner (link must now be like ticket).
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+
+    // Check response.
+    // ticket link.
+    $this->assert(drupal_substr($response['items']['item']['stills']['ticket'], 0, 7) == 'ticket/', 'Found ticket link');
+
+    // Remove ACL rule.
+    $parameters = array(
+    );
+    $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+
+    // Check response.
+    // Perm. link means ticket is same as still ID.
+    $this->assert($response['items']['item']['stills']['still_id'] == $response['items']['item']['stills']['ticket'], 'permanent still check');
+
+    // Not make asset unappropriate
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == TRUE');
+
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    $still = $this->getMediafile($still_id);
+    $this->var_export($still);
+
+    // Again.
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => 'Not owner!',
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+
+    // Again with owner.
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
+
+    // Again with owner.
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+
+    // Check response.
+    // ticket link.
+    $this->assert(drupal_substr($response['items']['item']['stills']['ticket'], 0, 7) == 'ticket/', 'Found ticket link');
+
+    // Not make asset unappropriate.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'FALSE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == FALSE');
+
+    $parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+    );
+    $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
+
+    // Check response.
+    // Perm. link means ticket is same as still ID.
+    $this->assert($response['items']['item']['stills']['still_id'] == $response['items']['item']['stills']['ticket']);
+
+
+    //
+    // Now the same with still links when getting an asset.
+    //
+
+    $asset = $this->getAsset($asset_id);
+
+    // Must perm. link.
+    $this->assertFalse(stripos($asset['vpx_still_url'], '/still/ticket/'), 'Must be perm. link');
+
+    // Add ACL rule.
+    $parameters = array(
+      'aut_domain' => 'foo.nl',
+    );
+    $this->setMediafileAut($still_id, $parameters);
+
+    $parameters = array(
+      mediamosa_rest_call_asset_get::USER_ID => 'Not owner!',
+      mediamosa_rest_call_asset_get::AUT_USER_ID => 'Not owner!',
+    );
+    $asset = $this->getAsset($asset_id, $parameters);
+
+    // No access to still, means no link too.
+    $this->assertTrue(empty($asset['vpx_still_url']), 'No access to still = no still link');
+
+    $parameters = array(
+    );
+    $asset = $this->getAsset($asset_id, $parameters);
+
+    // Must be ticket link.
+    $this->assertTrue(stripos($asset['vpx_still_url'], '/still/ticket/'), 'Must be ticket link');
+
+    // Remove ACL rule.
+    $parameters = array(
+    );
+    $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+    // Perm. again.
+    $asset = $this->getAsset($asset_id);
+
+    // Must perm. link.
+    $this->assertFalse(stripos($asset['vpx_still_url'], '/still/ticket/'), 'Must be perm. link');
+
+    // Not make asset unappropriate
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == TRUE');
+
+    $parameters = array(
+    );
+    $asset = $this->getAsset($asset_id, $parameters);
+
+    // Unapp. with onwer means access to asset, but not to still.
+    $this->assertTrue(empty($asset['vpx_still_url']), 'No still link given with unappropriate and owner of asset.');
+
+    // Even with unappropriate, if we are app admin, then we may have the still
+    // as ticket.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $asset = $this->getAsset($asset_id, $parameters);
+
+    // Unapp. with onwer means access to asset, but not to still.
+    $this->assertTrue(stripos($asset['vpx_still_url'], '/still/ticket/'), 'Must be ticket link');
+
+    // Not make asset unappropriate.
+    $parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'FALSE',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
+    );
+    $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == FALSE');
+
+    // Perm. again.
+    $asset = $this->getAsset($asset_id);
+
+    // Must perm. link.
+    $this->assertFalse(stripos($asset['vpx_still_url'], '/still/ticket/'), 'Must be perm. link');
+
   }
 }
