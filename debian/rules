@@ -9,84 +9,49 @@
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-  # Add here commands to configure the package.
+build: 
+	#docbook-to-man debian/mediamosa.sgml > mediamosa.1
 
-	touch configure-stamp
-
-
-build: build-stamp
-
-build-stamp: configure-stamp 
-	dh_testdir
-	touch $@
-
-clean:
+clean: 
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
-
-  # Add here commands to clean up after the build process.
-	-$(MAKE) clean
-
+	# Add here commands to clean up after the build process.
 	dh_clean 
 
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k 
+	dh_prep
 	dh_installdirs
+	dh_install
 
-  # installs the package into debian/vpcore.
-	cp -r includes debian/vpcore/opt/www/vpcore/htdocs
-	cp -r misc debian/vpcore/opt/www/vpcore/htdocs
-	cp -r modules debian/vpcore/opt/www/vpcore/htdocs
-	cp -r profiles debian/vpcore/opt/www/vpcore/htdocs
-	cp -r scripts debian/vpcore/opt/www/vpcore/htdocs
-	cp -r sites debian/vpcore/opt/www/vpcore/htdocs
-	cp -r themes debian/vpcore/opt/www/vpcore/htdocs
-	cp -r mmplayer debian/vpcore/opt/www/vpcore/htdocs
-	cp *.php debian/vpcore/opt/www/vpcore/htdocs
-	cp .htaccess debian/vpcore/opt/www/vpcore/htdocs
-	cp crossdomain.xml debian/vpcore/opt/www/vpcore/htdocs
-	cp robots.txt debian/vpcore/opt/www/vpcore/htdocs
+	# fix permissions
+	find $(CURDIR)/debian/mediamosa/usr/share/mediamosa \
+	  -name '*.png' -o -name '*.jpg' -o -name '*.gif'| xargs chmod a-x
+
+	# delete unneeded modules
+	rm -rf $(CURDIR)/debian/mediamosa/usr/share/mediamosa/sites/all/modules/coder
+	rm -rf $(CURDIR)/debian/mediamosa/usr/share/mediamosa/sites/all/modules/devel
+
+	# extra
+	install -m644 debian/mediamosa.lintian debian/mediamosa/usr/share/lintian/overrides/mediamosa
 
 # Build architecture-independent files here.
 binary-indep: build install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs CHANGELOG.txt
 	dh_installdocs
 	dh_installexamples
-#	dh_install
-#	dh_installmenu
-#	dh_installdebconf	
-#	dh_installlogrotate
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installmime
-#	dh_python
-#	dh_installinit
-#	dh_installcron
-#	dh_installinfo
-	dh_installman
+	dh_installdebconf
+	dh_installcron
 	dh_link
-	dh_strip
 	dh_compress
 	dh_fixperms
-#	dh_perl
-#	dh_makeshlibs
 	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
+	dh_gencontrol -- -V'debconf-depends=debconf (>= $(MINDEBCONFVER))'
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+binary: binary-indep
+.PHONY: build clean binary-indep binary install configure
