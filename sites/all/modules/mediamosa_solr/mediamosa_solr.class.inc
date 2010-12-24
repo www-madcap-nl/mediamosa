@@ -341,33 +341,27 @@ class mediamosa_solr {
 
     $asset_ids = array();
 
-    $solr_query_access = array();
+    $solr_query = array();
+
+    // Assets to process.
+    foreach ($parameters['asset_ids'] as $asset_id) {
+      $solr_query[self::WHERE_AND][self::ASSET][self::WHERE_OR][] = 'asset_id:' . mediamosa_solr_apache_solr_service::escapePhrase($asset_id);
+    }
 
     // AUT layer.
-    self::build_access_where($solr_query_access, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['aut_user_id'], $parameters['aut_group_ids'], $parameters['aut_domain'], $parameters['aut_realm'], array(), $parameters['is_app_admin']);
+    self::build_access_where($solr_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['aut_user_id'], $parameters['aut_group_ids'], $parameters['aut_domain'], $parameters['aut_realm'], array(), $parameters['is_app_admin']);
 
-    while (!empty($parameters['asset_ids'])) {
+    // Build query.
+    $query = self::where($solr_query);
 
-      $solr_query = $solr_query_access;
+    // Do query.
+    $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query);
 
-      $limit = 35; // 35 per time, else Solr query will fail.
-      while (!empty($parameters['asset_ids']) && $limit--) {
-        $asset_id = array_pop($parameters['asset_ids']);
-        $solr_query[self::WHERE_AND][self::ASSET][self::WHERE_OR][] = 'asset_id:' . mediamosa_solr_apache_solr_service::escapePhrase($asset_id);
-      }
+    // Get the asset_ids.
+    $result = $mediamosa_solr_apache_solr_response->getAssetIds();
 
-      // Build query.
-      $query = self::where($solr_query);
-
-      // Do query.
-      $mediamosa_solr_apache_solr_response = mediamosa_solr::search($query);
-
-      // Get the asset_ids.
-      $result = $mediamosa_solr_apache_solr_response->getAssetIds();
-
-      foreach ($result as $asset_id) {
-        $asset_ids[$asset_id] = $asset_id;
-      }
+    foreach ($result as $asset_id) {
+      $asset_ids[$asset_id] = $asset_id;
     }
 
     return $asset_ids;
@@ -668,7 +662,7 @@ class mediamosa_solr {
    * @return
    *  Returns the Solr Response object.
    */
-  static public function search($query, $offset = 0, $limit = 10, $params = array(), $method = 'GET') {
+  static public function search($query, $offset = 0, $limit = 10, $params = array(), $method = 'POST') {
     $mediamosa_apache_solr_service = mediamosa_solr_apache_solr_service::mediamosaGetSolrObject();
     return new mediamosa_solr_apache_solr_response($mediamosa_apache_solr_service->search($query, $offset, $limit, $params, $method));
   }

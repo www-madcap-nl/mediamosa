@@ -31,7 +31,7 @@ TODO: (v2.3.3)
 - ^ support CQL->Solr
 - Upgrade to RC2 drupal 7
 
-MediaMosa 2.3.3 (build 1214)
+MediaMosa 2.3.3 (build 1216)
 ----------------------------
 - Fixed permanent still link (#291).
   * Stills that are protected by ACL:
@@ -51,10 +51,13 @@ MediaMosa 2.3.3 (build 1214)
   debug is set on normal or high.
 - Fixed problem with WLE browsing with Solr enabled; Solr API does not support
   queries that are longer than 1024 bytes, making the WLE browse with 200 assets
-  to cause problems. Hot fixed by splitting up into chunks of 35 assets per 
-  call. Solr API needs fixing to use fopen calls instead of file_contents calls.
-  Maybe time for Drupal 7 version of the API instead of the Google code version.
-  
+  to cause problems. Fixed by using POST instead of GET for Solr queries.
+  Solr API needs fixing to use fopen calls instead of file_contents calls. 
+  Maybe time for Drupal 7 version of the API instead of the Google code 
+  version with some good unittesting on the code?
+  Although I'm not sure its the API or Solr thats has the problem with GET 
+  queries.
+
 
 MediaMosa 2.3.2 (build 1210)
 ----------------------------
