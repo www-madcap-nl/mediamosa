@@ -46,7 +46,7 @@ MediaMosa 2.3.3 (build 1216)
   * /still/[still_id] will always be a permanent still link. But is only allowed
     when no ACL is set.
 
-(no ticket related issues).
+Other changes (not ticket related).
 - Downgraded number of exceptions, so those will only end up in watchdog when 
   debug is set on normal or high.
 - Fixed problem with WLE browsing with Solr enabled; Solr API does not support
