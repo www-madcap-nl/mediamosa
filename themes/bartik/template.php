@@ -1,5 +1,5 @@
 <?php
-// $Id: template.php,v 1.10 2010/12/01 00:18:15 webchick Exp $
+// $Id: template.php,v 1.13 2010/12/14 01:04:27 dries Exp $
 
 /**
  * Add body classes if certain regions have content.
@@ -107,6 +107,9 @@ function bartik_process_maintenance_page(&$variables) {
  */
 function bartik_preprocess_node(&$variables) {
   $variables['submitted'] = t('published by !username on !datetime', array('!username' => $variables['name'], '!datetime' => $variables['date']));
+  if ($variables['view_mode'] == 'full' && node_is_page($variables['node'])) {
+    $variables['classes_array'][] = 'node-full';
+  }
 }
 
 /**
@@ -124,4 +127,28 @@ function bartik_preprocess_block(&$variables) {
  */
 function bartik_menu_tree($variables) {
   return '<ul class="menu clearfix">' . $variables['tree'] . '</ul>';
+}
+
+/**
+ * Implements theme_field__field_type().
+ */
+function bartik_field__taxonomy_term_reference($variables) {
+  $output = '';
+
+  // Render the label, if it's not hidden.
+  if (!$variables['label_hidden']) {
+    $output .= '<h3 class="field-label">' . $variables['label'] . ': </h3>';
+  }
+
+  // Render the items.
+  $output .= ($variables['element']['#label_display'] == 'inline') ? '<ul class="links inline">' : '<ul class="links">';
+  foreach ($variables['items'] as $delta => $item) {
+    $output .= '<li class="taxonomy-term-reference-' . $delta . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</li>';
+  }
+  $output .= '</ul>';
+
+  // Render the top-level DIV.
+  $output = '<div class="' . $variables['classes'] . (!in_array('clearfix', $variables['classes_array']) ? ' clearfix' : '') . '">' . $output . '</div>';
+
+  return $output;
 }

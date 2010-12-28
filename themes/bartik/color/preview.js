@@ -1,4 +1,4 @@
-// $Id: preview.js,v 1.3 2010/11/19 20:37:17 dries Exp $
+// $Id: preview.js,v 1.5 2010/12/11 21:37:41 webchick Exp $
 
 (function ($) {
   Drupal.color = {
@@ -8,6 +8,10 @@
       if (!this.logoChanged) {
         $('#preview #preview-logo img').attr('src', Drupal.settings.color.logo);
         this.logoChanged = true;
+      }
+      // Remove the logo if the setting is toggled off. 
+      if (Drupal.settings.color.logo == null) {
+        $('div').remove('#preview-logo');
       }
 
       // Solid background.
@@ -22,7 +26,7 @@
       $('#preview #preview-sidebar #preview-block', form).css('border-color', $('#palette input[name="palette[sidebarborders]"]', form).val());
 
       // Footer wrapper background.
-      $('#preview #footer-wrapper', form).css('background-color', $('#palette input[name="palette[footer]"]', form).val());
+      $('#preview #preview-footer-wrapper', form).css('background-color', $('#palette input[name="palette[footer]"]', form).val());
 
       // CSS3 Gradients.
       var gradient_start = $('#palette input[name="palette[top]"]', form).val();

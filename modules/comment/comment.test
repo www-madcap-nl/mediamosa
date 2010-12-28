@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.test,v 1.93 2010/12/01 00:19:18 webchick Exp $
+// $Id: comment.test,v 1.96 2010/12/18 01:50:16 dries Exp $
 
 class CommentHelperCase extends DrupalWebTestCase {
   protected $admin_user;
@@ -226,7 +226,7 @@ class CommentHelperCase extends DrupalWebTestCase {
 
     if ($operation == 'delete') {
       $this->drupalPost(NULL, array(), t('Delete comments'));
-      $this->assertRaw(t('Deleted @count comments.', array('@count' => 1)), t('Operation "' . $operation . '" was performed on comment.'));
+      $this->assertRaw(format_plural(1, 'Deleted 1 comment.', 'Deleted @count comments.'), t('Operation "' . $operation . '" was performed on comment.'));
     }
     else {
       $this->assertText(t('The update has been performed.'), t('Operation "' . $operation . '" was performed on comment.'));
@@ -1407,5 +1407,167 @@ class CommentTokenReplaceTestCase extends CommentHelperCase {
       $output = token_replace($input, array('node' => $node), array('language' => $language));
       $this->assertFalse(strcmp($output, $expected), t('Node comment token %token replaced.', array('%token' => $input)));
     }
+  }
+}
+
+/**
+ * Test actions provided by the comment module.
+ */
+class CommentActionsTestCase extends CommentHelperCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment actions',
+      'description' => 'Test actions provided by the comment module.',
+      'group' => 'Comment',
+    );
+  }
+
+  /**
+   * Test comment publish and unpublish actions.
+   */
+  function testCommentPublishUnpublishActions() {
+    $this->drupalLogin($this->web_user);
+    $comment_text = $this->randomName();
+    $subject = $this->randomName();
+    $comment = $this->postComment($this->node, $comment_text, $subject);
+    $comment = comment_load($comment->id);
+
+    // Unpublish a comment (direct form: doesn't actually save the comment).
+    comment_unpublish_action($comment);
+    $this->assertEqual($comment->status, COMMENT_NOT_PUBLISHED, t('Comment was unpublished'));
+    $this->assertWatchdogMessage('Unpublished comment %subject.', array('%subject' => $subject), t('Found watchdog message'));
+    $this->clearWatchdog();
+
+    // Unpublish a comment (indirect form: modify the comment in the database).
+    comment_unpublish_action(NULL, array('cid' => $comment->cid));
+    $this->assertEqual(comment_load($comment->cid)->status, COMMENT_NOT_PUBLISHED, t('Comment was unpublished'));
+    $this->assertWatchdogMessage('Unpublished comment %subject.', array('%subject' => $subject), t('Found watchdog message'));
+
+    // Publish a comment (direct form: doesn't actually save the comment).
+    comment_publish_action($comment);
+    $this->assertEqual($comment->status, COMMENT_PUBLISHED, t('Comment was published'));
+    $this->assertWatchdogMessage('Published comment %subject.', array('%subject' => $subject), t('Found watchdog message'));
+    $this->clearWatchdog();
+
+    // Publish a comment (indirect form: modify the comment in the database).
+    comment_publish_action(NULL, array('cid' => $comment->cid));
+    $this->assertEqual(comment_load($comment->cid)->status, COMMENT_PUBLISHED, t('Comment was published'));
+    $this->assertWatchdogMessage('Published comment %subject.', array('%subject' => $subject), t('Found watchdog message'));
+    $this->clearWatchdog();
+  }
+
+  /**
+   * Verify that a watchdog message has been entered.
+   *
+   * @param $watchdog_message
+   *   The watchdog message.
+   * @param $variables
+   *   The array of variables passed to watchdog().
+   * @param $message
+   *   The assertion message.
+   */
+  function assertWatchdogMessage($watchdog_message, $variables, $message) {
+    $status = (bool) db_query_range("SELECT 1 FROM {watchdog} WHERE message = :message AND variables = :variables", 0, 1, array(':message' => $watchdog_message, ':variables' => serialize($variables)))->fetchField();
+    return $this->assert($status, $message);
+  }
+
+  /**
+   * Helper function: clear the watchdog.
+   */
+  function clearWatchdog() {
+    db_truncate('watchdog')->execute();
+  }
+}
+
+/**
+ * Test fields on comments.
+ */
+class CommentFieldsTest extends CommentHelperCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment fields',
+      'description' => 'Tests fields on comments.',
+      'group' => 'Comment',
+    );
+  }
+
+  /**
+   * Tests that the default 'comment_body' field is correctly added.
+   */
+  function testCommentDefaultFields() {
+    // Do not make assumptions on default node types created by the test
+    // install profile, and create our own.
+    $this->drupalCreateContentType(array('type' => 'test_node_type'));
+
+    // Check that the 'comment_body' field is present on all comment bundles.
+    $instances = field_info_instances('comment');
+    foreach (node_type_get_types() as $type_name => $info) {
+      $this->assertTrue(isset($instances['comment_node_' . $type_name]['comment_body']), t('The comment_body field is present for comments on type @type', array('@type' => $type_name)));
+
+      // Delete the instance along the way.
+      field_delete_instance($instances['comment_node_' . $type_name]['comment_body']);
+    }
+
+    // Check that the 'comment_body' field is deleted.
+    $field = field_info_field('comment_body');
+    $this->assertTrue(empty($field), t('The comment_body field was deleted'));
+
+    // Create a new content type.
+    $type_name = 'test_node_type_2';
+    $this->drupalCreateContentType(array('type' => $type_name));
+
+    // Check that the 'comment_body' field exists and has an instance on the
+    // new comment bundle.
+    $field = field_info_field('comment_body');
+    $this->assertTrue($field, t('The comment_body field exists'));
+    $instances = field_info_instances('comment');
+    $this->assertTrue(isset($instances['comment_node_' . $type_name]['comment_body']), t('The comment_body field is present for comments on type @type', array('@type' => $type_name)));
+  }
+
+  /**
+   * Test that comment module works when enabled after a content module.
+   */
+  function testCommentEnable() {
+    // Create a user to do module administration.
+    $this->admin_user = $this->drupalCreateUser(array('access administration pages', 'administer modules'));
+    $this->drupalLogin($this->admin_user);
+
+    // Disable the comment module.
+    $edit = array();
+    $edit['modules[Core][comment][enable]'] = FALSE;
+    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+    $this->resetAll();
+    $this->assertFalse(module_exists('comment'), t('Comment module disabled.'));
+
+    // Enable core content type modules (blog, book, and poll).
+    $edit = array();
+    $edit['modules[Core][blog][enable]'] = 'blog';
+    $edit['modules[Core][book][enable]'] = 'book';
+    $edit['modules[Core][poll][enable]'] = 'poll';
+    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+    $this->resetAll();
+
+    // Now enable the comment module.
+    $edit = array();
+    $edit['modules[Core][comment][enable]'] = 'comment';
+    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+    $this->resetAll();
+    $this->assertTrue(module_exists('comment'), t('Comment module enabled.'));
+
+    // Create nodes of each type.
+    $blog_node = $this->drupalCreateNode(array('type' => 'blog'));
+    $book_node = $this->drupalCreateNode(array('type' => 'book'));
+    $poll_node = $this->drupalCreateNode(array('type' => 'poll', 'active' => 1, 'runtime' => 0, 'choice' => array(array('chtext' => ''))));
+
+    $this->drupalLogout();
+
+    // Try to post a comment on each node. A failure will be triggered if the
+    // comment body is missing on one of these forms, due to postComment()
+    // asserting that the body is actually posted correctly.
+    $this->web_user = $this->drupalCreateUser(array('access content', 'access comments', 'post comments', 'skip comment approval'));
+    $this->drupalLogin($this->web_user);
+    $this->postComment($blog_node, $this->randomName(), $this->randomName());
+    $this->postComment($book_node, $this->randomName(), $this->randomName());
+    $this->postComment($poll_node, $this->randomName(), $this->randomName());
   }
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.module,v 1.924 2010/12/01 00:19:18 webchick Exp $
+// $Id: comment.module,v 1.929 2010/12/18 01:50:15 dries Exp $
 
 /**
  * @file
@@ -314,12 +314,15 @@ function comment_count_unpublished() {
 
 /**
  * Implements hook_node_type_insert().
+ *
+ * Creates a comment body field for a node type created while the comment module
+ * is enabled. For node types created before the comment module is enabled,
+ * hook_modules_enabled() serves to create the body fields.
+ *
+ * @see comment_modules_enabled()
  */
 function comment_node_type_insert($info) {
-  field_attach_create_bundle('comment', 'comment_node_' . $info->type);
-  // @todo Create a comment_field_attach_create_bundle() function, and have that
-  //   function create the comment body field instance.
-  _comment_body_field_instance_create($info);
+  _comment_body_field_create($info);
 }
 
 /**
@@ -351,27 +354,39 @@ function comment_node_type_delete($info) {
 }
 
  /**
- * Helper function which creates a comment body field instance for a given node
- * type.
+ * Creates a comment_body field instance for a given node type.
  */
-function _comment_body_field_instance_create($info) {
-  // Attaches the body field by default.
-  $instance = array(
-    'field_name' => 'comment_body',
-    'label' => 'Comment',
-    'entity_type' => 'comment',
-    'bundle' => 'comment_node_' . $info->type,
-    'settings' => array('text_processing' => 1),
-    'required' => TRUE,
-    'display' => array(
-      'default' => array(
-        'label' => 'hidden',
-        'type' => 'text_default',
-        'weight' => 0,
+function _comment_body_field_create($info) {
+  // Create the field if needed.
+  if (!field_read_field('comment_body', array('include_inactive' => TRUE))) {
+    $field = array(
+      'field_name' => 'comment_body',
+      'type' => 'text_long',
+      'entity_types' => array('comment'),
+    );
+    field_create_field($field);
+  }
+  // Create the instance if needed.
+  if (!field_read_instance('comment', 'comment_body', 'comment_node_' . $info->type, array('include_inactive' => TRUE))) {
+    field_attach_create_bundle('comment', 'comment_node_' . $info->type);
+    // Attaches the body field by default.
+    $instance = array(
+      'field_name' => 'comment_body',
+      'label' => 'Comment',
+      'entity_type' => 'comment',
+      'bundle' => 'comment_node_' . $info->type,
+      'settings' => array('text_processing' => 1),
+      'required' => TRUE,
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'text_default',
+          'weight' => 0,
+        ),
       ),
-    ),
-  );
-  field_create_instance($instance);
+    );
+    field_create_instance($instance);
+  }
 }
 
 /**
@@ -650,11 +665,11 @@ function comment_node_view($node, $view_mode) {
         }
       }
     }
-    elseif ($view_mode != 'search_index') {
+    elseif ($view_mode != 'search_index' && $view_mode != 'search_result') {
       // Node in other view modes: add a "post comment" link if the user is
       // allowed to post comments and if this node is allowing new comments.
       // But we don't want this link if we're building the node for search
-      // indexing.
+      // indexing or constructing a search result excerpt.
       if ($node->comment == COMMENT_NODE_OPEN) {
         if (user_access('post comments')) {
           $links['comment-add'] = array(
@@ -1452,6 +1467,7 @@ function comment_save($comment) {
 
     // Allow modules to alter the comment before saving.
     module_invoke_all('comment_presave', $comment);
+    module_invoke_all('entity_presave', $comment, 'comment');
 
     if ($comment->cid) {
       // Update the comment in the database.
@@ -1901,7 +1917,7 @@ function comment_form($form, &$form_state, $comment) {
       $author = $user->name;
     }
     else {
-      $author = ($comment->name ? $comment->name : variable_get('anonymous', t('Anonymous')));
+      $author = ($comment->name ? $comment->name : '');
     }
     $status = (user_access('skip comment approval') ? COMMENT_PUBLISHED : COMMENT_NOT_PUBLISHED);
     $date = '';
@@ -2146,12 +2162,18 @@ function comment_submit($comment) {
   if (empty($comment->date)) {
     $comment->date = 'now';
   }
-
   $comment->created = strtotime($comment->date);
   $comment->changed = REQUEST_TIME;
 
+  // If the comment was posted by a registered user, assign the author's ID.
+  // @todo Too fragile. Should be prepared and stored in comment_form() already.
   if (!$comment->is_anonymous && !empty($comment->name) && ($account = user_load_by_name($comment->name))) {
     $comment->uid = $account->uid;
+  }
+  // If the comment was posted by an anonymous user and no author name was
+  // required, use "Anonymous" by default.
+  if ($comment->is_anonymous && (!isset($comment->name) || $comment->name === '')) {
+    $comment->name = variable_get('anonymous', t('Anonymous'));
   }
 
   // Validate the comment's subject. If not specified, extract from comment body.
@@ -2508,13 +2530,13 @@ function comment_action_info() {
  * @ingroup actions
  */
 function comment_publish_action($comment, $context = array()) {
-  if (isset($comment->comment)) {
+  if (isset($comment->subject)) {
     $subject = $comment->subject;
     $comment->status = COMMENT_PUBLISHED;
   }
   else {
     $cid = $context['cid'];
-    $subject = db_query('SELECT subject FROM {comment} WHERE cid = :cid', array(':cid', $cid))->fetchField();
+    $subject = db_query('SELECT subject FROM {comment} WHERE cid = :cid', array(':cid' => $cid))->fetchField();
     db_update('comment')
       ->fields(array('status' => COMMENT_PUBLISHED))
       ->condition('cid', $cid)
@@ -2535,13 +2557,13 @@ function comment_publish_action($comment, $context = array()) {
  * @ingroup actions
  */
 function comment_unpublish_action($comment, $context = array()) {
-  if (isset($comment->comment)) {
+  if (isset($comment->subject)) {
     $subject = $comment->subject;
     $comment->status = COMMENT_NOT_PUBLISHED;
   }
   else {
     $cid = $context['cid'];
-    $subject = db_query('SELECT subject FROM {comment} WHERE cid = :cid', array(':cid', $cid))->fetchField();
+    $subject = db_query('SELECT subject FROM {comment} WHERE cid = :cid', array(':cid' => $cid))->fetchField();
     db_update('comment')
       ->fields(array('status' => COMMENT_NOT_PUBLISHED))
       ->condition('cid', $cid)

@@ -1,5 +1,5 @@
 <?php
-// $Id: update.inc,v 1.82 2010/11/22 07:02:58 webchick Exp $
+// $Id: update.inc,v 1.84 2010/12/18 06:36:00 webchick Exp $
 
 /**
  * @file
@@ -156,6 +156,15 @@ function update_prepare_d7_bootstrap() {
       ),
     );
     update_extra_requirements($requirements);
+
+    // Allow a D6 session to work, since the upgrade has not been performed yet.
+    $d6_session_name = update_get_d6_session_name();
+    if (!empty($_COOKIE[$d6_session_name])) {
+      // Set the current sid to the one found in the D6 cookie.
+      $sid = $_COOKIE[$d6_session_name];
+      $_COOKIE[session_name()] = $sid;
+      session_id($sid);
+    }
   }
 
   // Create the registry tables.
@@ -696,11 +705,18 @@ function update_fix_d7_requirements() {
       db_add_field('locales_source', 'context', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => '', 'description' => 'The context this string applies to.'));
     }
 
-    // Rename 'site_offline_message' variable to 'maintenance_mode_message'.
+    // Rename 'site_offline_message' variable to 'maintenance_mode_message'
+    // and 'site_offline' variable to 'maintenance_mode'.
     // Old variable is removed in update for system.module, see
     // system_update_7036().
     if ($message = variable_get('site_offline_message', NULL)) {
       variable_set('maintenance_mode_message', $message);
+    }
+    // Old variable is removed in update for system.module, see
+    // system_update_7069().
+    $site_offline = variable_get('site_offline', -1);
+    if ($site_offline != -1) {
+      variable_set('maintenance_mode', $site_offline);
     }
 
     // Add ssid column and index.
@@ -819,6 +835,37 @@ function update_parse_db_url($db_url, $db_prefix) {
     }
   }
   return $databases;
+}
+
+/**
+ * Constructs a session name compatible with a D6 environment.
+ *
+ * @return
+ *   D6-compatible session name string.
+ *
+ * @see drupal_settings_initialize()
+ */
+function update_get_d6_session_name() {
+  global $base_url, $cookie_domain;
+  $cookie_secure = ini_get('session.cookie_secure');
+
+  // If a custom cookie domain is set in settings.php, that variable forms
+  // the basis of the session name. Re-compute the D7 hashing method to find
+  // out if $cookie_domain was used as the session name.
+  if (($cookie_secure ? 'SSESS' : 'SESS') . substr(hash('sha256', $cookie_domain), 0, 32) == session_name()) {
+    $session_name = $cookie_domain;
+  }
+  else {
+    // Otherwise use $base_url as session name, without the protocol
+    // to use the same session identifiers across http and https.
+    list( , $session_name) = explode('://', $base_url, 2);
+  }
+
+  if ($cookie_secure) {
+    $session_name .= 'SSL';
+  }
+
+  return 'SESS' . md5($session_name);
 }
 
 /**
