@@ -36,6 +36,17 @@ MediaMosa 2.3.4 (build 1216)
 - Fixed some camelcase mistakes in menu items.
 - Fixed log page with Drupal 7 RC3.
 - Upgraded to Drupal 7 RC3.
+- Cleaned-up unused errorcodes:
+  - ERRORCODE_RETRIEVING_SERVER_JOBLIST (1302)
+  - ERRORCODE_JOB_CANCEL_NOT_ALLOWED (1131)
+  - ERRORCODE_JOB_CREATE_NOT_ALLOWED (1132)
+  - ERRORCODE_RETRIEVING_SERVERLIST (1201)
+  - ERRORCODE_RETRIEVING_AVAILABLE_SERVERLIST (1202)
+  - ERRORCODE_STUB_SERVER_RETRIEVING_JOB_FOR_EXECUTION (1401)
+  - ERRORCODE_FTP_ERROR (1700)
+  - ERRORCODE_ACL_ERROR_AUTHORIZED (1801)
+- Error code description texts have been reviewed and corrected where needed.
+  Installed systems are not updated, only new cleaned installs.
 
 MediaMosa 2.3.3 (build 1216)
 ----------------------------
