@@ -1,0 +1,52 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for openAPI.
+  */
+class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ----------------------------------------------------------------- Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Mediafile - openAPI test',
+      'description' => 'Test openAPI related functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI,
+    );
+  }
+
+  // -------------------------------------------------------------------- Tests.
+  function testOpenAPI() {
+    // Enable OpenAPI module.
+    module_enable(array('mediamosa_openapi'), TRUE);
+
+    // Create mediafile with /openapi/mediaItem [POST] REST call.
+    list($asset_id, $mediafile_id) = $this->createMediaItem();
+  }
+}

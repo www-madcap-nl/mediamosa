@@ -1603,6 +1603,49 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Create a media item.
+   * Based on REST call /openapi/mediaItems (POST)
+   */
+  protected function createMediaItem(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
+    );
+
+    // Set the URI.
+    $uri = strtr('openapi/mediaItem/@items_user_id/@group_id/@album_id', array(
+      '@items_user_id' => '@me',
+      '@group_id' => '@self',
+      '@album_id' => mediamosa_db::uuid(0),
+    ));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Get the new mediafile_id.
+    $this->assertTrue(TRUE, 'Response: ' . print_r($response, TRUE));
+    $asset_id = empty($response['xml']->items->item[0]->asset_id) ? NULL : (string) $response['xml']->items->item[0]->asset_id;
+    $mediafile_id = empty($response['xml']->items->item[0]->mediafile_id) ? NULL : (string) $response['xml']->items->item[0]->mediafile_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Created mediafile with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Return the mediafile ID.
+    return array($asset_id, $mediafile_id);
+  }
+
+  /**
    * Create upload ticket.
    * Based on REST call /mediafile/$mediafile_id/uploadticket/create (POST)
    */
