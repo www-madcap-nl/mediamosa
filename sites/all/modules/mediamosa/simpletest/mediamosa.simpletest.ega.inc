@@ -1632,9 +1632,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
       strtr(
-        "Created mediafile with ID: @mediafile_id, got result @result (@result_description)",
+        "Created mediafile with ID: @mediafile_id, asset_id: @asset_id, got result @result (@result_description)",
         array(
           '@mediafile_id' => $mediafile_id,
+          '@asset_id' => $asset_id,
           '@result' => (string) $response['xml']->header->request_result_id,
           '@result_description' => (string) $response['xml']->header->request_result_description
         )
