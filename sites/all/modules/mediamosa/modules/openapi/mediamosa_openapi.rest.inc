@@ -724,6 +724,9 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
 
     // Call related paramters.
     $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
+    if ($user_id_parameter == self::USER_ME || $user_id_parameter == self::USER_VIEWER) {
+      $user_id_parameter = $user_id;
+    }
     $group_id = addslashes($this->get_param_value(self::GROUP_ID));
     $album_id = addslashes($this->get_param_value(self::ALBUM_ID));
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
@@ -803,7 +806,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       mediamosa_asset_mediafile_db::FILENAME => NULL,
       mediamosa_asset_mediafile_db::URI => $url,
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
-      mediamosa_asset_mediafile_db::TAG => implode(', ', $tags),
+      mediamosa_asset_mediafile_db::TAG => $tags ? implode(', ', $tags) : '',
     );
 
     // Insert the mediafile.
