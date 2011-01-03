@@ -49,6 +49,9 @@ class mediamosa_settings {
   // URL to collection. (lib function mediamosa_lib::l_collection($coll_id, $text);)
   const URL_COLLECTION = 'admin/mediamosa/browse/collection/@coll_id';
 
+  // Path to icon.
+  const PATH_ICON = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo-16x16.png';
+
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';
   const SAN_NAS_STILLS_FOLDER = 'stills';
