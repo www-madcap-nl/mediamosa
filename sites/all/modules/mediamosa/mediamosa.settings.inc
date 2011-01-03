@@ -66,6 +66,8 @@ class mediamosa_settings {
   const ATOM_TITLE = 'MediaMosa Atom Feed';
   const ATOM_ENTRY_CATEGORY_MAX = 5;
   const ATOM_ENTRY_ID = 'MediaMosa:asset:';
+  // RSS.
+  const RSS_GENERATOR = 'MediaMosa RSS API';
 
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';

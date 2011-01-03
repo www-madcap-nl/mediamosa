@@ -621,8 +621,74 @@ class mediamosa_response extends mediamosa {
    * @return string
    */
   public function generate_rss() {
-    // TODO
-    return 'RSS: ' . $this->generate_xml();
+    global $base_url, $language_content;
+
+    $channel = array(
+      'lastBuildDate' => mediamosa_datetime::time_to_rfc_822(),
+      'generator' => mediamosa_settings::RSS_GENERATOR,
+      'image' => array(
+        'url' => $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_LOGO,
+      ),
+    );
+
+    $item_length = variable_get('feed_item_length', 'fulltext');
+    $namespaces = array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/');
+    $teaser = ($item_length == 'teaser');
+
+    // Items.
+    $items = '';
+    foreach ($this->response['items'] as $item) {
+      // Base data.
+      $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
+      $link = $base_url;
+      $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
+
+      // More data.
+      $args = array();
+      $args[] = array('key' => 'author', 'value' => !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : '');
+      if (!empty($item['dublin_core']['date'][0])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['dublin_core']['date'][0], 'dc_date', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $args[] = array('key' => 'pubDate', 'value' => mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+      $args[] = array('key' => 'guid', 'value' => $item['asset_id'] . ' at ' . $base_url, 'attributes' => array('isPermaLink' => 'false'));
+      $args[] = array('key' => 'dc:creator', 'value' => !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : '');
+
+      // Category.
+      $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+      $table_alias = $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
+      $query
+        ->condition('ac.' . mediamosa_asset_collection_db::ASSET_ID, $item['asset_id'])
+        ->fields('c', array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))
+        ->range(0, mediamosa_settings::ATOM_ENTRY_CATEGORY_MAX);
+      $result = $query->execute();
+      foreach ($result as $record) {
+        if ($record[mediamosa_collection_db::TITLE]) {
+          $args[] = array('key' => 'category', 'value' => $record[mediamosa_collection_db::TITLE]);
+        }
+      }
+
+      // Add the item to the RSS.
+      $items .= format_rss_item($title, $link, $description, $args);
+    }
+
+
+    $channel_defaults = array(
+      'version'     => '2.0',
+      'title'       => variable_get('site_name', 'Drupal'),
+      'link'        => $base_url,
+      'description' => variable_get('feed_description', ''),
+      'language'    => $language_content->language,
+    );
+    $channel_extras = array_diff_key($channel, $channel_defaults);
+    $channel = array_merge($channel_defaults, $channel);
+
+    $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+    $output .= "<rss version=\"" . $channel["version"] . "\" xml:base=\"" . $base_url . "\" " . drupal_attributes($namespaces) . ">\n";
+    $output .= format_rss_channel($channel['title'], $channel['link'], $channel['description'], $items, $channel['language'], $channel_extras);
+    $output .= "</rss>\n";
+
+    drupal_add_http_header('Content-Type', 'application/rss+xml; charset=utf-8');
+    return $output;
   }
 
   /**
