@@ -197,7 +197,6 @@ function _mediamosa_error_install() {
     'ERRORCODE_FTP_USER_EXISTS' => 'FTP user already exists',
 
     'ERRORCODE_NOT_AUTHORIZED' => 'Action is not allowed, not authorized (@reason)',
-    'ERRORCODE_ACL_ERROR_AUTHORIZED' => '',
 
     'ERRORCODE_USERMAN_INVALID_GROUP' => 'Invalid group name',
     'ERRORCODE_USERMAN_GROUP_NOT_EMPTY' => 'The group is not empty',
