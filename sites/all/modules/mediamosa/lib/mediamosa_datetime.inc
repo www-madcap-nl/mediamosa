@@ -115,6 +115,17 @@ class mediamosa_datetime {
   }
 
   /**
+   * Return the current time in RFC 3339 format.
+   * Eg. 2003-12-13T18:30:02Z
+   * @link http://www.ietf.org/rfc/rfc3339.txt @link
+   *
+   * @return date
+   */
+  static public function time_to_rfc_3339($time = NULL) {
+    return $time ? gmdate('Y-m-d\TH:i:s\Z', $time) : gmdate('Y-m-d\TH:i:s\Z');
+  }
+
+  /**
    * Return the current time UTC and in SQL datetime format
    * (YYYY-MM-DD HH:MM:SS)
    *

@@ -449,8 +449,170 @@ class mediamosa_response extends mediamosa {
    * @return string
    */
   public function generate_atom() {
-    // TODO
-    return 'Atom: ' . $this->generate_xml();
+    global $base_url;
+
+    $this->response['header']['request_process_time'] = $this->get_processed_time();
+
+    $this->response['header']['item_count_total'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
+    $this->response['header']['item_offset'] = $this->item_offset;
+    $this->response['header']['item_count'] = $this->item_count;
+
+    if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
+      self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
+    }
+
+    // Sort the header.
+    ksort($this->response['header']);
+
+    // Log the rest call.
+    $this->log_event_restcall();
+
+    // Create the SimpleXML element.
+    $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><feed xmlns="http://www.w3.org/2005/Atom"></feed>');
+
+
+    // Author.
+    $xml_element = $xml_response->addChild('author');
+    $this->generate_plain_xml_add_child($xml_element, 'name', mediamosa_settings::ATOM_NAME);
+
+    // Generator.
+    $xml_element = $xml_response->addChild('generator', mediamosa_settings::ATOM_GENERATOR);
+    $xml_element->addAttribute('uri', mediamosa_settings::ATOM_GENERATOR_URI);
+    $xml_element->addAttribute('version', mediamosa_settings::ATOM_GENERATOR_VERSION);
+
+    // Icon.
+    $xml_element = $xml_response->addChild('icon', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_ICON);
+
+    // Id.
+    $xml_element = $xml_response->addChild('id', mediamosa_settings::ATOM_ID);
+
+    // Link.
+    $xml_element = $xml_response->addChild('link');
+    $xml_element->addAttribute('href', $base_url);
+
+    // Logo.
+    $xml_element = $xml_response->addChild('logo', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_LOGO);
+
+    // Subtitle.
+    $xml_element = $xml_response->addChild('subtitle', mediamosa_settings::ATOM_SUBTITLE);
+    $xml_element->addAttribute('type', 'text');
+
+    // Title.
+    $xml_element = $xml_response->addChild('title', mediamosa_settings::ATOM_TITLE);
+    $xml_element->addAttribute('type', 'text');
+
+    // Updated.
+    $xml_element = $xml_response->addChild('updated', mediamosa_datetime::time_to_rfc_3339());
+
+    //
+    // Extension.
+    //
+    $xml_extension = $xml_response->addChild('extension');
+
+    foreach ($this->response['header'] as $key => $value) {
+      $this->generate_plain_xml_add_child($xml_extension, $key, $value);
+    }
+
+    if (!empty($this->response['errors'])) {
+      $xml_response_errors = $xml_extension->addChild('errors');
+
+      foreach ($this->response['errors'] as $key => $error) {
+        $xml_response_errors->addChild('error', htmlspecialchars($error));
+      }
+    }
+
+    //
+    // Entry.
+    //
+    foreach ($this->response['items'] as $item) {
+      $xml_response_item = $xml_response->addChild('entry');
+
+      // Author.
+      $xml_element = $xml_response_item->addChild('author');
+      $this->generate_plain_xml_add_child($xml_element, 'name', !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : mediamosa_settings::ATOM_NAME);
+
+      // Category.
+      $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+      $table_alias = $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
+      $query
+        ->condition('ac.' . mediamosa_asset_collection_db::ASSET_ID, $item['asset_id'])
+        ->fields('c', array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))
+        ->range(0, mediamosa_settings::ATOM_ENTRY_CATEGORY_MAX);
+      $result = $query->execute();
+      foreach ($result as $record) {
+        $xml_element = $xml_response_item->addChild('category');
+        $this->generate_plain_xml_add_child($xml_element, 'term', $record[mediamosa_collection_db::ID]);
+        $this->generate_plain_xml_add_child($xml_element, 'label', $record[mediamosa_collection_db::TITLE]);
+      }
+
+      // Content.
+      if (!empty($item['dublin_core']['description'][0])) {
+        $xml_element = $xml_response_item->addChild('content');
+        $xml_element->addAttribute('type', 'xhtml');
+        $xml_element_div = $xml_element->addChild('div', $item['dublin_core']['description'][0]);
+        $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      }
+
+      // Contributor.
+      if (!empty($item['dublin_core']['contributor'][0])) {
+        $xml_element = $xml_response_item->addChild('contributor');
+        $this->generate_plain_xml_add_child($xml_element, 'name', $item['dublin_core']['contributor'][0]);
+      }
+
+      // Id.
+      $xml_element = $xml_response_item->addChild('id', mediamosa_settings::ATOM_ENTRY_ID . $item['asset_id']);
+
+      // Link.
+      $xml_element = $xml_response_item->addChild('link');
+      $xml_element->addAttribute('href', $base_url);
+
+      // Published.
+      if (!empty($item['dublin_core']['date'][0])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['dublin_core']['date'][0], 'dc_date', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $xml_element = $xml_response_item->addChild('published', mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+
+      // Rights.
+      if (!empty($item['dublin_core']['rights'][0])) {
+        $xml_element = $xml_response_item->addChild('rights', $item['dublin_core']['rights'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Summary.
+      if (!empty($item['qualified_dublin_core']['description_abstract'][0])) {
+        $xml_element = $xml_response_item->addChild('summary', $item['qualified_dublin_core']['description_abstract'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Title.
+      if (!empty($item['dublin_core']['title'][0])) {
+        $xml_element = $xml_response_item->addChild('title', $item['dublin_core']['title'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Updated.
+      if (!empty($item['videotimestampmodified'])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['videotimestampmodified'], 'videotimestampmodified', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $xml_element = $xml_response_item->addChild('updated', mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+
+      // Extension.
+      $xml_extension = $xml_response_item->addChild('extension');
+      // Process items with a maximum recursion depth (last parameter).
+      //
+      foreach ($item as $key => $value) {
+        $this->generate_plain_xml_add_child($xml_extension, $key, $value);
+      }
+    }
+
+
+    $dom_document = new DOMDocument('1.0', 'UTF-8');
+    $dom_document->formatOutput = TRUE;
+
+    $dom_document_node = dom_import_simplexml($xml_response);
+    $dom_document_node = $dom_document->importNode($dom_document_node, TRUE);
+    $dom_document->appendChild($dom_document_node);
+    return $dom_document->saveXML();
   }
 
   /**
