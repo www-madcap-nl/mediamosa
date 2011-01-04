@@ -453,7 +453,12 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // Look for a request_result_id.
-    $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+    if (isset($result_id) && isset($result_description)) {
+      $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+    }
+    else {
+      $this->assertTrue(TRUE, t('@method request to: "@uri".', array('@method' => $request_method, '@uri' => $uri)));
+    }
 
     $this->assertFalse($http_result[1] == 404, 'REST call was found');
 
