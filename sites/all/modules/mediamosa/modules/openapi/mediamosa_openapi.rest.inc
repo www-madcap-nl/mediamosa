@@ -247,6 +247,59 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
       );
 
       foreach ($items as $item) {
+        // Fix app_id.
+        $app_id = in_array($item['app_id'], $app_ids) ? $item['app_id'] : reset($app_ids);
+
+        // Add mediafiles.
+        $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($item['asset_id'], NULL, FALSE, ($item['app_id'] == $app_id ? array() : $app_ids));
+
+        // Is app client at 1.6 ?
+        $app_active_version = $this->app_active_version($app_id);
+
+        // Show in old format?
+        $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+
+        // Now enrich the output with mediafiles.
+        $show_stills = TRUE;
+        $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, FALSE, $show_stills, $old_output);
+
+        // Add streamable setting on asset.
+        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+
+        if (!empty($item['mediafiles']['mediafile']) && is_array($item['mediafiles']['mediafile'])) {
+          reset($item['mediafiles']['mediafile']);
+          $mediafile = current($item['mediafiles']['mediafile']);
+
+          if (!empty($mediafile['still']) && is_array($mediafile['still'])) {
+            reset($mediafile['still']);
+            $still = current($mediafile['still']);
+          }
+
+          $item['mediaitem'] = array(
+            'album_id' => NULL,
+            'created' => !empty($item['qualified_dublin_core']['created']) ? $item['qualified_dublin_core']['created'] : NULL,
+            'description' => !empty($item['dublin_core']['description']) ? $item['dublin_core']['description'] : NULL,
+            'duration' => !empty($mediafile['metadata']['file_duration']) ? $mediafile['metadata']['file_duration'] : NULL,
+            'file_size' => !empty($mediafile['metadata']['filesize']) ? $mediafile['metadata']['filesize'] : NULL,
+            'id' => !empty($mediafile['mediafile_id']) ? $mediafile['mediafile_id'] : NULL,
+            'language' => !empty($item['dublin_core']['language']) ? $item['dublin_core']['language'] : NULL,
+            'last_updated' => !empty($mediafile['changed']) ? $mediafile['changed'] : NULL,
+            'location' => NULL,
+            'mime_type' => !empty($mediafile['metadata']['mime_type']) ? $mediafile['metadata']['mime_type'] : NULL,
+            'num_comments' => NULL,
+            'num_views' => !empty($item['viewed']) ? $item['viewed'] : NULL,
+            'num_votes' => NULL,
+            'rating' => NULL,
+            'start_time' => NULL,
+            'tagged_people' => NULL,
+            'tags' => !empty($mediafile['tag']) ? array($mediafile['tag']) : NULL,
+            'thumbnail_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
+            'title' => !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : NULL,
+            'type' => !empty($item['dublin_core']['type'][0]) ? $item['dublin_core']['type'][0] : NULL,
+            'url' => !empty($mediafile['uri']) ? $mediafile['uri'] : NULL,
+          );
+        }
+
         $mediamosa->add_item($item);
       }
     }
