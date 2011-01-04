@@ -524,26 +524,26 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
 
         $item['mediaitem'] = array(
           'album_id' => NULL,
-          'created' => $mediafile['created'],
-          'description' => $item['dublin_core']['description'],
-          'duration' => $mediafile['metadata']['file_duration'],
-          'file_size' => $mediafile['metadata']['filesize'],
-          'id' => $mediafile['mediafile_id'],
-          'language' => $item['dublin_core']['language'],
-          'last_updated' => $mediafile['changed'],
+          'created' => !empty($item['qualified_dublin_core']['created']) ? $item['qualified_dublin_core']['created'] : NULL,
+          'description' => !empty($item['dublin_core']['description']) ? $item['dublin_core']['description'] : NULL,
+          'duration' => !empty($mediafile['metadata']['file_duration']) ? $mediafile['metadata']['file_duration'] : NULL,
+          'file_size' => !empty($mediafile['metadata']['filesize']) ? $mediafile['metadata']['filesize'] : NULL,
+          'id' => !empty($mediafile['mediafile_id']) ? $mediafile['mediafile_id'] : NULL,
+          'language' => !empty($item['dublin_core']['language']) ? $item['dublin_core']['language'] : NULL,
+          'last_updated' => !empty($mediafile['changed']) ? $mediafile['changed'] : NULL,
           'location' => NULL,
-          'mime_type' => $mediafile['metadata']['mime_type'],
+          'mime_type' => !empty($mediafile['metadata']['mime_type']) ? $mediafile['metadata']['mime_type'] : NULL,
           'num_comments' => NULL,
-          'num_views' => $item['viewed'],
+          'num_views' => !empty($item['viewed']) ? $item['viewed'] : NULL,
           'num_votes' => NULL,
           'rating' => NULL,
-          'start_time' => 0,
+          'start_time' => NULL,
           'tagged_people' => NULL,
           'tags' => !empty($mediafile['tag']) ? array($mediafile['tag']) : NULL,
           'thumbnail_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
           'title' => !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : NULL,
           'type' => !empty($item['dublin_core']['type'][0]) ? $item['dublin_core']['type'][0] : NULL,
-          'url' => $mediafile['uri'],
+          'url' => !empty($mediafile['uri']) ? $mediafile['uri'] : NULL,
         );
       }
 
@@ -880,6 +880,30 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     foreach ($a_value_set as $name => $value) {
       $response[$name] = $value;
     }
+
+    $response['mediaitem'] = array(
+      'album_id' => NULL,
+      'created' => $created,
+      'description' => $description,
+      'duration' => NULL,
+      'file_size' => NULL,
+      'id' => $mediafile_id,
+      'language' => $language,
+      'last_updated' => NULL,
+      'location' => NULL,
+      'mime_type' => NULL,
+      'num_comments' => NULL,
+      'num_views' => NULL,
+      'num_votes' => NULL,
+      'rating' => NULL,
+      'start_time' => NULL,
+      'tagged_people' => NULL,
+      'tags' => !empty($tags) ? $tags : NULL,
+      'thumbnail_url' => NULL,
+      'title' => $title,
+      'type' => NULL,
+      'url' => $url,
+    );
 
     $mediamosa->add_item($response);
   }
