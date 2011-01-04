@@ -905,7 +905,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_search::QUERY => $query,
-      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_XML,
+      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     );
 
     // Required.
@@ -1732,7 +1732,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_XML,
+      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     );
 
     // Set the URI.
@@ -1747,8 +1747,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Get the new mediafile_id.
     $this->assertTrue(TRUE, 'Response: ' . print_r($response, TRUE));
-    $asset_id = empty($response['xml']->items->item[0]->asset_id) ? NULL : (string) $response['xml']->items->item[0]->asset_id;
-    $mediafile_id = empty($response['xml']->items->item[0]->mediafile_id) ? NULL : (string) $response['xml']->items->item[0]->mediafile_id;
 
     // Check response.
     switch ($parameters[mediamosa_rest_call::RESPONSE_ALT]) {
@@ -1756,10 +1754,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         $this->assertTrue(
           in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
           strtr(
-            "Created mediafile with ID: @mediafile_id, asset_id: @asset_id, got result @result (@result_description)",
+            "Created mediafile, got result @result (@result_description)",
             array(
-              '@mediafile_id' => $mediafile_id,
-              '@asset_id' => $asset_id,
               '@result' => (string) $response['xml']->header->request_result_id,
               '@result_description' => (string) $response['xml']->header->request_result_description
             )
@@ -1770,10 +1766,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         $this->assertTrue(
           in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
           strtr(
-            "Created mediafile with ID: @mediafile_id, asset_id: @asset_id, got result @result (@result_description)",
+            "Created mediafile, got result @result (@result_description)",
             array(
-              '@mediafile_id' => $mediafile_id,
-              '@asset_id' => $asset_id,
               '@result' => (string) $response['xml']->extension->request_result_id,
               '@result_description' => (string) $response['xml']->extension->request_result_description
             )
@@ -1782,8 +1776,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         break;
     }
 
-    // Return the mediafile ID.
-    return array($asset_id, $mediafile_id);
+    // Get response.
+    $asset = mediamosa_lib::simplexml2array($response['xml']);
+
+    // Return data.
+    return $asset;
   }
 
   /**
