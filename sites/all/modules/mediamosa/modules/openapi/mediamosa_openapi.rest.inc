@@ -513,6 +513,40 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       // Add streamable setting on asset.
       $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
+      if (!empty($item['mediafiles']['mediafile']) && is_array($item['mediafiles']['mediafile'])) {
+        reset($item['mediafiles']['mediafile']);
+        $mediafile = current($item['mediafiles']['mediafile']);
+
+        if (!empty($mediafile['still']) && is_array($mediafile['still'])) {
+          reset($mediafile['still']);
+          $still = current($mediafile['still']);
+        }
+
+        $item['mediaitem'] = array(
+          'album_id' => NULL,
+          'created' => $mediafile['created'],
+          'description' => $item['dublin_core']['description'],
+          'duration' => $mediafile['metadata']['file_duration'],
+          'file_size' => $mediafile['metadata']['filesize'],
+          'id' => $mediafile['mediafile_id'],
+          'language' => $item['dublin_core']['language'],
+          'last_updated' => $mediafile['changed'],
+          'location' => NULL,
+          'mime_type' => $mediafile['metadata']['mime_type'],
+          'num_comments' => NULL,
+          'num_views' => $item['viewed'],
+          'num_votes' => NULL,
+          'rating' => NULL,
+          'start_time' => 0,
+          'tagged_people' => NULL,
+          'tags' => !empty($mediafile['tag']) ? array($mediafile['tag']) : NULL,
+          'thumbnail_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
+          'title' => !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : NULL,
+          'type' => !empty($item['dublin_core']['type'][0]) ? $item['dublin_core']['type'][0] : NULL,
+          'url' => $mediafile['uri'],
+        );
+      }
+
       $mediamosa->add_item($item);
     }
   }

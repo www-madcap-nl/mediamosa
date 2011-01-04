@@ -140,6 +140,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
   );
   $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
@@ -152,6 +153,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
   );
 
   return $rest_calls;

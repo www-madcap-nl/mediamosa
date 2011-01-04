@@ -551,7 +551,21 @@ class mediamosa_response extends mediamosa {
         $xml_element->addAttribute('type', 'xhtml');
         $xml_element_div = $xml_element->addChild('div', $item['dublin_core']['description'][0]);
         $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+
+        // MediaItem part.
+        if (!empty($item['mediaitem'])) {
+          $xml_element_mediaitem = $xml_element->addChild('mediaItem');
+          $xml_element_mediaitem->addAttribute('xmlns', 'http://ns.opensocial.org/2008/opensocial');
+
+          foreach ($item['mediaitem'] as $key => $value) {
+            //$xml_element_mediaitem_content = $xml_element_mediaitem->addChild($key, $value);
+            $this->generate_plain_xml_add_child($xml_element_mediaitem, $key, $value);
+          }
+        }
       }
+
+      // Unset "mediaitem". We won't use it in the "extension".
+      unset($item['mediaitem']);
 
       // Contributor.
       if (!empty($item['dublin_core']['contributor'][0])) {
