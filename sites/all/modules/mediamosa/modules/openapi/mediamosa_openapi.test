@@ -46,7 +46,111 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
     // Enable OpenAPI module.
     module_enable(array('mediamosa_openapi'), TRUE);
 
-    // Create mediafile with /openapi/mediaItem [POST] REST call.
-    list($asset_id, $mediafile_id) = $this->createMediaItem();
+
+    // Create mediafile with /openapi/mediaItem [POST] call.
+    $item_user_id = '@me';
+    $group_id = '@self';
+    $album_id = mediamosa_db::uuid(0);
+    $parameters = array(
+      'created' => '2003-12-13T18:30:02Z',
+      'description' => mediamosa_db::uuid(0),
+      'duration' => mt_rand(10, 100),
+      'file_size' => mt_rand(10, 100),
+      'id' => mediamosa_db::uuid(0),
+      'language' => mt_rand(0, 1) ? 'nld' : 'eng',
+      'last_updated' => '2004-10-11T13:24:10Z',
+      'location' => mediamosa_db::uuid(0),
+      'mime_type' => mediamosa_db::uuid(0),
+      'num_comments' => mt_rand(0, 100),
+      'num_views' => mt_rand(0, 100),
+      'num_votes' => mt_rand(0, 100),
+      'rating' => mt_rand(0, 10),
+      'start_time' => '2007-04-13T07:49:09Z',
+      'tagged_people' => array(
+        mediamosa_db::uuid(0),
+        mediamosa_db::uuid(0),
+      ),
+      'tags' => array(
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+      ),
+      'thumbnail_url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      'title' => mediamosa_db::uuid(0),
+      'type' => 'video',
+      'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+    );
+    list($asset_id, $mediafile_id) = $this->createMediaItem($item_user_id, $group_id, $album_id, $parameters);
+
+
+    // Get the mediafile with /openapi/mediaItems [GET] call.
+    $mediafiles = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id);
+
+
+    // Check response.
+    $this->assertTrue(TRUE, print_r($mediafiles, TRUE));
+    // TODO
+
+
+    // Create other mediafile with /openapi/mediaItem [POST] call.
+    $item_user_id2 = '@me';
+    $group_id2 = '@self';
+    $album_id2 = mediamosa_db::uuid(0);
+    $parameters2 = array(
+      'created' => '2003-11-13T18:30:02Z',
+      'description' => $parameters['description'], // Same field.
+      'duration' => mt_rand(10, 100),
+      'file_size' => mt_rand(10, 100),
+      'id' => mediamosa_db::uuid(0),
+      'language' => mt_rand(0, 1) ? 'nld' : 'eng',
+      'last_updated' => '2004-09-11T13:24:10Z',
+      'location' => mediamosa_db::uuid(0),
+      'mime_type' => mediamosa_db::uuid(0),
+      'num_comments' => mt_rand(0, 100),
+      'num_views' => mt_rand(0, 100),
+      'num_votes' => mt_rand(0, 100),
+      'rating' => mt_rand(0, 10),
+      'start_time' => '2007-03-13T07:49:09Z',
+      'tagged_people' => array(
+        mediamosa_db::uuid(0),
+        mediamosa_db::uuid(0),
+      ),
+      'tags' => array(
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+        mt_rand(0, 100),
+      ),
+      'thumbnail_url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      'title' => mediamosa_db::uuid(0),
+      'type' => 'video',
+      'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+    );
+    list($asset_id2, $mediafile_id2) = $this->createMediaItem($item_user_id2, $group_id2, $album_id2, $parameters2);
+
+
+    // Search mediafiles with /openapi/search [GET] call.
+    $query = $parameters2['title'];
+    $search_parameters = array(
+      'qLimit' => NULL,
+      'qOffset' => NULL,
+      'qOrder' => NULL,
+      'qDirection' => NULL,
+      'Subject' => NULL,
+      'Language' => NULL,
+      'Location' => NULL,
+      'Since' => NULL,
+      'Until' => NULL,
+      'Author' => NULL,
+      'Contributor' => NULL,
+      'Publisher' => NULL,
+      'Category' => NULL,
+      'Format' => NULL,
+      'Duration' => NULL,
+    );
+    $assets = $this->searchOpenAPI($query, $search_parameters);
+
+    // Check response.
+    $this->assertTrue(TRUE, print_r($assets, TRUE));
+    // TODO
   }
 }
