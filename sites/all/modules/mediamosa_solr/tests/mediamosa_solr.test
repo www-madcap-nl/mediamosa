@@ -126,7 +126,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
         'description' => '~asset number 1',
         'issued' => '2010-01-01 00:00:00',
         'titel' => '2010-01-01 00:00:00',
-
+        'beschrijving' => 'SURFguest.rocvideo',
       )
     );
     $this->createAssetMetadata($upload_2['asset_id'],
@@ -135,6 +135,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
         'description' => 'asset~ number 2',
         'issued' => '2009-01-01 00:00:00',
         'titel' => '2009-01-01 00:00:00',
+        'beschrijving' => 'sURFguest.rocvideo',
       )
     );
     $this->createAssetMetadata($upload_3['asset_id'],
@@ -218,5 +219,8 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Range check.
     $asset_ids = $this->cql_do_search_test_assets_1('issued <= "2009"', array($upload_2['asset_id'] => TRUE), $search_params);
+
+    // Lowercase check.
+    $this->cql_do_search_test_assets_1('beschrijving = "SURFguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
   }
 }

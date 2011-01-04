@@ -23,6 +23,16 @@
        1.2: omitTermFreqAndPositions attribute introduced, true by default except for text fields.
      -->
 
+  <!--
+    Notes on MediaMosa;
+      - Sorl search is based on the version of MySQL SQL.
+      - MySQL uses Innodb.
+      - MySQL searches are case insensitive (default) and case sensitive.
+      - MySQL uses UTF8.
+      - Case sensitive search is only used on metadata.
+      - All other searches are case insensitive.
+    -->
+
   <types>
     <!-- 
       Each asset belongs to one app_id.
@@ -31,6 +41,9 @@
 
     <!--
       We use a seperate type for MediaMosa asset_ids (sortable).
+      case-sensitive: verified.
+      wildcards: yes.
+      sortable: yes.
       -->
     <fieldType name="asset_id" class="solr.StrField" multiValued="false" omitNorms="true"/>
 
@@ -39,14 +52,26 @@
       Its also used for exact searching with wildcards. Unit test will test this
       type if it still conform what it needs to do.
       -->
-    <fieldType name="string_id" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true"/>
-
+    <fieldType name="string_id" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true">
+      <analyzer>
+        <!-- KeywordTokenizer does no actual tokenizing, so the entire
+             input string is preserved as a single token
+          -->
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+      </analyzer>
+    </fieldType>
 
     <!--
-    <fieldType name="strtest" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="false"/>
       Not intended for full text searching. More technical data. (sortable).
       -->
-    <fieldType name="string" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true"/>
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true" multiValued="false" omitNorms="true">
+      <analyzer>
+        <!-- KeywordTokenizer does no actual tokenizing, so the entire
+             input string is preserved as a single token
+          -->
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+      </analyzer>
+    </fieldType>
 
     <!--
       Default date type (sortable).
@@ -146,7 +171,15 @@
     -->
     <fieldType name="sval_int" class="solr.SortableIntField" sortMissingLast="true" omitNorms="true"/>
     <fieldType name="sval_date" class="solr.DateField" sortMissingLast="true" omitNorms="true"/>
-    <fieldType name="sval_char" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="sval_char" class="solr.StrField" sortMissingLast="true" omitNorms="true">
+      <analyzer>
+        <!-- KeywordTokenizer does no actual tokenizing, so the entire
+             input string is preserved as a single token
+          -->
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+      </analyzer>
+    </fieldType>
+    
 
     <!-- Less flexible matching, but less false matches.  Probably not ideal for product names,
          but may be good for SKUs.  Can insert dashes in the wrong place and still match. -->
@@ -259,8 +292,8 @@
       (searchable, sortable)
       
       Coll_id is stored as;
-      ^coll_id~isprivate~is_unappropriate^
-      ^coll_id~owner_id^
+      coll_id _ isprivate _ is_unappropriate
+      coll_id _ owner_id
       -->
     <field name="coll_id" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
     <field name="coll_id_owner" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
@@ -268,7 +301,7 @@
 
     <!--
       User fav.
-      stored as; app_id~username~
+      stored as; app_id _ username
       -->
     <field name="user_fav" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
 
@@ -318,8 +351,8 @@
 
       mf_aut_master_slave[]: 
       is_protected; TRUE: TRUE or DOMAIN_REALM. FALSE: FALSE or USER_USERGROUP
-      aut_type~aut_id~; is only set when is_protected is != FALSE.
-      app_id_slave~app_id_master~is_protected~[aut_type~aut_id~]
+      aut_type_aut_id; is only set when is_protected is != FALSE.
+      app_id _ slave_app_id _ master_is_protected _ [aut_type _ aut_id]
       
       -->
     <field name="mf" type="boolean" indexed="true" stored="true" required="true" multiValued="false" /> 
@@ -368,6 +401,9 @@
     <dynamicField name="*_vi" type="val_int" indexed="true" stored="false" multiValued="true"/>
     <dynamicField name="*_vd" type="val_date" indexed="true" stored="false" multiValued="true"/>
 
+    <!-- Searchable exact fields -->
+    <dynamicField name="*_vc_exact" type="val_char_exact" indexed="true" stored="false" multiValued="true"/>
+
     <!-- Sortable fields lo (asc searching) -->
     <dynamicField name="*_svc_lo" type="sval_char" indexed="true" stored="false" multiValued="false"/>
     <dynamicField name="*_svi_lo" type="sval_int" indexed="true" stored="false" multiValued="false"/>
@@ -377,10 +413,6 @@
     <dynamicField name="*_svc_hi" type="sval_char" indexed="true" stored="false" multiValued="false"/>
     <dynamicField name="*_svi_hi" type="sval_int" indexed="true" stored="false" multiValued="false"/>
     <dynamicField name="*_svd_hi" type="sval_date" indexed="true" stored="false" multiValued="false"/>
-
-    <!-- Searchable fields left and right sided -->
-    <dynamicField name="*_vc_lft" type="val_char_exact" indexed="true" stored="false" multiValued="true"/>
-    <dynamicField name="*_vc_rght" type="val_char_exact" indexed="true" stored="false" multiValued="true"/>
 
    <!-- Uncommenting the following will create a "timestamp" field using
         a default value of "NOW" to indicate when each document was indexed.

@@ -80,7 +80,7 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    */
 
   static public function filterDelimeters($value) {
-    return str_replace(array(/*'^',*/'_'), '', $value);
+    return str_replace(array('_'), '', $value);
   }
 
   /**

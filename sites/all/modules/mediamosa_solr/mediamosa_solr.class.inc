@@ -136,31 +136,27 @@ class mediamosa_solr {
         // coll_id _ isprivate _ is_unappropriate _ owner_id
         // coll_id _ owner_id
         if (!$parameters['is_app_admin']) {
-          $isprivate_false_false = mediamosa_solr_apache_solr_service::phrase(strtr('_@coll_id_FALSE_FALSE_', array('@coll_id' => $coll_id)));
-          $isprivate_false_true = mediamosa_solr_apache_solr_service::phrase(strtr('_@coll_id_FALSE_TRUE_', array('@coll_id' => $coll_id)));
-          $is_unappropriate_false_false = mediamosa_solr_apache_solr_service::phrase(strtr('_@coll_id_FALSE_FALSE_', array('@coll_id' => $coll_id)));
-          $is_unappropriate_true_false = mediamosa_solr_apache_solr_service::phrase(strtr('_@coll_id_TRUE_FALSE_', array('@coll_id' => $coll_id)));
-          $owner = mediamosa_solr_apache_solr_service::phrase(strtr('_@coll_id_@owner_', array('@coll_id' => $coll_id, '@owner' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['aut_user_id']))));
+          $isprivate_false_false = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id_FALSE_FALSE', array('@coll_id' => $coll_id)));
+          $isprivate_false_true = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id_FALSE_TRUE', array('@coll_id' => $coll_id)));
+          $is_unappropriate_false_false = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id_FALSE_FALSE', array('@coll_id' => $coll_id)));
+          $is_unappropriate_true_false = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id_TRUE_FALSE', array('@coll_id' => $coll_id)));
+          $owner = mediamosa_solr_apache_solr_service::phrase(strtr('@coll_id_@owner', array('@coll_id' => $coll_id, '@owner' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['aut_user_id']))));
 
           if ($parameters['is_public_list'] && $parameters['aut_user_id']) {
             $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('((coll_id:@isprivate_1 OR coll_id:@isprivate_2) AND (coll:@unappropriate_1 OR coll:@unappropriate_2 OR coll_id_owner:@owner))' , array('@isprivate_1' => $isprivate_false_false, '@isprivate_2' => $isprivate_false_true, '@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false, '@owner' => $owner));
-            //("(c.isprivate = 'FALSE' AND (c.is_unappropriate = 'FALSE' OR c.owner_id = '%s'))",
           }
           elseif ($parameters['is_public_list']) {
             $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('((coll_id:@isprivate_1 OR coll_id:@isprivate_2) AND (coll:@unappropriate_1 OR coll:@unappropriate_2))' , array('@isprivate_1' => $isprivate_false_false, '@isprivate_2' => $isprivate_false_true, '@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false));
-            //"c.isprivate = 'FALSE' AND c.is_unappropriate = 'FALSE'";
           }
           elseif ($parameters['aut_user_id']) { // if provided, then we only have access to unappropate when owner.
             $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('(coll:@unappropriate_1 OR coll:@unappropriate_2 OR coll_id_owner:@owner)' , array('@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false, '@owner' => $owner));
-            //"(c.is_unappropriate = 'FALSE' OR c.owner_id = '%s')", mediamosa_solr_apache_solr_service::escapePhrase($parameters['aut_user_id']));
           }
           else {
             $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR][] = strtr('(coll:@unappropriate_1 OR coll:@unappropriate_2)' , array('@unappropriate_1' => $is_unappropriate_false_false, '@unappropriate_2' => $is_unappropriate_true_false));
-            //"c.is_unappropriate = 'FALSE'"; // is_unappropriate must be TRUE
           }
         }
         else {
-          $coll_id = mediamosa_solr_apache_solr_service::escape(strtr('_@coll_id_', array('@coll_id' => $coll_id)));
+          $coll_id = mediamosa_solr_apache_solr_service::escape(strtr('@coll_id_', array('@coll_id' => $coll_id)));
           $solr_query[self::WHERE_AND][self::COLLS][self::WHERE_OR] = strtr('coll_id:@coll_id*', array('@coll_id' => $coll_id));
         }
       }
@@ -173,7 +169,7 @@ class mediamosa_solr {
 
     if (!empty($parameters['fav_user_id'])) {
       foreach ($parameters['app_ids'] as $app_id) {
-        $user_fav = mediamosa_solr_apache_solr_service::phrase(strtr('_@app_id_@name_', array('@app_id' => $app_id, '@name' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['fav_user_id']))));
+        $user_fav = mediamosa_solr_apache_solr_service::phrase(strtr('@app_id_@name', array('@app_id' => $app_id, '@name' => mediamosa_solr_apache_solr_service::filterDelimeters($parameters['fav_user_id']))));
         $solr_query[self::WHERE_AND][self::USER_FAV][self::WHERE_OR][] = strtr('user_fav:@user_fav', array('@user_fav' => $user_fav));
       }
     }
@@ -280,7 +276,7 @@ class mediamosa_solr {
         // Check if master/slave exists.
         if ($granted) {
           foreach ($master_app_ids as $master_app_id) {
-            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:_' . mediamosa_solr_apache_solr_service::escape(implode('_', array($app_id_slave, $master_app_id)) . '_') . '*';
+            $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:' . mediamosa_solr_apache_solr_service::escape(implode('_', array($app_id_slave, $master_app_id)) . '_') . '*';
           }
 
           continue;
@@ -294,18 +290,18 @@ class mediamosa_solr {
 
         foreach ($master_app_ids as $master_app_id) {
           // Allow any master/slave without AUT rights.
-          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:_' . mediamosa_solr_apache_solr_service::escape(implode('_', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_FALSE)) . '_');
+          $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:' . mediamosa_solr_apache_solr_service::escape(implode('_', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_FALSE)));
 
           // Only DOMAIN_REALM require AUT.
           if (!empty($aut_ids[$app_id_slave]['a_name'])) {
             foreach ($aut_ids[$app_id_slave]['a_name'] as $aut_id) {
-              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:_' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('_', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_id)) . '_');
+              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:' . mediamosa_solr_apache_solr_service::escape(implode('_', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_id)));
             }
           }
 
           if (!empty($aut_ids['slaves_convert']['a_group'][$app_id_slave])) {
             foreach ($aut_ids['slaves_convert']['a_group'][$app_id_slave] as $aut_id) {
-              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:_' . mediamosa_solr_apache_solr_service::escapeForFunction(implode('_', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut_object_db::AUT_TYPE_GROUP, $aut_id)) . '_');
+              $solr_query[self::WHERE_AND][self::AUT][self::WHERE_OR][self::MF][self::WHERE_AND][self::ORG][self::WHERE_OR][$app_id_slave][self::WHERE_AND][self::WHERE_OR][] = 'mf_aut_master_slave:' . mediamosa_solr_apache_solr_service::escape(implode('_', array($app_id_slave, $master_app_id, mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut_object_db::AUT_TYPE_GROUP, $aut_id)));
             }
           }
         }
@@ -857,8 +853,8 @@ class mediamosa_solr {
       foreach ($asset_for_index['collections'] as $coll_id => $collection) {
         $isprivate = $collection[mediamosa_collection_db::ISPRIVATE] == mediamosa_collection_db::ISPRIVATE_TRUE ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
         $is_unappropriate = $collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
-        $coll_ids[] = '_' . implode('_', array($coll_id, $isprivate, $is_unappropriate)) . '_';
-        $coll_id_owners[] = '_' . implode('_', array($coll_id, mediamosa_solr_apache_solr_service::filterDelimeters($collection[mediamosa_collection_db::OWNER_ID]))) . '_';
+        $coll_ids[] = implode('_', array($coll_id, $isprivate, $is_unappropriate));
+        $coll_id_owners[] = implode('_', array($coll_id, mediamosa_solr_apache_solr_service::filterDelimeters($collection[mediamosa_collection_db::OWNER_ID])));
       }
 
       $document->coll_id = $coll_ids;
@@ -868,7 +864,7 @@ class mediamosa_solr {
     // User fav.
     if (!empty($asset_for_index['user_favorites'])) {
       foreach ($asset_for_index['user_favorites'] as $user_favorite) {
-        $user_favorites[] = '_' . implode('_', array($user_favorite[mediamosa_user_favorite_db::APP_ID], mediamosa_solr_apache_solr_service::filterDelimeters($user_favorite[mediamosa_user_favorite_db::NAME]))) . '_';
+        $user_favorites[] = implode('_', array($user_favorite[mediamosa_user_favorite_db::APP_ID], mediamosa_solr_apache_solr_service::filterDelimeters($user_favorite[mediamosa_user_favorite_db::NAME])));
       }
 
       $document->user_fav = $user_favorites;
@@ -961,12 +957,12 @@ class mediamosa_solr {
               $master_slave_2 = $master_slave;
               $master_slave_2[] = $aut_object[mediamosa_aut_object_db::AUT_TYPE];
               $master_slave_2[] = $aut_object[mediamosa_aut_object_db::AUT_ID];
-              $mf_aut_master_slave[] = '_' . implode('_', $master_slave_2) . '_';
+              $mf_aut_master_slave[] = implode('_', $master_slave_2);
             }
 
           }
           else {
-            $mf_aut_master_slave[] = '_' . implode('_', $master_slave) . '_';
+            $mf_aut_master_slave[] = implode('_', $master_slave);
           }
         }
 
@@ -1033,19 +1029,19 @@ class mediamosa_solr {
         }
 
         if (!empty($mf_org_aut_obj_aut_name)) {
-          $document->mf_org_aut_obj_aut_name = $mf_org_aut_obj_aut_name;
+          $document->mf_org_aut_obj_aut_name = array_unique($mf_org_aut_obj_aut_name);
         }
         if (!empty($mf_org_aut_obj_aut_group)) {
-          $document->mf_org_aut_obj_aut_group = $mf_org_aut_obj_aut_group;
+          $document->mf_org_aut_obj_aut_group = array_unique($mf_org_aut_obj_aut_group);
         }
       }
     }
 
     if (!empty($mf_org_owner)) {
-      $document->mf_org_owner = $mf_org_owner;
+      $document->mf_org_owner = array_unique($mf_org_owner);
     }
     if (!empty($mf_org_group)) {
-      $document->mf_org_group = $mf_org_group;
+      $document->mf_org_group = array_unique($mf_org_group);
     }
     if (!empty($mf_org_is_protected)) {
       $document->mf_org_is_protected = array_unique($mf_org_is_protected);
@@ -1076,19 +1072,19 @@ class mediamosa_solr {
     $document->asset_is_master_slaved = $is_master_slaved;
 
     if (!empty($asset_for_index['aut']['aut_user']['mediafile'])) {
-      $document->mf_aut_user = $asset_for_index['aut']['aut_user']['mediafile'];
+      $document->mf_aut_user = array_unique($asset_for_index['aut']['aut_user']['mediafile']);
     }
     if (!empty($asset_for_index['aut']['aut_user_group']['mediafile'])) {
-      $document->mf_aut_user_group = $asset_for_index['aut']['aut_user_group']['mediafile'];
+      $document->mf_aut_user_group = array_unique($asset_for_index['aut']['aut_user_group']['mediafile']);
     }
     if (!empty($asset_for_index['aut']['aut_domain']['mediafile'])) {
-      $document->mf_aut_domain = $asset_for_index['aut']['aut_domain']['mediafile'];
+      $document->mf_aut_domain = array_unique($asset_for_index['aut']['aut_domain']['mediafile']);
     }
     if (!empty($asset_for_index['aut']['aut_realm']['mediafile'])) {
-      $document->mf_aut_realm = $asset_for_index['aut']['aut_realm']['mediafile'];
+      $document->mf_aut_realm = array_unique($asset_for_index['aut']['aut_realm']['mediafile']);
     }
     if (!empty($asset_for_index['aut']['aut_realm_prefix']['mediafile'])) {
-      $document->mf_aut_realm_prefix = $asset_for_index['aut']['aut_realm_prefix']['mediafile'];
+      $document->mf_aut_realm_prefix = array_unique($asset_for_index['aut']['aut_realm_prefix']['mediafile']);
     }
 
     // AUT CQL.
@@ -1174,9 +1170,9 @@ class mediamosa_solr {
     $result = array();
     foreach ($where as $type => $statements) {
       if ($type == self::WHERE_AND) {
-        $glue = " AND \n";
-        $statements = self::where_2($statements, '(', ')', " AND \n");
-        $result[] = $l . implode(" AND \n", $statements) . $r;
+        $glue = " AND ";
+        $statements = self::where_2($statements, '(', ')', " AND ");
+        $result[] = $l . implode(" AND ", $statements) . $r;
       }
       elseif ($type == self::WHERE_OR) {
         $statements = self::where_2($statements, '(', ')', ' OR ');
