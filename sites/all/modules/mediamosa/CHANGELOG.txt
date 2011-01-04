@@ -31,7 +31,7 @@ TODO: (v2.3.3)
 - ^ support CQL->Solr
 - Upgrade to RC2 drupal 7
 
-MediaMosa 2.3.4 (build 1227)
+MediaMosa 2.3.4 (build 1233)
 ----------------------------
 - Fixed some camelcase mistakes in menu items.
 - Fixed log page with Drupal 7 RC4.
