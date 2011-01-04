@@ -578,7 +578,10 @@ class mediamosa_response extends mediamosa {
 
       // Link.
       $xml_element = $xml_response_item->addChild('link');
-      $xml_element->addAttribute('href', $base_url);
+      $mediafiles = $item['mediafiles']['mediafile'];
+      reset($mediafiles);
+      $mediafile = current($mediafiles);
+      $xml_element->addAttribute('href', $base_url . '/openapi/play/' . $mediafile['mediafile_id']);
 
       // Published.
       if (!empty($item['dublin_core']['date'][0])) {
@@ -654,8 +657,12 @@ class mediamosa_response extends mediamosa {
     foreach ($this->response['items'] as $item) {
       // Base data.
       $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
-      $link = $base_url;
       $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
+
+      $mediafiles = $item['mediafiles']['mediafile'];
+      reset($mediafiles);
+      $mediafile = current($mediafiles);
+      $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
 
       // More data.
       $args = array();
