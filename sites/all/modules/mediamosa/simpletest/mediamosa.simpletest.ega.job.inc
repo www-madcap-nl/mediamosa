@@ -121,13 +121,13 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
     // Check response.
     $this->assertTrue(
-      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      in_array((string) $response['xml']->header->request_result_id, $a_expected_result_ids),
       strtr(
-        "Started transcode job for mediafile ID: @mediafile_id, got result @result (@result_description)",
+        'Started transcode job for mediafile ID: @mediafile_id, got result @result (@result_description)',
         array(
           '@mediafile_id' => $mediafile_id,
-          '@result' => (string)$response['xml']->header->request_result_id,
-          '@result_description' => (string)$response['xml']->header->request_result_description
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
         )
       )
     );

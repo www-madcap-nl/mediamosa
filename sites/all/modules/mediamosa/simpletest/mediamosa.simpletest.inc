@@ -346,8 +346,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Do a REST call inside the sandbox.
    *
-   * @param array $a_app
-   *  The app_id used during the call, this can be more than one.
    * @param string $uri
    *  The uri of the REST call.
    * @param string $request_method
@@ -428,7 +426,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         $this->var_export($out['body']);
       }
       else {
-        $this->var_export_verbose(mediamosa_unicode::substr($out['body'], 0, 10000) . '...<snap>...');
+        $this->var_export_verbose(mediamosa_unicode::substr($out['body'], 0, 10000) . (mediamosa_unicode::strlen($out['body']) > 10000 ? '...<snap>...' : ''));
       }
     }
     catch (Exception $e) {
@@ -445,8 +443,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // Get the result ID.
-    $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int)$out['xml']->header->request_result_id;
-    $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string)$out['xml']->header->request_result_description;
+    $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
+    $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
 
     // Look for a request_result_id.
     $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
@@ -465,7 +463,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Wrapper for GET restC 98 |all
+   * Wrapper for GET restCall
    */
   protected function restCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     return $this->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids);
