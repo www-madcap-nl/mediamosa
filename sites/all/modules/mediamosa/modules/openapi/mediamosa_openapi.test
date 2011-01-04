@@ -221,5 +221,35 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
         '@get' => $mediaitem2[$field],
       ))
     );
+
+
+    // Search mediafiles with /openapi/search [GET] call.
+    $query = $parameters['description']; // Common parameter.
+    $search_parameters = array(
+      'qLimit' => NULL,
+      'qOffset' => NULL,
+      'qOrder' => NULL,
+      'qDirection' => NULL,
+      'Subject' => NULL,
+      'Language' => NULL,
+      'Location' => NULL,
+      'Since' => NULL,
+      'Until' => NULL,
+      'Author' => NULL,
+      'Contributor' => NULL,
+      'Publisher' => NULL,
+      'Category' => NULL,
+      'Format' => NULL,
+      'Duration' => NULL,
+    );
+    $assets_search = $this->searchOpenAPI($query, $search_parameters);
+
+
+    // Check response.
+    // Dump the response.
+    $this->assertTrue(TRUE, print_r($assets_search, TRUE));
+    // Check.
+    $count = count($assets_search['entry']);
+    $this->assertTrue($count == 2, strtr('We get the correct number of results (2 == @count).', array('@count' => $count,)));
   }
 }
