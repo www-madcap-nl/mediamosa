@@ -243,7 +243,7 @@
     <!--
       The app_id is always stored. (searchable, sortable)
       -->
-    <field name="app_id" type="app_id" indexed="true" stored="false" required="true" multiValued="false" /> 
+    <field name="app_id" type="app_id" indexed="true" stored="true" required="true" multiValued="false" /> 
 
     <!--
       The asset_id is always stored. (searchable, sortable)
@@ -342,6 +342,7 @@
       mf_aut_realm_prefix: mediamosa_aut_name.REALM_PREFIX
       -->
     <field name="mf_app_id_master" type="int" indexed="true" stored="true" required="false" multiValued="true" /> 
+    <field name="mf_app_id_slave" type="int" indexed="true" stored="true" required="false" multiValued="true" /> 
     <field name="asset_is_master_slaved" type="boolean" indexed="true" stored="true" required="true" multiValued="false" /> 
     <field name="mf_is_protected" type="boolean" indexed="true" stored="true" required="false" multiValued="true" /> 
     <field name="mf_aut_user" type="string_id_ci" indexed="true" stored="true" required="false" multiValued="true" /> 

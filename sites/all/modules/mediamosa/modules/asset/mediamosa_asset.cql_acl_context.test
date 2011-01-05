@@ -123,7 +123,6 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadata($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
     $this->toEga_2();
     $this->createAssetMetadata($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
-    //$this->createAssetMetadata($asset_id_6, array('description' => ''));
 
     // Created.
     $this->toEga_3();
@@ -135,7 +134,6 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadata($asset_id_4, array('created' => '2008-01-01 15:15:00'));
     $this->toEga_2();
     $this->createAssetMetadata($asset_id_5, array('created' => '2008-04-01 10:15:00'));
-    //$this->createAssetMetadata($asset_id_6, array('created' => ''));
 
     //
     // CQL test.

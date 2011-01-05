@@ -474,12 +474,17 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       $a_result_cql2sql['str_having'] = $str_sql_having;
     }
 
+    // Reserved for extra switch for aut context set.
+    if (!empty($a_result_parse['is_aut_search'])) {
+      $a_result_cql2sql['is_aut_search'] = $a_result_parse['is_aut_search'];
+    }
+
     if (drupal_strlen($str_sql_where) > 1 || drupal_strlen($str_sql_having) > 1) {
       // The joins
-      $a_result_cql2sql['a_joins'] = (isset($a_result_parse['a_joins']) ? $a_result_parse['a_joins'] : array());
+      $a_result_cql2sql['a_joins'] = (!empty($a_result_parse['a_joins']) ? $a_result_parse['a_joins'] : array());
 
       // Extra select expr.
-      $a_result_cql2sql['a_select_expr'] = (isset($a_result_parse['a_select_expr']) ? $a_result_parse['a_select_expr'] : array());
+      $a_result_cql2sql['a_select_expr'] = (!empty($a_result_parse['a_select_expr']) ? $a_result_parse['a_select_expr'] : array());
     }
 
     $o_sortby = $this->mediamosa_cql_sortby_get();
@@ -504,7 +509,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   }
 
   /**
-   * Where hook
+   * Where hook.
    *
    * @param cql_part $o_cql_part
    * @param array $a_result

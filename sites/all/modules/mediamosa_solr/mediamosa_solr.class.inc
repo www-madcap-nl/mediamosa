@@ -49,6 +49,7 @@ class mediamosa_solr {
   const CQL = 'cql';
   const M_APPS = 'm_apps';
   const APPS = 'apps';
+  const SLAVE_APPS = 's_apps';
   const MF = 'mf';
   const ASSET = 'asset';
   const NO_MF = 'no_mf';
@@ -81,7 +82,7 @@ class mediamosa_solr {
     $app_ids_all = array_unique(array_merge($parameters['app_ids'], array_keys($slave_mediafiles), array_keys($slave_assets)));
     sort($app_ids_all);
 
-    // Get all assets of our app(s) and slave apps.
+    // Need these.
     foreach ($app_ids_all as $app_id) {
       $solr_query[self::WHERE_AND][self::ASSET][self::APPS][self::WHERE_OR][] = 'app_id:' . (int) $app_id;
     }
@@ -112,6 +113,23 @@ class mediamosa_solr {
 
     if (!empty($parameters['cql'])) {
       $result = mediamosa_solr_cql::parse_asset($parameters['cql'], $parameters['app_ids']);
+
+      // When searching with AUT search rule set, we need special case.
+      if (!empty($result['is_aut_search'])) {
+        // Granted = TRUE, see all.
+        $parameters['granted'] = TRUE;
+
+        // Unset access where.
+        unset($solr_query[self::WHERE_AND][self::ASSET][self::AUT]);
+
+        // Special case.
+        if (in_array('AUT_APP_MASTER_SLAVE', $result['a_joins'])) {
+          // Get all assets of our app(s) and slave apps.
+          foreach ($parameters['app_ids'] as $slave_app_id) {
+            $solr_query[self::WHERE_AND][self::ASSET][self::SLAVE_APPS][self::WHERE_OR][] = 'mf_app_id_slave:' . (int) $slave_app_id;
+          }
+        }
+      }
 
       // We got something from cql?
       if (!empty($result['str_where'])) {
@@ -179,7 +197,7 @@ class mediamosa_solr {
 
     // Build query.
     $query = self::where($solr_query);
-mediamosa_watchdog::log_export($query);
+
     // Setup sorting.
     $query_params = array();
     if (!empty($order_by)) {
@@ -1065,6 +1083,7 @@ mediamosa_watchdog::log_export($query);
         foreach ($asset_for_index['aut']['aut_app_master_slave']['mediafile'][$mediafile_id] as $aut_app_master_slave) {
           // For AUT CQL context.
           $app_id_masters[] = $aut_app_master_slave[mediamosa_aut_app_master_slave_db::APP_ID_MASTER];
+          $app_id_slaves[] = $aut_app_master_slave[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE];
         }
       }
     }
@@ -1091,6 +1110,9 @@ mediamosa_watchdog::log_export($query);
     // AUT CQL.
     if (!empty($app_id_masters)) {
       $document->mf_app_id_master = array_unique($app_id_masters);
+    }
+    if (!empty($app_id_slaves)) {
+      $document->mf_app_id_slave = array_unique($app_id_slaves);
     }
 
     if (!empty($is_protected)) {

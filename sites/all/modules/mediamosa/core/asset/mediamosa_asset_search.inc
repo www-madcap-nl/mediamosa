@@ -173,9 +173,7 @@ class mediamosa_asset_search {
         $a_query[VPX_DB_QUERYB_ALLOW_DISTINCT] = FALSE;
       }
 
-      // Quick hack, or else i really need to extend the MediaMosa CQL class
       if (!empty($a_result_cql2sql['a_joins'])) {
-
 
         $key = array_search('MEDIAFILE_METADATA_MIMETYPE', $a_result_cql2sql['a_joins']);
         if ($key) {
