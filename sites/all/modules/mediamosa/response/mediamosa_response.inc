@@ -589,8 +589,7 @@ class mediamosa_response extends mediamosa {
       // Link.
       $xml_element = $xml_response_item->addChild('link');
       $mediafiles = $item['mediafiles']['mediafile'];
-      reset($mediafiles);
-      $mediafile = current($mediafiles);
+      $mediafile = reset($mediafiles);
       $xml_element->addAttribute('href', $base_url . '/openapi/play/' . $mediafile['mediafile_id']);
 
       // Published.
@@ -670,8 +669,7 @@ class mediamosa_response extends mediamosa {
       $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
 
       $mediafiles = $item['mediafiles']['mediafile'];
-      reset($mediafiles);
-      $mediafile = current($mediafiles);
+      $mediafile = reset($mediafiles);
       $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
 
       // More data.

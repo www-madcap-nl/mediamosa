@@ -130,6 +130,8 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
 
   // OpenSocial.
@@ -141,6 +143,8 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
   $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
@@ -154,7 +158,60 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
 
   return $rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_settings_collect().
+ */
+function mediamosa_openapi_mediamosa_configuration_collect() {
+  $form['settings_openapi'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('OpenAPI'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $options = array(
+    0 => '',
+  );
+
+  $apps = mediamosa_app::get_all_apps(array(), mediamosa_app_db::APP_ID);
+  foreach ($apps as $app) {
+    $options[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME] . ' (APP ID: ' . $app[mediamosa_app_db::APP_ID] . ')';
+  }
+
+  $form['settings_openapi'][mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID] = array(
+    '#type' => 'select',
+    '#title' => t('Open client application'),
+    '#description' => t("Leave it empty, if you don't want to use OpenAPI related features."),
+    '#default_value' => variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0),
+    '#options' => $options,
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_mediamosa_configuration_validate().
+ */
+function mediamosa_openapi_mediamosa_configuration_validate($form, $form_state) {
+  $app_id = $form_state['values'][mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID];
+
+  $options = array(
+    0,
+  );
+
+  $apps = mediamosa_app::get_all_apps(array(), mediamosa_app_db::APP_ID);
+  foreach ($apps as $app) {
+    $options[] = $app[mediamosa_app_db::APP_ID];
+  }
+
+  if (!in_array($app_id, $options)) {
+    form_set_error(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, t("Invalid application id."));
+  }
 }

@@ -246,6 +246,9 @@ class mediamosa_settings {
   const APP_ID_MIN = 1;
   const APP_ID_MAX = 9999;
 
+  // Name of the variable, that contains the app_id of open client for OpenAPI.
+  const MEDIAMOSA_OPENAPI_OPEN_APP_ID = 'mediamosa_openapi_open_app_id';
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.

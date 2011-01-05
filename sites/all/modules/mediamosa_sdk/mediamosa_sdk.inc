@@ -211,6 +211,8 @@ class mediamosa_sdk {
 
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
 
+  const ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID = 2100;
+
   const ERRORCODE_INVALID_REST_CALL = 3000;
 
   // ---------------------------------------------------------------- Var Types.

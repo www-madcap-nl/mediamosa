@@ -136,13 +136,27 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
     unset($a_var_setup[self::VARS][self::ORDER_DIRECTION]);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
+  // ------------------------------------------------------------------ Override Validate Rest Args.
+  protected function validate_rest_args(array $a_var_setup) {
+
+    // Validate first.
+    parent::validate_rest_args($a_var_setup);
+
+    $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
+
+    if (!$app_id) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID);
+    }
+  }
+
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();
+    $app_ids = array(variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0));
 
     // Get params.
     $limit = $this->get_param_value(self::QLIMIT);
@@ -229,6 +243,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
         'cql' => $cql,
         'limit' => $limit,
         'offset' => $offset,
+        'show_deleted' => FALSE,
       ));
 
       // Fill response.
@@ -267,12 +282,10 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
         $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
         if (!empty($item['mediafiles']['mediafile']) && is_array($item['mediafiles']['mediafile'])) {
-          reset($item['mediafiles']['mediafile']);
-          $mediafile = current($item['mediafiles']['mediafile']);
+          $mediafile = reset($item['mediafiles']['mediafile']);
 
           if (!empty($mediafile['still']) && is_array($mediafile['still'])) {
-            reset($mediafile['still']);
-            $still = current($mediafile['still']);
+            $still = reset($mediafile['still']);
           }
 
           $item['mediaitem'] = array(
@@ -432,13 +445,27 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
+  // ------------------------------------------------------------------ Override Validate Rest Args.
+  protected function validate_rest_args(array $a_var_setup) {
+
+    // Validate first.
+    parent::validate_rest_args($a_var_setup);
+
+    $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
+
+    if (!$app_id) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID);
+    }
+  }
+
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();
+    $app_ids = array(variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0));
     $app_id = reset($app_ids);
 
     $cql = '';
@@ -481,7 +508,12 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       if ($user_id_parameter == self::USER_ME || $user_id_parameter == self::USER_VIEWER) {
         $user_id_parameter = $user_id;
       }
-      $cql .= ($cql ? ' AND ' : '') . 'owner_id="' . $user_id_parameter . '"';
+      if (!$user_id_parameter) {
+        //$user_id_parameter = 'anonymous';
+      }
+      if ($user_id_parameter) {
+        $cql .= ($cql ? ' AND ' : '') . 'owner_id="' . $user_id_parameter . '"';
+      }
     }
 
     if ($group_id) {
@@ -529,6 +561,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       'cql' => $cql,
       'limit' => $limit,
       'offset' => $offset,
+      'show_deleted' => FALSE,
     ));
 
     // Fill response.
@@ -567,12 +600,10 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
       if (!empty($item['mediafiles']['mediafile']) && is_array($item['mediafiles']['mediafile'])) {
-        reset($item['mediafiles']['mediafile']);
-        $mediafile = current($item['mediafiles']['mediafile']);
+        $mediafile = reset($item['mediafiles']['mediafile']);
 
         if (!empty($mediafile['still']) && is_array($mediafile['still'])) {
-          reset($mediafile['still']);
-          $still = current($mediafile['still']);
+          $still = reset($mediafile['still']);
         }
 
         $item['mediaitem'] = array(
@@ -792,13 +823,27 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
+  // ------------------------------------------------------------------ Override Validate Rest Args.
+  protected function validate_rest_args(array $a_var_setup) {
+
+    // Validate first.
+    parent::validate_rest_args($a_var_setup);
+
+    $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
+
+    if (!$app_id) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID);
+    }
+  }
+
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();
+    $app_ids = array(variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0));
     $app_id = reset($app_ids);
 
     // Get params.
@@ -813,6 +858,9 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
     if ($user_id_parameter == self::USER_ME || $user_id_parameter == self::USER_VIEWER) {
       $user_id_parameter = $user_id;
+    }
+    if (!$user_id_parameter) {
+      $user_id_parameter = 'anonymous';
     }
     $group_id = addslashes($this->get_param_value(self::GROUP_ID));
     $album_id = addslashes($this->get_param_value(self::ALBUM_ID));
