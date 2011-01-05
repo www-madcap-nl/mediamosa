@@ -144,6 +144,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
         'description' => 'asset ~number~ 3',
         'issued' => '2010-08-01 00:00:00',
         'titel' => '2010-08-01 00:00:00',
+        'beschrijving' => 'SURFfoo.rocvideo',
       )
     );
 
@@ -222,5 +223,26 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Lowercase check.
     $this->cql_do_search_test_assets_1('beschrijving = "SURFguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Lowercase check.
+    $this->cql_do_search_test_assets_1('beschrijving = "surfguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFguest.rocvideo"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFguest"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFfoo"', array($upload_3['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "^SURFguest.rocvideo^"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "rocvideo^"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE, $upload_3['asset_id'] => TRUE));
+
+    // Ancor check.
+    $this->cql_do_search_test_assets_1('beschrijving == "SURFguest.rocvideo^"', array($upload_1['asset_id'] => TRUE, $upload_2['asset_id'] => TRUE));
   }
 }

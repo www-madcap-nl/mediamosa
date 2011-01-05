@@ -690,7 +690,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
 
         if (drupal_strlen($str_search_term) > 1) {
-          if (mediamosa_unicode::substr($str_search_term, -1) != '*' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -1) != '\*' && mediamosa_unicode::substr($str_search_term, -1) != '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
+          if (mediamosa_unicode::substr($str_search_term, -1) != '*' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -1) != '\*' && mediamosa_unicode::substr($str_search_term, -1) != '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
             $str_search_term .= '*';
           }
         }
@@ -755,7 +755,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
                 continue;
               }
 
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
+              if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_word), -2) != '\^') {
                 $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
               }
 
@@ -766,7 +766,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
                 $ancor_left = '';
               }
 
-              if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
+              if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_word), -2) != '\^') {
                 $str_word = mediamosa_unicode::substr($str_word, 0, -1);
                 $ancor_right = '';
               }
@@ -782,14 +782,14 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $do_null = TRUE;
       case '==':
       case 'adj':
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
+        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
           $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
         }
 
         if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
           $a_sub_parts[] = sprintf("%s%s %s %s%s%%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 1)), $str_quotes);
         }
-        elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
+        elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
           $a_sub_parts[] = sprintf("%s%s %s %s%%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 0, -1)), $str_quotes);
         }
         else {

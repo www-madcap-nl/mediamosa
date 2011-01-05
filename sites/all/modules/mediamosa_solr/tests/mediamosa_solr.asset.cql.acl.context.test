@@ -88,8 +88,8 @@ class MediaMosaSolrAssetCQLAclContextTestCaseEga extends MediaMosaAssetCQLAclCon
 
     // Remove it.
     if (!empty($app_ids)) {
-      mediamosa_solr::delete_simpletest_documents($app_ids);
-      $this->pass(strtr('Removed metadata from solr for app ids @app_ids.', array('@app_ids' => implode(', ', $app_ids))));
+     // mediamosa_solr::delete_simpletest_documents($app_ids);
+    //  $this->pass(strtr('Removed metadata from solr for app ids @app_ids.', array('@app_ids' => implode(', ', $app_ids))));
     }
 
     parent::tearDown();

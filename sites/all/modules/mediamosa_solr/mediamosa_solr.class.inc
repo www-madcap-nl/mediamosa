@@ -179,7 +179,7 @@ class mediamosa_solr {
 
     // Build query.
     $query = self::where($solr_query);
-
+mediamosa_watchdog::log_export($query);
     // Setup sorting.
     $query_params = array();
     if (!empty($order_by)) {
@@ -881,6 +881,7 @@ class mediamosa_solr {
             sort($metadata['values'], SORT_STRING);
 
             $document->{$name . '_vc'} = $metadata['values'];
+            $document->{$name . '_vc_exact'} = $metadata['values'];
             $document->{$name . '_svc_lo'} = drupal_substr(reset($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
             $document->{$name . '_svc_hi'} = drupal_substr(array_pop($metadata['values']), 0, self::VAR_CHAR_SORT_LENGTH);
             break;

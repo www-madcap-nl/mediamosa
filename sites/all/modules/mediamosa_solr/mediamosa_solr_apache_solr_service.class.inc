@@ -93,6 +93,20 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   }
 
   /**
+   * Escape a value for special query characters. Skips * and ?, which are
+   * allowed to be used with CQL.
+   *
+   * @param string $value
+   * @return string
+   */
+  static public function escapeSolrForCQL($value) {
+    $pattern = '/(\+|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|:|\\\)/';
+    $replace = '\\\$1';
+
+    return mediamosa_unicode::strtolower(preg_replace($pattern, $replace, $value));
+  }
+
+  /**
    * Return the url for the solr servlet.
    */
   static public function mediamosaGetUrl() {
