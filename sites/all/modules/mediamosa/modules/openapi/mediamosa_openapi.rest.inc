@@ -165,7 +165,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
     $order_direction = $this->get_param_value(self::QDIRECTION);
     $callback = $this->get_param_value(self::CALLBACK);
 
-    $cql = '';
+    $cql = array();
 
     // Get params with escape.
     $query = addslashes($this->get_param_value(self::QUERY));
@@ -182,52 +182,55 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
     $duration = addslashes($this->get_param_value(self::DURATION));
 
     if ($query) {
-      $cql = '(title="' . $query . '" OR description="' . $query . '")';
+      $cql[] = '(title="' . $query . '" OR description="' . $query . '")';
     }
 
     if ($subject) {
-      $cql .= ($cql ? ' AND ' : '') . 'subject="' . $subject . '"';
+      $cql[] = 'subject="' . $subject . '"';
     }
 
     if ($language) {
-      $cql .= ($cql ? ' AND ' : '') . 'language="' . $language . '"';
+      $cql[] = 'language="' . $language . '"';
     }
 
     if ($location) {
-      $cql .= ($cql ? ' AND ' : '') . 'coverage_spatial="' . $location . '"';
+      $cql[] = 'coverage_spatial="' . $location . '"';
     }
 
     if ($this->isset_param(self::SINCE)) {
-      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>="' . $since . '"';
+      $cql[] = 'videotimestamp>="' . $since . '"';
     }
 
     if ($this->isset_param(self::UNTIL)) {
-      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp<="' . $until . '"';
+      $cql[] = 'videotimestamp<="' . $until . '"';
     }
 
     if ($author) {
-      $cql .= ($cql ? ' AND ' : '') . 'creator="' . $author . '"';
+      $cql[] = 'creator="' . $author . '"';
     }
 
     if ($contributor) {
-      $cql .= ($cql ? ' AND ' : '') . 'contributor="' . $contributor . '"';
+      $cql[] = 'contributor="' . $contributor . '"';
     }
 
     if ($publisher) {
-      $cql .= ($cql ? ' AND ' : '') . 'publisher="' . $publisher . '"';
+      $cql[] = 'publisher="' . $publisher . '"';
     }
 
     if ($category) {
-      $cql .= ($cql ? ' AND ' : '') . 'coll_id="' . $category . '"';
+      $cql[] = 'coll_id="' . $category . '"';
     }
 
     if ($format) {
-      $cql .= ($cql ? ' AND ' : '') . 'mediafile_container_type="' . $format . '"';
+      $cql[] = 'mediafile_container_type="' . $format . '"';
     }
 
     if ($duration) {
-      $cql .= ($cql ? ' AND ' : '') . 'mediafile_duration="' . $duration . '"';
+      $cql[] = 'mediafile_duration="' . $duration . '"';
     }
+
+    // Gluing CQL.
+    $cql = implode(' AND ', $cql);
 
     // TODO: Implement callback.
 
@@ -468,7 +471,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     $app_ids = array(variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0));
     $app_id = reset($app_ids);
 
-    $cql = '';
+    $cql = array();
 
     // Get params.
 
@@ -498,7 +501,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     }
 
     if ($since) {
-      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>="' . $since . '"';
+      $cql[] = 'videotimestamp>="' . $since . '"';
     }
 
     // We don't know, who the owner the page (USER_OWNER), that the current user visit.
@@ -512,7 +515,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
         //$user_id_parameter = 'anonymous';
       }
       if ($user_id_parameter) {
-        $cql .= ($cql ? ' AND ' : '') . 'owner_id="' . $user_id_parameter . '"';
+        $cql[] = 'owner_id="' . $user_id_parameter . '"';
       }
     }
 
@@ -523,27 +526,30 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
 
         if (isset($a_user['group_id']) && $a_user['group_id']) {
           $group_id = $a_user['group_id'];
-          $cql .= ($cql ? ' AND ' : '') . 'group_id="' . $group_id . '"';
+          $cql[] = 'group_id="' . $group_id . '"';
         }
       }
       if ($group_id != self::GROUP_SELF) {
-        $cql .= ($cql ? ' AND ' : '') . 'group_id="' . $group_id . '"';
+        $cql[] = 'group_id="' . $group_id . '"';
       }
     }
 
     if ($album_id) {
       // We skip this.
       // TODO: $album_id is the title of the collection, or the coll_id?
-      //$cql .= ($cql ? ' AND ' : '') . 'coll_id="' . $album_id . '"';
+      //$cql[] = 'coll_id="' . $album_id . '"';
     }
 
     if ($appid_parameter) {
-      $cql .= ($cql ? ' AND ' : '') . 'app_id="' . $appid_parameter . '"';
+      $cql[] = 'app_id="' . $appid_parameter . '"';
     }
 
     if ($mediafile_id) {
-      $cql .= ($cql ? ' AND ' : '') . 'mediafile_id="' . $mediafile_id . '"';
+      $cql[] = 'mediafile_id="' . $mediafile_id . '"';
     }
+
+    // Gluing CQL.
+    $cql = implode(' AND ', $cql);
 
     // TODO: Message collection fields. Should we do it?
     // REQUEST_PARAMETER_FILTERBY_VALUE, REQUEST_PARAMETER_FILTEROP_VALUE, REQUEST_PARAMETER_FILTERVALUE_VALUE
