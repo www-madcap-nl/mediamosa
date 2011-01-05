@@ -1,0 +1,3 @@
+version=3
+http://www.mediamosa.org/downloads \
+  http://www.mediamosa.org/sites/default/files/mediamosa-(.*)\.tgz
