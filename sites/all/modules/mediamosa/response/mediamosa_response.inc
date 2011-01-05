@@ -537,6 +537,10 @@ class mediamosa_response extends mediamosa {
     foreach ($this->response['items'] as $item) {
       $xml_response_item = $xml_response->addChild('entry');
 
+      $mediafiles = $item['mediafiles']['mediafile'];
+      $mediafile = reset($mediafiles);
+      $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
+
       // Author.
       $xml_element = $xml_response_item->addChild('author');
       $this->generate_plain_xml_add_child($xml_element, 'name', !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : mediamosa_settings::ATOM_NAME);
@@ -563,6 +567,18 @@ class mediamosa_response extends mediamosa {
         $xml_element_div = $xml_element->addChild('div', $item['dublin_core']['description'][0]);
         $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
       }
+      // Image.
+      if ($item['vpx_still_url']) {
+        $xml_element_div = $xml_element->addChild('div');
+        $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        $xml_element_div_img = $xml_element_div->addChild('img');
+        $xml_element_div_img->addAttribute('src', $item['vpx_still_url']);
+      }
+      // "More" link.
+      $xml_element_div = $xml_element->addChild('div');
+      $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      $xml_element_div_link = $xml_element_div->addChild('a', 'more');
+      $xml_element_div_link->addAttribute('href', $link);
       // MediaItem part.
       if (!empty($item['mediaitem'])) {
         $xml_element_mediaitem = $xml_element->addChild('mediaItem');
@@ -588,9 +604,7 @@ class mediamosa_response extends mediamosa {
 
       // Link.
       $xml_element = $xml_response_item->addChild('link');
-      $mediafiles = $item['mediafiles']['mediafile'];
-      $mediafile = reset($mediafiles);
-      $xml_element->addAttribute('href', $base_url . '/openapi/play/' . $mediafile['mediafile_id']);
+      $xml_element->addAttribute('href', $link);
 
       // Published.
       if (!empty($item['dublin_core']['date'][0])) {
@@ -664,13 +678,15 @@ class mediamosa_response extends mediamosa {
     // Items.
     $items = '';
     foreach ($this->response['items'] as $item) {
-      // Base data.
-      $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
-      $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
-
       $mediafiles = $item['mediafiles']['mediafile'];
       $mediafile = reset($mediafiles);
       $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
+
+      // Base data.
+      $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
+      $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
+      // Image and "more" link.
+      $description = '<p>' . $description . '</p>' . ($item['vpx_still_url'] ? '<p><img src="' . $item['vpx_still_url']. '"></p>' : '') . '<p><a href="' . $link . '" target="_blank">more</a></p>';
 
       // More data.
       $args = array();
@@ -703,7 +719,7 @@ class mediamosa_response extends mediamosa {
 
     $channel_defaults = array(
       'version'     => '2.0',
-      'title'       => variable_get('site_name', 'Drupal'),
+      'title'       => t('MediaMosa RSS feed at @place', array('@place' => variable_get('site_name', 'Drupal'),)),
       'link'        => $base_url,
       'description' => variable_get('feed_description', ''),
       'language'    => $language_content->language,
