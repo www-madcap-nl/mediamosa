@@ -16,12 +16,19 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 - All require_once are local path. This works fine, but I'm seeing a lot of
-  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
+  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some
   study if we need to change our require_once.
 
 Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
-- Searching on mime_type no longer works because of re-write mediafile metadata. 
+- Searching on mime_type no longer works because of re-write mediafile metadata.
+
+OpenAPI development:
+- Alternative output formats (JSON, Atom, RSS)
+- OpenAPI interface
+- OpenAPI search
+- OpenSocial GET
+- OpenSocial POST
 
 MediaMosa 2.3.1 (build 1198)
 ----------------------------
