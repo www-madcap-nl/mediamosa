@@ -1,0 +1,21 @@
+; $Id: $
+name = "Database migration 1.7.x to 2.0"
+description = "Migration module for database migration from 1.7 to 2.0."
+package = "MediaMosa - Misc"
+version = "1.0.0"
+core = 7.x
+
+configure = admin/mediamosa/config/migration/settings
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+dependencies[] = mediamosa_configuration
+dependencies[] = mediamosa_transcode
+dependencies[] = mediamosa_server
+dependencies[] = mediamosa_app
+
+; Used files.
+
+; Migration files.
+; files[] = mediamosa_migration.test
+files[] = mediamosa_migration.admin.inc

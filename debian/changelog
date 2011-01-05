@@ -1,0 +1,96 @@
+vpcore (2.2.5.2) unstable; urgency=low
+
+  * Version 2.2.5.2; Black Still off - noodpatch
+
+ -- arjen <vpcore@madcap.nl>  Tue, 12 Oct 2010 10:04:26 +0200
+
+vpcore (2.2.5.1) unstable; urgency=low
+
+  * Version 2.2.5.1; group_id[] noodpatch
+
+ -- arjen <vpcore@madcap.nl>  Tue, 12 Oct 2010 10:04:26 +0200
+
+vpcore (2.2.5) unstable; urgency=low
+
+  * Version 2.2.5; see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 05 Oct 2010 10:04:26 +0200
+
+vpcore (2.2.4) unstable; urgency=low
+
+  * Version 2.2.4; see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 29 Sept 2010 10:04:26 +0200
+
+vpcore (2.2.3) unstable; urgency=low
+
+  * Version 2.2.3; see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 28 Sept 2010 10:04:26 +0200
+
+vpcore (2.2.2) unstable; urgency=low
+
+  * Version 2.2.2; Version 2.2.2, see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 22 Sept 2010 10:04:26 +0200
+
+vpcore (2.2.0) unstable; urgency=low
+
+  * Version 2.2.0; Version 2.2, see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 01 Sept 2010 10:04:26 +0200
+
+vpcore (2.1.5.1) unstable; urgency=low
+
+  * Version 2.1.5.1; still image fix.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 08 Jul 2010 10:04:26 +0200
+
+vpcore (2.1.5) unstable; urgency=low
+
+  * Version 2.1.5; Minor updates.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 02 Jul 2010 10:04:26 +0200
+
+vpcore (2.1.4.1) unstable; urgency=low
+
+  * Version 2.1.4.1; Patch for playproxyemu
+
+ -- arjen <vpcore@madcap.nl>  Tue, 24 Jun 2010 10:04:26 +0200
+
+vpcore (2.1.4) unstable; urgency=low
+
+  * Version 2.1.4; minor bugfix release.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 14 Jun 2010 10:04:26 +0200
+
+vpcore (2.1.3) unstable; urgency=low
+
+  * Version 2.1.3; minor release.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 03 Jun 2010 10:04:26 +0200
+
+vpcore (2.1.2) unstable; urgency=low
+
+  * Version 2.1.2; minor release.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 22 May 2010 10:04:26 +0200
+
+vpcore (2.1.1) unstable; urgency=low
+
+  * Version 2.1.1; minor release.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 6 May 2010 10:04:26 +0200
+
+vpcore (2.1) unstable; urgency=low
+
+  * Version 2.1
+
+ -- arjen <vpcore@madcap.nl>  Tue, 13 Apr 2010 10:04:26 +0200
+
+vpcore (2.0.1-1) unstable; urgency=low
+
+  * Initial release 2.0.1
+
+ -- arjen <vpcore@madcap.nl>  Mon, 01 Feb 2010 10:06:44 +0100
+
