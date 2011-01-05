@@ -107,6 +107,21 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
   }
 
   /**
+   * Escape a value for special query characters such as ':', '(', ')', '*', '?', etc.
+   *
+   * Added space escape.
+   *
+   * @param string $value
+   * @return string
+   */
+  static public function escapeForSpace($value) {
+    $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\\)/';
+    $replace = '\\\$1';
+
+    return preg_replace($pattern, $replace, $value);
+  }
+
+  /**
    * Return the url for the solr servlet.
    */
   static public function mediamosaGetUrl() {

@@ -45,19 +45,27 @@ class mediamosa_asset_collection {
    */
   static public function delete($asset_id = FALSE, $coll_id = FALSE) {
 
+    if (!$asset_id && !$coll_id) {
+      // if none is provided, none will be deleted.
+      return FALSE;
+    }
+
     // Asset must exist.
     if ($asset_id) {
       mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    }
+    else {
+      // We need the asset_ids to reindex.
+      $asset_ids = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac')
+        ->condition(mediamosa_asset_collection_db::COLL_ID, $coll_id)
+        ->fields('ac', array(mediamosa_asset_collection_db::ASSET_ID))
+        ->execute()
+        ->fetchCol();
     }
 
     // Collection must exist.
     if ($coll_id) {
       mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
-    }
-
-    if (!$asset_id && !$coll_id) {
-      // if none is provided, none will be deleted.
-      return FALSE;
     }
 
     // Do the delete.
@@ -71,7 +79,17 @@ class mediamosa_asset_collection {
       $query->condition(mediamosa_asset_collection_db::COLL_ID, $coll_id);
     }
 
-    return $query->execute();
+    $result = $query->execute();
+
+    // Reindex the asset(s).
+    if ($asset_id) {
+      mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION);
+    }
+    elseif (!empty($asset_ids)) {
+      mediamosa_asset::mediamosa_asset_reindex($asset_ids, mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION);
+    }
+
+    return $result;
   }
 
   /**
@@ -121,6 +139,9 @@ class mediamosa_asset_collection {
       // Get access, remove relation.
       mediamosa_asset_collection::delete($asset_id, $a_collection[mediamosa_collection_db::ID]);
     }
+
+    // Reindex asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION);
   }
 
   /**
@@ -225,6 +246,9 @@ class mediamosa_asset_collection {
     mediamosa_db::db_insert(mediamosa_asset_collection_db::TABLE_NAME)
       ->fields($fields)
       ->execute();
+
+    // Reindex the asset.
+    mediamosa_asset::mediamosa_asset_reindex(array($asset_id), mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION);
   }
 
   /**

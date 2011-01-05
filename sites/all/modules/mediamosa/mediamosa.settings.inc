@@ -35,6 +35,7 @@ class mediamosa_settings {
   const SEARCH_INDEX_TYPE_ASSET_UPDATE = 'asset_update';
   const SEARCH_INDEX_TYPE_ASSET_NORMALIZE = 'asset_normalize';
   const SEARCH_INDEX_TYPE_MEDIAFILE_UPDATE = 'mediafile_update';
+  const SEARCH_INDEX_TYPE_ASSET_COLLECTION = 'asset_collection';
   const SEARCH_INDEX_TYPE_METADATA = 'metadata';
   const SEARCH_INDEX_TYPE_FAV_USER = 'fav_user';
   const SEARCH_INDEX_TYPE_MASTER_SLAVE = 'master_slave';

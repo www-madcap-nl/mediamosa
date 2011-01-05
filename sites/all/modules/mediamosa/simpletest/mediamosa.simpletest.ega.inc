@@ -165,10 +165,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         // Might already been deleted.
         if ($mediafile) {
           // Delete uploaded file by deleting the mediafile.
-         // mediamosa_asset_mediafile::delete($mediafile_id);
+          mediamosa_asset_mediafile::delete($mediafile_id);
 
           // Check if the file has been deleted.
-       //   $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been deleted.');
+          $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been deleted.');
         }
       }
     }
@@ -3419,5 +3419,26 @@ $this->var_export($response['xml']);
     if (!$sorting_ok) {
       $this->pass('Got IDs in order; ' . implode(', ', $got) . '; expecting in order;' .  implode(', ', $expected));
     }
+  }
+
+  /**
+   * Search engine switches.
+   */
+
+  /**
+   * Can find "" around word(s).
+   */
+  public function engine_fulltext_can_find_with_quotes() {
+    return TRUE;
+  }
+
+  /**
+   * Indexes per word or per line?
+   *
+   * Text; master : m*r will match?
+   *       maste foor : m*r will match?
+   */
+  public function engine_fulltext_wildcard_indexes_lines() {
+    return TRUE;
   }
 }

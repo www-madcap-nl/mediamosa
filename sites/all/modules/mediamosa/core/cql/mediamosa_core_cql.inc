@@ -589,6 +589,12 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
       foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS] as $str_index) {
         $str_part = $this->mediamosa_core_cql_context_index2column_finalize($o_cql_part, $o_part_relation, $a_result, $str_index, $do_having);
+
+        // Make sure if we use NOT and is translated to 'AND ', that we don't start with AND.
+        if (empty($a_parts) && mediamosa_unicode::substr($str_part, 0, 4) == 'AND ') {
+          $str_part = mediamosa_unicode::substr($str_part, 4);
+        }
+
         if (trim($str_part) != '') {
           $a_parts[] = $str_part;
         }

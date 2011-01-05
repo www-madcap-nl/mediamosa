@@ -439,6 +439,13 @@ class mediamosa_solr {
   }
 
   /**
+   * Instant update on asset collection relations?
+   */
+  static public function settingInstantlyAssetCollection() {
+    return variable_get('mediamosa_solr_assetcollection_instantly', TRUE);
+  }
+
+  /**
    * Common log function.
    *
    * @param string $message

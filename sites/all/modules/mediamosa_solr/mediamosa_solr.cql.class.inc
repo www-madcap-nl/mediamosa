@@ -163,7 +163,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       'AUT_GROUP_REALM',
       'AUT_APP_MASTER_SLAVE',
     );
-    if (in_array($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN], $aut_joins)) {
+    if (!empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN]) && in_array($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN], $aut_joins)) {
       $result['is_aut_search'] = TRUE;
     }
 
@@ -182,6 +182,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       $result['a_select_expr'][$str_index] = $index2column['select_expr'];
     }
 
+    // Get the search tern.
     $str_search_term = $cql_part_search_term->mediamosa_cql_part_str_get();
 
     // NULL values allowed.
@@ -199,8 +200,10 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         break;
 
       case mediamosa_sdk::TYPE_DATETIME:
-        $str = '0000-01-01T00:00:00Z';
-        $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
+        if ($str_relation != 'within') {
+          $str = '0000-01-01T00:00:00Z';
+          $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
+        }
         break;
 
       case mediamosa_sdk::TYPE_DOMAIN:
@@ -303,21 +306,61 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             break;
 
           default:
-            // Remove trailing ^.
-            if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
-              $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeSolrForCQL(mediamosa_unicode::substr($str_search_term, 1, -1));
-            }
-            elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
-              // Left ancor.
-              $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeSolrForCQL(mediamosa_unicode::substr($str_search_term, 1)) . '*';
-            }
-            elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
-              // Right ancor.
-              $sub_parts[] = $str_table_column_exact . ':*' . mediamosa_solr_apache_solr_service::escapeSolrForCQL(mediamosa_unicode::substr($str_search_term, 0, -1));
+            if ($is_metadata) {
+              // Remove trailing ^.
+              if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                if ($cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
+                  $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+                }
+
+                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1, -1));
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Left ancor.
+                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1)) . '*';
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Right ancor.
+                $sub_parts[] = $str_table_column_exact . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 0, -1));
+              }
+              else {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // No ancor search.
+                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::phrase('*' . $str_search_term . '*');
+              }
             }
             else {
-              // No ancor search.
-              $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeSolrForCQL($str_search_term) . '*';
+              // Remove trailing ^.
+              if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                if ($cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
+                  $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+                }
+
+                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1, -1));
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Left ancor.
+                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1)) . '*';
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Right ancor.
+                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 0, -1));
+              }
+              else {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // No ancor search.
+                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term) . '*';
+              }
             }
         }
         break;
@@ -347,6 +390,17 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         // Split up.
         $values = explode(' ', $str_search_term);
 
+        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+          case mediamosa_sdk::TYPE_DATETIME:
+            $str = '0000-01-01T00:00:00Z';
+            $values[0] = $values[0] . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($values[0]));
+            $values[1] = $values[1] . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($values[1]));
+            break;
+
+          default:
+            break;
+        }
+
         $sub_parts = array(strtr('@field:[@value_1 TO @value_2]', array('@field' => $str_table_column, '@value_1' => mediamosa_solr_apache_solr_service::escape($values[0]), '@value_2' => mediamosa_solr_apache_solr_service::escape($values[1]))));
         break;
 
@@ -361,10 +415,15 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
     }
 
+    if ($cql_part_boolean) {
+      $str_boolean = $cql_part_boolean->mediamosa_cql_part_str_get();
+      $str_boolean = ($str_boolean == 'NOT' ? ' AND ' : ' ' . $str_boolean . ' ');
+    }
+
     // Into one.
     $parts[] = (count($sub_parts) < 2 ? '' : '(') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) < 2 ? '' : ')');
 
-    return ($has_not ? '-' : '') . (count($parts) < 2 ? '' : '(') . implode (' OR ', $parts) . (count($parts) < 2 ? '' : ')');
+    return ($has_not ? '-' : '') . (count($parts) < 2 ? '' : '(') . implode (' OR ', $parts) . (count($parts) < 2 ? '' : ')') . (empty($str_boolean) ? '' : $str_boolean);
   }
 }
 

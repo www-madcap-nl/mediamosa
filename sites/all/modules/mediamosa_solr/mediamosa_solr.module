@@ -312,6 +312,10 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
     case mediamosa_settings::SEARCH_INDEX_TYPE_AUT:
       $instant = mediamosa_solr::settingInstantlyAUT();
       break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION:
+      $instant = mediamosa_solr::settingInstantlyAssetCollection();
+      break;
   }
 
   if ($instant) {
@@ -424,6 +428,12 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#type' => 'checkbox',
     '#title' => t('Process asset updates instantly'),
     '#default_value' => mediamosa_solr::settingInstantlyAssetUpdate(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_assetcollection_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process asset in/with collection relations instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAssetCollection(),
   );
 
   $form['mediamosa_solr']['queue']['mediamosa_solr_mediafile_update_instantly'] = array(
