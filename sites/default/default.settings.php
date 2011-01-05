@@ -527,7 +527,7 @@ $conf['mediamosa_app_download'] = TRUE;
  * as an OpenAPI interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_openapi' to TRUE.
  */
-$conf['mediamosa_app_openapi'] = TRUE;
+$conf['mediamosa_app_openapi'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
