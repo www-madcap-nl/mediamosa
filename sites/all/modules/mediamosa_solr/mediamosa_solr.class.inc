@@ -197,6 +197,7 @@ class mediamosa_solr {
 
     // Build query.
     $query = self::where($solr_query);
+mediamosa_debug::log_export($query);
 
     // Setup sorting.
     $query_params = array();
