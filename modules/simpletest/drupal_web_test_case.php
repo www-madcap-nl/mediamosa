@@ -1,5 +1,5 @@
 <?php
-// $Id: drupal_web_test_case.php,v 1.253 2010/11/30 19:31:46 dries Exp $
+// $Id: drupal_web_test_case.php,v 1.256 2010/12/22 21:34:13 webchick Exp $
 
 /**
  * Global variable that holds information about the tests being run.
@@ -1313,9 +1313,32 @@ class DrupalWebTestCase extends DrupalTestCase {
    * set up a clean environment for the current test run.
    */
   protected function preloadRegistry() {
+    // Use two separate queries, each with their own connections: copy the
+    // {registry} and {registry_file} tables over from the parent installation
+    // to the child installation.
     $original_connection = Database::getConnection('default', 'simpletest_original_default');
-    db_query('INSERT INTO {registry} SELECT * FROM ' . $original_connection->prefixTables('{registry}'));
-    db_query('INSERT INTO {registry_file} SELECT * FROM ' . $original_connection->prefixTables('{registry_file}'));
+    $test_connection = Database::getConnection();
+
+    foreach (array('registry', 'registry_file') as $table) {
+      // Find the records from the parent database.
+      $source_query = $original_connection
+        ->select($table, array(), array('fetch' => PDO::FETCH_ASSOC))
+        ->fields($table);
+
+      $dest_query = $test_connection->insert($table);
+
+      $first = TRUE;
+      foreach ($source_query->execute() as $row) {
+        if ($first) {
+          $dest_query->fields(array_keys($row));
+          $first = FALSE;
+        }
+        // Insert the records into the child database.
+        $dest_query->values($row);
+      }
+
+      $dest_query->execute();
+    }
   }
 
   /**
@@ -1326,16 +1349,22 @@ class DrupalWebTestCase extends DrupalTestCase {
    * are enabled later.
    */
   protected function resetAll() {
-    // Rebuild caches.
+    // Reset all static variables.
     drupal_static_reset();
+    // Reset the list of enabled modules.
+    module_list(TRUE);
+
+    // Reset cached schema for new database prefix. This must be done before
+    // drupal_flush_all_caches() so rebuilds can make use of the schema of
+    // modules enabled on the cURL side.
+    drupal_get_schema(NULL, TRUE);
+
+    // Perform rebuilds and flush remaining caches.
     drupal_flush_all_caches();
 
     // Reload global $conf array and permissions.
     $this->refreshVariables();
     $this->checkPermissions(array(), TRUE);
-
-    // Reset statically cached schema for new database prefix.
-    drupal_get_schema(NULL, TRUE);
   }
 
   /**
@@ -1748,7 +1777,7 @@ class DrupalWebTestCase extends DrupalTestCase {
         $post = array();
         $upload = array();
         $submit_matches = $this->handleForm($post, $edit, $upload, $ajax ? NULL : $submit, $form);
-        $action = isset($form['action']) ? $this->getAbsoluteUrl($form['action']) : $this->getUrl();
+        $action = isset($form['action']) ? $this->getAbsoluteUrl((string) $form['action']) : $this->getUrl();
         if ($ajax) {
           $action = $this->getAbsoluteUrl(!empty($submit['path']) ? $submit['path'] : 'system/ajax');
           // AJAX callbacks verify the triggering element if necessary, so while

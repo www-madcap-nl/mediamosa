@@ -257,9 +257,10 @@ function mediamosa_solr_mediamosa_status_collect_realtime($reset = FALSE) {
  * @param array $reindex_info
  */
 function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
-
   // Delete the asset.
-  mediamosa_solr::delete_assets(array($asset_id));//$asset_id);
+  if (mediamosa_solr::is_enabled()) {
+    mediamosa_solr::delete_assets(array($asset_id));
+  }
 }
 
 /**
@@ -275,6 +276,10 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
   // Instant is default TRUE.
   $instant = TRUE;
 
+  if (!mediamosa_solr::is_enabled()) {
+    return;
+  }
+
   switch ($search_index_type) {
     case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_NORMALIZE:
       $instant = mediamosa_solr::settingInstantlyAssetNormalize();
@@ -285,11 +290,15 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_CREATE:
-      $instant = mediamosa_solr::settingInstantlyAssetUpdate();
+      $instant = mediamosa_solr::settingInstantlyAssetCreate();
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_UPDATE:
-      $instant = mediamosa_solr::settingInstantlyAssetCreate();
+      $instant = mediamosa_solr::settingInstantlyAssetUpdate();
+      break;
+
+    case mediamosa_settings::SEARCH_INDEX_TYPE_MEDIAFILE_UPDATE:
+      $instant = mediamosa_solr::settingInstantlyMediafileUpdate();
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_FAV_USER:
@@ -300,8 +309,14 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       $instant = mediamosa_solr::settingInstantlyMasterSlave();
       break;
 
-  }
+    case mediamosa_settings::SEARCH_INDEX_TYPE_AUT:
+      $instant = mediamosa_solr::settingInstantlyAUT();
+      break;
 
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION:
+      $instant = mediamosa_solr::settingInstantlyAssetCollection();
+      break;
+  }
 
   if ($instant) {
     mediamosa_solr::insert_assets($reindex_info['asset_ids']);
@@ -415,6 +430,18 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#default_value' => mediamosa_solr::settingInstantlyAssetUpdate(),
   );
 
+  $form['mediamosa_solr']['queue']['mediamosa_solr_assetcollection_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process asset in/with collection relations instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAssetCollection(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_mediafile_update_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process mediafiles updates instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyMediafileUpdate(),
+  );
+
   $form['mediamosa_solr']['queue']['mediamosa_solr_user_fav_instantly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Process user favorites of assets instantly'),
@@ -425,6 +452,12 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#type' => 'checkbox',
     '#title' => t('Process master/slave changes of assets instantly'),
     '#default_value' => mediamosa_solr::settingInstantlyMasterSlave(),
+  );
+
+  $form['mediamosa_solr']['queue']['mediamosa_solr_aut_instantly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Process access (ACL/AUT) changes of assets instantly'),
+    '#default_value' => mediamosa_solr::settingInstantlyAUT(),
   );
 
   return $form;

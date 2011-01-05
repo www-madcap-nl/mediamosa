@@ -68,7 +68,7 @@ class mediamosa {
 
   // Check if we will log rest calls to log().
   public function is_log_rest() {
-    return variable_get('mediamosa_watchdog_rest', TRUE);
+    return variable_get('mediamosa_watchdog_rest', FALSE);
   }
 
   // Drupal usage for getting the current URI.
@@ -113,9 +113,8 @@ class mediamosa {
   }
 
   /**
-   * Returns the timezone of the current session. Is by default Europe/Paris.
+   * Returns the timezone of the current session. Is by default Europe/Amsterdam.
    * Is set when REST call is run and the application timezone is used.
-   *
    */
   static public function get_restcall_timezone($timezone = NULL) {
     static $timezone_static = NULL;
@@ -211,7 +210,7 @@ class mediamosa {
         // Unlike drupal, we don't treat recoverable errors as fatal, preventing Drupal to display error page.
         _drupal_log_error(array(
           '%type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
-          '%message' => $message,
+          '!message' => check_plain($message),
           '%function' => $caller['function'],
           '%file' => $caller['file'],
           '%line' => $caller['line'],

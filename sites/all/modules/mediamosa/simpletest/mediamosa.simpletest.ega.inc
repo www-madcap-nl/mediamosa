@@ -1168,17 +1168,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Get response.
-    $a_response = mediamosa_lib::responsexml2array($response['xml']);
-    $a_stills = $a_response['items']['item'];
+    $response = mediamosa_lib::responsexml2array($response['xml']);
+    $stills = $response['items']['item'];
 
     // Did we get something?
     $this->assertTrue(
-      count($a_stills),
+      count($stills),
       'Got the mediafile stills'
     );
 
     // Return data.
-    return $a_stills;
+    return $stills;
   }
 
 
@@ -3208,7 +3208,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do Post call.
     $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
-
+$this->var_export($response['xml']);
     // Test return status.
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
@@ -3313,13 +3313,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     $expected = $this->cql_expected_ids($found, $expected_asset_ids, 'asset_id', $granted);
 
-    $found_ids = array();
+    $found_ids_2 = $found_ids = array();
     foreach ($found as $key_item => $item) {
+      $found_ids_2[] = $item['asset_id'] . ($granted ? ($item['granted'] ? ' (granted)' : ' (not granted)') : ' [always granted]');
       $found_ids[] = $item['asset_id'];
     }
 
     // Now see if we got what we wanted.
-    $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $found_ids), '@expected' => implode(', ', array_keys($expected_asset_ids)))));
+    $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $found_ids_2), '@expected' => implode(', ', array_keys($expected_asset_ids)))));
 
     // Return the asset IDs in order of the items.
     return $found_ids;
@@ -3599,5 +3600,26 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     if (!$sorting_ok) {
       $this->pass('Got IDs in order; ' . implode(', ', $got) . '; expecting in order;' .  implode(', ', $expected));
     }
+  }
+
+  /**
+   * Search engine switches.
+   */
+
+  /**
+   * Can find "" around word(s).
+   */
+  public function engine_fulltext_can_find_with_quotes() {
+    return TRUE;
+  }
+
+  /**
+   * Indexes per word or per line?
+   *
+   * Text; master : m*r will match?
+   *       maste foor : m*r will match?
+   */
+  public function engine_fulltext_wildcard_indexes_lines() {
+    return TRUE;
   }
 }

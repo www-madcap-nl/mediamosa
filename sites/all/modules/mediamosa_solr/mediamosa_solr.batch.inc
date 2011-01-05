@@ -86,11 +86,8 @@ function _mediamosa_solr_batch_reindex(&$context) {
     $context['sandbox']['max'] = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')->countQuery()->execute()->fetchField();
   }
 
-  // Keep updating the max, because it might change during batch.
-  $context['sandbox']['max'] = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')->countQuery()->execute()->fetchField();
-
-  // Do 100 assets per cycle.
-  $limit = 100;
+  // Do 50 assets per cycle.
+  $limit = 1000;
 
   $asset_ids = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a')
     ->fields('a', array(mediamosa_asset_db::ID))
@@ -111,6 +108,7 @@ function _mediamosa_solr_batch_reindex(&$context) {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
   }
   else {
+    $context['finished'] = 1;
     $context['results'][] = $context['sandbox']['max'];
   }
 }

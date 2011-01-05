@@ -37,7 +37,7 @@ function mediamosa_connector_menu() {
   $items = array();
 
   $items['admin/config/development/mediamosa/connector'] = array(
-    'title' => 'MediaMosa Connector',
+    'title' => 'MediaMosa connector',
     'description' => 'The MediaMosa connector enables other modules to connect on the MediaMosa REST interface. The configuration needs username, password and URL to connect to MediaMosa. You need to create or have a MediaMosa application login.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_connector_settings'),
@@ -45,7 +45,7 @@ function mediamosa_connector_menu() {
   );
 
   $items['admin/config/development/mediamosa/connector/list'] = array(
-    'title' => 'MediaMosa Connector',
+    'title' => 'MediaMosa connector',
     'access arguments' => array('administer mediamosa connector settings'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );

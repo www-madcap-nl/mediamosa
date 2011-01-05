@@ -152,6 +152,16 @@ class mediamosa_response extends mediamosa {
       // We redirect and exit.
       exit();
     }
+    catch (mediamosa_exception_error_403 $e) {
+      // Forbidden
+      header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+      exit();
+    }
+    catch (mediamosa_exception_error_404 $e) {
+      // Not dounf
+      header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+      exit();
+    }
     catch (mediamosa_exception_error $e) {
       // If we are in simpletest, we need to skip logging of mediamosa
       // exceptions, because these might be generated intentially for testing.

@@ -1,14 +1,13 @@
-; $Id: block_test.info,v 1.1 2010/02/28 17:28:38 dries Exp $
+; $Id: block_test.info,v 1.2 2010/12/20 19:59:40 webchick Exp $
 name = Block test
 description = Provides test blocks.
 package = Testing
 version = VERSION
 core = 7.x
-files[] = block_test.module
 hidden = TRUE
 
-; Information added by drupal.org packaging script on 2010-12-01
-version = "7.0-rc1"
+; Information added by drupal.org packaging script on 2010-12-30
+version = "7.0-rc4"
 project = "drupal"
-datestamp = "1291190139"
+datestamp = "1293684080"
 

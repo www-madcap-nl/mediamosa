@@ -80,7 +80,45 @@ class mediamosa_solr_apache_solr_service extends Apache_Solr_Service {
    */
 
   static public function filterDelimeters($value) {
-    return str_replace(array('^','~'), '', $value);
+    return str_replace(array('_'), '', $value);
+  }
+
+  /**
+   * Filter and escape our value;
+   *
+   * @param $value
+   */
+  static public function escapeForFunction($value) {
+    return self::escape($value);
+  }
+
+  /**
+   * Escape a value for special query characters. Skips * and ?, which are
+   * allowed to be used with CQL.
+   *
+   * @param string $value
+   * @return string
+   */
+  static public function escapeSolrForCQL($value) {
+    $pattern = '/(\+|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|:|\\\)/';
+    $replace = '\\\$1';
+
+    return mediamosa_unicode::strtolower(preg_replace($pattern, $replace, $value));
+  }
+
+  /**
+   * Escape a value for special query characters such as ':', '(', ')', '*', '?', etc.
+   *
+   * Added space escape.
+   *
+   * @param string $value
+   * @return string
+   */
+  static public function escapeForSpace($value) {
+    $pattern = '/(\+|\s|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|"|~|\*|\?|:|\\\)/';
+    $replace = '\\\$1';
+
+    return preg_replace($pattern, $replace, $value);
   }
 
   /**

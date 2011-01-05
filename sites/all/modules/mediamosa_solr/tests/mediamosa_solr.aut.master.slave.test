@@ -86,6 +86,16 @@ class MediaMosaSolrAutMasterSlaveTestCaseEga extends MediaMosaAutMasterSlaveTest
       $app_ids[] = $this->a_app_3['app_id'];
     }
 
+    // Build basic query.
+    foreach ($app_ids as $app_id) {
+      $solr_query[] = 'app_id:' . $app_id;
+    }
+
+    // Select all.
+    if (!empty($solr_query)) {
+      $solr_result = mediamosa_solr::search(implode(' OR ', $solr_query));
+    }
+
     // Remove it.
     if (!empty($app_ids)) {
       mediamosa_solr::delete_simpletest_documents($app_ids);

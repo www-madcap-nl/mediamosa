@@ -624,4 +624,36 @@ class mediamosa_asset_mediafile_still {
       )
     );
   }
+
+  /**
+   * Remove the permanent symlink to a still.
+   *
+   * @param string $still_id
+   */
+  static public function remove_permanent_link($still_id) {
+    // Remove the permanent still link.
+    $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
+    mediamosa_io::unlink($file);
+  }
+
+  /**
+   * Test if a permanent still link can be made.
+   *
+   * @param string $still_id
+   *
+   * @throws Will throw mediamosa_exception_error_is_unappropriate when you
+   *         still link is not allowed at all.
+   */
+  static public function is_still_permanent($still_id, $is_app_admin = FALSE) {
+    // Protected mediafiles (stills) can not be permanent.
+    try {
+      return !mediamosa_asset_mediafile::is_mediafile_protected($still_id, $is_app_admin);
+    }
+    catch (mediamosa_exception_error_is_unappropriate $e) {
+      throw $e;
+    }
+    catch (mediamosa_exception $e) {
+      return FALSE;
+    }
+  }
 }

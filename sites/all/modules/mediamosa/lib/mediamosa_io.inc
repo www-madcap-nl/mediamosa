@@ -346,7 +346,7 @@ class mediamosa_io {
   static public function command_installed($command, &$exec_output, $allowed_ret_values = array(0)) {
     $exec_output = array();
     $ret_val = 0;
-    exec($command, $exec_output, $ret_val);
+    exec($command . ' 2>/dev/null', $exec_output, $ret_val);
 
     // If ret_val is ok, then check if $exec_output is empty.
     if (in_array($ret_val, $allowed_ret_values)) {

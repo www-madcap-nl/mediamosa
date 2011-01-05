@@ -41,10 +41,23 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     if (!isset($mediamosa_context)) {
       $mediamosa_context = $this->m_a_mediamosa_context;
 
+      $replace = array(
+        'mime_type' => 'mime_type',
+        'aut_app' => 'mf_app_id_master',
+        'is_master_slaved' => 'asset_is_master_slaved',
+        'is_protected' => 'mf_is_protected',
+        'aut_app' => 'mf_app_id_master',
+        'aut_user' => 'mf_aut_user',
+        'aut_group' => 'mf_aut_user_group',
+        'aut_domain' => 'mf_aut_domain',
+        'aut_realm' => 'mf_aut_realm',
+        'aut_realm_prefix' => 'mf_aut_realm_prefix',
+      );
+
       foreach ($mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $context_set => &$lvl1) {
         foreach ($lvl1[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS] as $column_name => $column) {
-          if ($column_name == 'mime_type') {
-            $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['column'] = 'mime_type';
+          if (isset($replace[$column_name])) {
+            $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['column'] = $replace[$column_name];
           }
 
           $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['table_for_sort'] = $mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$column_name]['column'];
@@ -76,13 +89,13 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         switch ($a_def['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_INT:
             $column = $name . '_vi';
-            $sort_column = $name . '_svc';
+            $sort_column = $name . '_svi';
             $type = mediamosa_sdk::TYPE_INT;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
             $column = $name . '_vd';
-            $sort_column = $name . '_svc';
+            $sort_column = $name . '_svd';
             $type = mediamosa_sdk::TYPE_DATETIME;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
@@ -121,7 +134,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
    *
    * @return array
    */
-  public function mediamosa_core_cql_context_index2column_finalize(mediamosa_cql_part $cql_part, mediamosa_cql_part_relation $cql_part_relation, array &$a_result, $str_index, $do_having) {
+  public function mediamosa_core_cql_context_index2column_finalize(mediamosa_cql_part $cql_part, mediamosa_cql_part_relation $cql_part_relation, array &$result, $str_index, $do_having) {
 
     $cql_part_search_term = $cql_part->mediamosa_cql_part_search_term_get();
     $cql_part_boolean = $cql_part->mediamosa_cql_part_boolean_get();
@@ -140,84 +153,216 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
       throw new mediamosa_cql_exception('index not found, use verify before you parse the cql string.', CQL_EXCEPTION_SEVERITY_HIGH);
     }
 
-    if (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING]) && $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] && !$do_having) {
-      return '';
+    // Solr does not support having.
+    $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
+    // Special case when these keys are used.
+    $aut_joins = array(
+      'AUT_NAME_USER',
+      'AUT_NAME_USER_GROUP',
+      'AUT_GROUP_DOMAIN',
+      'AUT_GROUP_REALM',
+      'AUT_APP_MASTER_SLAVE',
+    );
+    if (!empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN]) && in_array($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN], $aut_joins)) {
+      $result['is_aut_search'] = TRUE;
     }
 
-    if (!isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING])) {
-      $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
+    // For some special cases.
+    if (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN])) {
+      $result['a_joins'][$str_index] = $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN];
     }
 
-    if (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING]) && !$index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] && $do_having) {
-      return '';
-    }
+    // Is asset metadata?
+    $is_metadata = empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID]) ? FALSE : TRUE;
 
     $str_table_column = $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
+    $str_table_column_exact = $is_metadata ? $str_table_column . '_exact' : $str_table_column;
 
     if (isset($index2column['select_expr'])) {
-      $a_result['a_select_expr'][$str_index] = $index2column['select_expr'];
+      $result['a_select_expr'][$str_index] = $index2column['select_expr'];
     }
 
+    // Get the search tern.
     $str_search_term = $cql_part_search_term->mediamosa_cql_part_str_get();
 
-// Export data.
-mediamosa_debug::log_export($index2column);
+    // NULL values allowed.
+    $has_null = isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL] : FALSE;
 
     $parts_or = $parts = $sub_parts = array();
+
+    // Default is OR.
+    $str_sub_parts_glue = ' OR ';
+    $str_relation = $cql_part_relation->mediamosa_cql_part_str_get();
+    $has_not = $cql_part->mediamosa_cql_part_has_not();
 
     switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
       case mediamosa_sdk::TYPE_INT:
         break;
 
       case mediamosa_sdk::TYPE_DATETIME:
-        $str = '0000-01-01T00:00:00Z';
-        $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
+        if ($str_relation != 'within') {
+          $str = '0000-01-01T00:00:00Z';
+          $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
+        }
         break;
 
       case mediamosa_sdk::TYPE_DOMAIN:
       case mediamosa_sdk::TYPE_REALM:
       case mediamosa_sdk::TYPE_STRING:
+        // Do NULL compare?
+        if (mediamosa_unicode::strtolower($str_search_term) == 'null') {
+          switch ($str_relation) {
+            case '<>':
+              $str_relation = 'IS NOT NULL';
+              break;
+
+            default:
+              $str_relation = 'IS NULL';
+              break;
+          }
+        }
+
         break;
 
       case mediamosa_sdk::TYPE_BOOL:
-        break;
-
       case mediamosa_sdk::TYPE_BOOL_IS_SLAVED:
+        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == "true" ? "TRUE" : "FALSE");
+
+        $bool_is_true = $str_search_term == "TRUE";
+
+        // Lets prevent usage of NOT.
+        $bool_is_true = ($str_relation == '<>' ? !$bool_is_true : $bool_is_true);
+
+        // Back into text.
+        $str_search_term = $bool_is_true ? 'TRUE' : 'FALSE';
+
+        // Prevent usage of <>.
+        $str_relation = 'bool';
         break;
 
       case mediamosa_sdk::TYPE_JOB_PROGRESS:
         throw new mediamosa_solr_exception('Type TYPE_JOB_PROGRESS is not supported by asset SOLR, job context.');
     }
 
-    // Default is OR.
-    $str_sub_parts_glue = ' OR ';
-    $str_relation = $cql_part_relation->mediamosa_cql_part_str_get();
-    $has_not = $cql_part->mediamosa_cql_part_has_not();
-mediamosa_debug::log($str_search_term);
-mediamosa_debug::log($str_relation);
-mediamosa_debug::log($has_not ? "has not" : 'no not');
+    // Switch NOT value when <> is found.
+    if ($str_relation == '<>') {
+      $has_not = !$has_not;
+      $str_relation = '=';
+    }
 
     switch ($str_relation) {
+      case 'bool':
+        $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
+        break;
+
       case 'all':
         $str_sub_parts_glue = ' AND ';
 
       case '=':
       case 'any':
-        $words = explode(' ', $str_search_term);
+        // Split whitespace up into words.
+        $words = preg_split('/\s+/', $str_search_term);
         foreach ($words as $word) {
           if (trim($word) == '') {
             continue;
           }
 
-          $sub_parts[] = $word;
-        }
+          switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+            case mediamosa_sdk::TYPE_INT:
+            case mediamosa_sdk::TYPE_UINT:
+              $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escape($word);
+              break;
 
-        $sub_parts = array($str_table_column . ':' . mediamosa_solr_apache_solr_service::phrase(implode(' ', $sub_parts)) );
+            default:
+              // Remove trailing ^.
+              if (mediamosa_unicode::substr($word, 0, 1) == '^' && mediamosa_unicode::substr($word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $word), -2) != '\^') {
+                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($word, 1, -1));
+              }
+              elseif (mediamosa_unicode::substr($word, 0, 1) == '^') {
+                // Convert to LC, wildcard Solr search does no lower case translation.
+                $word = mediamosa_unicode::strtolower($word);
+
+                // Left ancor.
+                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($word, 1)) . '*';
+              }
+              elseif (mediamosa_unicode::substr($word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $word), -2) != '\^') {
+                // Right ancor.
+                $sub_parts[] = $str_table_column_exact . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($word, 0, -1));
+              }
+              else {
+                // No ancor search.
+                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace($word) . '*';
+              }
+          }
+        }
         break;
 
       case '==':
       case 'adj':
-        $sub_parts = array($str_table_column . ':' . mediamosa_solr_apache_solr_service::phrase($str_search_term));
+        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+          case mediamosa_sdk::TYPE_INT:
+          case mediamosa_sdk::TYPE_UINT:
+            $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escape($str_search_term);
+            break;
+
+          default:
+            if ($is_metadata) {
+              // Remove trailing ^.
+              if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                if ($cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
+                  $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+                }
+
+                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1, -1));
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Left ancor.
+                $sub_parts[] = $str_table_column_exact . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1)) . '*';
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Right ancor.
+                $sub_parts[] = $str_table_column_exact . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 0, -1));
+              }
+              else {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // No ancor search.
+                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace('*' . $str_search_term . '*');
+              }
+            }
+            else {
+              // Remove trailing ^.
+              if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                if ($cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
+                  $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+                }
+
+                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1, -1));
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Left ancor.
+                $sub_parts[] = $str_table_column . ':' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 1)) . '*';
+              }
+              elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\', '', $str_search_term), -2) != '\^') {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // Right ancor.
+                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace(mediamosa_unicode::substr($str_search_term, 0, -1));
+              }
+              else {
+                $str_search_term = mediamosa_unicode::strtolower($str_search_term);
+
+                // No ancor search.
+                $sub_parts[] = $str_table_column . ':*' . mediamosa_solr_apache_solr_service::escapeForSpace($str_search_term) . '*';
+              }
+            }
+        }
         break;
 
       case '<>':
@@ -226,363 +371,59 @@ mediamosa_debug::log($has_not ? "has not" : 'no not');
         break;
 
       case '>':
-        $sub_parts = array(strtr('@field:[@value TO *]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
+        $sub_parts = array(strtr('@field:{@value TO *}', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
+
       case '>=':
         $sub_parts = array(strtr('@field:[@value TO *]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
+
       case '<':
-        $sub_parts = array(strtr('@field:[* TO @value]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
+        $sub_parts = array(strtr('@field:{* TO @value}', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
+
       case '<=':
         $sub_parts = array(strtr('@field:[* TO @value]', array('@field' => $str_table_column, '@value' => mediamosa_solr_apache_solr_service::escape($str_search_term))));
         break;
+
       case 'within':
         // Split up.
         $values = explode(' ', $str_search_term);
 
+        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+          case mediamosa_sdk::TYPE_DATETIME:
+            $str = '0000-01-01T00:00:00Z';
+            $values[0] = $values[0] . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($values[0]));
+            $values[1] = $values[1] . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($values[1]));
+            break;
+
+          default:
+            break;
+        }
+
         $sub_parts = array(strtr('@field:[@value_1 TO @value_2]', array('@field' => $str_table_column, '@value_1' => mediamosa_solr_apache_solr_service::escape($values[0]), '@value_2' => mediamosa_solr_apache_solr_service::escape($values[1]))));
         break;
 
+      // Special cases.
+      case 'IS NULL':
+        $sub_parts = array(strtr('-@field:*', array('@field' => $str_table_column)));
+        break;
+
+      case 'IS NOT NULL':
+        $sub_parts = array(strtr('@field:*', array('@field' => $str_table_column)));
+        break;
+
     }
-mediamosa_debug::log_export($sub_parts);
-    // Into one.
-    $parts[] = (count($sub_parts) < 2 ? '' : '(') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) < 2 ? '' : ')');
-mediamosa_debug::log_export($parts);
-
-    return ($has_not ? '-' : '') . (count($parts) < 2 ? '' : '(') . implode (' OR ', $parts) . (count($parts) < 2 ? '' : ')');
-
-  //  if ($cql_part_boolean) {
- //     $str_boolean = $cql_part_boolean->mediamosa_cql_part_str_get();
- //     $a_parts[] = ($str_boolean == 'NOT' ? 'AND ' : '') . $str_boolean;
-  //  }
-
-    //$a_parts_or[] = (($has_not && count($a_parts) ? 'NOT ' : '') . implode(' ', $a_parts));
-
-    //if ( ($do_null || $has_not) && $has_null) {
-    //  $a_parts_or[] = sprintf('%s IS NULL', $str_table_column);
-    //}
-
-    return count($a_parts_or) > 1 ? '(' . implode(' OR ', $a_parts_or) . ')' : reset($a_parts_or);
-
-
-    switch ($str_relation) {
-      case 'all':
-        $str_sub_parts_glue = ' AND ';
-
-      case '=':
-      case 'any':
-        $a_words = explode(' ', $str_search_term);
-        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
-          case mediamosa_sdk::TYPE_INT:
-          case mediamosa_sdk::TYPE_UINT:
-            // Rewrite to IN statement: $str_table_column IN ($a_sub_parts).
-            $tmp = array();
-            foreach ($a_words as $str_word) {
-              $tmp[] = sprintf('%d', (int)$str_word);
-            }
-
-            if (count($tmp)  == 1) {
-              $a_sub_parts[] = sprintf('%s = %s', $str_table_column, implode(',', $tmp));
-            }
-            else {
-              $a_sub_parts[] = sprintf('%s IN(%s)', $str_table_column, implode(',', $tmp));
-            }
-            break;
-          default:
-            foreach ($a_words as $str_word) {
-              if (trim($str_word) == '') {
-                continue;
-              }
-
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
-                $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
-              }
-
-              $ancor_right = $ancor_left = '%';
-
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^') {
-                $str_word = mediamosa_unicode::substr($str_word, 1);
-                $ancor_left = '';
-              }
-
-              if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
-                $str_word = mediamosa_unicode::substr($str_word, 0, -1);
-                $ancor_right = '';
-              }
-
-              $a_sub_parts[] = sprintf("%s%s LIKE %s%s%s%s%s", $str_binary, $str_table_column, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_word), $ancor_right, $str_quotes);
-            }
-            break;
-        }
-        break;
-      case '<>':
-        $str_like = 'NOT LIKE';
-        $str_compare = '<>';
-        $do_null = TRUE;
-      case '==':
-      case 'adj':
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
-          $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
-        }
-
-        // Fixing search on empty string.
-        // TODO: needs testing.
-        /*
-        if (trim($str_search_term) == '') {
-          continue;
-        }
-         */
-
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
-          $a_sub_parts[] = sprintf("%s%s %s %s%s%%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 1)), $str_quotes);
-        }
-        elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
-          $a_sub_parts[] = sprintf("%s%s %s %s%%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 0, -1)), $str_quotes);
-        }
-        else {
-          if ($cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
-            $ancor_right = $ancor_left = '%';
-            $str_compare = $str_like;
-          }
-
-          $a_sub_parts[] = sprintf("%s%s %s %s%s%s%s%s", $str_binary, $str_table_column, $str_compare, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $ancor_right, $str_quotes);
-        }
-        break;
-      case '>':
-        $a_sub_parts[] = sprintf("%s%s > %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case '>=':
-        $a_sub_parts[] = sprintf("%s%s >= %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case '<':
-        $a_sub_parts[] = sprintf("%s%s < %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case '<=':
-        $a_sub_parts[] = sprintf("%s%s <= %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case 'within':
-        $a_within = explode(' ', $str_search_term);
-        $str_sub_parts_glue = ' AND ';
-
-        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
-          case mediamosa_sdk::TYPE_INT:
-            $a_sub_parts[] = sprintf("%s >= %s", $str_table_column, intval($a_within[0]));
-            $a_sub_parts[] = sprintf("%s <= %s", $str_table_column, intval($a_within[1]));
-            break;
-          case mediamosa_sdk::TYPE_DATETIME:
-            $a_sub_parts[] = sprintf("%s >= '%s'", $str_table_column, $this->mediamosa_cql_context_sql_escape($this->mediamosa_cql_str_date_2_db_date($a_within[0])));
-            $a_sub_parts[] = sprintf("%s <= '%s'", $str_table_column, $this->mediamosa_cql_context_sql_escape($this->mediamosa_cql_str_date_2_db_date($a_within[1])));
-            break;
-          default:
-            $a_sub_parts[] = sprintf("%s%s >= '%s'", $str_binary, $str_table_column, $this->mediamosa_cql_context_sql_escape($a_within[0]));
-            $a_sub_parts[] = sprintf("%s%s <= '%s'", $str_binary, $str_table_column, $this->mediamosa_cql_context_sql_escape($a_within[1]));
-            break;
-        }
-    }
-
-
-    return;
-/*
-    $a_parts_or = $a_parts = $a_sub_parts = array();
-    $str_sub_parts_glue = ' OR ';
-    $str_like = 'LIKE';
-    $str_compare = '=';
-    $str_binary = '';
-    $has_not = $cql_part->mediamosa_cql_part_has_not();
-
-    $str_relation = $cql_part_relation->mediamosa_cql_part_str_get();
-    $has_null = isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL] : FALSE;
-    $do_null = FALSE;
-
-    switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
-      case mediamosa_sdk::TYPE_INT:
-        $str_quotes = '';
-        if ($str_relation != 'within') {
-          $str_search_term = (int)$str_search_term; // make sure its an integer.... :)
-        }
-        break;
-      case mediamosa_sdk::TYPE_DATETIME:
-        if ($str_relation != 'within') {
-          // Now into DB
-          $str_search_term = $this->mediamosa_cql_str_date_2_db_date($str_search_term);
-
-          if ($str_relation == '=' || $str_relation == 'any') {
-            $str_relation = '==';
-          }
-          $str_quotes = '\'';
-        }
-        break;
-      case mediamosa_sdk::TYPE_DOMAIN:
-      case mediamosa_sdk::TYPE_REALM:
-      case mediamosa_sdk::TYPE_STRING:
-        if (in_array('respectcase', $a_relation_modifiers)) {
-          $str_binary = 'BINARY ';
-        }
-        $str_quotes = '\'';
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) !== '*' && mediamosa_unicode::substr($str_search_term, 0, 1) !== '^') {
-          $str_search_term = '*' . $str_search_term;
-        }
-
-        if (drupal_strlen($str_search_term) > 1) {
-          if (mediamosa_unicode::substr($str_search_term, -1) != '*' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -1) != '\*' && mediamosa_unicode::substr($str_search_term, -1) != '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
-            $str_search_term .= '*';
-          }
-        }
-
-        break;
-      case mediamosa_sdk::TYPE_BOOL:
-        $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == "true" ? "TRUE" : "FALSE");
-        $str_quotes = '\'';
-        $str_like = '=';
-        $str_relation = '==';
-        break;
-
-      case mediamosa_sdk::TYPE_BOOL_IS_SLAVED:
-        $is_slaved = mediamosa_unicode::strtolower($str_search_term) == "true";
-        $is_slaved = $str_relation == '<>' ? !$is_slaved : $is_slaved;
-
-        $str_search_term = reset($this->app_ids);
-        $str_quotes = '';
-        $str_relation = $str_like = $is_slaved ? '=' : '<>';
-        // Change type to int.
-        $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] = mediamosa_sdk::TYPE_UINT;
-        break;
-
-      case mediamosa_sdk::TYPE_JOB_PROGRESS:
-        $str_quotes = '\'';
-        $str_like = '=';
-        break;
-
-      default:
-        $str_quotes = '\'';
-        break;
-    }
-
-    $ancor_right = $ancor_left = '';
-
-    switch ($str_relation) {
-
-      case 'all':
-        $str_sub_parts_glue = ' AND ';
-      case '=':
-      case 'any':
-        $a_words = explode(' ', $str_search_term);
-        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
-          case mediamosa_sdk::TYPE_INT:
-          case mediamosa_sdk::TYPE_UINT:
-            // Rewrite to IN statement: $str_table_column IN ($a_sub_parts).
-            $tmp = array();
-            foreach ($a_words as $str_word) {
-              $tmp[] = sprintf('%d', (int)$str_word);
-            }
-
-            if (count($tmp)  == 1) {
-              $a_sub_parts[] = sprintf('%s = %s', $str_table_column, implode(',', $tmp));
-            }
-            else {
-              $a_sub_parts[] = sprintf('%s IN(%s)', $str_table_column, implode(',', $tmp));
-            }
-            break;
-          default:
-            foreach ($a_words as $str_word) {
-              if (trim($str_word) == '') {
-                continue;
-              }
-
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
-                $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
-              }
-
-              $ancor_right = $ancor_left = '%';
-
-              if (mediamosa_unicode::substr($str_word, 0, 1) == '^') {
-                $str_word = mediamosa_unicode::substr($str_word, 1);
-                $ancor_left = '';
-              }
-
-              if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
-                $str_word = mediamosa_unicode::substr($str_word, 0, -1);
-                $ancor_right = '';
-              }
-
-              $a_sub_parts[] = sprintf("%s%s LIKE %s%s%s%s%s", $str_binary, $str_table_column, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_word), $ancor_right, $str_quotes);
-            }
-            break;
-        }
-        break;
-      case '<>':
-        $str_like = 'NOT LIKE';
-        $str_compare = '<>';
-        $do_null = TRUE;
-      case '==':
-      case 'adj':
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^' && mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
-          $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
-        }
-
-        if (mediamosa_unicode::substr($str_search_term, 0, 1) == '^') {
-          $a_sub_parts[] = sprintf("%s%s %s %s%s%%%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 1)), $str_quotes);
-        }
-        elseif (mediamosa_unicode::substr($str_search_term, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_search_term), -2) != '\^') {
-          $a_sub_parts[] = sprintf("%s%s %s %s%%%s%s", $str_binary, $str_table_column, $str_like, $str_quotes, $this->mediamosa_cql_context_sql_escape_like(mediamosa_unicode::substr($str_search_term, 0, -1)), $str_quotes);
-        }
-        else {
-          if ($cql_part_search_term->mediamosa_cql_contains_wildcards($str_search_term)) {
-            $ancor_right = $ancor_left = '%';
-            $str_compare = $str_like;
-          }
-
-          $a_sub_parts[] = sprintf("%s%s %s %s%s%s%s%s", $str_binary, $str_table_column, $str_compare, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $ancor_right, $str_quotes);
-        }
-        break;
-      case '>':
-        $a_sub_parts[] = sprintf("%s%s > %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case '>=':
-        $a_sub_parts[] = sprintf("%s%s >= %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case '<':
-        $a_sub_parts[] = sprintf("%s%s < %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case '<=':
-        $a_sub_parts[] = sprintf("%s%s <= %s%s%s", $str_binary, $str_table_column, $str_quotes, $this->mediamosa_cql_context_sql_escape_like($str_search_term), $str_quotes);
-        break;
-      case 'within':
-        $a_within = explode(' ', $str_search_term);
-        $str_sub_parts_glue = ' AND ';
-
-        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
-          case mediamosa_sdk::TYPE_INT:
-            $a_sub_parts[] = sprintf("%s >= %s", $str_table_column, intval($a_within[0]));
-            $a_sub_parts[] = sprintf("%s <= %s", $str_table_column, intval($a_within[1]));
-            break;
-          case mediamosa_sdk::TYPE_DATETIME:
-            $a_sub_parts[] = sprintf("%s >= '%s'", $str_table_column, $this->mediamosa_cql_context_sql_escape($this->mediamosa_cql_str_date_2_db_date($a_within[0])));
-            $a_sub_parts[] = sprintf("%s <= '%s'", $str_table_column, $this->mediamosa_cql_context_sql_escape($this->mediamosa_cql_str_date_2_db_date($a_within[1])));
-            break;
-          default:
-            $a_sub_parts[] = sprintf("%s%s >= '%s'", $str_binary, $str_table_column, $this->mediamosa_cql_context_sql_escape($a_within[0]));
-            $a_sub_parts[] = sprintf("%s%s <= '%s'", $str_binary, $str_table_column, $this->mediamosa_cql_context_sql_escape($a_within[1]));
-            break;
-        }
-    }
-
-    $a_parts[] = ( (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX] : '') . (count($a_sub_parts) ? '(' : '') . implode($str_sub_parts_glue, $a_sub_parts) . (count($a_sub_parts) ? ')' : '') . (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX] : ''));
 
     if ($cql_part_boolean) {
       $str_boolean = $cql_part_boolean->mediamosa_cql_part_str_get();
-      $a_parts[] = ($str_boolean == 'NOT' ? 'AND ' : '') . $str_boolean;
+      $str_boolean = ($str_boolean == 'NOT' ? ' AND ' : ' ' . $str_boolean . ' ');
     }
 
-    $a_parts_or[] = (($has_not && count($a_parts) ? 'NOT ' : '') . implode(' ', $a_parts));
+    // Into one.
+    $parts[] = (count($sub_parts) < 2 ? '' : '(') . implode($str_sub_parts_glue, $sub_parts) . (count($sub_parts) < 2 ? '' : ')');
 
-    if ( ($do_null || $has_not) && $has_null) {
-      $a_parts_or[] = sprintf('%s IS NULL', $str_table_column);
-    }
-
-    return count($a_parts_or) > 1 ? '(' . implode(' OR ', $a_parts_or) . ')' : reset($a_parts_or);
-    */
+    return ($has_not ? '-' : '') . (count($parts) < 2 ? '' : '(') . implode (' OR ', $parts) . (count($parts) < 2 ? '' : ')') . (empty($str_boolean) ? '' : $str_boolean);
   }
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: system.install,v 1.528 2010/11/30 01:05:24 dries Exp $
+// $Id: system.install,v 1.531 2010/12/29 03:46:39 webchick Exp $
 
 /**
  * @file
@@ -2115,21 +2115,6 @@ function system_update_7021() {
 }
 
 /**
- * Add the substr_index() function to PostgreSQL.
- *
- * Note: this should go into the driver itself, but we have no support
- * for driver-specific updates yet.
- */
-function system_update_7024() {
-  if (db_driver() == 'pgsql') {
-    db_query('CREATE OR REPLACE FUNCTION "substring_index"(text, text, integer) RETURNS text AS
-      \'SELECT array_to_string((string_to_array($1, $2)) [1:$3], $2);\'
-      LANGUAGE \'sql\''
-    );
-  }
-}
-
-/**
  * Enable field type modules.
  */
 function system_update_7027() {
@@ -2940,14 +2925,27 @@ function system_update_7066() {
 }
 
 /**
- * Allow all users to view the administration theme.
+ * Grant administrators permission to view the administration theme.
  */
 function system_update_7067() {
-  // Preserve the site's current behavior of automatically allowing all users
-  // to view the administration theme whenever they have access to an
-  // administrative page.
-  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('view the administration theme'));
-  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('view the administration theme'));
+  // Users with access to administration pages already see the administration
+  // theme in some places (if one is enabled on the site), so we want them to
+  // continue seeing it.
+  $admin_roles = user_roles(FALSE, 'access administration pages');
+  foreach (array_keys($admin_roles) as $rid) {
+    _update_7000_user_role_grant_permissions($rid, array('view the administration theme'), 'system');
+  }
+  // The above check is not guaranteed to reach all administrative users of the
+  // site, so if the site is currently using an administration theme, display a
+  // message also.
+  if (variable_get('admin_theme')) {
+    if (empty($admin_roles)) {
+      drupal_set_message('The new "View the administration theme" permission is required in order to view your site\'s administration theme. You can grant this permission to your site\'s administrators on the <a href="' . url('admin/people/permissions', array('fragment' => 'module-system')) . '">permissions page</a>.');
+    }
+    else {
+      drupal_set_message('The new "View the administration theme" permission is required in order to view your site\'s administration theme. This permission has been automatically granted to the following roles: <em>' . check_plain(implode(', ', $admin_roles)) . '</em>. You can grant this permission to other roles on the <a href="' . url('admin/people/permissions', array('fragment' => 'module-system')) . '">permissions page</a>.');
+    }
+  }
 }
 
 /**
@@ -2962,6 +2960,15 @@ function system_update_7068() {
     'default' => '',
   );
   db_change_field('url_alias', 'language', 'language', $spec);
+}
+
+/**
+ * Remove the obsolete 'site_offline' variable.
+ *
+ * @see update_fix_d7_requirements()
+ */
+function system_update_7069() {
+  variable_del('site_offline');
 }
 
 /**

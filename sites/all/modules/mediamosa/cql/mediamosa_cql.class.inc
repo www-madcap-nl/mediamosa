@@ -365,7 +365,7 @@ abstract class mediamosa_cql {
       assert($str_result != '"'); // removed code here that handled this, but $str_result can never be '"'...
     }
 
-    return $str_result;
+    return $is_quoted ? stripslashes($str_result) : $str_result;
   }
 
   /**
@@ -375,17 +375,17 @@ abstract class mediamosa_cql {
    * @param integer $i_pos
    * @return string
    */
-  private function mediamosa_cql_next_quoted($str_cql, &$i_pos) {
-    $is_escaped = $this->mediamosa_cql_next_pos($str_cql, $i_pos, TRUE);
+  private function mediamosa_cql_next_quoted($str_cql, &$pos) {
+    $is_escaped = $this->mediamosa_cql_next_pos($str_cql, $pos, TRUE);
 
-    $str = '"' . $this->mediamosa_cql_next($str_cql, $i_pos, TRUE, $is_escaped, array('"')) . '"';
+    $str = '"' . $this->mediamosa_cql_next($str_cql, $pos, TRUE, $is_escaped, array('"')) . '"';
 
     // If the string didn't end with an ", the cql is not valid.
-    if (mediamosa_unicode::strlen($str_cql) <= $i_pos || mediamosa_unicode::substr($str_cql, $i_pos, 1) != '"') {
+    if (mediamosa_unicode::strlen($str_cql) <= $pos || mediamosa_unicode::substr($str_cql, $pos, 1) != '"') {
       throw new mediamosa_cql_exception_eo_quote_unmatched();
     }
 
-    $i_pos++;
+    $pos++;
     return $str;
   }
 

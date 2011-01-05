@@ -75,12 +75,13 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     $ticket_id = $this->get_param_value(self::TICKET_ID);
 
     if (!$ticket_id && !$still_id) {
+      throw new mediamosa_exception_error(mediamosa_error::HTTP_FORBIDDEN);
+
       // Nor ticket_id, nor still_id.
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
+      //throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
     }
 
     if ($ticket_id) {
-
       //
       // Temporary link.
       //
@@ -105,22 +106,19 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
       // No perm link? Then check access, based on that create a perm link.
       if (!file_exists($file)) {
-        // Get the mediafile_id, asset_id.
-        $mediafile = mediamosa_asset_mediafile::get($still_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::IS_PROTECTED));
 
-        if (!$mediafile) {
-          throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
+        // Check access.
+        try {
+          mediamosa_asset_mediafile::is_mediafile_protected($still_id);
         }
-
-        // Get asset.
-        $asset = mediamosa_asset::get($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
-        if (!$asset) {
-          throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
+        catch (mediamosa_exception_error_asset_not_found $e) {
+          throw new mediamosa_exception_error_404();
         }
-
-        // Forbidden when protected. We dont have enough information to do a play proxy call here.
-        if ($asset[mediamosa_asset_db::IS_PROTECTED] != mediamosa_asset_db::IS_PROTECTED_FALSE || $mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] != mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
-          throw new mediamosa_exception_error(mediamosa_error::HTTP_FORBIDDEN);
+        catch (mediamosa_exception_error_mediafile_not_found $e) {
+          throw new mediamosa_exception_error_404();
+        }
+        catch (mediamosa_exception $e) {
+          throw new mediamosa_exception_error_403();
         }
 
         // Create the permanent link.

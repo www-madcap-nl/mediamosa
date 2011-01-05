@@ -566,7 +566,7 @@ class mediamosa_aut {
     // Only owners (with the same app_id) can change access (for now)
     mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
 
-    // Eerst all oude links weggooien
+    // Replace old existing rights.
     if ($b_replace) {
       mediamosa_aut::rights_clear($app_id, $user_id, $aut_type, $object, $is_app_admin);
     }
@@ -734,68 +734,81 @@ class mediamosa_aut {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
           if (!$rights_set_domain_realm && $rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP,
             );
           }
           elseif ($rights_set_domain_realm && !$rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM,
             );
           }
           else {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE,
             );
           }
 
           // Add changed value.
-          $a_fields = mediamosa_db::db_update_enrich($a_fields);
+          $fields = mediamosa_db::db_update_enrich($fields);
 
           // Update it.
           mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
-            ->fields($a_fields)
+            ->fields($fields)
             ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
             ->execute();
 
-          // Remove the permanent still link.
-          $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($aut_object_id);
-          mediamosa_io::unlink($file);
+          // If its a still then remove the possible link to still.
+          if (mediamosa_asset_mediafile::is_still($object)) {
+            mediamosa_asset_mediafile_still::remove_permanent_link($aut_object_id);
+          }
+          else {
+            // Remove all perm. still links to stills.
+            $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($object[mediamosa_asset_mediafile_db::ASSET_ID]);
+
+            foreach ($still_ids as $still_id) {
+              mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
+            }
+          }
+
+          // Reindex the asset using the mediafile ID.
+          mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
           break;
 
         case mediamosa_aut::AUT_TYPE_ASSET:
           if (!$rights_set_domain_realm && $rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP,
             );
           }
           elseif ($rights_set_domain_realm && !$rights_set_user_usergroup) {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM,
             );
           }
           else {
-            $a_fields = array(
+            $fields = array(
               mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE,
             );
           }
 
           // Add changed value.
-          $a_fields = mediamosa_db::db_update_enrich($a_fields);
+          $fields = mediamosa_db::db_update_enrich($fields);
 
           // Update it.
           mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
-            ->fields($a_fields)
+            ->fields($fields)
             ->condition(mediamosa_asset_db::ID, $aut_object_id)
             ->execute();
 
           // Remove the permanent still links.
           $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($aut_object_id);
-
           foreach ($still_ids as $still_id) {
-            $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
-            mediamosa_io::unlink($file);
+            mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
           }
+
+          // Reindex the asset.
+          mediamosa_asset::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
           break;
 
         case mediamosa_aut::AUT_TYPE_COLLECTION:
@@ -847,31 +860,31 @@ class mediamosa_aut {
 
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        $a_fields = array(
+        $fields = array(
           mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE,
         );
 
         // Add changed value.
-        $a_fields = mediamosa_db::db_update_enrich($a_fields);
+        $fields = mediamosa_db::db_update_enrich($fields);
 
         // Update it.
         mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
-          ->fields($a_fields)
+          ->fields($fields)
           ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
           ->execute();
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        $a_fields = array(
+        $fields = array(
           mediamosa_asset_db::IS_PROTECTED => mediamosa_asset_db::IS_PROTECTED_FALSE,
         );
 
         // Add changed value.
-        $a_fields = mediamosa_db::db_update_enrich($a_fields);
+        $fields = mediamosa_db::db_update_enrich($fields);
 
         // Update it.
         mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
-          ->fields($a_fields)
+          ->fields($fields)
           ->condition(mediamosa_asset_db::ID, $aut_object_id)
           ->execute();
         break;
@@ -883,9 +896,6 @@ class mediamosa_aut {
         throw new mediamosa_exception_error_unexpected_error();
     }
 
-    // Verwijder de links tussen object en de aut_name/aut_group tabel
-    // Hierdoor verwijder je alle rechten.
-    // Verwijder ook alle master / slave links
     // Remove all links between object and the aut_name/aut_group tabel.
     // This will result into removal of all rights.
     // Also remove the master / slave links
@@ -901,6 +911,19 @@ class mediamosa_aut {
       ':aut_object_id' => $aut_object_id,
       ':app_id_slave' => $app_id,
     ));
+
+    // Reindex object.
+    switch ($aut_type) {
+      case mediamosa_aut::AUT_TYPE_MEDIAFILE:
+        // Reindex the asset using the mediafile ID.
+        mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+        break;
+
+      case mediamosa_aut::AUT_TYPE_ASSET:
+        // Reindex the asset using the mediafile ID.
+        mediamosa_asset::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
+        break;
+    }
   }
 
   /**
@@ -1094,6 +1117,9 @@ class mediamosa_aut {
           ':is_protected' => $is_protected,
           ':mediafile_id' => $aut_id_dest,
         ));
+
+        // Reindex the asset using the mediafile ID.
+        mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_id_dest), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
@@ -1101,6 +1127,9 @@ class mediamosa_aut {
           ':is_protected' => $is_protected,
           ':asset_id' => $aut_id_dest,
         ));
+
+        // Reindex the asset using the mediafile ID.
+        mediamosa_asset::mediamosa_asset_reindex(array($aut_id_dest), mediamosa_settings::SEARCH_INDEX_TYPE_AUT);
         break;
 
       default:
@@ -1146,7 +1175,7 @@ class mediamosa_aut {
    *  In some cases we want another table being used for app_id prefix.
    *
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1159,10 +1188,7 @@ class mediamosa_aut {
     }
 
     // Also require the rights from the other possible slave app(s)
-    $a_app_ids_tmp = $a_app_ids;
-    foreach ($slaves as $app_id_slave => $a_slave) {
-      $a_app_ids_tmp[] = $app_id_slave;
-    }
+    $a_app_ids_tmp = array_unique(array_merge($a_app_ids, array_keys($slaves)));
 
     // Get of this current user the aut_name/aut_group ids so we know his/her access.
     $a_aut_ids = mediamosa_aut::build_access($a_app_ids_tmp, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, $slaves);
@@ -1202,14 +1228,16 @@ class mediamosa_aut {
                 $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND][] = "mf.app_id=" . mediamosa_db::escape_string($app_id);
 
                 $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = "mf.is_protected = 'FALSE'";
-                $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = "mf.is_protected != 'FALSE'";
+
+                // RBL: Removed, because is_protected is always != FALSE when aut rules apply.
+                //$a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = "mf.is_protected != 'FALSE'";
 
                 if (count($a_aut_ids[$app_id]['a_name'])) {
                   $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "aut_obj.aut_type = 'NAME'";
                   $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "aut_obj.aut_id IN(" . implode(",", $a_aut_ids[$app_id]['a_name']) . ")";
                 }
 
-                if (count($a_aut_ids[$app_id]['a_group']) || (isset($a_aut_ids['slaves']) && isset($a_aut_ids['slaves']['a_group'][$app_id]))) {
+                if (count($a_aut_ids[$app_id]['a_group'])/* || (isset($a_aut_ids['slaves']) && isset($a_aut_ids['slaves']['a_group'][$app_id]))*/) {
                   $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "aut_obj.aut_type = 'GROUP'";
                   $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "aut_obj.aut_id IN(" . implode(",", $a_aut_ids[$app_id]['a_group']) . ")";
                 }
@@ -1420,12 +1448,10 @@ class mediamosa_aut {
               $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_aut::MEDIAFILE_IS_PROTECTED_FALSE, mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP);
 
               if (isset($a_aut_ids[$app_id_slave]) && count($a_aut_ids[$app_id_slave])) {
-                if (count($a_aut_ids[$app_id_slave]['a_name'])) {
-                  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
-                }
-
                 // Even if we dont have access we still want it in our result when granted == TRUE, so skip it when granted is TRUE
                 if (count($a_aut_ids[$app_id_slave]['a_name'])) {
+                  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
+
                   $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "aut_obja.aut_type='NAME'";
                   $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "aut_obja.aut_id IN(" . implode(",", $a_aut_ids[$app_id_slave]['a_name']) . ")";
                 }
@@ -1500,7 +1526,7 @@ class mediamosa_aut {
   }
 
   /**
-   * Check access on objects using given array asset_ids
+   * Check access on assets using given array asset_ids
    *
    * @param array $a_asset_ids
    * @param integer $app_id
@@ -1511,33 +1537,28 @@ class mediamosa_aut {
    * @return array
    *  returns the array with asset_id(s) on which we have access on
    */
-  static public function access_check_media($a_asset_ids, $mixed_app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
-
-    if (!is_array($mixed_app_id)) {
-      $mixed_app_id = array($mixed_app_id);
-    }
+  static public function access_check_assets($asset_ids, array $app_ids, $aut_user_id, array $aut_group_ids, $aut_domain, $aut_realm, $is_app_admin = FALSE) {
 
     $query = array();
 
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'a.asset_id';
     $query[mediamosa_db_query::A_FROM][] = '{mediamosa_asset} AS a';
 
-    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id IN('%s')", implode("','", $a_asset_ids));
-    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
+    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id IN('%s')", implode("','", $asset_ids));
 
     // Build the access where.
-    mediamosa_aut::build_access_where($query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $mixed_app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+    mediamosa_aut::build_access_where($query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $app_ids, $aut_user_id, $aut_group_ids, $aut_domain, $aut_realm, array(), $is_app_admin);
 
     $query_sql = mediamosa_db_query::query_select($query);
 
     $db_result = mediamosa_db::db_query($query_sql);
 
-    $a_result = array();
-    foreach ($db_result as $a_row) {
-      $a_result[$a_row['asset_id']] = $a_row['asset_id'];
+    $asset_ids = array();
+    foreach ($db_result as $row) {
+      $asset_ids[$row['asset_id']] = $row['asset_id'];
     }
 
-    return $a_result;
+    return $asset_ids;
   }
 
   /**
@@ -1552,7 +1573,7 @@ class mediamosa_aut {
    * @param string $s_aut_domain
    * @param string $s_aut_realm
    *
-   * Throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
+   * @throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
   static public function access_check_on_object($aut_type, $asset_id, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, $is_app_admin = FALSE) {
 
@@ -1570,7 +1591,7 @@ class mediamosa_aut {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, array(), $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id = '%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
@@ -1590,6 +1611,7 @@ class mediamosa_aut {
         $db_result = mediamosa_db::db_query($query_sql);
 
         if ($db_result->fetchAssoc() === FALSE) {
+          // FIXME: will always be thrown, even when unappropriate was the reason.
           throw new mediamosa_exception_error_access_denied(array('@reason' => 'mediafile is protected'));
         }
 
@@ -1603,7 +1625,7 @@ class mediamosa_aut {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($query, $aut_type, $object_id, $app_id, $aut_user_id, $aut_group_ids, $s_aut_domain, $s_aut_realm, array(), $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id ='%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";

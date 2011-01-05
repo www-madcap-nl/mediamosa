@@ -32,18 +32,19 @@
 /**
  * Show a selection of the watchdog in our own log viewer.
  */
-function _mediamosa_maintenance_browse_log() {
+function _mediamosa_maintenance_browse_log_form() {
   $rows = array();
   $icons = array(
     WATCHDOG_DEBUG     => '',
     WATCHDOG_INFO      => '',
     WATCHDOG_NOTICE    => '',
-    WATCHDOG_WARNING   => theme('image', 'misc/watchdog-warning.png', t('warning'), t('warning')),
-    WATCHDOG_ERROR     => theme('image', 'misc/watchdog-error.png', t('error'), t('error')),
-    WATCHDOG_CRITICAL  => theme('image', 'misc/watchdog-error.png', t('critical'), t('critical')),
-    WATCHDOG_ALERT     => theme('image', 'misc/watchdog-error.png', t('alert'), t('alert')),
-    WATCHDOG_EMERGENCY => theme('image', 'misc/watchdog-error.png', t('emergency'), t('emergency')),
+    WATCHDOG_WARNING   => theme('image', array('path' => 'misc/watchdog-warning.png', 'alt' => t('warning'))),
+    WATCHDOG_ERROR     => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('error'))),
+    WATCHDOG_CRITICAL  => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('critical'))),
+    WATCHDOG_ALERT     => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('alert'))),
+    WATCHDOG_EMERGENCY => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('emergency'))),
   );
+
   $classes = array(
     WATCHDOG_DEBUG     => 'dblog-debug',
     WATCHDOG_INFO      => 'dblog-info',
@@ -84,7 +85,7 @@ function _mediamosa_maintenance_browse_log() {
         $levels[$dblog->severity],
         theme('mediamosa_maintenance_date', array('timestamp' => $dblog->timestamp)),
       ),
-      // Attributes for tr
+      // Attributes for tr.
       'class' => array('dblog-' . preg_replace('/[^a-z]/i', '-', $dblog->type), $classes[$dblog->severity]),
     );
   }
@@ -92,6 +93,8 @@ function _mediamosa_maintenance_browse_log() {
   if (!$rows) {
     $rows[] = array(array('data' => t('No log messages available.'), 'colspan' => 5));
   }
+
+  $form = array();
 
   $form['log_pager_top'] = array('#theme' => 'pager');
   $form['log_table'] = array(

@@ -194,7 +194,6 @@ class mediamosa_collection_search {
 
     // Build the query.
     $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => $calculate_total_count));
-mediamosa_watchdog::log_export($query);
 
     // Do the query.
     $result = mediamosa_db::db_query($query);

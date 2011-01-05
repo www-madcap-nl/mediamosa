@@ -134,14 +134,16 @@ class mediamosa_aut_app_master_slave {
       // ignore, double row.
     }
 
-    if ($aut_object_type == mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET) {
-      // Trigger the reindex hook for external search engines.
-      try {
-        module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => array($aut_object_id)), mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE);
-      }
-      catch (Exception $e) {
-        mediamosa_watchdog::log_asset($aut_object_id, "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => $aut_object_id, '@message' => $e->getMessage()));
-      }
+    switch ($aut_object_type) {
+      case mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET:
+        // Trigger the reindex hook for external search engines.
+        mediamosa_asset::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE);
+        break;
+
+      case mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE:
+        // Trigger the reindex hook for external search engines.
+        mediamosa_asset_mediafile::mediamosa_asset_reindex(array($aut_object_id), mediamosa_settings::SEARCH_INDEX_TYPE_MASTER_SLAVE);
+        break;
     }
   }
 

@@ -91,7 +91,7 @@ function mediamosa_maintenance_browse_errorcode_edit_form($form, &$form_state, $
   $breadcrumb[] = l(t('Administer'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
-  $breadcrumb[] = l(t('Errorcode Management'), 'admin/mediamosa/browse/errorcode');
+  $breadcrumb[] = l(t('Errorcode management'), 'admin/mediamosa/browse/errorcode');
   drupal_set_breadcrumb($breadcrumb);
 
   $form = array();

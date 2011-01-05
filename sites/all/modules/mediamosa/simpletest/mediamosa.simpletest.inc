@@ -59,6 +59,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   // file to unlink on teardown.
   protected $unlinks = array();
 
+  // Change if your test needs different timezone.
+  protected $default_timezone = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
+
   // ------------------------------------------------------------------ Consts.
   // Default old user/group.
   const SIMPLETEST_USER_ID = 'Simpletest user id';
@@ -344,8 +347,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Do a REST call inside the sandbox.
    *
-   * @param array $a_app
-   *  The app_id used during the call, this can be more than one.
    * @param string $uri
    *  The uri of the REST call.
    * @param string $request_method
@@ -426,7 +427,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         $this->var_export($out['body']);
       }
       else {
-        $this->var_export_verbose(mediamosa_unicode::substr($out['body'], 0, 10000) . '...<snap>...');
+        $this->var_export_verbose(mediamosa_unicode::substr($out['body'], 0, 10000) . (mediamosa_unicode::strlen($out['body']) > 10000 ? '...<snap>...' : ''));
       }
     }
     catch (Exception $e) {
@@ -444,12 +445,12 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Get the result ID.
     if (!empty($out['xml']->header)) {
-      $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int)$out['xml']->header->request_result_id;
-      $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string)$out['xml']->header->request_result_description;
+      $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
+      $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
     }
     elseif (!empty($out['xml']->extension)) {
-      $result_id = empty($out['xml']->extension->request_result_id) ? 0 : (int)$out['xml']->extension->request_result_id;
-      $result_description = empty($out['xml']->extension->request_result_description) ? 'no description' : (string)$out['xml']->extension->request_result_description;
+      $result_id = empty($out['xml']->extension->request_result_id) ? 0 : (int) $out['xml']->extension->request_result_id;
+      $result_description = empty($out['xml']->extension->request_result_description) ? 'no description' : (string) $out['xml']->extension->request_result_description;
     }
 
     // Look for a request_result_id.
@@ -474,7 +475,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Wrapper for GET restC 98 |all
+   * Wrapper for GET restCall
    */
   protected function restCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     return $this->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids);
@@ -668,6 +669,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Add defaults.
     $fields += array(
       mediamosa_app_db::APP_ID => rand($app_id_max, $app_id_max + 1000),
+      mediamosa_app_db::TIMEZONE => $this->default_timezone,
     );
 
     // Make sure its not in normal app id range.
@@ -683,7 +685,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::QUOTA} = 0;
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
-    $node->{mediamosa_app_db::TIMEZONE} = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
+    $node->{mediamosa_app_db::TIMEZONE} = $fields[mediamosa_app_db::TIMEZONE];
 
     node_save($node);
 

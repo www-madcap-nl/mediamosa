@@ -301,11 +301,11 @@ abstract class mediamosa_rest_call {
     // Setup the calling application.
     $this->setup_calling_app($var_setup);
 
-    // Convert input datetime to UTC based on the app timezone.
-    $this->appdate2utc_rest_args($var_setup);
-
     // Set the rest call timezone.
     mediamosa::set_restcall_timezone($this->calling_app[mediamosa_app_db::TIMEZONE]);
+
+    // Convert input datetime to UTC based on the app timezone.
+    $this->appdate2utc_rest_args($var_setup);
 
     // Call the function.
     $this->do_call();
@@ -986,7 +986,7 @@ abstract class mediamosa_rest_call {
 
     // Now loop through input and convert to UTC. Specify TYPE_DATETIME_UTC when you need to skip conversion.
     foreach ($this->a_rest_args as $name => $param) {
-      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_DATETIME && $this->isset_param($name)) {
+      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_DATETIME && $this->isset_param($name) && !empty($this->a_rest_args[$name][self::PARAM_VALUE]) && $this->a_rest_args[$name][self::PARAM_VALUE] != '0000-00-00 00:00:00') {
         $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app[mediamosa_app_db::TIMEZONE]);
       }
     }

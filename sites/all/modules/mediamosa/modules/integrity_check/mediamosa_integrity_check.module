@@ -48,7 +48,7 @@ function mediamosa_integrity_check_menu() {
   $items = array();
 
   $items['admin/mediamosa/browse/integrity'] = array(
-    'title' => 'File Integrity',
+    'title' => 'File integrity',
     'description' => 'Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.',
     'page callback' => 'mediamosa_integrity_check_page',
     'access arguments' => array('view integrity'),

@@ -28,7 +28,7 @@
   * @file
   * Unittests for aut/ACL.
   */
-class MediaMosaAutMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
+class MediaMosaAutMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
@@ -287,29 +287,110 @@ class MediaMosaAutMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
 
     // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE);
-/*
-    // Remove all rights.
-    $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id_1);
-    $this->deleteMediafileAut($mediafile_id_3);
-    $this->deleteMediafileAut($mediafile_id_4);
-
-    $this->toEga_2();
-    $this->deleteMediafileAut($mediafile_id_2);
-    $this->deleteMediafileAut($mediafile_id_5);
-    $this->deleteMediafileAut($mediafile_id_6);
-
-    // All with 'aap' in title.
-    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
-
-    // Do master/slave check on asset (previous check was on mediafiles).
-    $this->toEga_2();
-    $this->setAssetAut($asset_id_5, array('aut_app' => array($app_id_1)));
-
-    // Now lets see if we see the asset as EGA1
-    // All with 'aap' in title.
-    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
- */
   }
 
+  // ------------------------------------------------------------------ Tests.
+  // Test if not original is masterslaved.
+  function testAut_MasterSlave_Non_Original() {
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3(); // no assets.
+
+    $this->toEga_1();
+
+    // Create upload file.
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Create transcode job.
+    $job_id = $this->createMediafileTranscode($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
+
+    $mediafile_id_not_org = FALSE;
+
+    // Add mediafile clean up.
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+
+          if ($mediafile_child[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE) {
+            $mediafile_id_not_org = $mediafile_child['mediafile_id'];
+          }
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
+    }
+
+    // Non original?
+    $this->assert($mediafile_id_not_org !== FALSE, 'Found non-original');
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id,
+      array(
+        'title' => 'aap noot',
+        'description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.',
+        'created' => '2007-06-06 10:15:00',
+      )
+    );
+
+    // With GRANTED = FALSE
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE));
+
+    // All with 'aap' in title for app 2, no assets must not be found.
+    $this->cql_do_search_test_assets_2('aap', array());
+
+    // App master slave for app 2
+    $this->toEga_1();
+    $this->setMediafileAut($mediafile_id_not_org, array('aut_app' => $app_id_2));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_2('aap', array($asset_id => TRUE));
+
+    // Remove all rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id_not_org);
+
+    // With GRANTED = TRUE
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // All with 'aap' in title for app 2, no assets must not be found.
+    $this->cql_do_search_test_assets_2('aap', array(), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // App master slave for app 2
+    $this->toEga_1();
+    $this->setMediafileAut($mediafile_id_not_org, array('aut_app' => $app_id_2));
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_2('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
+  }
 }

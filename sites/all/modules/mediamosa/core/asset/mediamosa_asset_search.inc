@@ -173,9 +173,7 @@ class mediamosa_asset_search {
         $a_query[VPX_DB_QUERYB_ALLOW_DISTINCT] = FALSE;
       }
 
-      // Quick hack, or else i really need to extend the MediaMosa CQL class
       if (!empty($a_result_cql2sql['a_joins'])) {
-
 
         $key = array_search('MEDIAFILE_METADATA_MIMETYPE', $a_result_cql2sql['a_joins']);
         if ($key) {
@@ -419,6 +417,7 @@ class mediamosa_asset_search {
       // Normal behaviour
       // Do the query
       $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => $calculate_total_count));
+
       // If we specify data2, then we do our read queries on the slave.
       global $databases;
       $olddb = NULL;

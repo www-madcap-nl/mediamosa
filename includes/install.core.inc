@@ -1,5 +1,5 @@
 <?php
-// $Id: install.core.inc,v 1.45 2010/11/29 04:45:10 webchick Exp $
+// $Id: install.core.inc,v 1.48 2010/12/28 18:17:27 webchick Exp $
 
 /**
  * @file
@@ -1121,6 +1121,10 @@ function install_select_profile_form($form, &$form_state, $profile_files) {
 function install_find_locales($profilename) {
   $locales = file_scan_directory('./profiles/' . $profilename . '/translations', '/\.po$/', array('recurse' => FALSE));
   array_unshift($locales, (object) array('name' => 'en'));
+  foreach ($locales as $key => $locale) {
+    // The locale (file name) might be drupal-7.2.cs.po instead of cs.po.
+    $locales[$key]->langcode = preg_replace('!^(.+\.)?([^\.]+)$!', '\2', $locale->name);
+  }
   return $locales;
 }
 
@@ -1146,8 +1150,8 @@ function install_select_locale(&$install_state) {
 
   if (!empty($_POST['locale'])) {
     foreach ($locales as $locale) {
-      if ($_POST['locale'] == $locale->name) {
-        $install_state['parameters']['locale'] = $locale->name;
+      if ($_POST['locale'] == $locale->langcode) {
+        $install_state['parameters']['locale'] = $locale->langcode;
         return;
       }
     }
@@ -1165,14 +1169,6 @@ function install_select_locale(&$install_state) {
           $output = '<p>Follow these steps to translate Drupal into your language:</p>';
           $output .= '<ol>';
           $output .= '<li>Download a translation from the <a href="http://localize.drupal.org/download" target="_blank">translation server</a>.</li>';
-          $output .= '<li>Rename the downloaded file retaining only the language code at the end of the file name and its extension. For example, if the file name is
-<pre>
-drupal-7.0.pt-br.po
-</pre>
-rename it to
-<pre>
-pt-br.po
-</pre></li>';
           $output .= '<li>Place it into the following directory:
 <pre>
 /profiles/' . $profilename . '/translations/
@@ -1238,16 +1234,15 @@ function install_select_locale_form($form, &$form_state, $locales, $profilename)
   include_once DRUPAL_ROOT . '/includes/iso.inc';
   $languages = _locale_get_predefined_list();
   foreach ($locales as $locale) {
-    // Try to use verbose locale name.
-    $name = $locale->name;
+    $name = $locale->langcode;
     if (isset($languages[$name])) {
       $name = $languages[$name][0] . (isset($languages[$name][1]) ? ' ' . st('(@language)', array('@language' => $languages[$name][1])) : '');
     }
-    $form['locale'][$locale->name] = array(
+    $form['locale'][$locale->langcode] = array(
       '#type' => 'radio',
-      '#return_value' => $locale->name,
-      '#default_value' => $locale->name == 'en' ? 'en' : '',
-      '#title' => $name . ($locale->name == 'en' ? ' ' . st('(built-in)') : ''),
+      '#return_value' => $locale->langcode,
+      '#default_value' => $locale->langcode == 'en' ? 'en' : '',
+      '#title' => $name . ($locale->langcode == 'en' ? ' ' . st('(built-in)') : ''),
       '#parents' => array('locale')
     );
   }
@@ -1411,11 +1406,15 @@ function install_configure_form($form, &$form_state, &$install_state) {
   // Warn about settings.php permissions risk
   $settings_dir = conf_path();
   $settings_file = $settings_dir . '/settings.php';
-  if (!drupal_verify_install_file(DRUPAL_ROOT . '/' . $settings_file, FILE_EXIST|FILE_READABLE|FILE_NOT_WRITABLE) || !drupal_verify_install_file(DRUPAL_ROOT . '/' . $settings_dir, FILE_NOT_WRITABLE, 'dir')) {
+  // Check that $_POST is empty so we only show this message when the form is
+  // first displayed, not on the next page after it is submitted. (We do not
+  // want to repeat it multiple times because it is a general warning that is
+  // not related to the rest of the installation process; it would also be
+  // especially out of place on the last page of the installer, where it would
+  // distract from the message that the Drupal installation has completed
+  // successfully.)
+  if (empty($_POST) && (!drupal_verify_install_file(DRUPAL_ROOT . '/' . $settings_file, FILE_EXIST|FILE_READABLE|FILE_NOT_WRITABLE) || !drupal_verify_install_file(DRUPAL_ROOT . '/' . $settings_dir, FILE_NOT_WRITABLE, 'dir'))) {
     drupal_set_message(st('All necessary changes to %dir and %file have been made, so you should remove write permissions to them now in order to avoid security risks. If you are unsure how to do so, consult the <a href="@handbook_url">online handbook</a>.', array('%dir' => $settings_dir, '%file' => $settings_file, '@handbook_url' => 'http://drupal.org/server-permissions')), 'warning');
-  }
-  else {
-    drupal_set_message(st('All necessary changes to %dir and %file have been made. They have been set to read-only for security.', array('%dir' => $settings_dir, '%file' => $settings_file)));
   }
 
   drupal_add_js(drupal_get_path('module', 'system') . '/system.js');
@@ -1714,7 +1713,7 @@ function _install_configure_form($form, &$form_state, &$install_state) {
   $countries = country_get_list();
   $form['server_settings']['site_default_country'] = array(
     '#type' => 'select',
-    '#title' => t('Default country'),
+    '#title' => st('Default country'),
     '#empty_value' => '',
     '#default_value' => variable_get('site_default_country', NULL),
     '#options' => $countries,

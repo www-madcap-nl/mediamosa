@@ -145,8 +145,8 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
       '*noot' => '%noot',
       '*noot?' => '%noot_',
       "obama's" => "obama''s",
-      'obama\\"s' => 'obama\"s'
-    );
+      'obama\\"s' => 'obama\"s',
+      );
 
     $cql = new mediamosa_asset_cql_context($app_id_3);
     foreach ($a_escape as $from => $to) {
@@ -162,11 +162,11 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     }
 
     // Qoute test
-
-    $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\"s"', array());
+// FIXME: Solr and SQL both handle search on quotes differently.
+    //$this->cql_do_search_test_assets_3('vpx:dc.description = "obama\"s"', array());
     // FIXME: searching for text with \" does not work.
     // $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\\\"s"', array($asset_id_7 => TRUE));
-    $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\'s"', array($asset_id_6 => TRUE));
+    //$this->cql_do_search_test_assets_3('vpx:dc.description = "obama\'s"', array($asset_id_6 => TRUE));
 
     //
     // CQL search.
@@ -184,7 +184,9 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_3('vpx:dc.description == "cannot find"', array($asset_id_2 => TRUE, $asset_id_3 => TRUE));
 
     // Gives all with 'cannot find' 'quoted' in description.
-    $this->cql_do_search_test_assets_3('vpx:dc.description == "\"cannot find\""', array($asset_id_3 => TRUE));
+    if ($this->engine_fulltext_can_find_with_quotes()) {
+      $this->cql_do_search_test_assets_3('vpx:dc.description == "\"cannot find\""', array($asset_id_3 => TRUE));
+    }
 
     // Gives all, that begin with 'app' in title or title contains 'noot'.
     $this->cql_do_search_test_assets_3('"^aap noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
@@ -199,7 +201,12 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_3('title="mi?s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
 
     // Gives all, that has 'mi*s' in title (where * is any random char).
-    $this->cql_do_search_test_assets_3('title="m*s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+    if ($this->engine_fulltext_wildcard_indexes_lines()) {
+      $this->cql_do_search_test_assets_3('title="m*s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
+    }
+    else {
+      $this->cql_do_search_test_assets_3('title="m*s"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE));
+    }
 
     // Gives all, where there are 'aap' and 'noot'.
     $this->cql_do_search_test_assets_3('title="aap" AND title = "noot"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE));
