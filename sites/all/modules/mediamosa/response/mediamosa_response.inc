@@ -645,7 +645,6 @@ class mediamosa_response extends mediamosa {
       }
     }
 
-
     $dom_document = new DOMDocument('1.0', 'UTF-8');
     $dom_document->formatOutput = TRUE;
 

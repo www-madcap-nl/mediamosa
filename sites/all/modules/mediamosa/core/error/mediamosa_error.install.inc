@@ -209,7 +209,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_TRANSCODE_PROFILE_EXISTS' => "Transcode profile with name '@profile_name' already exists",
     'ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND' => "Transcode profile with ID '@profile_id' was not found",
     'ERRORCODE_INVALID_STILL_TICKET' => "Invalid still ticket with ID '@ticket_id'",
-    'ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID' => "Open client application is missing for OpenAPI",
+    'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID' => "Open client application is missing for OpenAPI",
     'ERRORCODE_INVALID_REST_CALL' => "Invalid REST call with ID '@rest_call'",
   );
 

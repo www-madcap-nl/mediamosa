@@ -148,7 +148,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
     $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
 
     if (!$app_id) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID);
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID);
     }
   }
 
@@ -198,11 +198,11 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
     }
 
     if ($this->isset_param(self::SINCE)) {
-      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>"' . $since . '"';
+      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>="' . $since . '"';
     }
 
     if ($this->isset_param(self::UNTIL)) {
-      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp<"' . $until . '"';
+      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp<="' . $until . '"';
     }
 
     if ($author) {
@@ -457,7 +457,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
 
     if (!$app_id) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID);
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID);
     }
   }
 
@@ -498,7 +498,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     }
 
     if ($since) {
-      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>"' . $since . '"';
+      $cql .= ($cql ? ' AND ' : '') . 'videotimestamp>="' . $since . '"';
     }
 
     // We don't know, who the owner the page (USER_OWNER), that the current user visit.
@@ -835,7 +835,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
 
     if (!$app_id) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_OPENAPI_OPEN_APP_ID);
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID);
     }
   }
 

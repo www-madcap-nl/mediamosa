@@ -211,7 +211,7 @@ class mediamosa_rest {
       // TODO Upload, Download restriction.
 
       // OpenAPI restriction.
-      if ($is_app_restricted_openapi && drupal_substr($uri, 0, drupal_strlen(mediamosa_openapi::CALL_URI_PREFIX . '/')) != mediamosa_openapi::CALL_URI_PREFIX . '/') {
+      if ($is_app_restricted_openapi && drupal_substr($uri, 0, drupal_strlen(mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/')) != mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/') {
         continue;
       }
 
