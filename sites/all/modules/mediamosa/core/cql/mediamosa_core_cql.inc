@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -40,6 +40,7 @@ define('MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX', 'prefix');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX', 'suffix');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_NULL', 'null');// Indicate that value null is possible on this field
 define('MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION', 'direction');
+define('MEDIAMOSA_CQL_CONTEXT_KEY_CASE_SENSITIVE', 'case_sensitive');// Boolean TRUE when column is case-sensitive (like varbinary)
 
 
 class mediamosa_core_cql {
@@ -1119,6 +1120,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_STRING,
+                MEDIAMOSA_CQL_CONTEXT_KEY_CASE_SENSITIVE => TRUE,
               ),
               'group_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::GROUP_ID,
@@ -1263,6 +1265,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'asset_coll',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_sdk::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'ASSET_COLLECTION',// Trick to include the join of this table.
+                MEDIAMOSA_CQL_CONTEXT_KEY_CASE_SENSITIVE => TRUE,
               ),
             ),
           ),

@@ -34,17 +34,15 @@ OpenAPI development:
 - OpenSocial POST
 
 
-TODO: (v2.3.3)
+TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
-- ^ support CQL->Solr
-- Upgrade to RC2 drupal 7
 
-MediaMosa 2.3.4 (build 1237)
+MediaMosa 2.3.4 (build 1243)
 ----------------------------
 - Fixed some camelcase mistakes in menu items.
-- Fixed log page with Drupal 7 RC4.
-- Upgraded to Drupal 7 RC4.
+- Fixed log page with Drupal 7 Final.
+- Upgraded to Drupal 7 Final.
 - Cleaned-up unused errorcodes:
   - ERRORCODE_RETRIEVING_SERVER_JOBLIST (1302)
   - ERRORCODE_JOB_CANCEL_NOT_ALLOWED (1131)
@@ -56,6 +54,8 @@ MediaMosa 2.3.4 (build 1237)
   - ERRORCODE_ACL_ERROR_AUTHORIZED (1801)
 - Error code description texts have been reviewed and corrected where needed.
   Installed systems are not updated, only new cleaned installs.
+- Solr search on fulltext is now case-insensitive (like MySQL).
+- All other searches, beside database IDs are now case-insensitive (like MySQL). 
 
 MediaMosa 2.3.3 (build 1216)
 ----------------------------
