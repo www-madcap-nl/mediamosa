@@ -292,7 +292,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
           }
 
           $item['mediaitem'] = array(
-            'album_id' => NULL,
+            'album_id' => $item['asset_id'],
             'created' => !empty($item['qualified_dublin_core']['created']) ? $item['qualified_dublin_core']['created'] : NULL,
             'description' => !empty($item['dublin_core']['description']) ? $item['dublin_core']['description'] : NULL,
             'duration' => !empty($mediafile['metadata']['file_duration']) ? $mediafile['metadata']['file_duration'] : NULL,
@@ -535,9 +535,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     }
 
     if ($album_id) {
-      // We skip this.
-      // TODO: $album_id is the title of the collection, or the coll_id?
-      //$cql[] = 'coll_id="' . $album_id . '"';
+      $cql[] = 'asset_id="' . $album_id . '"';
     }
 
     if ($appid_parameter) {
@@ -613,7 +611,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
         }
 
         $item['mediaitem'] = array(
-          'album_id' => NULL,
+          'album_id' => $item['asset_id'],
           'created' => !empty($item['qualified_dublin_core']['created']) ? $item['qualified_dublin_core']['created'] : NULL,
           'description' => !empty($item['dublin_core']['description']) ? $item['dublin_core']['description'] : NULL,
           'duration' => !empty($mediafile['metadata']['file_duration']) ? $mediafile['metadata']['file_duration'] : NULL,
@@ -907,31 +905,14 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       $this->set_param_value(self::RESPONSE_ALT, $alt);
     }
 
-    //
-    // Create collection.
-    //
-
-    // TODO: $album_id is the title of the collection, or the coll_id?
-
-    //
-    // Create asset.
-    //
-
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
-    // See the call definition.
-    $group_id = NULL;
-    $reference_id = NULL;
-    $provider_id = NULL;
-    $parent_id = NULL;
+    // Must exists.
+    $asset = mediamosa_asset::must_exists($asset_id);
 
-    // Create the asset.
-    $asset_id = mediamosa_asset::create($app_id, $user_id_parameter, $group_id, $reference_id, $provider_id, $parent_id);
-
-    //
-    // Create mediafile.
-    //
+    // Check owner of parent asset, need ownership.
+    mediamosa_aut::owner_check($app_id, $user_id_parameter, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID]);
 
     // Set mediafile ID to something if not present.
     if (!$mediafile_id) {
@@ -989,7 +970,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     }
 
     $response['mediaitem'] = array(
-      'album_id' => NULL,
+      'album_id' => $asset_id,
       'created' => $created,
       'description' => $description,
       'duration' => NULL,
