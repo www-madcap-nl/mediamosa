@@ -114,6 +114,58 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
 </feed>',
   );
 
+  /*
+  // Albums POST.
+  $rest_calls['openapi/albums/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'OpenSocial create albums.',
+    mediamosa_rest_call::DESCRIPTION => 'The Albums Service support requests to create an Album for the currently authenticated user and app.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/albums/owner/@self',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>MediaMosa Atom Feed</title>
+  <link href="http://mediamosa.org/"/>
+  <updated>2010-12-13T18:30:02Z</updated>
+  <author>
+    <name>MediaMosa</name>
+  </author>
+  <id>MediaMosa:feed:atom:search</id>
+  <entry>
+    <title>Morning news</title>
+    <id>asset_id:Q2DQJjCMIfPejfnkM8mjekw6</id>
+  </entry>
+</feed>',
+  );
+   */
+
+  // Upload.
+  $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'OpenSocial upload.',
+    mediamosa_rest_call::DESCRIPTION => 'Content Upload is a generic mechanism to allow for a standard way to upload content.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/album/112233',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <author>
+    <name>MediaMosa</name>
+  </author>
+  <link href="http://mediamosa.org/"/>
+  <entry xmlns="http://www.w3.org/2005/Atom" xmlns:osapi="http://opensocial.org/2008/opensocialapi">
+    <content type="application/xml">
+      <mediaitem xmlns="http://ns.opensocial.org/2008/opensocial">
+        <id>223344</id>
+        <media_type>VIDEO</media_type>
+      </mediaitem>
+    </content>
+    <title />
+    <updated>2008-10-24T20:30:40.500Z</updated>
+    <author />
+  </entry>
+</feed>',
+  );
+  $rest_calls['openapi/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls['openapi/album/$album_id/mediaitem/$mediaitem_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+
   return $rest_calls;
 }
 
@@ -161,6 +213,32 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
+
+  /*
+  // Albums POST.
+  $rest_calls['openapi/albums/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_albums_post',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+  );
+   */
+
+  // Upload.
+  $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_upload',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+  );
+  $rest_calls['openapi/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls['openapi/album/$album_id/mediaitem/$mediaitem_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
 
   return $rest_calls;
 }
