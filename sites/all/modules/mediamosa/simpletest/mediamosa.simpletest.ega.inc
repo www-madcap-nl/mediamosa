@@ -772,6 +772,46 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Basic file upload for OpenAPI.
+   */
+  protected function uploadTestFileOpenAPI($album_id = NULL, $filename = '') {
+    global $base_url;
+
+    if (!$album_id) {
+      // Create an album.
+      $album_id = $this->createAsset();
+    }
+
+    // Get link to upload file.
+    $filename = empty($filename) ? self::getTestVideo() : $filename;
+
+    // Mime type.
+    $mime_type = 'video/x-ms-wmv';
+
+    $url = $base_url . '/album/' . $album_id;
+    $headers = array(
+      'Accept-Type' => 'application/rss+xml',
+      'Content-Type' => $mime_type,
+    );
+    $options = array(
+      'headers' => $headers,
+      'method' => 'POST',
+      'data' => file_get_contents($filename)
+    );
+
+    // Dump the request.
+    $this->verbose(print_r($url, TRUE));
+    $this->verbose(print_r($options, TRUE));
+
+    $response = mediamosa_http::drupal_http_request($url, $options);
+
+    // Dump the response.
+    $this->verbose(print_r($response, TRUE));
+
+    //return $mediaitem_id;
+  }
+
+  /**
    * Compare input insert/update with result.
    * @param string $table
    *  Table name.
