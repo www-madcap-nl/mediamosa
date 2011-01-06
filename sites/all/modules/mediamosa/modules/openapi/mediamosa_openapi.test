@@ -35,7 +35,7 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
   // ----------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Mediafile - openAPI test',
+      'name' => 'OpenAPI basic test',
       'description' => 'Test openAPI related functions.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI,
     );
