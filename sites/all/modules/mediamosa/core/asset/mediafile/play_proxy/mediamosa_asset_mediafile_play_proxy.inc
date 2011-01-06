@@ -498,7 +498,7 @@ class mediamosa_asset_mediafile_play_proxy {
           $mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
         }
 
-        $output = $streaming_server_uri . '/' . $mediafile_ext['filename'];
+        $output = $streaming_server_uri . '/' . rawurlencode($mediafile_ext['filename']);
         break;
 
       case self::RESPONSE_TYPE_OBJECT:

@@ -76,7 +76,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $app_id = $a_app[mediamosa_app_db::APP_ID];
     $ticket_id = mediamosa_db::uuid(1);
     $uuid = mediamosa_db::uuid(1);
-    $filename = "plus'q uote";
+    $filename = "plus'q %20uote";
 
     $a_mediafile_ext = array(
       mediamosa_asset_mediafile_db::ID => $uuid,

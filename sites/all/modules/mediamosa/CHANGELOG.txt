@@ -31,6 +31,10 @@ TODO: (v2.4)
 
 MediaMosa 2.3.4 (build 1243)
 ----------------------------
+- Fixed downloading of files when filename contained URL encoded chars. (See
+  vpcore ticket #219).
+
+Other changes (not ticket related).
 - Fixed some camelcase mistakes in menu items.
 - Fixed log page with Drupal 7 Final.
 - Upgraded to Drupal 7 Final.
@@ -46,11 +50,23 @@ MediaMosa 2.3.4 (build 1243)
 - Error code description texts have been reviewed and corrected where needed.
   Installed systems are not updated, only new cleaned installs.
 - Solr search on fulltext is now case-insensitive (like MySQL).
-- All other searches, beside database IDs are now case-insensitive (like MySQL). 
+- All other searches, beside database IDs are now case-insensitive (like MySQL).
+- Added auto-queuing when index fails on Solr, so asset will be indexed as soon
+  when Solr is back up.
+- Fixed bug in asset browser where some asset would not show page due to image
+  theme changes in Drupal 7 final.
+- Download filenames are no longer raw-encoded in HTTP header (tested on IE8,
+  FF3.6 and Chrome 6.
+- When Solr is enabled and goes down, MediaMosa will automaticly switch back to
+  MySQL until Solr is up again.
+- Failed indexes and deletes from Solr index are now queued for later indexing
+  and/or deletion.
+- When during Solr index the asset is not found, any existing index will be
+  removed.
 
 MediaMosa 2.3.3 (build 1216)
 ----------------------------
-- Fixed permanent still link (#291).
+- Fixed permanent still link (See ticket #291).
   * Stills that are protected by ACL:
     - Will now generate a ticket link when access is granted.
     - Will not generate a link at all when access is denied.

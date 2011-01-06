@@ -152,7 +152,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     if ($index2column === FALSE) {
       throw new mediamosa_cql_exception('index not found, use verify before you parse the cql string.', CQL_EXCEPTION_SEVERITY_HIGH);
     }
-mediamosa_debug::log_export($index2column);
+
     // Solr does not support having.
     $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
     // Special case when these keys are used.

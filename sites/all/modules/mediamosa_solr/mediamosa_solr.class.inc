@@ -197,7 +197,6 @@ class mediamosa_solr {
 
     // Build query.
     $query = self::where($solr_query);
-mediamosa_debug::log_export($query);
 
     // Setup sorting.
     $query_params = array();
@@ -621,6 +620,9 @@ mediamosa_debug::log_export($query);
         foreach ($asset_ids as $asset_id) {
           $document = self::create_asset_document($asset_id);
           if (empty($document)) {
+            // Delete from Solr index.
+            self::delete_assets(array($asset_id));
+
             $documents['asset_ids'][] = $asset_id; // So its removed from queue.
             continue; // Not found.
           }
