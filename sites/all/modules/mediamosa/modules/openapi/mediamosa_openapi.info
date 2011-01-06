@@ -14,3 +14,4 @@ files[] = mediamosa_openapi.module
 files[] = mediamosa_openapi.rest.inc
 files[] = mediamosa_openapi.output.test
 files[] = mediamosa_openapi.test
+files[] = mediamosa_openapi.upload.test
