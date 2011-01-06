@@ -32,7 +32,7 @@
 /**
  * The basic mediamosa_solr_exception class
  */
-class mediamosa_solr_exception extends Exception {
+class mediamosa_solr_exception extends mediamosa_exception {
 
   const MEDIAMOSA_SOLR_EXCEPTION_SEVERITY_HIGH = 80;
   const MEDIAMOSA_SOLR_EXCEPTION_SEVERITY_NORMAL = 50;

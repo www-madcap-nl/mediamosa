@@ -261,6 +261,10 @@ function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
   if (mediamosa_solr::is_enabled()) {
     mediamosa_solr::delete_assets(array($asset_id));
   }
+  else {
+    // Queue, so they are deleted when indexed.
+    mediamosa_solr::queue_assets($reindex_info['asset_ids']);
+  }
 }
 
 /**
@@ -276,7 +280,9 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
   // Instant is default TRUE.
   $instant = TRUE;
 
+  // When off, then insert into queue.
   if (!mediamosa_solr::is_enabled()) {
+    mediamosa_solr::queue_assets($reindex_info['asset_ids']);
     return;
   }
 
@@ -324,6 +330,19 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
   else { // queue
     mediamosa_solr::queue_assets($reindex_info['asset_ids']);
   }
+}
+
+/**
+ * Implementation of hook_mediamosa_asset_queue().
+ *
+ * @param array $reindex_info
+ *
+ * Keys in array;
+ *  - asset_ids: (array)
+ *    The assets to reindex.
+ */
+function mediamosa_solr_mediamosa_asset_queue($reindex_info) {
+  mediamosa_solr::queue_assets($reindex_info['asset_ids']);
 }
 
 /**

@@ -81,15 +81,18 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     }
 
     // Set headers.
-    header("Pragma: public");
-    header("Expires: 0");
-    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Cache-Control: private, false");
-    header("Content-Description: Download");
-    header("Content-Type: application/force-download"); // alternative: application/octet-stream
-    header("Content-Length: " . filesize($file));
-    header("Content-Disposition: attachment; filename=\"" . rawurlencode($filename) . "\""); // force a save dialog.
-    header("Content-Transfer-Encoding: binary");
+    header('Pragma: public');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Cache-Control: private, false');
+    header('Content-Description: Download');
+    header('Content-Type: application/force-download'); // alternative: application/octet-stream
+    header('Content-Length: ' . filesize($file));
+
+    // This has been tested with filename plus'q %20uote.mp4 under IE8 and
+    // FF3.6, chrome 6.
+    header('Content-Disposition: attachment; filename="' . $filename . '"'); // force a save dialog.
+    header('Content-Transfer-Encoding: binary');
 
     $handle = fopen($file, 'rb');
 

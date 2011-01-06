@@ -694,7 +694,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
           }
 
           $rows[] = array(
-            t('Still') . '<br />' . ($still_ticket ? theme('image', $still_ticket, '', '', array('width' => 200, 'height' => NULL), FALSE) : ''),
+            t('Still') . '<br />' . ($still_ticket ? theme('image', array('path' => $still_ticket, 'width' => 200, 'height' => NULL), FALSE) : ''),
             theme('table', array('header' => $still_header, 'rows' => $still_rows)),
           );
         }

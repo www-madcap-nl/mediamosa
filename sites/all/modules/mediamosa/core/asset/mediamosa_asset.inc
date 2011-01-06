@@ -1317,13 +1317,7 @@ class mediamosa_asset {
    *  @see mediamosa_settings::search_index_type_*
    */
   static public function mediamosa_asset_reindex(array $asset_ids, $search_index_type) {
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_reindex', array('asset_ids' => $asset_ids), $search_index_type);
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset(reset($asset_ids), "Reindex for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => reset($asset_ids), '@message' => $e->getMessage()));
-    }
+    mediamosa_search::asset_reindex($asset_ids, $search_index_type);
   }
 
   /**
@@ -1333,12 +1327,6 @@ class mediamosa_asset {
    *  The assets to remove.
    */
   static public function mediamosa_asset_delete(array $asset_ids) {
-    // Trigger the reindex hook for external search engines.
-    try {
-      module_invoke_all('mediamosa_asset_index_delete', array('asset_ids' => $asset_ids));
-    }
-    catch (Exception $e) {
-      mediamosa_watchdog::log_asset(reset($asset_ids), "Index delete for external search engines failed during call of hook 'mediamosa_asset_reindex' for asset with ID '@asset_id'. Exception message; @message.", array('@asset_id' => reset($asset_ids), '@message' => $e->getMessage()));
-    }
+    mediamosa_search::asset_delete($asset_ids);
   }
 }
