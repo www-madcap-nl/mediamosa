@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.4 (build 1243)
+MediaMosa 2.3.4 (build 1246)
 ----------------------------
 - Fixed downloading of files when filename contained URL encoded chars. (See
   vpcore ticket #219).
