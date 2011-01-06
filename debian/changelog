@@ -1,9 +1,16 @@
+mediamosa (2.3.4-2) unstable; urgency=low
+
+  * Fixes to file download.
+  * Minor enhancements on Solr support.
+
+ -- Arjen Klop <a.klop@madcap.nl>  Tue, 06 Jan 2011 10:00:00 +0200
+
 mediamosa (2.3.4-1) unstable; urgency=low
 
-  * RC 4 Drupal
+  * Drupal 7 final
   * small bugfixes.
 
- -- Arjen Klop <a.klop@madcap.nl>  Tue, 03 Jan 2011 10:00:00 +0200
+ -- Arjen Klop <a.klop@madcap.nl>  Tue, 05 Jan 2011 10:00:00 +0200
 
 mediamosa (2.3.3-1) unstable; urgency=low
 
