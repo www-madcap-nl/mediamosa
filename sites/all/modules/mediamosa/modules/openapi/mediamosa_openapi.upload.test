@@ -49,10 +49,23 @@ class MediaMosaOpenAPIUploadTestCaseEga extends MediaMosaTestCaseEga {
 
   // -------------------------------------------------------------------- Tests.
   function testUpload() {
+    // Enable OpenAPI module.
+    module_enable(array('mediamosa_openapi'), TRUE);
+
+    // Set the app id for the OpenAPI.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    variable_set(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, $app_id);
+
+
+    $user_id = 'upload_user';
+
     // Create an album.
-    $album_id = $this->createAsset();
+    $parameters = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id = $this->createAsset($parameters);
 
     // Upload a file.
-    $this->uploadTestFileOpenAPI($album_id);
+    $mediaitem_id = $this->uploadTestFileOpenAPI($album_id, $user_id);
   }
 }

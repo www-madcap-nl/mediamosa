@@ -537,9 +537,16 @@ class mediamosa_response extends mediamosa {
     foreach ($this->response['items'] as $item) {
       $xml_response_item = $xml_response->addChild('entry');
 
-      $mediafiles = $item['mediafiles']['mediafile'];
-      $mediafile = reset($mediafiles);
-      $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
+      $mediafile_id = '';
+      if (!empty($item['mediafiles']['mediafile'])) {
+        $mediafiles = $item['mediafiles']['mediafile'];
+        $mediafile = reset($mediafiles);
+        $mediafile_id = $mediafile['mediafile_id'];
+      }
+      elseif (!empty($item['mediafile_id'])) {
+        $mediafile_id = $item['mediafile_id'];
+      }
+      $link = $base_url . '/openapi/play/' . $mediafile_id;
 
       // Author.
       $xml_element = $xml_response_item->addChild('author');
@@ -568,7 +575,7 @@ class mediamosa_response extends mediamosa {
         $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
       }
       // Image.
-      if ($item['vpx_still_url']) {
+      if (!empty($item['vpx_still_url'])) {
         $xml_element_div = $xml_element->addChild('div');
         $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
         $xml_element_div_img = $xml_element_div->addChild('img');
@@ -677,15 +684,22 @@ class mediamosa_response extends mediamosa {
     // Items.
     $items = '';
     foreach ($this->response['items'] as $item) {
-      $mediafiles = $item['mediafiles']['mediafile'];
-      $mediafile = reset($mediafiles);
+      $mediafile_id = '';
+      if (!empty($item['mediafiles']['mediafile'])) {
+        $mediafiles = $item['mediafiles']['mediafile'];
+        $mediafile = reset($mediafiles);
+        $mediafile_id = $mediafile['mediafile_id'];
+      }
+      elseif (!empty($item['mediafile_id'])) {
+        $mediafile_id = $item['mediafile_id'];
+      }
       $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
 
       // Base data.
       $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
       $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
       // Image and "more" link.
-      $description = '<p>' . $description . '</p>' . ($item['vpx_still_url'] ? '<p><img src="' . $item['vpx_still_url']. '"></p>' : '') . '<p><a href="' . $link . '" target="_blank">more</a></p>';
+      $description = '<p>' . $description . '</p>' . (!empty($item['vpx_still_url']) ? '<p><img src="' . $item['vpx_still_url']. '"></p>' : '') . '<p><a href="' . $link . '" target="_blank">more</a></p>';
 
       // More data.
       $args = array();

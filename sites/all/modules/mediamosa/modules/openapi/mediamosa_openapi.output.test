@@ -46,11 +46,22 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
     // Enable OpenAPI module.
     module_enable(array('mediamosa_openapi'), TRUE);
 
+    // Set the app id for the OpenAPI.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    variable_set(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, $app_id);
+
+
+    $user_id = 'upload_user';
+
+    // Create an album.
+    $parameters = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id = $this->createAsset($parameters);
 
     // Create mediafile with /openapi/mediaItem [POST] call.
-    $item_user_id = '@me';
+    $item_user_id = $user_id;
     $group_id = '@self';
-    $album_id = mediamosa_db::uuid(0);
     $parameters = array(
       'created' => '2003-12-13T18:30:02Z',
       'description' => mediamosa_db::uuid(0),
@@ -84,7 +95,6 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id = $asset['entry']['extension']['asset_id'];
     $mediafile_id = $asset['entry']['extension']['mediafile_id'];
 
-
     // Get the mediafile with /openapi/mediaItems [GET] call.
     $parameters = array(
       mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
@@ -95,7 +105,6 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue(TRUE, print_r($assets, TRUE));
     // Check.
     $this->assertTrue(isset($assets['entry']), 'Atom has the "entry" element.');
-
 
     // Get the mediafile with /openapi/mediaItems [GET] call.
     $parameters = array(

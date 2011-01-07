@@ -46,11 +46,22 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
     // Enable OpenAPI module.
     module_enable(array('mediamosa_openapi'), TRUE);
 
+    // Set the app id for the OpenAPI.
+    $app_id = $this->a_app[mediamosa_app_db::APP_ID];
+    variable_set(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, $app_id);
+
+
+    $user_id = 'upload_user';
+
+    // Create an album.
+    $parameters_album = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id = $this->createAsset($parameters_album);
 
     // Create mediafile with /openapi/mediaItem [POST] call.
-    $item_user_id = '@me';
+    $item_user_id = $user_id;
     $group_id = '@self';
-    $album_id = mediamosa_db::uuid(0);
     $parameters = array(
       'created' => '2003-12-13T18:30:02Z',
       'description' => mediamosa_db::uuid(0),
@@ -79,6 +90,7 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
       'title' => mediamosa_db::uuid(0),
       'type' => 'video',
       'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => $user_id,
     );
     $asset = $this->createMediaItem($item_user_id, $group_id, $album_id, $parameters);
     $asset_id = $asset['entry']['extension']['asset_id'];
@@ -86,7 +98,10 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Get the mediafile with /openapi/mediaItems [GET] call.
-    $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id);
+    $search_parameters = array(
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => $user_id,
+    );
+    $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $search_parameters);
 
 
     // Check response.
@@ -126,10 +141,16 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
     );
 
 
+
+    // Create an album.
+    $parameters_album2 = array(
+      mediamosa_rest_call_asset_create::USER_ID => $user_id,
+    );
+    $album_id2 = $this->createAsset($parameters_album2);
+
     // Create other mediafile with /openapi/mediaItem [POST] call.
-    $item_user_id2 = '@me';
+    $item_user_id2 = $user_id;
     $group_id2 = '@self';
-    $album_id2 = mediamosa_db::uuid(0);
     $parameters2 = array(
       'created' => '2003-11-13T18:30:02Z',
       'description' => $parameters['description'], // Same field.
@@ -158,6 +179,7 @@ class MediaMosaOpenAPITestCaseEga extends MediaMosaTestCaseEga {
       'title' => mediamosa_db::uuid(0),
       'type' => 'video',
       'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => $user_id,
     );
     $asset2 = $this->createMediaItem($item_user_id2, $group_id2, $album_id2, $parameters2);
     $asset_id2 = $asset2['entry']['extension']['asset_id'];

@@ -773,8 +773,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Basic file upload for OpenAPI.
+   *
+   * @param $album_id string
+   *   Asset id.
+   * @param $user_id string
+   *   User id.
+   * @param $filename string
+   *
+   * @return $mediafile_id
+   *   MediaItem id.
    */
-  protected function uploadTestFileOpenAPI($album_id = NULL, $filename = '') {
+  protected function uploadTestFileOpenAPI($album_id = NULL, $user_id = self::SIMPLETEST_USER_ID, $filename = '') {
     global $base_url;
 
     if (!$album_id) {
@@ -788,7 +797,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Mime type.
     $mime_type = 'video/x-ms-wmv';
 
-    $url = $base_url . '/album/' . $album_id;
+    $url = $base_url . '/openapi/album/' . $album_id . '?user_id=' . $user_id;
     $headers = array(
       'Accept-Type' => 'application/rss+xml',
       'Content-Type' => $mime_type,
@@ -808,7 +817,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Dump the response.
     $this->verbose(print_r($response, TRUE));
 
-    //return $mediaitem_id;
+    try {
+      $xml = new SimpleXMLElement($response->data);
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
+    }
+
+    $feed = mediamosa_lib::simplexml2array($xml);
+
+    // Dump the response.
+    $this->verbose(print_r($feed, TRUE));
+
+    $mediaitem_id = $feed['entry']['content']['mediaItem']['id'];
+
+    return $mediaitem_id;
   }
 
   /**
@@ -1093,8 +1116,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $uri .= '/' . $item_user_id;
       if ($group_id) {
         $uri .= '/' . $group_id;
-        if ($mediafile_id) {
-          $uri .= '/' . $mediafile_id;
+        if ($album_id) {
+          $uri .= '/' . $album_id;
+          if ($mediafile_id) {
+            $uri .= '/' . $mediafile_id;
+          }
         }
       }
     }
@@ -1136,10 +1162,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Get response.
-    $mediafiles = mediamosa_lib::simplexml2array($response['xml']);
+    $assets = mediamosa_lib::simplexml2array($response['xml']);
 
     // Return data.
-    return $mediafiles;
+    return $assets;
   }
 
   /**
@@ -1775,11 +1801,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     );
 
+    if (!$album_id) {
+      // Create an album.
+      $album_id = $this->createAsset();
+    }
+
     // Set the URI.
     $uri = strtr('openapi/mediaItem/@items_user_id/@group_id/@album_id', array(
       '@items_user_id' => $item_user_id,
       '@group_id' => $group_id,
-      '@album_id' => $album_id ? $album_id : mediamosa_db::uuid(0),
+      '@album_id' => $album_id,
     ));
 
     // Do Post call.

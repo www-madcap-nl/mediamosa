@@ -59,7 +59,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
   const DEFAULT_LIMIT = 10;
   const DEFAULT_OFFSET = 0;
 
-            // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
@@ -350,7 +350,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
   const APPID = 'appid';
   const MEDIAITEM_ID = 'mediaitem_id';
 
-            // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
@@ -492,7 +492,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     // Call related paramters.
     $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
     $group_id = addslashes($this->get_param_value(self::GROUP_ID));
-    $album_id = addslashes($this->get_param_value(self::ALBUM_ID));
+    $asset_id = addslashes($this->get_param_value(self::ALBUM_ID));
     $appid_parameter = addslashes($this->get_param_value(self::APPID));
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
 
@@ -534,8 +534,8 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       }
     }
 
-    if ($album_id) {
-      $cql[] = 'asset_id="' . $album_id . '"';
+    if ($asset_id) {
+      $cql[] = 'asset_id="' . $asset_id . '"';
     }
 
     if ($appid_parameter) {
@@ -659,7 +659,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
   const ALBUM_ID = 'album_id';
 
   // Data parameters.
-  const MEDIAITEM_ID = 'mediaitem_id';
+  const MEDIAITEM_ID = 'id';
   //
   const CREATED = 'created';
   const DESCRIPTION = 'description';
@@ -681,7 +681,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
   const TYPE = 'type';
   const URL = 'url';
 
-            // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
@@ -867,7 +867,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       $user_id_parameter = 'anonymous';
     }
     $group_id = addslashes($this->get_param_value(self::GROUP_ID));
-    $album_id = addslashes($this->get_param_value(self::ALBUM_ID));
+    $asset_id = addslashes($this->get_param_value(self::ALBUM_ID));
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
 
     // Data parameters.
@@ -915,9 +915,11 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     mediamosa_aut::owner_check($app_id, $user_id_parameter, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID]);
 
     // Set mediafile ID to something if not present.
-    if (!$mediafile_id) {
+    // Commented out, because we don't want, that the user can set the mediafile_id.
+    // Otherwise we have to check, if the mediafile with mediafile_id is not exists.
+    //if (!$mediafile_id) {
       $mediafile_id = mediamosa_db::uuid($app_id);
-    }
+    //}
 
     // Fields to insert.
     $fields = array(
@@ -934,9 +936,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     // Insert the mediafile.
     $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id_parameter, $fields);
 
-    //
     // Create metadata.
-    //
 
     // Metadata function call parameters.
     $action = 'replace';
@@ -953,11 +953,9 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     );
 
     // Create the metadata.
-    $a_value_set = mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $params, $action);
+    $value_set = mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $params, $action);
 
-    //
     // Create response.
-    //
 
     $response = array();
 
@@ -965,7 +963,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $response['mediafile_id'] = $mediafile_id;
 
     // Return what has been inserted into the metadata.
-    foreach ($a_value_set as $name => $value) {
+    foreach ($value_set as $name => $value) {
       $response[$name] = $value;
     }
 
@@ -990,6 +988,446 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       'thumbnail_url' => NULL,
       'title' => $title,
       'type' => NULL,
+      'url' => $url,
+    );
+
+    $mediamosa->add_item($response);
+  }
+}
+
+/**
+ * URI: /openapi/album/$album_id
+ * URI: /openapi/album/$album_id/mediaitem
+ * URI: /openapi/album/$album_id/mediaitem/$mediaitem_id
+ *
+ * Method: POST
+ *
+ */
+class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER_ID = 'user_id';
+
+  // Standard Request Parameters.
+  const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
+  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
+
+  // Call related paramters.
+  const ALBUM_ID = 'album_id';
+
+  // Data parameters.
+  const MEDIAITEM_ID = 'id';
+  //
+  const CREATED = 'created';
+  const DESCRIPTION = 'description';
+  const DURATION = 'duration';
+  const FILE_SIZE = 'file_size';
+  const LANGUAGE = 'language';
+  const LAST_UPDATED = 'last_updated';
+  const LOCATION = 'location';
+  const MIME_TYPE = 'mime_type';
+  const NUM_COMMENTS = 'num_comments';
+  const NUM_VIEWS = 'num_views';
+  const NUM_VOTES = 'num_votes';
+  const RATING = 'rating';
+  const START_TIME = 'start_time';
+  const TAGGED_PEOPLE = 'tagged_people';
+  const TAGS = 'tags';
+  const THUMBNAIL_URL = 'thumbnail_url';
+  const TITLE = 'title';
+  const TYPE = 'type';
+  const URL = 'url';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User id.',
+        ),
+
+        // Standard Request Parameters.
+        self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::REQUEST_PARAMETER_FORMET_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_rest_call::RESPONSE_TYPE_XML,
+            mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+            mediamosa_rest_call::RESPONSE_TYPE_RSS,
+            mediamosa_rest_call::RESPONSE_TYPE_JSON,
+          ),
+          self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
+        ),
+
+        // Call related paramters.
+        self::ALBUM_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
+          self::VAR_DESCRIPTION => 'Album to which the media item belongs. ',
+        ),
+
+        // Data parameters.
+        self::MEDIAITEM_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'Id Associated with the media item.',
+        ),
+        //
+        self::CREATED => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'Creation datetime associated with the media item - assigned by container in UTC (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::DESCRIPTION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Description of the media item.',
+        ),
+        self::DURATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'For audio/video clips - playtime length in seconds. set to -1/not defined if unknown.',
+          self::VAR_DEFAULT_VALUE => -1,
+        ),
+        self::FILE_SIZE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Number of bytes (set to -1/undefined if unknown).',
+          self::VAR_DEFAULT_VALUE => -1,
+        ),
+        self::LANGUAGE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_LANGUAGE_CODE_ISO_639_3,
+          self::VAR_DESCRIPTION => 'Language associated with the media item in ISO 639-3 format.',
+        ),
+        self::LAST_UPDATED => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'Update datetime associated with the media item - assigned by container in UTC (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::LOCATION => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Location corresponding to the media item.',
+        ),
+        self::MIME_TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MIMETYPE,
+          self::VAR_DESCRIPTION => 'The MIME type of media, specified as a string.',
+        ),
+        self::NUM_COMMENTS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Number of comments on the media item.',
+        ),
+        self::NUM_VIEWS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Number of views for the media item.',
+        ),
+        self::NUM_VOTES => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Number of votes received for voting.',
+        ),
+        self::RATING => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+          self::VAR_DESCRIPTION => 'Average rating of the media item on a scale of 0-10.',
+          self::VAR_RANGE_START => 0,
+          self::VAR_RANGE_END => 10,
+        ),
+        self::START_TIME => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
+          self::VAR_DESCRIPTION => 'For streaming/live content, datetime when the content is available (e.g. 2008-01-23T04:56:22Z).',
+        ),
+        self::TAGGED_PEOPLE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Array of string (IDs) of people tagged in the media item.',
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::TAGS => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Tags associated with this media item.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::THUMBNAIL_URL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'URL to a thumbnail image of the media item.',
+        ),
+        self::TITLE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Describing the media item.',
+        ),
+        // This variable is "media_type" in the upload documentation, but the mediaItem description clearly said it is "type".
+        // References:
+        // http://opensocial-resources.googlecode.com/svn/spec/1.1/Core-API-Server.xml#Content-Upload
+        // http://opensocial-resources.googlecode.com/svn/spec/1.1/Social-Data.xml#MediaItem
+        self::TYPE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
+          self::VAR_DESCRIPTION => 'The type of media, specified as a MediaItem.Type object.',
+          self::VAR_ALLOWED_VALUES => array(
+            // We don't support others, just video type.
+            mediamosa_rest_call::MEDIAITEM_TYPE,
+          ),
+        ),
+        self::URL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Specifying the URL where the media can be found.',
+        ),
+
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  // ------------------------------------------------------------------ Override Validate Rest Args.
+  protected function validate_rest_args(array $a_var_setup) {
+
+    // Validate first.
+    parent::validate_rest_args($a_var_setup);
+
+    $app_id = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0);
+
+    if (!$app_id) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID);
+    }
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = array(variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, 0));
+    $app_id = reset($app_ids);
+
+    // Get params.
+
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    // Standard Request Parameters.
+    $since = $this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE);
+    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMET_VALUE);
+
+    // Call related paramters.
+    $asset_id = addslashes($this->get_param_value(self::ALBUM_ID));
+    $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
+
+    // Data parameters.
+    $created = $this->get_param_value(self::CREATED);
+    $description = strip_tags(addslashes($this->get_param_value(self::DESCRIPTION)));
+    $duration = $this->get_param_value(self::DURATION);
+    $file_size = $this->get_param_value(self::FILE_SIZE);
+    $language = $this->get_param_value(self::LANGUAGE);
+    $last_updated = $this->get_param_value(self::LAST_UPDATED);
+    $location = strip_tags(addslashes($this->get_param_value(self::LOCATION)));
+    $mime_type = strip_tags(addslashes($this->get_param_value(self::MIME_TYPE)));
+    $num_comments = $this->get_param_value(self::NUM_COMMENTS);
+    $num_views = $this->get_param_value(self::NUM_VIEWS);
+    $num_votes = $this->get_param_value(self::NUM_VOTES);
+    $rating = $this->get_param_value(self::RATING);
+    $start_time = $this->get_param_value(self::START_TIME);
+    $tagged_people = $this->get_param_value(self::TAGGED_PEOPLE);
+    if ($tagged_people) {
+      foreach ($tagged_people as $key => $value) {
+        $tagged_people[$key] = strip_tags(addslashes($value));
+      }
+    }
+    $tags = $this->get_param_value(self::TAGS);
+    if ($tags) {
+      foreach ($tags as $key => $value) {
+        $tags[$key] = strip_tags(addslashes($value));
+      }
+    }
+    $thumbnail_url = strip_tags(addslashes($this->get_param_value(self::THUMBNAIL_URL)));
+    $title = strip_tags(addslashes($this->get_param_value(self::TITLE)));
+    $type = $this->get_param_value(self::TYPE);
+    $url = strip_tags(addslashes($this->get_param_value(self::URL)));
+
+    if ($alt) {
+      $this->set_param_value(self::RESPONSE_ALT, $alt);
+    }
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
+
+    // Must exists.
+    $asset = mediamosa_asset::must_exists($asset_id);
+
+    // Check owner of parent asset, need ownership.
+    mediamosa_aut::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID]);
+
+    // Mediafile check / create.
+    if ($mediafile_id) {
+      // If we have mediafile_id, the mediafile must exists.
+      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+    }
+    else {
+      // New mediafile.
+
+      // Set mediafile ID to something if not present.
+      $mediafile_id = mediamosa_db::uuid($app_id);
+
+      // Fields to insert.
+      $fields = array(
+        mediamosa_asset_mediafile_db::GROUP_ID => NULL,
+        mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE,
+        mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => NULL,
+        mediamosa_asset_mediafile_db::FILENAME => NULL,
+        mediamosa_asset_mediafile_db::URI => $url,
+        mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
+        mediamosa_asset_mediafile_db::TAG => $tags ? implode(', ', $tags) : '',
+      );
+
+      // Insert the mediafile.
+      $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields);
+    }
+
+    // Create metadata.
+
+    // Metadata function call parameters.
+    $action = 'replace';
+    // Get full definitions.
+    $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full();
+    // Mapping metadata parameters.
+    $params = array(
+      'created' => array($created),
+      'description' => array($description),
+      'language' => array($language),
+      'title' => array($title),
+      // Skipped fields, because we don't have metadata equivalients.
+      // $duration, $file_size, $last_updated, $location, $mime_type, $num_comments, $num_views, $num_votes, $rating, $start_time, $tagged_people, $thumbnail_url, $type,
+    );
+
+    // Create the metadata.
+    $value_set = mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $params, $action);
+
+    // Upload file.
+
+    // The file was sent as POST data.
+    $video = 'video/';
+    $post_upload = (isset($_SERVER['CONTENT_TYPE']) && drupal_substr($_SERVER['CONTENT_TYPE'], 0, drupal_strlen($video)) == $video);
+    if ($post_upload || count($_FILES)) {
+
+      // file_size depends on method used.
+      if ($post_upload) {
+        $file_size = (int) $_SERVER['CONTENT_LENGTH'];
+      }
+      elseif (count($_FILES)) {
+        $file_size = 0;
+        foreach ($_FILES as $file) {
+          $file_size = $file['size'];
+          break;
+        }
+      }
+      $response['file_size'] = $file_size;
+
+      // Create job.
+      $is_app_admin = FALSE;
+      $retranscode = FALSE;
+      $create_still = TRUE;
+      $still_parameters = array(
+        'still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+        'still_per_mediafile' => NULL,
+        'still_every_second' => NULL,
+        'start_frame' => NULL,
+        'end_frame' => NULL,
+        'size' => NULL,
+        'h_padding' => NULL,
+        'v_padding' => NULL,
+        'tag' => NULL,
+        'frametime' => NULL,
+        'width' => NULL,
+        'height' => NULL,
+      );
+      $job_id = mediamosa_job::create_job_upload($app_id,  $asset[mediamosa_asset_db::OWNER_ID], $asset[mediamosa_asset_db::GROUP_ID], $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
+
+      // Build the filename.
+      $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
+
+      // Create possible missing directories.
+      mediamosa_io::mkdir(mediamosa_io::dirname($filename));
+
+      if ($post_upload) {
+        // POST: file in the data.
+        $mime_type = $_SERVER['CONTENT_TYPE'];
+
+        $written_bytes = mediamosa_asset_mediafile_upload::handle_upload_post($filename);
+        $response['written_bytes'] = $written_bytes;
+        $success = ($written_bytes ? TRUE : FALSE);
+      }
+      elseif (count($_FILES)) {
+        // POST: Multi-part.
+        $success = FALSE;
+        $mime_type = NULL;
+        foreach ($_FILES as $file) {
+          $success = move_uploaded_file($file['tmp_name'], $filename);
+          $mime_type = $file['type'];
+          // We support only one file.
+          // TODO Support more files.
+          break;
+        }
+      }
+
+
+      // When upload has failed, then set the upload job on 'failed'.
+      if (!$success) {
+        // Get complete job.
+        $job_ext = mediamosa_job::get_job_ext($job_id);
+
+        // Change status to failed.
+        mediamosa_job::update_status($job_ext, mediamosa_job_db::JOB_STATUS_FAILED, '1.000');
+
+        // Throw exception.
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
+      }
+
+      // Update the mediafile.
+      $fields = array(
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
+        mediamosa_asset_mediafile_db::FILENAME => $filename,
+        mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => 'TRUE',
+        mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE,
+      );
+
+      // Don't overwrite the tag when the tag was not provided.
+      if (!is_null($tags)) {
+        $fields[mediamosa_asset_mediafile_db::TAG] = $tags;
+      }
+
+      // Update mediafile.
+      mediamosa_asset_mediafile::update($app_id, $mediafile_id, $asset[mediamosa_asset_db::OWNER_ID], $fields);
+
+      // Update the job.
+      mediamosa_job::update_progress_upload($job_id, $file_size);
+    }
+
+    // Create response.
+
+    $response['asset_id'] = $asset_id;
+    $response['mediafile_id'] = $mediafile_id;
+
+    // Return what has been inserted into the metadata.
+    foreach ($value_set as $name => $value) {
+      $response[$name] = $value;
+    }
+
+    $response['mediaitem'] = array(
+      'album_id' => $asset_id,
+      'created' => $created,
+      'description' => $description,
+      'duration' => NULL,
+      'file_size' => $file_size,
+      'id' => $mediafile_id,
+      'language' => $language,
+      'last_updated' => NULL,
+      'location' => NULL,
+      'mime_type' => $mime_type,
+      'num_comments' => NULL,
+      'num_views' => NULL,
+      'num_votes' => NULL,
+      'rating' => NULL,
+      'start_time' => NULL,
+      'tagged_people' => NULL,
+      'tags' => !empty($tags) ? $tags : NULL,
+      'thumbnail_url' => NULL,
+      'title' => $title,
+      'type' => $type,
       'url' => $url,
     );
 
