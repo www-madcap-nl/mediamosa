@@ -57,7 +57,7 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE = 'response_type';
   const RESPONSE_ALT = 'alt';
   // Types.
-  const RESPONSE_TYPE_XML = 'mediamosa';
+  const RESPONSE_TYPE_XML = 'xml';
   const RESPONSE_TYPE_ATOM = 'atom';
   const RESPONSE_TYPE_RSS = 'rss';
   const RESPONSE_TYPE_JSON = 'json';

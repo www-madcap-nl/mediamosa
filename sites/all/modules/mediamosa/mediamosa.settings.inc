@@ -248,6 +248,7 @@ class mediamosa_settings {
 
   // Name of the variable, that contains the app_id of open client for OpenAPI.
   const MEDIAMOSA_OPENAPI_OPEN_APP_ID = 'mediamosa_openapi_open_app_id';
+  const MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE = 'mediamosa_openapi_default_response_type';
   const MEDIAMOSA_OPENAPI_CALL_URI_PREFIX = 'openapi';
 
   // ------------------------------------------------------------------ Functions.
