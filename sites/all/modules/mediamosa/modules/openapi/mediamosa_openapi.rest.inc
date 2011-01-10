@@ -1360,6 +1360,8 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
           $mime_type = $file['type'];
           // We support only one file.
           // TODO Support more files.
+          // TODO The OpenSocial request can refer to the content being uploaded by setting the URL to "@field:<fieldname>".
+          // http://opensocial-resources.googlecode.com/svn/spec/1.1/Core-API-Server.xml#Content-Upload
           break;
         }
       }
