@@ -450,7 +450,7 @@ class mediamosa_response extends mediamosa {
    * @return string
    */
   public function generate_json() {
-    return drupal_json_encode($this->response['items']);
+    return drupal_json_encode($this->response);
   }
 
   /**
