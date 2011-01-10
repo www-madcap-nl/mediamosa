@@ -211,6 +211,8 @@ class mediamosa_sdk {
 
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
 
+  const ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID = 2100;
+
   const ERRORCODE_INVALID_REST_CALL = 3000;
 
   // ---------------------------------------------------------------- Var Types.
@@ -259,6 +261,7 @@ class mediamosa_sdk {
   const TYPE_REALM                       = 'REALM';
   const TYPE_FILENAME                    = 'FILENAME';
   const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
+  const TYPE_LANGUAGE_CODE_ISO_639_3     = 'LANGUAGE_CODE_ISO_639_3';
 
   const TYPE_CQL_ASSET                   = 'CQL_ASSET';
   const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';

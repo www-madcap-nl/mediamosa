@@ -1817,4 +1817,18 @@ function mediamosa_update_7086() {
   );
 }
 
+/**
+ * Create new errorcode in database.
+ */
+function mediamosa_update_7087() {
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID',
+      mediamosa_error_db::MESSAGE => 'Open client application is missing for OpenAPI',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID,
+    ))
+  ->execute();
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

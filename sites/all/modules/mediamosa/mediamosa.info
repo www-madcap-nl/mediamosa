@@ -233,6 +233,9 @@ files[] = core/node/revision/mediamosa_node_revision_db.inc
 files[] = core/node/revision/mediamosa_node_revision.inc
 files[] = core/node/revision/mediamosa_node_revision.install.inc
 
+; OpenAPI class.
+files[] = core/openapi/mediamosa_openapi.inc
+
 ; Statistics
 files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.inc
 files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used.install.inc

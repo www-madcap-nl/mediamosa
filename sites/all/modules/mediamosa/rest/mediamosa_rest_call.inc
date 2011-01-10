@@ -55,8 +55,13 @@ abstract class mediamosa_rest_call {
   const URI_REQUEST = 'uri_request'; // Original URI.
 
   const RESPONSE_TYPE = 'response_type';
-  const RESPONSE_TYPE_XML = 'text/xml';
-  const RESPONSE_TYPE_PLAIN = 'text/plain';
+  const RESPONSE_ALT = 'alt';
+  // Types.
+  const RESPONSE_TYPE_XML = 'mediamosa';
+  const RESPONSE_TYPE_ATOM = 'atom';
+  const RESPONSE_TYPE_RSS = 'rss';
+  const RESPONSE_TYPE_JSON = 'json';
+  const RESPONSE_TYPE_PLAIN = 'plain';
 
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';
@@ -184,6 +189,23 @@ abstract class mediamosa_rest_call {
   const PARAM_IS_READ_ONLY = 'read_only';
   const PARAM_IS_REQUIRED = 'is_required';
   const PARAM_ALLOWED_VALUES = 'allowed_values';
+
+  // Filter options.
+  const FILTEROP_CONTAINS = 'contains';
+  const FILTEROP_EQUALS = 'equals';
+  const FILTEROP_STARTSWITH = 'startsWith';
+  const FILTEROP_PRESENT = 'present';
+
+  // Sort order.
+  const SORTORDER_ASCENDING = 'ascending';
+  const SORTORDER_DESCENDING = 'descending';
+
+  // MediaItem.
+  const USER_OWNER = '@owner';
+  const USER_VIEWER = '@viewer';
+  const USER_ME = '@me';
+  const GROUP_SELF = '@self';
+  const MEDIAITEM_TYPE = 'video';
 
   /**
    * Main constructor.
@@ -331,6 +353,18 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
       self::VAR_DEFAULT_VALUE => 'false',
+    );
+
+    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::RESPONSE_ALT] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_ALLOWED_VALUES => array(
+        mediamosa_rest_call::RESPONSE_TYPE_XML,
+        mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+        mediamosa_rest_call::RESPONSE_TYPE_RSS,
+        mediamosa_rest_call::RESPONSE_TYPE_JSON,
+      ),
+      self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
     );
 
     // Add default parameter descriptions

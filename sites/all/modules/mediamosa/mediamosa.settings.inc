@@ -52,6 +52,26 @@ class mediamosa_settings {
   // URL to collection. (lib function mediamosa_lib::l_collection($coll_id, $text);)
   const URL_COLLECTION = 'admin/mediamosa/browse/collection/@coll_id';
 
+  // Path to icon.
+  const PATH_ICON = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo-16x16.png';
+
+  // Path to logo.
+  const PATH_LOGO = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo.png';
+
+
+  // Atom fields.
+  const ATOM_NAME = 'MediaMosa';
+  const ATOM_GENERATOR = 'MediaMosa Atom API';
+  const ATOM_GENERATOR_URI = 'http://mediamosa.org/';
+  const ATOM_GENERATOR_VERSION = '1.0';
+  const ATOM_ID = 'MediaMosa:feed:atom:search';
+  const ATOM_SUBTITLE = 'Videos from MediaMosa';
+  const ATOM_TITLE = 'MediaMosa Atom Feed';
+  const ATOM_ENTRY_CATEGORY_MAX = 5;
+  const ATOM_ENTRY_ID = 'MediaMosa:asset:';
+  // RSS.
+  const RSS_GENERATOR = 'MediaMosa RSS API';
+
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';
   const SAN_NAS_STILLS_FOLDER = 'stills';
@@ -225,6 +245,10 @@ class mediamosa_settings {
   // Client application settings.
   const APP_ID_MIN = 1;
   const APP_ID_MAX = 9999;
+
+  // Name of the variable, that contains the app_id of open client for OpenAPI.
+  const MEDIAMOSA_OPENAPI_OPEN_APP_ID = 'mediamosa_openapi_open_app_id';
+  const MEDIAMOSA_OPENAPI_CALL_URI_PREFIX = 'openapi';
 
   // ------------------------------------------------------------------ Functions.
   /**
