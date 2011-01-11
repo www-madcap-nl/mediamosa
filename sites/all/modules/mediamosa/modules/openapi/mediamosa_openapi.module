@@ -36,7 +36,7 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
   $rest_calls = array();
 
   // Open API search.
-  $rest_calls['openapi/search'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/search'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Search by OpenAPI.',
     mediamosa_rest_call::DESCRIPTION => 'Search by OpenAPI (eg. RSS feed, Atom, JSON).',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/search?query=news',
@@ -62,7 +62,7 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
 
   // OpenSocial.
 
-  $rest_calls['openapi/mediaItems'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'OpenSocial get media items.',
     mediamosa_rest_call::DESCRIPTION => 'The MediaItems Service support requests to retrieve mediafiles.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/mediaItems/owner/group',
@@ -85,12 +85,12 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
   </entry>
 </feed>',
   );
-  $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id/$mediaitem_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id/$album_id/$mediaitem_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET];
 
-  $rest_calls['openapi/mediaItem/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItem/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'OpenSocial create media items.',
     mediamosa_rest_call::DESCRIPTION => 'The MediaItems Service support requests to create a mediafile for the currently authenticated user and app.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/mediaItems/owner/@self/album',
@@ -116,7 +116,7 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
 
   /*
   // Albums POST.
-  $rest_calls['openapi/albums/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/albums/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'OpenSocial create albums.',
     mediamosa_rest_call::DESCRIPTION => 'The Albums Service support requests to create an Album for the currently authenticated user and app.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'openapi/albums/owner/@self',
@@ -139,7 +139,7 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
    */
 
   // Upload.
-  $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'OpenSocial upload.',
     mediamosa_rest_call::DESCRIPTION => 'Content Upload is a generic mechanism to allow for a standard way to upload content.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/album/112233',
@@ -163,8 +163,8 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
   </entry>
 </feed>',
   );
-  $rest_calls['openapi/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
-  $rest_calls['openapi/album/$album_id/mediaitem/$id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem/$id'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
 
   return $rest_calls;
 }
@@ -176,7 +176,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
   $rest_calls = array();
 
   // Open API search.
-  $rest_calls['openapi/search'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/search'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
@@ -189,7 +189,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
   // OpenSocial.
 
   // MediaItem GET.
-  $rest_calls['openapi/mediaItems'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_mediaitems_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
@@ -198,13 +198,13 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
-  $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id/$mediaitem_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['openapi/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id/$album_id/$mediaitem_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_GET];
 
   // MediaItem POST.
-  $rest_calls['openapi/mediaItem/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItem/$items_user_id/$group_id/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_mediaitems_post',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
@@ -216,7 +216,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
 
   /*
   // Albums POST.
-  $rest_calls['openapi/albums/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/albums/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_albums_post',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
@@ -228,7 +228,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
    */
 
   // Upload.
-  $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_openapi_upload',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
@@ -237,8 +237,15 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
-  $rest_calls['openapi/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
-  $rest_calls['openapi/album/$album_id/mediaitem/$id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['openapi/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+  $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem/$id'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
+
+  // If it is openapi interface, we support calls without prefix.
+  if (mediamosa::is_app_restricted_openapi()) {
+    foreach ($rest_calls as $path => $call) {
+      $rest_calls[drupal_substr($path, drupal_strlen(mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/'))] = $call;
+    }
+  }
 
   return $rest_calls;
 }
@@ -297,6 +304,8 @@ function mediamosa_openapi_mediamosa_configuration_collect() {
  * Implements hook_mediamosa_configuration_validate().
  */
 function mediamosa_openapi_mediamosa_configuration_validate($form, $form_state) {
+  // Default app_id check.
+
   $app_id = $form_state['values'][mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID];
 
   $options = array(
@@ -311,4 +320,31 @@ function mediamosa_openapi_mediamosa_configuration_validate($form, $form_state) 
   if (!in_array($app_id, $options)) {
     form_set_error(mediamosa_settings::MEDIAMOSA_OPENAPI_OPEN_APP_ID, t("Invalid application id."));
   }
+
+  // Default response type check.
+
+  $response_type = $form_state['values'][mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE];
+
+  $options = array(
+    mediamosa_rest_call::RESPONSE_TYPE_XML  => 'XML',
+    mediamosa_rest_call::RESPONSE_TYPE_ATOM  => 'Atom',
+    mediamosa_rest_call::RESPONSE_TYPE_RSS  => 'RSS',
+    mediamosa_rest_call::RESPONSE_TYPE_JSON  => 'JSON',
+  );
+
+  if (!in_array($response_type, $options)) {
+    form_set_error(mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE, t("Invalid response type."));
+  }
+}
+
+/**
+ * Implementation of hook_mediamosa_response_get().
+ */
+function mediamosa_openapi_mediamosa_response_get() {
+  if (mediamosa::is_app_restricted_openapi()) {
+    $mediamosa_response = new mediamosa_openapi_response();
+    return $mediamosa_response;
+  }
+
+  return NULL;
 }

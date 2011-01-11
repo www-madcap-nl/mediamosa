@@ -246,10 +246,19 @@ class mediamosa_settings {
   const APP_ID_MIN = 1;
   const APP_ID_MAX = 9999;
 
+  // Openapi.
+
   // Name of the variable, that contains the app_id of open client for OpenAPI.
   const MEDIAMOSA_OPENAPI_OPEN_APP_ID = 'mediamosa_openapi_open_app_id';
+  // Name of the variable, that define the default openapi response type.
   const MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE = 'mediamosa_openapi_default_response_type';
+  // Openapi call uri prefix.
   const MEDIAMOSA_OPENAPI_CALL_URI_PREFIX = 'openapi';
+
+  // Header.
+  const MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT_TYPE = 'HTTP_ACCEPT_TYPE';
+  const MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT = 'HTTP_ACCEPT';
+  const MEDIAMOSA_OPENAPI_HEADER_ACCEPT_TYPE = 'ACCEPT_TYPE';
 
   // ------------------------------------------------------------------ Functions.
   /**

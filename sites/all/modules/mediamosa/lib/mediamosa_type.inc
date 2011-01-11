@@ -252,6 +252,7 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_ALPHA:
+      case mediamosa_sdk::TYPE_RESPONSE_TYPE:
         if (!ctype_alpha($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }

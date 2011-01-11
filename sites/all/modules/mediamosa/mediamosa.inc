@@ -106,7 +106,13 @@ class mediamosa {
     }
 
     if (!isset($mediamosa_response)) {
-      $mediamosa_response = new mediamosa_response();
+      $responses = module_invoke_all('mediamosa_response_get');
+      if (!empty($responses)) {
+        $mediamosa_response = reset($responses);
+      }
+      else {
+        $mediamosa_response = new mediamosa_response();
+      }
     }
 
     return $mediamosa_response;

@@ -229,6 +229,7 @@ class mediamosa_sdk {
   const TYPE_ALPHA_NUM                   = 'ALPHA_NUM'; // [A-Za-z0-9]
   const TYPE_ALPHA_NUM_UNDERSCORE        = 'ALPHA_NUM_UNDERSCORE'; // [A-Za-z0-9_]
   const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
+  const TYPE_RESPONSE_TYPE               = 'RESPONSE_TYPE';
   const TYPE_STRING                      = 'STRING';
   const TYPE_DATETIME                    = 'DATETIME';
   const TYPE_DATETIME_UTC                = 'DATETIME_UTC'; // Is in UTC (already).

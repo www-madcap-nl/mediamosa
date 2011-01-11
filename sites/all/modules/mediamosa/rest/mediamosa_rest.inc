@@ -204,6 +204,7 @@ class mediamosa_rest {
 
     // OpenAPI restriction for just a few specific calls.
     $is_app_restricted_openapi = mediamosa::is_app_restricted_openapi();
+    $rest_calls_openapi = (function_exists('mediamosa_openapi_mediamosa_register_rest_call') ? mediamosa_openapi_mediamosa_register_rest_call() : array());
 
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
@@ -211,7 +212,7 @@ class mediamosa_rest {
       // TODO Upload, Download restriction.
 
       // OpenAPI restriction.
-      if ($is_app_restricted_openapi && drupal_substr($uri, 0, drupal_strlen(mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/')) != mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/') {
+      if ($is_app_restricted_openapi && !empty($rest_calls_openapi) && !array_key_exists($uri, $rest_calls_openapi)) {
         continue;
       }
 
@@ -341,7 +342,16 @@ class mediamosa_rest {
       $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
 
-    return $the_rest_call->get_param_value(mediamosa_rest_call::RESPONSE_ALT);
+    $response_type = NULL;
+
+    // Get the response type variable, if there is any.
+    foreach ($the_rest_call->a_rest_args as $parameter => $call) {
+      if ($call[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_RESPONSE_TYPE) {
+        $response_type = $the_rest_call->get_param_value($parameter);
+      }
+    }
+
+    return $response_type;
   }
 
   /**

@@ -333,7 +333,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
 
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
-  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
+  const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
 
   // Collection Request Parameters.
   const REQUEST_PARAMETER_COUNT_VALUE = 'Request-Parameter-Count-Value';
@@ -364,8 +364,8 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
           self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
         ),
-        self::REQUEST_PARAMETER_FORMET_VALUE => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+        self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_rest_call::RESPONSE_TYPE_XML,
@@ -479,7 +479,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
 
     // Standard Request Parameters.
     $since = $this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE);
-    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMET_VALUE);
+    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMAT_VALUE);
 
     // Collection Request Parameters.
     $limit = $this->get_param_value(self::REQUEST_PARAMETER_COUNT_VALUE);
@@ -495,10 +495,6 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     $asset_id = addslashes($this->get_param_value(self::ALBUM_ID));
     $appid_parameter = addslashes($this->get_param_value(self::APPID));
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
-
-    if ($alt) {
-      $this->set_param_value(self::RESPONSE_ALT, $alt);
-    }
 
     if ($since) {
       $cql[] = 'videotimestamp>="' . $since . '"';
@@ -651,7 +647,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
 
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
-  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
+  const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
 
   // Call related paramters.
   const ITEMS_USER_ID = 'items_user_id';
@@ -695,8 +691,8 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
           self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
         ),
-        self::REQUEST_PARAMETER_FORMET_VALUE => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+        self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_rest_call::RESPONSE_TYPE_XML,
@@ -856,7 +852,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
 
     // Standard Request Parameters.
     $since = $this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE);
-    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMET_VALUE);
+    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMAT_VALUE);
 
     // Call related paramters.
     $user_id_parameter = addslashes($this->get_param_value(self::ITEMS_USER_ID));
@@ -900,10 +896,6 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
     $title = strip_tags(addslashes($this->get_param_value(self::TITLE)));
     $type = $this->get_param_value(self::TYPE);
     $url = strip_tags(addslashes($this->get_param_value(self::URL)));
-
-    if ($alt) {
-      $this->set_param_value(self::RESPONSE_ALT, $alt);
-    }
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
@@ -1010,7 +1002,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
 
   // Standard Request Parameters.
   const REQUEST_PARAMETER_UPDATEDSINCE_VALUE = 'Request-Parameter-UpdatedSince-Value';
-  const REQUEST_PARAMETER_FORMET_VALUE = 'Request-Parameter-Formet-Value';
+  const REQUEST_PARAMETER_FORMAT_VALUE = 'Request-Parameter-Format-Value';
 
   // Call related paramters.
   const ALBUM_ID = 'album_id';
@@ -1052,8 +1044,8 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,
           self::VAR_DESCRIPTION => 'Only return items whose updated date & time is equal to or more recent then the specified value (e.g. 2008-01-23T04:56:22Z).',
         ),
-        self::REQUEST_PARAMETER_FORMET_VALUE => array(
-          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
+        self::REQUEST_PARAMETER_FORMAT_VALUE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_rest_call::RESPONSE_TYPE_XML,
@@ -1201,7 +1193,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
 
     // Standard Request Parameters.
     $since = $this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE);
-    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMET_VALUE);
+    $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMAT_VALUE);
 
     // Call related paramters.
     $asset_id = addslashes($this->get_param_value(self::ALBUM_ID));
@@ -1237,10 +1229,6 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
     $title = strip_tags(addslashes($this->get_param_value(self::TITLE)));
     $type = $this->get_param_value(self::TYPE);
     $url = strip_tags(addslashes($this->get_param_value(self::URL)));
-
-    if ($alt) {
-      $this->set_param_value(self::RESPONSE_ALT, $alt);
-    }
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);

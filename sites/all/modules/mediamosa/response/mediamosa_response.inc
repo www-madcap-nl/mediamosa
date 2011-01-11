@@ -38,8 +38,8 @@ class mediamosa_response extends mediamosa {
 
   // ------------------------------------------------------------------ Members
   // The stored response.
-  private $response = array();
-  private $response_success = FALSE;
+  protected $response = array();
+  protected $response_success = FALSE;
 
   // The rest class object.
   protected $mediamosa_rest = NULL;
@@ -49,10 +49,10 @@ class mediamosa_response extends mediamosa {
   protected $request_method;
 
   // Start in miliseconds when call was made.
-  private $f_start_time = 0;
+  protected $f_start_time = 0;
 
   // Content_type to use for output.
-  private $content_type;
+  protected $content_type;
 
   // Public counters.
   public $item_count = 0;
@@ -139,10 +139,10 @@ class mediamosa_response extends mediamosa {
       $response_type = $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Now execute the call.
-      $alt = $this->mediamosa_rest->process_call($rest_call);
-
-      if ($alt) {
-        $response_type = $alt;
+      $response_type_parameter = $this->mediamosa_rest->process_call($rest_call);
+      // Check the response parameter.
+      if ($response_type_parameter) {
+        $response_type = $response_type_parameter;
       }
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
@@ -196,6 +196,17 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
+    $output = $this->generate_output($response_type);
+
+    // Stop and output our content.
+    // Might run any added exit functions (drupal).
+    exit($output);
+  }
+
+  /**
+   * Generate output.
+   */
+  public function generate_output($response_type) {
     // Make sure its set.
     $output = '';
 
@@ -245,9 +256,7 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    // Stop and output our content.
-    // Might run any added exit functions (drupal).
-    exit($output);
+    return $output;
   }
 
   /**
@@ -823,7 +832,7 @@ class mediamosa_response extends mediamosa {
    * @param integer $max_depth
    * @return NULL or added item.
    */
-  private function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
+  protected function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
     if (!--$max_depth) {
       return NULL;
     }

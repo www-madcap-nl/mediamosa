@@ -968,7 +968,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_search::QUERY => $query,
-      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     );
 
     // Required.
@@ -978,32 +977,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
-    switch ($parameters[mediamosa_rest_call::RESPONSE_ALT]) {
-      case mediamosa_rest_call::RESPONSE_TYPE_XML:
-        $this->assertTrue(
-          in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
-          strtr(
-            "Search asset, got result @result (@result_description)",
-            array(
-              '@result' => (string) $response['xml']->header->request_result_id,
-              '@result_description' => (string) $response['xml']->header->request_result_description
-            )
-          )
-        );
-        break;
-      case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
-        $this->assertTrue(
-          in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
-          strtr(
-            "Search asset, got result @result (@result_description)",
-            array(
-              '@result' => (string) $response['xml']->extension->request_result_id,
-              '@result_description' => (string) $response['xml']->extension->request_result_description
-            )
-          )
-        );
-        break;
-    }
+    $this->assertTrue(
+      in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
+      strtr(
+        "Search asset, got result @result (@result_description)",
+        array(
+          '@result' => (string) $response['xml']->extension->request_result_id,
+          '@result_description' => (string) $response['xml']->extension->request_result_description
+        )
+      )
+    );
 
     // Must be ok to return object.
     if (!in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
@@ -1107,7 +1090,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     );
 
     // Set uri.
@@ -1129,7 +1112,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
-    switch ($parameters[mediamosa_rest_call::RESPONSE_ALT]) {
+    switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
       case mediamosa_rest_call::RESPONSE_TYPE_XML:
         $this->assertTrue(
           in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
@@ -1798,7 +1781,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call::RESPONSE_ALT => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     );
 
     if (!$album_id) {
@@ -1820,7 +1803,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(TRUE, 'Response: ' . print_r($response, TRUE));
 
     // Check response.
-    switch ($parameters[mediamosa_rest_call::RESPONSE_ALT]) {
+    switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
       case mediamosa_rest_call::RESPONSE_TYPE_XML:
         $this->assertTrue(
           in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),

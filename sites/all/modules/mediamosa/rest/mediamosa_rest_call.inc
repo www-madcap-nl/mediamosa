@@ -55,7 +55,6 @@ abstract class mediamosa_rest_call {
   const URI_REQUEST = 'uri_request'; // Original URI.
 
   const RESPONSE_TYPE = 'response_type';
-  const RESPONSE_ALT = 'alt';
   // Types.
   const RESPONSE_TYPE_XML = 'xml';
   const RESPONSE_TYPE_ATOM = 'atom';
@@ -353,18 +352,6 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
       self::VAR_DEFAULT_VALUE => 'false',
-    );
-
-    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::RESPONSE_ALT] = array(
-      self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
-      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
-      self::VAR_ALLOWED_VALUES => array(
-        mediamosa_rest_call::RESPONSE_TYPE_XML,
-        mediamosa_rest_call::RESPONSE_TYPE_ATOM,
-        mediamosa_rest_call::RESPONSE_TYPE_RSS,
-        mediamosa_rest_call::RESPONSE_TYPE_JSON,
-      ),
-      self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
     );
 
     // Add default parameter descriptions
