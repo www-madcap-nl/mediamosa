@@ -173,7 +173,7 @@ class mediamosa_openapi_response extends mediamosa_response {
    * @return string
    */
   public function generate_json() {
-    return drupal_json_encode($this->response);
+    return drupal_json_encode(simplexml_load_string($this->generate_xml()));
   }
 
   /**
@@ -182,18 +182,15 @@ class mediamosa_openapi_response extends mediamosa_response {
    * @return string
    */
   public function generate_xml() {
-    $this->response['header']['request_process_time'] = $this->get_processed_time();
+    global $base_url;
 
-    $this->response['header']['item_count_total'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
-    $this->response['header']['item_offset'] = $this->item_offset;
-    $this->response['header']['item_count'] = $this->item_count;
+    $this->response['xml_header']['startIndex'] = $this->item_offset;
+    $this->response['xml_header']['itemsPerPage'] = $this->item_count;
+    $this->response['xml_header']['totalResults'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
 
     if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
       self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
     }
-
-    // Sort the header.
-    ksort($this->response['header']);
 
     // Log the rest call.
     $this->log_event_restcall();
@@ -201,34 +198,136 @@ class mediamosa_openapi_response extends mediamosa_response {
     // Create the SimpleXML element.
     $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><response></response>');
 
-    // Add the header node.
-    $xml_response_header = $xml_response->addChild('header');
-
-    // Add Items array.
-    $xml_response_items = $xml_response->addChild('items');
-
-    foreach ($this->response['header'] as $key => $value) {
-      $this->generate_plain_xml_add_child($xml_response_header, $key, $value);
+    foreach ($this->response['xml_header'] as $key => $value) {
+      $this->generate_plain_xml_add_child($xml_response, $key, $value);
     }
 
-    $item_counter = 0;
-
     if (!empty($this->response['errors'])) {
-      $xml_response_errors = $xml_response_header->addChild('errors');
+      $xml_response_errors = $xml_response->addChild('errors');
 
       foreach ($this->response['errors'] as $key => $error) {
         $xml_response_errors->addChild('error', htmlspecialchars($error));
       }
     }
 
+    //
+    // Entry.
+    //
     foreach ($this->response['items'] as $item) {
-      $xml_response_items_item = $xml_response_items->addChild('item');
-      $xml_response_items_item->addAttribute('id', ++$item_counter);
+      $xml_response_item = $xml_response->addChild('entry');
 
+      $mediafile_id = '';
+      if (!empty($item['mediafiles']['mediafile'])) {
+        $mediafiles = $item['mediafiles']['mediafile'];
+        $mediafile = reset($mediafiles);
+        $mediafile_id = $mediafile['mediafile_id'];
+      }
+      elseif (!empty($item['mediafile_id'])) {
+        $mediafile_id = $item['mediafile_id'];
+      }
+      $link = $base_url . '/openapi/play/' . $mediafile_id;
+
+      // Author.
+      $xml_element = $xml_response_item->addChild('author');
+      $this->generate_plain_xml_add_child($xml_element, 'name', !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : mediamosa_settings::ATOM_NAME);
+
+      // Category.
+      $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+      $table_alias = $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
+      $query
+        ->condition('ac.' . mediamosa_asset_collection_db::ASSET_ID, $item['asset_id'])
+        ->fields('c', array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))
+        ->range(0, mediamosa_settings::ATOM_ENTRY_CATEGORY_MAX);
+      $result = $query->execute();
+      foreach ($result as $record) {
+        $xml_element = $xml_response_item->addChild('category');
+        $this->generate_plain_xml_add_child($xml_element, 'term', $record[mediamosa_collection_db::ID]);
+        $this->generate_plain_xml_add_child($xml_element, 'label', $record[mediamosa_collection_db::TITLE]);
+      }
+
+      // Content.
+      $xml_element = $xml_response_item->addChild('content');
+      $xml_element->addAttribute('type', 'xhtml');
+      // Description part.
+      if (!empty($item['dublin_core']['description'][0])) {
+        $xml_element_div = $xml_element->addChild('div', $item['dublin_core']['description'][0]);
+        $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      }
+      // Image.
+      if (!empty($item['vpx_still_url'])) {
+        $xml_element_div = $xml_element->addChild('div');
+        $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        $xml_element_div_img = $xml_element_div->addChild('img');
+        $xml_element_div_img->addAttribute('src', $item['vpx_still_url']);
+      }
+      // "More" link.
+      $xml_element_div = $xml_element->addChild('div');
+      $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      $xml_element_div_link = $xml_element_div->addChild('a', 'more');
+      $xml_element_div_link->addAttribute('href', $link);
+      // MediaItem part.
+      if (!empty($item['mediaitem'])) {
+        $xml_element_mediaitem = $xml_element->addChild('mediaItem');
+        $xml_element_mediaitem->addAttribute('xmlns', 'http://ns.opensocial.org/2008/opensocial');
+
+        foreach ($item['mediaitem'] as $key => $value) {
+          //$xml_element_mediaitem_content = $xml_element_mediaitem->addChild($key, $value);
+          $this->generate_plain_xml_add_child($xml_element_mediaitem, $key, $value);
+        }
+
+        // Unset "mediaitem". We won't use it in the "extension".
+        unset($item['mediaitem']);
+      }
+
+      // Contributor.
+      if (!empty($item['dublin_core']['contributor'][0])) {
+        $xml_element = $xml_response_item->addChild('contributor');
+        $this->generate_plain_xml_add_child($xml_element, 'name', $item['dublin_core']['contributor'][0]);
+      }
+
+      // Id.
+      $xml_element = $xml_response_item->addChild('id', mediamosa_settings::ATOM_ENTRY_ID . $item['asset_id']);
+
+      // Link.
+      $xml_element = $xml_response_item->addChild('link');
+      $xml_element->addAttribute('href', $link);
+
+      // Published.
+      if (!empty($item['dublin_core']['date'][0])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['dublin_core']['date'][0], 'dc_date', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $xml_element = $xml_response_item->addChild('published', mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+
+      // Rights.
+      if (!empty($item['dublin_core']['rights'][0])) {
+        $xml_element = $xml_response_item->addChild('rights', $item['dublin_core']['rights'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Summary.
+      if (!empty($item['qualified_dublin_core']['description_abstract'][0])) {
+        $xml_element = $xml_response_item->addChild('summary', $item['qualified_dublin_core']['description_abstract'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Title.
+      if (!empty($item['dublin_core']['title'][0])) {
+        $xml_element = $xml_response_item->addChild('title', $item['dublin_core']['title'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Updated.
+      if (!empty($item['videotimestampmodified'])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['videotimestampmodified'], 'videotimestampmodified', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $xml_element = $xml_response_item->addChild('updated', mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+
+      // Extension.
+      $xml_extension = $xml_response_item->addChild('extension');
       // Process items with a maximum recursion depth (last parameter).
       //
       foreach ($item as $key => $value) {
-        $this->generate_plain_xml_add_child($xml_response_items_item, $key, $value);
+        //$this->generate_plain_xml_add_child($xml_extension, $key, $value);
       }
     }
 
