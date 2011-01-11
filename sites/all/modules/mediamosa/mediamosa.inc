@@ -284,6 +284,15 @@ class mediamosa {
   }
 
   /**
+   * Is the APP app REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_app_enabled() {
+    return mediamosa::variable_get('mediamosa_app', FALSE);
+  }
+
+  /**
    * Is the APP download REST Interface enabled?
    *
    * @return bool

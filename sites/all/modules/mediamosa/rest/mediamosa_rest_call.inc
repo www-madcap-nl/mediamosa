@@ -116,6 +116,12 @@ abstract class mediamosa_rest_call {
 
   const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
 
+  const FOR_INTERFACE = 'for_interface';
+  const FOR_INTERFACE_APP = 'for_interface_app';
+  const FOR_INTERFACE_UPLOAD = 'for_interface_upload';
+  const FOR_INTERFACE_DOWNLOAD = 'for_interface_download';
+  const FOR_INTERFACE_OPENAPI = 'for_interface_openapi';
+
   // Specify to TRUE will make sure the REST can not be canceled by user and
   // will still continue to execute even when connection to client has been
   // lost. This will always be true for POST rest calls.

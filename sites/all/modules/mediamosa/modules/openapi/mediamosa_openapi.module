@@ -166,6 +166,13 @@ function mediamosa_openapi_mediamosa_register_rest_call_doc() {
   $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
   $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem/$id'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
 
+  // If it is openapi interface, we support calls without prefix.
+  if (mediamosa::is_app_restricted_openapi()) {
+    foreach ($rest_calls as $path => $call) {
+      $rest_calls[drupal_substr($path, drupal_strlen(mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/'))] = $call;
+    }
+  }
+
   return $rest_calls;
 }
 
@@ -184,6 +191,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
   );
 
   // OpenSocial.
@@ -197,6 +205,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
   );
   $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems'][mediamosa_rest_call::METHOD_GET];
   $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id/$group_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/mediaItems/$items_user_id'][mediamosa_rest_call::METHOD_GET];
@@ -212,6 +221,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
   );
 
   /*
@@ -224,6 +234,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
   );
    */
 
@@ -236,6 +247,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
   );
   $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];
   $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id/mediaitem/$id'][mediamosa_rest_call::METHOD_POST] = $rest_calls[mediamosa_settings::MEDIAMOSA_OPENAPI_CALL_URI_PREFIX . '/album/$album_id'][mediamosa_rest_call::METHOD_POST];

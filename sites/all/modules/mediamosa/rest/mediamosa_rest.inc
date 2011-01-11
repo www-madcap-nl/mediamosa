@@ -202,23 +202,40 @@ class mediamosa_rest {
       $limit = -1; // get all.
     }
 
-    // OpenAPI restriction for just a few specific calls.
-    $is_app_restricted_openapi = mediamosa::is_app_restricted_openapi();
-    $rest_calls_openapi = (function_exists('mediamosa_openapi_mediamosa_register_rest_call') ? mediamosa_openapi_mediamosa_register_rest_call() : array());
+    // Restriction for just a few specific calls.
+    $current_interface = array();
+    if (mediamosa::is_app_app_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_APP;
+    }
+    if (mediamosa::is_app_upload_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_UPLOAD;
+    }
+    if (mediamosa::is_app_download_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD;
+    }
+    if (mediamosa::is_app_openapi_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_OPENAPI;
+    }
 
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
 
-      // TODO Upload, Download restriction.
-
-      // OpenAPI restriction.
-      if ($is_app_restricted_openapi && !empty($rest_calls_openapi) && !array_key_exists($uri, $rest_calls_openapi)) {
-        continue;
-      }
-
       foreach ($rest_call_2 as $method => $rest_call) {
         if ($offset && $offset--) {
           $pos++;
+          continue;
+        }
+
+        // TODO Upload, Download restriction.
+        if (empty($rest_call[mediamosa_rest_call::FOR_INTERFACE])) {
+          $rest_call[mediamosa_rest_call::FOR_INTERFACE] = array(
+            mediamosa_rest_call::FOR_INTERFACE_APP,
+            mediamosa_rest_call::FOR_INTERFACE_UPLOAD,
+            mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD,
+          );
+        }
+        $intersec = array_intersect($current_interface, $rest_call[mediamosa_rest_call::FOR_INTERFACE]);
+        if (empty($intersec)) {
           continue;
         }
 
