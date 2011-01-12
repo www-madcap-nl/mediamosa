@@ -43,8 +43,17 @@ class mediamosa_rest_call_mediamosa_version extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $o_mediamosa->add_item(array('version' => mediamosa_version::get_current_version_str(FALSE)));
+    // Get version array.
+    $version = mediamosa_version::get_current_version(TRUE);
+
+    $mediamosa->add_item(
+      array(
+        'version' => mediamosa_version::get_current_version_str(FALSE),
+        'build' => $version[mediamosa_version::BUILD],
+        'info' => $version[mediamosa_version::INFO],
+      )
+    );
   }
 }

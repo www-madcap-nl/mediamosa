@@ -226,8 +226,6 @@ class mediamosa_search {
    * @param $parameters
    */
   static public function asset_delete(array $asset_ids) {
-    return;
-
     // Trigger the reindex hook for external search engines.
     try {
       module_invoke_all('mediamosa_asset_index_delete', array('asset_ids' => $asset_ids));

@@ -250,11 +250,12 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param string $mediafile_group_id
    * @param array $stills
    */
-  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
+  static public function create_response_1x_to_2x($asset_id, $a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
     return self::create_response(
       $a_parameters['response']['value'],
       $app_id,
       $ticket,
+      $asset_id,
       isset($a_parameters['autostart']['value']) ? mediamosa_lib::boolstr2bool($a_parameters['autostart']['value']) : TRUE,
       isset($a_parameters['width']['value']) ? $a_parameters['width']['value'] : 0,
       isset($a_parameters['height']['value']) ? $a_parameters['height']['value'] : 0,
@@ -265,6 +266,26 @@ class mediamosa_asset_mediafile_play_proxy {
       $mediafile_ext,
       $stills
     );
+  }
+
+  /**
+   * Generate default still link for asset.
+   *
+   * @param integer $app_id
+   * @param string $asset_id
+   */
+  static function create_response_still_url($app_id, $asset_id) {
+
+    // Get default still.
+    $still_id = mediamosa_asset_mediafile_still::find_default($asset_id);
+
+    // Any still?
+    if (!empty($still_id)) {
+      $response = mediamosa_asset_mediafile_play_proxy::create_response_still($still_id, $app_id);
+      return $response['output'];
+    }
+
+    return '';
   }
 
   /**
@@ -304,6 +325,7 @@ class mediamosa_asset_mediafile_play_proxy {
     $response_type,
     $app_id,
     $ticket,
+    $asset_id = NULL,
     $autostart = TRUE,
     $width = 0,
     $height = 0,
@@ -519,7 +541,7 @@ class mediamosa_asset_mediafile_play_proxy {
           'HEIGHT_PLUS_20' => $video_size['height'] > 0 ? $video_size['height'] + 20 : '',
           'MEDIAFILE_ID' => $mediafile_ext['mediafile_id'],
           'TICKET_URI' => $streaming_server_ticket_uri,
-          'STILL_URI' => isset($asset_metadata['vpx_still_url']) ? $asset_metadata['vpx_still_url'] : '', // Broken, needs ticket.
+          'STILL_URI' => self::create_response_still_url($app_id, $asset_id),
           'AUTOPLAY' => $autostart ? 'true' : 'false',
           'AUTOPLAY_NUM' => $autostart ? '1' : '0',
           'AUTOPLAY_TEXT' => $autostart ? 'autoplay' : '',

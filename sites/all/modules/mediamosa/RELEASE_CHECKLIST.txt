@@ -10,5 +10,11 @@ Release Checklist (mediamosa.org release):
  8. Throw away /sites/all/modules/coder
  9. Throw away /sites/all/modules/devel
 10. cd ..
-11. tar -zcvf mediamosa-2.x[-RCx].tar mediamosa-2.x[-RCx]/ 
+11. tar -zcvf mediamosa-2.x[-RCx].tgz mediamosa-2.x[-RCx]/ 
 12. Done!
+
+
+
+Keeping svn dir and remove source;
+
+find . \! \( -path '*svn*' \) -type f -exec rm {} \;

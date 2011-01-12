@@ -459,6 +459,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $response_type,
       $app_id,
       $ticket,
+      $asset_id,
       $this->get_param_value(self::AUTOSTART),
       $this->get_param_value(self::WIDTH),
       $this->get_param_value(self::HEIGHT),
