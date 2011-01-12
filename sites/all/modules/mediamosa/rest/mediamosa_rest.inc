@@ -202,11 +202,40 @@ class mediamosa_rest {
       $limit = -1; // get all.
     }
 
+    // Restriction for just a few specific calls.
+    $current_interface = array();
+    if (mediamosa::is_app_app_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_APP;
+    }
+    if (mediamosa::is_app_upload_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_UPLOAD;
+    }
+    if (mediamosa::is_app_download_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD;
+    }
+    if (mediamosa::is_app_openapi_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_OPENAPI;
+    }
+
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
+
       foreach ($rest_call_2 as $method => $rest_call) {
         if ($offset && $offset--) {
           $pos++;
+          continue;
+        }
+
+        // TODO Upload, Download restriction.
+        if (empty($rest_call[mediamosa_rest_call::FOR_INTERFACE])) {
+          $rest_call[mediamosa_rest_call::FOR_INTERFACE] = array(
+            mediamosa_rest_call::FOR_INTERFACE_APP,
+            mediamosa_rest_call::FOR_INTERFACE_UPLOAD,
+            mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD,
+          );
+        }
+        $intersec = array_intersect($current_interface, $rest_call[mediamosa_rest_call::FOR_INTERFACE]);
+        if (empty($intersec)) {
           continue;
         }
 
@@ -329,6 +358,17 @@ class mediamosa_rest {
     if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
       $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
+
+    $response_type = NULL;
+
+    // Get the response type variable, if there is any.
+    foreach ($the_rest_call->a_rest_args as $parameter => $call) {
+      if ($call[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_RESPONSE_TYPE) {
+        $response_type = $the_rest_call->get_param_value($parameter);
+      }
+    }
+
+    return $response_type;
   }
 
   /**

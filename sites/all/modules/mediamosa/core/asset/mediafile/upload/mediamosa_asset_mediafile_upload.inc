@@ -394,6 +394,63 @@ class mediamosa_asset_mediafile_upload {
   }
 
   /**
+   * Specific function for POST data upload
+   *
+   * @param string $filename
+   *  Destination filename.
+   *
+   * @return int $written_bytes
+   *   Number of the written bytes.
+   */
+  static public function handle_upload_post($filename) {
+    $filename_after_upload = NULL;
+
+    // If mediafile exists, rename it.
+    if (file_exists($filename)) {
+      $filename_after_upload = $filename;
+      $filename .= '.upload_temp';
+    }
+
+    // Open the new file
+    $filename_file = @fopen($filename, 'w');
+    if (!$filename_file) {
+      throw new mediamosa_exception(0, "Unable to write to '" . $filename . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+    }
+
+    // Open the stream
+    $stream = fopen('php://input', 'r');
+    if (!$stream) {
+      throw new mediamosa_exception(0, 'Unable to open stream', mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+    }
+
+    $written_bytes = 0;
+
+    /// Read a chunk.
+    $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
+
+    while ($kb) {
+      $written_bytes += @fwrite($filename_file, $kb);
+      if (!$written_bytes) {
+        return FALSE;
+      }
+
+      // Read a chunk.
+      $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
+    }
+
+    // Close all open handles.
+    @fclose($filename_file);
+    @fclose($stream);
+
+    // Ok rename when required.
+    if (isset($filename_after_upload)) {
+      mediamosa_io::rename($filename, $filename_after_upload);
+    }
+
+    return $written_bytes;
+  }
+
+  /**
    * Return the status of the upload using given ID and APC.
    *
    * @param string $id

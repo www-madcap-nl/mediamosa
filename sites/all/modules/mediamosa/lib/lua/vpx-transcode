@@ -81,7 +81,7 @@ local ln_duration = space * "Duration" * COLON *
 local ln_audio = space * "Stream #" * float * language^-1 * COLON *
   "Audio" * COLON *
   codec * COMMA *
-  number * "Hz" * COMMA *
+  (number * "Hz" * COMMA)^-1 *
   (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
   ((COMMA * word) + lpeg.Cc("unknown")) *
   (COMMA * number * "kb/s")^-1
@@ -190,6 +190,8 @@ function find_best_streams(source_path, hash)
   local video_max_bitrate_size
   local audio_max_bitrate
   local audio_max_bitrate_stream
+  local audio_codecs
+  local audio_channels
 
   while line do
     -- log[#log+1] = line
@@ -198,6 +200,10 @@ function find_best_streams(source_path, hash)
 
     if streamtype == "Audio" then
       local stream, codecs, hertz, channels, sample_format, bitrate, addition = lpeg.match(ln_audio, line)
+      if channels == "channels" then
+        channels = hertz
+        hertz = nil
+      end
       if addition ~= nil then
         channels = channels.." "..sample_format
         sample_format = bitrate
@@ -224,6 +230,8 @@ function find_best_streams(source_path, hash)
       else
         log_out("audio: not interested in stream %s @ %s kbps", stream, bitrate)
       end
+      audio_codecs = codecs
+      audio_channels = channels
     elseif streamtype == "Video" then
       --local stream, codecs, colorspace, size, ar, bitrate, fps = lpeg.match(ln_video_best, line)
       local stream, codecs, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
@@ -267,12 +275,51 @@ function find_best_streams(source_path, hash)
     video_max_bitrate_size = "none"
   end
   log_out("Best video: %s, best audio: %s", video_max_bitrate_stream, audio_max_bitrate_stream)
-  return video_max_bitrate_stream, audio_max_bitrate_stream, video_max_bitrate_size
+  return video_max_bitrate_stream, audio_max_bitrate_stream, video_max_bitrate_size, audio_codecs, audio_channels
 end
 
 function transcode(source_path, destination_path, hash, dst_ext, params, pass, tmp_dir)
+
+  local audio_ext = "audio"
+  local cd_command = ""
+  local audio_aac_zero = false
+
   -- detect the best video audio stream
-  local video_stream, audio_stream, video_size = find_best_streams(source_path, hash)
+  local video_stream, audio_stream, video_size, audio_codecs, audio_channels = find_best_streams(source_path, hash)
+
+  -- Fix aac problems.
+  if audio_codecs ~= nil and audio_codecs == 'aac' and audio_channels ~= nil then
+    if audio_channels == '0' then
+      -- Fix aac / 0 channel problem.
+
+      audio_aac_zero = true
+
+      local command =
+        string.format(cd_command ..
+                      "faad -o %s/%s.%s %s/%s/%s 2>&1 || " ..
+                      "echo 'Error: faad returned a non-zero exit code:' $? &",
+                      destination_path, hash, audio_ext,
+                      source_path, string.sub(hash, 1, 1), hash)
+      local fd = io.popen(command, "r")
+      local line = fd:read("*l")
+      while line do
+        print(line)
+        line = fd:read("*l")
+      end
+      fd:close()
+      print(command)
+
+    elseif audio_channels == '5.1' then
+      -- Fix aac / 5.1 channel problem.
+      local new_params = ""
+      for token in string.gmatch(params, "[^-]+") do
+        if string.sub(token, 0, 3) ~= 'ac ' then
+          new_params = new_params .. "-" .. token
+        end
+      end
+      params = new_params
+    end
+  end
 
   -- When we use 2 pass encoding, and we are in the 1st phase, we don't use audio stream.
   if pass == 1 then
@@ -290,16 +337,23 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     end
   else
     if video_stream ~= "none" and audio_stream ~= "none" then
-      precommand = string.format("-map %s -map %s", video_stream, audio_stream)
+      if audio_aac_zero then
+        precommand = string.format("-map %s -map 1.0 -i %s", video_stream, destination_path .. "/" .. hash .. "." .. audio_ext)
+      else
+        precommand = string.format("-map %s -map %s", video_stream, audio_stream)
+      end
     elseif video_stream ~= "none" then
       precommand = string.format("-map %s -an", video_stream)
     elseif audio_stream ~= "none" then
-      precommand = string.format("-map %s -vn", audio_stream)
+      if audio_aac_zero then
+        precommand = string.format("-vn -map 1.0 -i %s", destination_path .. "/" .. hash .. "." .. audio_ext)
+      else
+        precommand = string.format("-map %s -vn", audio_stream)
+      end
     end
   end
 
   -- Go to the temporary directory and run the ffmpeg.
-  local cd_command = ""
   if pass ~= 0 then
     cd_command = "cd " .. destination_path .. "/" .. tmp_dir .. "; "
   end
@@ -368,6 +422,15 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     line = fd:read("*l")
   end
   fd:close()
+
+  -- Remove temporary audio file
+  if audio_aac_zero then
+    command = "rm " .. destination_path .. "/" .. hash .. "." .. audio_ext
+    local fd = io.popen(command, "r")
+    fd:close()
+    print(command)
+  end
+
 
   if next(errors) ~= nil then
     fd = io.open(status_file, "w")

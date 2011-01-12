@@ -16,7 +16,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 - All require_once are local path. This works fine, but I'm seeing a lot of
-  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
+  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some
   study if we need to change our require_once.
 
 update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
@@ -24,6 +24,15 @@ update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERV
 
 Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
+
+
+OpenAPI development:
+- Alternative output formats (JSON, Atom, RSS)
+- OpenAPI interface
+- OpenAPI search
+- OpenSocial GET
+- OpenSocial POST
+
 
 TODO: (v2.4)
 - OAI delete support.

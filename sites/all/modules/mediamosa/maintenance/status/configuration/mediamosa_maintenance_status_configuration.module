@@ -615,6 +615,11 @@ function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_re
     'value' => $conf['mediamosa_app_upload'] ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
+  $results_drupal['app_openapi'] = array(
+    'title' => t('Open API interface'),
+    'value' => $conf['mediamosa_app_openapi'] ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
   $results_drupal['app_download'] = array(
     'title' => t('Download interface'),
     'value' => $conf['mediamosa_app_download'] ? t('Enabled') : t('Disabled'),

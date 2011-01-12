@@ -55,8 +55,12 @@ abstract class mediamosa_rest_call {
   const URI_REQUEST = 'uri_request'; // Original URI.
 
   const RESPONSE_TYPE = 'response_type';
-  const RESPONSE_TYPE_XML = 'text/xml';
-  const RESPONSE_TYPE_PLAIN = 'text/plain';
+  // Types.
+  const RESPONSE_TYPE_XML = 'xml';
+  const RESPONSE_TYPE_ATOM = 'atom';
+  const RESPONSE_TYPE_RSS = 'rss';
+  const RESPONSE_TYPE_JSON = 'json';
+  const RESPONSE_TYPE_PLAIN = 'plain';
 
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';
@@ -111,6 +115,12 @@ abstract class mediamosa_rest_call {
   const RESPONSE_FIELDS = 'response_fields';   // Response fields in output.
 
   const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
+
+  const FOR_INTERFACE = 'for_interface';
+  const FOR_INTERFACE_APP = 'for_interface_app';
+  const FOR_INTERFACE_UPLOAD = 'for_interface_upload';
+  const FOR_INTERFACE_DOWNLOAD = 'for_interface_download';
+  const FOR_INTERFACE_OPENAPI = 'for_interface_openapi';
 
   // Specify to TRUE will make sure the REST can not be canceled by user and
   // will still continue to execute even when connection to client has been
@@ -184,6 +194,23 @@ abstract class mediamosa_rest_call {
   const PARAM_IS_READ_ONLY = 'read_only';
   const PARAM_IS_REQUIRED = 'is_required';
   const PARAM_ALLOWED_VALUES = 'allowed_values';
+
+  // Filter options.
+  const FILTEROP_CONTAINS = 'contains';
+  const FILTEROP_EQUALS = 'equals';
+  const FILTEROP_STARTSWITH = 'startsWith';
+  const FILTEROP_PRESENT = 'present';
+
+  // Sort order.
+  const SORTORDER_ASCENDING = 'ascending';
+  const SORTORDER_DESCENDING = 'descending';
+
+  // MediaItem.
+  const USER_OWNER = '@owner';
+  const USER_VIEWER = '@viewer';
+  const USER_ME = '@me';
+  const GROUP_SELF = '@self';
+  const MEDIAITEM_TYPE = 'video';
 
   /**
    * Main constructor.

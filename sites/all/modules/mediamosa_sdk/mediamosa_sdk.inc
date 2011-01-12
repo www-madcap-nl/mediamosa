@@ -211,6 +211,8 @@ class mediamosa_sdk {
 
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
 
+  const ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID = 2100;
+
   const ERRORCODE_INVALID_REST_CALL = 3000;
 
   // ---------------------------------------------------------------- Var Types.
@@ -227,6 +229,7 @@ class mediamosa_sdk {
   const TYPE_ALPHA_NUM                   = 'ALPHA_NUM'; // [A-Za-z0-9]
   const TYPE_ALPHA_NUM_UNDERSCORE        = 'ALPHA_NUM_UNDERSCORE'; // [A-Za-z0-9_]
   const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
+  const TYPE_RESPONSE_TYPE               = 'RESPONSE_TYPE';
   const TYPE_STRING                      = 'STRING';
   const TYPE_DATETIME                    = 'DATETIME';
   const TYPE_DATETIME_UTC                = 'DATETIME_UTC'; // Is in UTC (already).
@@ -259,6 +262,7 @@ class mediamosa_sdk {
   const TYPE_REALM                       = 'REALM';
   const TYPE_FILENAME                    = 'FILENAME';
   const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
+  const TYPE_LANGUAGE_CODE_ISO_639_3     = 'LANGUAGE_CODE_ISO_639_3';
 
   const TYPE_CQL_ASSET                   = 'CQL_ASSET';
   const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';
