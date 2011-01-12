@@ -194,6 +194,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
         try {
           $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+            $asset_id,
             $a_parameters,
             $a_asset_info,
             $a_mediafile_ext,
@@ -257,6 +258,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
       try {
         $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+          $asset_id,
           $a_parameters,
           $a_asset_info,
           $a_mediafile_ext,
@@ -305,6 +307,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
       try {
         $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+          $asset_id,
           $a_parameters,
           $a_asset_info,
           $a_mediafile_ext,
@@ -429,6 +432,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $a_mediafile_ext['metadata']['video_codec'] = 'h264';
     $a_mediafile_ext['filename'] = 'filename.wmv';
     $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $asset_id,
       $a_parameters,
       array(),
       $a_mediafile_ext,
@@ -446,6 +450,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $a_mediafile_ext['metadata']['video_codec'] = NULL;
     $a_mediafile_ext['filename'] = 'filename.wmv';
     $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $asset_id,
       $a_parameters,
       array(),
       $a_mediafile_ext,
@@ -463,6 +468,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $a_mediafile_ext['metadata']['video_codec'] = 'undef';
     $a_mediafile_ext['filename'] = 'filename.wmv';
     $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $asset_id,
       $a_parameters,
       array(),
       $a_mediafile_ext,

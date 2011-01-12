@@ -70,7 +70,7 @@ class mediamosa_version {
   const MINOR = 'minor';
   const RELEASE = 'release';
   const BUILD = 'build';
-  const EXTRA = 'extra';
+  const INFO = 'info';
 
   // ------------------------------------------------------------------ Static Function..
   /**
@@ -95,13 +95,13 @@ class mediamosa_version {
    * @return array
    */
   static public function get_current_version($return_full = FALSE) {
-    list($major, $minor, $release, $build, $extra) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
+    list($major, $minor, $release, $build, $info) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
     return array(
       self::MAJOR => $major,
       self::MINOR => $minor,
       self::RELEASE => $release,
       self::BUILD => $build,
-      self::EXTRA => $extra,
+      self::INFO => $info,
     );
   }
 
@@ -114,6 +114,6 @@ class mediamosa_version {
    */
   static public function get_current_version_str($return_full = FALSE) {
     $version = self::get_current_version($return_full);
-    return $version[self::MAJOR] . '.' . $version[self::MINOR] . '.' . $version[self::RELEASE] . ($return_full ? ' (build ' . $version[self::BUILD] . ') ' . $version[self::EXTRA] : '');
+    return $version[self::MAJOR] . '.' . $version[self::MINOR] . '.' . $version[self::RELEASE] . ($return_full ? ' (build ' . $version[self::BUILD] . ') ' . $version[self::INFO] : '');
   }
 }

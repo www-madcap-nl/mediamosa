@@ -29,6 +29,15 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 2.3.5 (build 1246)
+----------------------------
+
+Other changes (not ticket related).
+- Fixed asset Solr delete, it didn't delete the Solr index correctly. 
+- The /version REST call will now include <build> and <info> tags with data from
+  the current MediaMosa version.
+- Fixed STILL_URI in object code with play proxy call. 
+  
 MediaMosa 2.3.4 (build 1246)
 ----------------------------
 - Fixed downloading of files when filename contained URL encoded chars. (See
@@ -48,7 +57,7 @@ Other changes (not ticket related).
   - ERRORCODE_FTP_ERROR (1700)
   - ERRORCODE_ACL_ERROR_AUTHORIZED (1801)
 - Error code description texts have been reviewed and corrected where needed.
-  Installed systems are not updated, only new cleaned installs.
+  Installed systems are not updated, only new installs.
 - Solr search on fulltext is now case-insensitive (like MySQL).
 - All other searches, beside database IDs are now case-insensitive (like MySQL).
 - Added auto-queuing when index fails on Solr, so asset will be indexed as soon
@@ -57,7 +66,7 @@ Other changes (not ticket related).
   theme changes in Drupal 7 final.
 - Download filenames are no longer raw-encoded in HTTP header (tested on IE8,
   FF3.6 and Chrome 6.
-- When Solr is enabled and goes down, MediaMosa will automaticly switch back to
+- When Solr is enabled and goes down, MediaMosa will automaticlly switch back to
   MySQL until Solr is up again.
 - Failed indexes and deletes from Solr index are now queued for later indexing
   and/or deletion.
