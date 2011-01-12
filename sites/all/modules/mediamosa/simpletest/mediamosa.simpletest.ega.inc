@@ -783,7 +783,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * @return $mediafile_id
    *   MediaItem id.
    */
-  protected function uploadTestFileOpenAPI($album_id = NULL, $user_id = self::SIMPLETEST_USER_ID, $filename = '') {
+  protected function uploadTestFileOpenAPI($album_id = NULL, $user_id = self::SIMPLETEST_USER_ID, $filename = NULL, $mime_type = NULL, $mediaitem_id = NULL, $attributes = array()) {
     global $base_url;
 
     if (!$album_id) {
@@ -791,22 +791,26 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $album_id = $this->createAsset();
     }
 
-    // Get link to upload file.
-    $filename = empty($filename) ? self::getTestVideo() : $filename;
+    $attributes_query = '';
+    if (!empty($attributes)) {
+      foreach ($attributes as $name => $attribute) {
+        $attributes_query .= '&' . $name . '=' . $attribute;
+      }
+    }
 
-    // Mime type.
-    $mime_type = 'video/x-ms-wmv';
-
-    $url = $base_url . '/openapi/album/' . $album_id . '?user_id=' . $user_id;
+    $url = $base_url . '/openapi/album/' . $album_id . ($mediaitem_id ? '/mediaitem/' . $mediaitem_id : '') . '?user_id=' . $user_id . $attributes_query;
     $headers = array(
       'Accept-Type' => 'application/rss+xml',
-      'Content-Type' => $mime_type,
     );
     $options = array(
       'headers' => $headers,
       'method' => 'POST',
-      'data' => file_get_contents($filename)
     );
+
+    if ($filename) {
+      $headers['Content-Type'] = ($mime_type ? $mime_type : 'video/x-ms-wmv');
+      $options['data'] = file_get_contents($filename);
+    }
 
     // Dump the request.
     $this->verbose(print_r($url, TRUE));
@@ -831,7 +835,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     $mediaitem_id = $feed['entry']['content']['mediaItem']['id'];
 
-    return $mediaitem_id;
+    return array('mediaitem_id' => $mediaitem_id, 'feed' => $feed,);
   }
 
   /**
