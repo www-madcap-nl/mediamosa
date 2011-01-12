@@ -69,5 +69,8 @@ class MediaMosaOpenAPIUploadTestCaseEga extends MediaMosaTestCaseEga {
     $mediaitem_id = $this->uploadTestFileOpenAPI($album_id, $user_id);
 
     $this->assertTrue($mediaitem_id, 'MediaItem exists.');
+
+    // Get the mediafile / mediaitem.
+    $mediafile = $this->getMediafile($mediaitem_id);
   }
 }
