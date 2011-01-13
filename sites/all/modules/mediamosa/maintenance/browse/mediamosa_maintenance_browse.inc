@@ -259,21 +259,16 @@ function _mediamosa_browse_fix_metadata_name($name) {
  */
 function _mediamosa_get_transcode_profile_data($transcode_profile_id) {
 
-  static $transcode_profiles = array();
+  // Our static.
+  $transcode_profiles = &drupal_static(__FUNCTION__, array());
 
   if (isset($transcode_profiles[$transcode_profile_id])) {
     return $transcode_profiles[$transcode_profile_id];
   }
 
-  $uri = strtr('transcode/profile/!profile_id', array('!profile_id' => $transcode_profile_id));
+  // Because we need the node ID, we can't use the REST call here.
+  $transcode_profiles[$transcode_profile_id] = mediamosa_transcode_profile::get($transcode_profile_id);
 
-  // Prevent more than one calls to the same (missing transcode).
-  $transcode_profiles[$transcode_profile_id] = FALSE;
-
-  $result = mediamosa_response_connector::static_do_restcall($uri);
-  if (mediamosa_response_connector::static_result_okay($result)) {
-    $transcode_profiles[$transcode_profile_id] = reset($result['items']);
-  }
-
+  // Return it.
   return $transcode_profiles[$transcode_profile_id];
 }
