@@ -312,6 +312,8 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
     elseif audio_channels == '5.1' then
       -- Fix aac / 5.1 channel problem.
       local new_params = ""
+      -- Trim params
+      params = (string.gsub(params, "^%s*(.-)%s*$", "%1"))
       for token in string.gmatch(params, "[^-]+") do
         if string.sub(token, 0, 3) ~= 'ac ' and string.sub(token, 0, 3) ~= 'ar ' then
           new_params = new_params .. "-" .. token
