@@ -130,9 +130,27 @@ class mediamosa_rest {
       // Does it match with our REGEX?
       $s_regex = '@^' . implode('/', $a_regex) . '$@';
       if (preg_match($s_regex, $request_uri)) {
-        $rest_call[mediamosa_rest_call::URI] = $uri;
-        $rest_call_return = $rest_call;
-        break;
+        // Check the match_uri() static function.
+        if (method_exists($rest_call[mediamosa_rest_call::CLASS_NAME], mediamosa_rest_call::MATCH_URI_FUNCTION)) {
+          if (!call_user_func(array($rest_call[mediamosa_rest_call::CLASS_NAME], mediamosa_rest_call::MATCH_URI_FUNCTION), $request_uri)) {
+            continue;
+          }
+        }
+
+        // Check the number of wildchar parts.
+        // Less wildchar means better match.
+        $uri_parts = explode('/', $uri);
+        $wildchar = 0;
+        foreach ($uri_parts as $uri_part) {
+          if (drupal_substr($uri_part, 0, 1) == '$') {
+            $wildchar++;
+          }
+        }
+        if (!$rest_call_return || $rest_call_return[mediamosa_rest_call::URI_WILDCHAR] > $wildchar) {
+          $rest_call[mediamosa_rest_call::URI] = $uri;
+          $rest_call[mediamosa_rest_call::URI_WILDCHAR] = $wildchar;
+          $rest_call_return = $rest_call;
+        }
       }
     }
 
