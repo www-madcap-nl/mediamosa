@@ -1,5 +1,0 @@
-etc/mediamosa/sites/default
-etc/mediamosa/solr
-var/lib/mediamosa/files
-usr/share/doc/mediamosa
-usr/share/lintian/overrides
