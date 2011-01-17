@@ -312,6 +312,23 @@ class mediamosa_io {
   }
 
   /**
+   * Wrapper for imagecopymerge() function.
+   *
+   * @param resource $dest
+   * @param resource $src
+   * @param int $dst_x
+   * @param int $dst_y
+   * @param int $src_x
+   * @param int $src_y
+   * @param int $src_w
+   * @param int $src_h
+   * @param int $pct
+   */
+  static public function imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
+    return @imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+  }
+
+  /**
    * File get content.
    *
    * @param filename

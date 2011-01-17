@@ -1322,6 +1322,13 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
         'frametime' => NULL,
         'width' => NULL,
         'height' => NULL,
+        // Watermark.
+        'watermark_id' => NULL,
+        'watermark_dst_x' => NULL,
+        'watermark_dst_y' => NULL,
+        'watermark_pct' => NULL,
+        'watermark_v_align' => NULL,
+        'watermark_h_align' => NULL,
       );
       $job_id = mediamosa_job::create_job_upload($app_id,  $asset[mediamosa_asset_db::OWNER_ID], $asset[mediamosa_asset_db::GROUP_ID], $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
 

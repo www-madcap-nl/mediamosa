@@ -172,14 +172,16 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Upload still
    *
-   * @param array $mediafile
    * @param string $ticket_id
    * @param boolean $is_method_put
    * @param string $tag
    * @param string $completed_url
    * @param string $filename_put
+   * @param int $order
+   * @param boolean $default
+   * @param array $still_parameters
    */
-  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE) {
+  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array()) {
 
     // Set to false.
     $is_app_admin = FALSE;
@@ -250,6 +252,10 @@ class mediamosa_asset_mediafile_upload {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
     }
 
+    $still_parameters += array(
+      'still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+    );
+
     // Create still.
     mediamosa_asset_mediafile_still::create(
       $mediafile['asset_id'],
@@ -259,7 +265,7 @@ class mediamosa_asset_mediafile_upload {
       $ticket[mediamosa_ticket_db::GROUP_ID],
       $order,
       $default,
-      array('still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE),
+      $still_parameters,
       NULL,
       $mediafile[mediamosa_asset_mediafile_db::ID],
       $tag

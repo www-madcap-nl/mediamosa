@@ -351,8 +351,16 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   const V_PADDING = 'v_padding';
   const TAG = 'tag';
   const FRAMETIME = 'frametime';
-  const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
 
+  // Watermark.
+  const WATERMARK_ID = 'watermark_id';
+  const WATERMARK_DST_X = 'watermark_dst_x';
+  const WATERMARK_DST_Y = 'watermark_dst_y';
+  const WATERMARK_PCT = 'watermark_pct';
+  const WATERMARK_V_ALIGN = 'watermark_v_align';
+  const WATERMARK_H_ALIGN = 'watermark_h_align';
+
+  const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
   const PROFILE_ID = 'profile_id';
   const TOOL = 'tool';
   const FILE_EXTENSION = 'file_extension';
@@ -447,6 +455,48 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still frametime (in seconds).',
         ),
+        // Watermark.
+        self::WATERMARK_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The watermark ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+        ),
+        self::WATERMARK_DST_X => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'X-coordinate of destination point of watermark.',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_X,
+        ),
+        self::WATERMARK_DST_Y => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Y-coordinate of destination point of watermark.',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_Y,
+        ),
+        self::WATERMARK_PCT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Alpha transparency of watermark (watermark visibility in percentage [0 - 100%]).',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_PCT,
+          self::VAR_RANGE_START => 0,
+          self::VAR_RANGE_END => 100,
+        ),
+        self::WATERMARK_V_ALIGN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Vertical align of watermark.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_LEFT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_RIGHT,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_V_ALIGN,
+        ),
+        self::WATERMARK_H_ALIGN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Horizontal align of watermark.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_TOP,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_H_ALIGN,
+        ),
+
         self::COMPLETED_TRANSCODING_URL => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
           self::VAR_DESCRIPTION => 'Triggered when transcoding is completed.',
@@ -530,6 +580,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     $file_size = $this->get_param_value(self::FILE_SIZE);
     $priority = $this->get_param_value(self::PRIORITY);
     $retranscode = $this->get_param_value(self::RETRANSCODE);
+    $watermark_id = $this->get_param_value(self::WATERMARK_ID);
 
     $create_still = $this->get_param_value(self::CREATE_STILL);
     $still_parameters = array(
@@ -543,6 +594,13 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
       'v_padding' => $this->get_param_value(self::V_PADDING),
       'tag' => $this->get_param_value(self::TAG),
       'frametime' => $this->get_param_value(self::FRAMETIME),
+      // Watermark.
+      self::WATERMARK_ID => $watermark_id,
+      self::WATERMARK_DST_X => $this->get_param_value(self::WATERMARK_DST_X),
+      self::WATERMARK_DST_Y => $this->get_param_value(self::WATERMARK_DST_Y),
+      self::WATERMARK_PCT => $this->get_param_value(self::WATERMARK_PCT),
+      self::WATERMARK_V_ALIGN => $this->get_param_value(self::WATERMARK_V_ALIGN),
+      self::WATERMARK_H_ALIGN => $this->get_param_value(self::WATERMARK_H_ALIGN),
     );
 
     // Webservice must be enabled.
@@ -550,6 +608,11 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
     // Make sure the mediafile exists, returns the mediafile.
     $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+
+    // Check watermark id, if exists.
+    if ($watermark_id) {
+      mediamosa_asset_mediafile::must_exists($watermark_id, $app_id);
+    }
 
     if (in_array($job_type, array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_UPLOAD))) {
       mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
