@@ -97,39 +97,39 @@ class mediamosa_rest {
 
     // Now find a match.
     foreach ($rest_calls[$request_method] as $uri => $rest_call) {
-      $a_uri_parts = ($uri != '' ? explode('/', $uri) : array());
+      $uri_parts_array = ($uri != '' ? explode('/', $uri) : array());
 
       // Number of parts must match.
-      if (count($request_uris) != count($a_uri_parts)) {
+      if (count($request_uris) != count($uri_parts_array)) {
         continue;
       }
 
       // Both empty? Then we match '/'.
-      if (!count($request_uris) && !count($a_uri_parts)) {
+      if (!count($request_uris) && !count($uri_parts_array)) {
         $rest_call[mediamosa_rest_call::URI] = $uri;
         $rest_call_return = $rest_call;
         break;
       }
 
       // Build the REGEX so we can see if it matches.
-      $a_regex = array();
-      foreach ($a_uri_parts as $pos => $uri_part) {
+      $regex_array = array();
+      foreach ($uri_parts_array as $pos => $uri_part) {
         if (mediamosa_unicode::substr($uri_part, 0, 2) == '#$') {
-          $a_regex[] = "[0-9]*(:[a-zA-Z]+)?";
+          $regex_array[] = "[0-9]*(:[a-zA-Z]+)?";
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $request_uris[$pos];
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
-          $a_regex[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
+          $regex_array[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $request_uris[$pos];
         }
         else {
-          $a_regex[] = $uri_part;
+          $regex_array[] = $uri_part;
         }
       }
 
       // Does it match with our REGEX?
-      $s_regex = '@^' . implode('/', $a_regex) . '$@';
-      if (preg_match($s_regex, $request_uri)) {
+      $regex_string = '@^' . implode('/', $regex_array) . '$@';
+      if (preg_match($regex_string, $request_uri)) {
         // Check the match_uri() static function.
         if (method_exists($rest_call[mediamosa_rest_call::CLASS_NAME], mediamosa_rest_call::MATCH_URI_FUNCTION)) {
           if (!call_user_func(array($rest_call[mediamosa_rest_call::CLASS_NAME], mediamosa_rest_call::MATCH_URI_FUNCTION), $request_uri)) {
