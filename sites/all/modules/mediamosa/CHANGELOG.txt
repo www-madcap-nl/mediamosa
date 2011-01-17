@@ -31,13 +31,15 @@ TODO: (v2.4)
 
 MediaMosa 2.3.5 (build 1256)
 ----------------------------
+- Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
+  the default url to the still in asset call. (See ticket #456).
 
 Other changes (not ticket related).
 - Fixed asset Solr delete, it didn't delete the Solr index correctly. 
 - The /version REST call will now include <build> and <info> tags with data from
   the current MediaMosa version.
 - Fixed STILL_URI in object code with play proxy call. 
-- Added link to profile in asset viewer under asset browser.
+- Added link to transcode profile in asset viewer under asset browser.
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------

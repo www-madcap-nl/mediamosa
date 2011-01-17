@@ -35,18 +35,34 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset - VPX still url',
+      'name' => 'Asset - Still url',
       'description' => 'Testing asset vpx_still_url functions and in asset output.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
-  // Test Asset vpx_still_url (114).
   public function testAssetVpxStillUrl() {
+
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
+    $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
+
+    // Login in on other EGA.
+    $this->doEgaLogin_2();
+
+    // enable change master/slave.
+    $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+
+    // Back to 1.
+    $this->toEga_1();
 
     // Create an asset.
     $asset_id = $this->createAsset();
+
 
     // Create mediafiles.
     $mediafile_id_1 = $this->createMediafile($asset_id);
@@ -54,7 +70,6 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Get the asset.
     $asset = $this->getAsset($asset_id);
-    $this->var_export($asset);
 
     // Check the result.
     $this->assertFalse(
@@ -73,6 +88,20 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Parse the queue.
     $this->doQueueCycleAll();
 
+    // Get the asset.
+    $asset = $this->getAsset($asset_id);
+
+    // Check the result.
+    $this->assertTrue(
+      isset($asset['vpx_still_url']) && $asset['vpx_still_url'],
+      t('There is a vpx_still_url')
+    );
+
+    // Now master slave from app1 to app2.
+    $this->setMediafileAut($mediafile_id_1, array(mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2));
+    $this->setMediafileAut($mediafile_id_2, array(mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2));
+
+    $this->toEga_2();
 
     // Get the asset.
     $asset = $this->getAsset($asset_id);
@@ -81,7 +110,7 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Check the result.
     $this->assertTrue(
       isset($asset['vpx_still_url']) && $asset['vpx_still_url'],
-      t('There is vpx_still_url')
+      t('There is a vpx_still_url for other app.')
     );
   }
 }
