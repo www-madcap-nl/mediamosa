@@ -466,7 +466,7 @@ class mediamosa_response extends mediamosa {
       $xml_response_errors = $xml_response_header->addChild('errors');
 
       foreach ($this->response['errors'] as $key => $error) {
-        $xml_response_errors->addChild('error', htmlspecialchars($error));
+        $xml_response_errors->addChild('error', mediamosa_unicode::xmlentities($error));
       }
     }
 
@@ -505,7 +505,7 @@ class mediamosa_response extends mediamosa {
     }
 
     if (!is_array($mixed_value)) {
-      $item_child = $item->addChild($key, htmlspecialchars($mixed_value));
+      $item_child = $item->addChild($key, mediamosa_unicode::xmlentities($mixed_value));
 
       if ($key[0] == '#') {
         $attributes = @unserialize(mediamosa_unicode::substr($key, 1));
@@ -523,7 +523,7 @@ class mediamosa_response extends mediamosa {
     $first_key = key($mixed_value);
     if (is_numeric($first_key)) {
       foreach ($mixed_value as $mixed_key => $value) {
-        $item->addChild($key, htmlspecialchars($value));
+        $item->addChild($key, mediamosa_unicode::xmlentities($value));
       }
 
       return NULL;
