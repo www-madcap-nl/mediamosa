@@ -1,3 +1,0 @@
-mediamosa: package-contains-upstream-install-documentation usr/share/doc/mediamosa/INSTALL.mysql.txt
-mediamosa: package-contains-upstream-install-documentation usr/share/doc/mediamosa/INSTALL.pgsql.txt
-

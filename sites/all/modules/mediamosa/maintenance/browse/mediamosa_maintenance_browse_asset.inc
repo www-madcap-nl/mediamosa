@@ -640,12 +640,16 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')': '');
     $rows[] = array(t('Protected'), $item['is_protected']);
 
-    if ($item['transcode_profile_id']) {
+    if (!empty($item['transcode_profile_id'])) {
       $transcode_profile_data = _mediamosa_get_transcode_profile_data($item['transcode_profile_id']);
       if ($transcode_profile_data) {
-        $rows[] = array(t('Transcode Profile'), l($transcode_profile_data['profile_name'], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile_data['profile_id']));
+        $rows[] = array(t('Transcode profile'), l($transcode_profile_data[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile_data[mediamosa_transcode_profile_db::NID]));
+      }
+      else {
+         $rows[] = array(t('Transcode profile'), t('Transcode profile no longer exists.'));
       }
     }
+
     // Uri REST call.
     $uri = strtr('mediafile/@mediafile_id/acl', array('@mediafile_id' => $item['mediafile_id']));
 

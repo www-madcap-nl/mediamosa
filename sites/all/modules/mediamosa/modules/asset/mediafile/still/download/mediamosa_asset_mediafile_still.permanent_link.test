@@ -412,6 +412,5 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Must perm. link.
     $this->assertFalse(stripos($asset['vpx_still_url'], '/still/ticket/'), 'Must be perm. link');
-
   }
 }
