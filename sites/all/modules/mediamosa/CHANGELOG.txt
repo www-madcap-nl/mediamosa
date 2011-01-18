@@ -29,11 +29,12 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.5 (build 1264)
+MediaMosa 2.3.5 (build 1268)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
   the default url to the still in asset call. (See ticket #456).
 - Fixed bug where invalid char would cause malformed XML (See ticket #446).
+- Fixed LUA for video with 0 audio channels (See vpcore ticket #227).
 
 Other changes (not ticket related).
 - Fixed asset Solr delete, it didn't delete the Solr index correctly. 
@@ -42,6 +43,7 @@ Other changes (not ticket related).
 - Fixed STILL_URI in object code with play proxy call. 
 - Added link to transcode profile in asset viewer under asset browser.
 - Added reference_id to asset/update REST call.
+
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------
