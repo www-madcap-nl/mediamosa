@@ -591,7 +591,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of still.
    */
-  protected function uploadTestStill($order = 0, $default = FALSE) {
+  protected function uploadTestStill($order = 0, $default = FALSE, $filename = NULL) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -612,7 +612,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(!empty($uploadticket['ticket_id']), 'ticket_id set');
 
     // Get link to upload file.
-    $filename = self::getTestImage_NotBlackJpg();
+    if (!$filename) {
+      $filename = self::getTestImage_NotBlackJpg();
+    }
 
     // URL.
     // Still upload does not use the action from the upload ticket.
@@ -675,13 +677,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
 
     // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $still_filename);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'still_id' => $still_id, 'filename' => $still_filename);
   }
 
   /**
    * Upload of still on a existing mediafile.
    */
-  protected function uploadTestStillAttach($order = 0, $default = FALSE) {
+  protected function uploadTestStillAttach($order = 0, $default = FALSE, $filename = NULL) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -702,7 +704,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(!empty($uploadticket['ticket_id']), 'ticket_id set');
 
     // Get link to upload file.
-    $filename = self::getTestImage_NotBlackJpg();
+    if (!$filename) {
+      $filename = self::getTestImage_NotBlackJpg();
+    }
 
     // URL.
     // Still upload does not use the action from the upload ticket.
@@ -768,7 +772,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
 
     // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $still_filename);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'still_id' => $still_id, 'filename' => $still_filename);
   }
 
   /**
@@ -3246,6 +3250,47 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     return $response;
+  }
+
+  /**
+   * Watermark still.
+   * Based on the POST rest call /still/$still_id/watermark (POST)
+   */
+  protected function watermarkStill($still_id, $watermark_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_set_still_watermark::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_set_still_watermark::WATERMARK_ID => $watermark_id,
+    );
+
+    // Set the URI.
+    $uri = strtr('still/@still_id/watermark', array('@still_id' => $still_id));
+
+    $this->verbose(t('REST call: @uri, parameters = @parameters', array(
+      '@uri' => $uri,
+      '@parameters' => print_r($parameters, TRUE),
+    )));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Get the new watermarked still_id.
+    $still_id_watermarked = empty($response['xml']->items->item[0]->still_id) ? NULL : (string) $response['xml']->items->item[0]->still_id;
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr("Watermark still with ID: @still_id, got result @result (@result_description)", array('@still_id' => $still_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+    );
+
+    // Get path to still.
+    $still_filename_watermarked = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_watermarked);
+
+    // Add to unlinks.
+    $this->unlinks[] = $still_filename_watermarked;
+
+    // Return response.
+    return $still_id_watermarked;
   }
 
   // ------------------------------------------------------------------ Play Proxy.

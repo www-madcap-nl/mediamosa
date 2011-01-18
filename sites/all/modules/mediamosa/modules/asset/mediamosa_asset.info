@@ -54,6 +54,8 @@ files[] = mediafile/still/mediamosa_asset_mediafile_still.audio_file.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
 files[] = mediafile/still/mediamosa_asset_mediafile_still.blackstill.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.upload.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.watermark.test
 
 ; Mediafile Still Download.
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.inc

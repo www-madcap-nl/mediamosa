@@ -226,6 +226,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const STILL_ID = 'still_id';
+  const USER_ID = 'user_id';
 
   // Watermark.
   const WATERMARK_ID = 'watermark_id';
@@ -243,6 +244,11 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The owner ID to match.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
         self::STILL_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The still ID.',
@@ -317,6 +323,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
 
     // Get the 1st app.
     $app_id = reset($app_ids);
+    $user_id = $this->get_param_value(self::USER_ID);
 
     $still_id = $this->get_param_value(self::STILL_ID);
     $watermark_id = $this->get_param_value(self::WATERMARK_ID);
@@ -348,6 +355,20 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
     // Must be on.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));
 
+    // Does the user has access?
+    mediamosa_aut::owner_check(
+      $app_id,
+      $user_id,
+      $still[mediamosa_asset_mediafile_db::APP_ID],
+      $still[mediamosa_asset_mediafile_db::OWNER_ID]
+    );
+    mediamosa_aut::owner_check(
+      $app_id,
+      $user_id,
+      $watermark[mediamosa_asset_mediafile_db::APP_ID],
+      $watermark[mediamosa_asset_mediafile_db::OWNER_ID]
+    );
+
     $still_parameters = array(
       // Watermark.
       self::WATERMARK_ID => $watermark_id,
@@ -366,7 +387,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
-    $still_parameters += array(
+    $still_parameters = array(
       // TODO: New type?
       'still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
     );

@@ -1,0 +1,169 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * MediaMosa still watermark unittests.
+ */
+
+/**
+  * @file
+  * Unittest for watermark still.
+  */
+class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Still - Watermark test',
+      'description' => 'Watermarking still test.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    );
+  }
+
+  /**
+   * The still upload test.
+   */
+  function testStillWatermark() {
+
+    // Base values.
+    $order = 0;
+    $default = FALSE;
+
+    // Upload still.
+    $still = $this->uploadTestStill($order, $default, self::getTestImage_NotBlackJpg());
+
+    // Upload watermark.
+    //$watermark = $this->uploadTestStillAttach($order, $default, self::getTestImage_Png());
+    $watermark = $this->uploadTestStillAttach($order, $default, self::getTestImage_Jpg());
+
+    // Watermarking still image.
+    $parameters = array(
+      mediamosa_rest_call_set_still_watermark::WATERMARK_DST_X => 10,
+      mediamosa_rest_call_set_still_watermark::WATERMARK_DST_Y => 5,
+      mediamosa_rest_call_set_still_watermark::WATERMARK_PCT => 30,
+      mediamosa_rest_call_set_still_watermark::WATERMARK_V_ALIGN => mediamosa_asset_mediafile_still::WATERMARK_VALUE_RIGHT,
+      mediamosa_rest_call_set_still_watermark::WATERMARK_H_ALIGN => mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
+    );
+    $still_id_watermarked = $this->watermarkStill($still['still_id'], $watermark['still_id'], $parameters);
+    $still_id_watermarked_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_watermarked);
+
+
+    // Reproduce the process.
+
+    // Get the original files.
+    $dest = imagecreatefromjpeg($still['filename']);
+    //$src = imagecreatefrompng($watermark['filename']);
+    $src = imagecreatefromjpeg($watermark['filename']);
+
+    // Values.
+    $dst_x = 0;
+    $dst_y = 0;
+    $src_x = 0;
+    $src_y = 0;
+    $src_w = imagesx($src);
+    $src_h = imagesy($src);
+    $pct = $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_PCT];
+
+    // Destination x calculation.
+    if ($parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_V_ALIGN] == mediamosa_asset_mediafile_still::WATERMARK_VALUE_LEFT) {
+      $dst_x = $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_X];
+    }
+    else {
+      $dst_x = imagesx($dest) - $src_w - $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_X];
+    }
+
+    // Destination y calculation.
+    if ($parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_H_ALIGN] == mediamosa_asset_mediafile_still::WATERMARK_VALUE_TOP) {
+      $dst_y = $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_Y];
+    }
+    else {
+      $dst_y = imagesy($dest) - $src_h - $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_Y];
+    }
+
+    // Copymerge.
+    mediamosa_io::imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+
+    // Save image.
+    $still_id_new = mediamosa_db::uuid($still_id_watermarked);
+    $still_filename_new = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_new);
+
+    // Create possible missing directories.
+    mediamosa_io::mkdir(mediamosa_io::dirname($still_filename_new));
+
+    // Write still.
+    imagejpeg($dest, $still_filename_new);
+
+    $this->verbose(t('Contoll still id = @still_id, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct', array(
+      '@still_id' => $still_id_new,
+      '@dst_x' => $dst_x,
+      '@dst_y' => $dst_y,
+      '@src_x' => $src_x,
+      '@src_y' => $src_y,
+      '@src_w' => $src_w,
+      '@src_h' => $src_h,
+      '@pct' => $pct,
+    )));
+
+    // Destroye resources.
+    imagedestroy($dest);
+    imagedestroy($src);
+
+
+    // Check the two watermarked stills.
+    $im_rest = imagecreatefromjpeg($still_id_watermarked_filename);
+    $im_self = imagecreatefromjpeg($still_filename_new);
+
+    // Check generation.
+    $this->assertTrue($im_rest !== FALSE, 'Got image from still, REST created.');
+    $this->assertTrue($im_self !== FALSE, 'Got image from still, self created.');
+
+    if ($im_rest && $im_self) {
+      $color_rest = imagecolorat($im_rest, imagesx($im_rest) - 20, imagesy($im_rest) - 20);
+      $color_self = imagecolorat($im_self, imagesx($im_self) - 20, imagesy($im_self) - 20);
+      $this->assertTrue($color_rest == $color_self, t('The watermarked stills checked and seems ok (color1 = @color1, color2 = @color2, x1 = @x1, x2 = @x2, y1 = @y1, y2 = @y2).', array(
+        '@color1' => $color_rest,
+        '@color2' => $color_self,
+        '@x1' => imagesx($im_rest) - 20,
+        '@x2' => imagesx($im_self) - 20,
+        '@y1' => imagesy($im_rest) - 20,
+        '@y2' => imagesy($im_self) - 20,
+      )));
+    }
+
+    // Destroye resources.
+    imagedestroy($im_rest);
+    imagedestroy($im_self);
+
+
+    // Check the two watermarked still.
+    $this->assertTrue(crc32(file_get_contents($still_id_watermarked_filename)) == crc32(file_get_contents($still_filename_new)), t('The watermarked stills are identical'));
+
+
+    // Remove test image.
+    mediamosa_io::unlink($still_filename_new);
+  }
+}

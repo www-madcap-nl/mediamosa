@@ -816,14 +816,13 @@ class mediamosa_asset {
         // Insert granted.
         $items_pre_sort[$asset[mediamosa_asset_db::ID]]['granted'] = isset($items['granted']) && array_search($asset[mediamosa_asset_db::ID], $items['granted']) !== FALSE ? 'TRUE' : 'FALSE';
 
-        // Add ticket.
-        $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = '';
-        $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = '';
-
         // has_streamable_mediafiles.
         if ($add_has_streamable_mediafiles) {
           $items_pre_sort[$asset[mediamosa_asset_db::ID]]['has_streamable_mediafiles'] = (isset($mf[$asset[mediamosa_asset_db::ID]]) && $mf[$asset[mediamosa_asset_db::ID]] ? 'TRUE' : 'FALSE');
         }
+
+        // Empty by default.
+        $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = '';
 
         if ($show_stills) {
           // Can happen more than once, don't do it again when vpx_still_url is already set.
@@ -846,20 +845,7 @@ class mediamosa_asset {
               if (!empty($items['stills'][$asset[mediamosa_asset_db::ID]])) {
 
                 $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
-/*
-                // Check access.
-                mediamosa_aut::access_check_on_object(
-                  mediamosa_aut::AUT_TYPE_MEDIAFILE,
-                  $asset[mediamosa_asset_db::ID],
-                  $still_id,
-                  $app_id,
-                  $aut_user_id,
-                  $aut_group_ids,
-                  $aut_domain,
-                  $aut_realm,
-                  $is_app_admin
-                );
-*/
+
                 if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
                   $response = mediamosa_asset_mediafile_play_proxy::create_response_still($still_id, $app_id);
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
@@ -883,6 +869,9 @@ class mediamosa_asset {
               mediamosa_debug::log_asset($asset[mediamosa_asset_db::ID], $e->getMessage());
             }
           }
+        }
+        else {
+          $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = '';
         }
       }
 

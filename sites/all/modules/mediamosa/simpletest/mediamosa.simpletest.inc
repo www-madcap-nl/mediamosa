@@ -642,6 +642,24 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the path+filename to the test image (jpg).
+   */
+  protected function getTestImage_Jpg() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/cat.jpg';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
+   * Return the path+filename to the test image (png).
+   */
+  protected function getTestImage_Png() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/cat.png';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
    * Return the path+filename to the test image (gif).
    */
   protected function getTestImage_BlobGif() {

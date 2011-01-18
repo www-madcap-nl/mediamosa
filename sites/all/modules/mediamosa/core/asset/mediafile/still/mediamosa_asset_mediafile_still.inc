@@ -216,7 +216,7 @@ class mediamosa_asset_mediafile_still {
       $src = imagecreatefrompng($watermark_filename);
     }
 
-    // Sizes.
+    // Values.
     $dst_x = 0;
     $dst_y = 0;
     $src_x = 0;
