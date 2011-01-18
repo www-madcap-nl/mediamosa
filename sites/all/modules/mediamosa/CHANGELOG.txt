@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.5 (build 1256)
+MediaMosa 2.3.5 (build 1264)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
   the default url to the still in asset call. (See ticket #456).
