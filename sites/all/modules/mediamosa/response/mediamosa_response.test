@@ -51,5 +51,28 @@ class MediaMosaResponseTestCase extends MediaMosaTestCase {
 
     // Show the xml.
     $this->var_export($response['xml']);
+
+    $foo = '';
+    $allowed_chars = array(0x09, 0x0A, 0x0D);
+    foreach ($allowed_chars as $char) {
+      $foo .= chr($char);
+    }
+
+    $parameters = array(
+      'foo' => $foo,
+    );
+
+    // Do response.
+    $response = $this->restCallGet('version', $parameters);
+/*
+    // Show the xml.
+    $this->var_export($response['xml']);
+
+    $len = mediamosa_unicode::strlen('[GET] version?foo=');
+
+    // Make sure these are not translated to ?.
+    $this->assertTrue(mediamosa_unicode::substr((string)$response['xml']['header']['request_uri'], $len) == $foo);
+
+    $this->var_export((string)$response['xml']['header']['request_uri']);*/
   }
 }

@@ -127,7 +127,7 @@ class mediamosa_connector {
   public function request($uri, array $options = array()) {
 
     if (empty($this->url)) {
-      watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
+      self::watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
       return FALSE;
     }
 
@@ -220,7 +220,7 @@ class mediamosa_connector {
   // -------------------------------------------------------- Private Functions.
   private function do_login() {
     if (empty($this->url)) {
-      watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
+      self::watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
       return FALSE;
     }
 
@@ -516,5 +516,16 @@ class mediamosa_connector {
    */
   public static function response2array($response) {
     return $response ? self::responsexml2array($response->xml) : FALSE;
+  }
+
+  /**
+   * Wrapper around watchdog, minor diff. with drupal 6 version.
+   */
+  public function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
+    if (DRUPAL_CORE_COMPATIBILITY == '6.x') {
+      $type = substr($type, 0, 16);// Type is max len 16 chars.
+    }
+
+    watchdog($type, $message, $variables, $severity, $link);
   }
 }
