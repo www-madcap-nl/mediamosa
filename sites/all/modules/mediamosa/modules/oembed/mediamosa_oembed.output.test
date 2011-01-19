@@ -61,5 +61,8 @@ class MediaMosaOEmbedOutputTestCaseEga extends MediaMosaTestCaseEga {
     $this->verbose(print_r($oembed, TRUE));
     // Check.
     $this->assertTrue(isset($oembed['type']), 'oEmbed has the "type" element.');
+
+    // TODO: Test with empty mediafile.
+    // TODO: Test with protected mediafile.
   }
 }
