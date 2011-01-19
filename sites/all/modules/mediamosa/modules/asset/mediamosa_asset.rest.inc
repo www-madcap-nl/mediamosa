@@ -1218,6 +1218,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const IS_INAPPROPRIATE = 'is_inappropriate';
   const OWNER_ID = 'owner_id';
   const GROUP_ID = 'group_id';
+  const REFERENCE_ID = 'reference_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -1265,6 +1266,10 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The possible new group of the asset; Only the app manager can change this flag(is_app_admin=true).',
         ),
+        self::REFERENCE_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The reference ID.',
+        ),
       )
     );
 
@@ -1290,6 +1295,8 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     $play_restriction_end = $this->get_param_value(self::PLAY_RESTRICTION_END);
     $isprivate = $this->get_param_value(self::ISPRIVATE);
 
+    $reference_id = $this->get_param_value(self::REFERENCE_ID);
+
     // If is_inappropriate is set, we'll use that one.
     if ($this->isset_given_param(self::IS_INAPPROPRIATE)) {
       $this->set_param_value(self::IS_UNAPPROPRIATE, $this->get_param_value(self::IS_INAPPROPRIATE));
@@ -1301,7 +1308,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Update the asset.
-    mediamosa_asset::update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id, $group_id, $play_restriction_start, $play_restriction_end, $isprivate, $is_unappropriate);
+    mediamosa_asset::update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id, $group_id, $play_restriction_start, $play_restriction_end, $isprivate, $is_unappropriate, $reference_id);
 
     // Default OK.
     $mediamosa->set_result_okay();

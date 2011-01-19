@@ -871,6 +871,7 @@ class mediamosa_asset {
           }
         }
         else {
+          // Make sure its empty by default.
           $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = '';
         }
       }
@@ -1121,7 +1122,7 @@ class mediamosa_asset {
    * @param bool $is_unappropriate
    *  Is unappropriate flag.
    */
-  static public function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL) {
+  static public function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL, $reference_id = NULL) {
 
     // Asset must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
@@ -1152,6 +1153,10 @@ class mediamosa_asset {
     }
     if (!is_null($is_unappropriate)) {
       $fields[mediamosa_asset_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE : mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE;
+    }
+
+    if (isset($reference_id)) {
+      $fields[mediamosa_asset_db::REFERENCE_ID] = $reference_id;
     }
 
     if ($is_app_admin) {

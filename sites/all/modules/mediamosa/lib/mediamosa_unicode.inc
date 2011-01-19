@@ -135,4 +135,33 @@ class mediamosa_unicode {
   static public function format_date($timestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
     return format_date($timestamp, $type, $format, $timezone, $langcode);
   }
+
+  /**
+   * Although XML only requires < > " ' & to be encoded, we have problems with
+   * non-asc values generating invalid XML when using SimpleXML class.
+   *
+   * This function will correctly encode non-asc values.
+   *
+   * @param string $text
+   *  The value to encode.
+   */
+  static public function xmlentities($text) {
+    // First normal encoding.
+    $text = htmlspecialchars($text);
+
+    // Range from 0x00 to 0x1F and 0x80 to 0xFF need proper encoding.
+    $text_result = '';
+    for ($x = 0; $x < self::strlen($text); $x++) {
+      $char = self::substr($text, $x, 1);
+
+      if (strlen($char) > 1 || ( (ord($char) >= 32 && ord($char) <= 127) || in_array(ord($char), array(0x09, 0x0A, 0x0D)))) {
+        $text_result .= $char;
+      }
+      else {
+        $text_result .= '?';
+      }
+    }
+
+    return $text_result;
+  }
 }
