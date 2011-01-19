@@ -42,6 +42,7 @@ TODO: (v2.4)
 MediaMosa 2.4 (build ????)
 --------------------------
 - Watermarking stills (See ticket #82).
+- oEmbed provider functionality (See ticket #413).
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check wildchar numbers.
 
