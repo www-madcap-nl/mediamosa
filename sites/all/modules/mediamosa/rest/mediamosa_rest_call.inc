@@ -63,6 +63,8 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE_RSS = 'rss';
   const RESPONSE_TYPE_JSON = 'json';
   const RESPONSE_TYPE_PLAIN = 'plain';
+  const RESPONSE_TYPE_XML_OEMBED = 'xml_oembed';
+  const RESPONSE_TYPE_JSON_OEMBED = 'json_oembed';
 
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';

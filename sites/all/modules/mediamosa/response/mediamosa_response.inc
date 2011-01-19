@@ -249,6 +249,19 @@ class mediamosa_response extends mediamosa {
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml();
           break;
+
+        // Oembed.
+
+        case mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED:
+          header('Content-Type: application/json; charset=utf-8');
+          $output = $this->generate_json_oembed();
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED:
+        default:
+          header('Content-Type: text/xml; charset=utf-8');
+          $output = $this->generate_xml_oembed();
+          break;
       }
     }
     catch (Exception $e) {
@@ -460,6 +473,47 @@ class mediamosa_response extends mediamosa {
    */
   public function generate_json() {
     return drupal_json_encode($this->response);
+  }
+
+  /**
+   * Generate the JSON output for oEmbed.
+   *
+   * @return string
+   */
+  public function generate_json_oembed() {
+    $response = array();
+
+    foreach ($this->response['items'] as $item) {
+      foreach ($item as $key => $value) {
+        $response[$key] = $value;
+      }
+    }
+
+    return drupal_json_encode($response);
+  }
+
+  /**
+   * Generate the XML output for oEmbed.
+   *
+   * @return string
+   */
+  public function generate_xml_oembed() {
+    // Create the SimpleXML element.
+    $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><oembed></oembed>');
+
+    foreach ($this->response['items'] as $item) {
+      foreach ($item as $key => $value) {
+        $this->generate_plain_xml_add_child($xml_response, $key, $value);
+      }
+    }
+
+    $dom_document = new DOMDocument('1.0', 'UTF-8');
+    $dom_document->formatOutput = TRUE;
+
+    $dom_document_node = dom_import_simplexml($xml_response);
+    $dom_document_node = $dom_document->importNode($dom_document_node, TRUE);
+    $dom_document->appendChild($dom_document_node);
+    return $dom_document->saveXML();
   }
 
   /**
