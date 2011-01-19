@@ -170,13 +170,14 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       );
 
       $type = self::TYPE_VIDEO;
-      $title = implode(', ', $asset_metadata['dublin_core']['title']['values']);
+      $title = (empty($asset_metadata['dublin_core']['title']['values']) ? '' : implode(', ', $asset_metadata['dublin_core']['title']['values']));
       $author_name = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
 
       // Create ticket ID.
       $ticket = mediamosa_db::uuid($app_id);
 
-      if (empty($mediafile[mediamosa_asset_mediafile_db::URI])) {
+      $filename = mediamosa_configuration_storage::mediafile_filename_get($mediafile);
+      if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && file_exists($filename)) {
         $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
 
         $response = mediamosa_asset_mediafile_play_proxy::create_response(
@@ -196,11 +197,16 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
         );
         $url = $response['output'];
 
-        $xml = simplexml_load_string($response['output']);
-        $xml = (array)$xml;
+        $video_size = mediamosa_asset_mediafile_play_proxy::calc_video_size(
+          isset($mediafile['metadata']['width']) ? $mediafile['metadata']['width'] : 0,
+          isset($mediafile['metadata']['height']) ? $mediafile['metadata']['height'] : 0,
+          $maxwidth,
+          $maxheight,
+          isset($mediafile['metadata']['container_type']) ? $mediafile['metadata']['container_type'] : self::CONTAINER_TYPE_WMV
+        );
 
-        $width = $xml['@attributes']['width'];
-        $height = $xml['@attributes']['height'];
+        $width = ($video_size['width'] ? $video_size['width'] : $maxwidth);
+        $height = ($video_size['height'] ? $video_size['height'] : $maxheight);
       }
 
     }
@@ -236,7 +242,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       );
 
       $type = self::TYPE_PHOTO;
-      $title = implode(', ', $asset_metadata['dublin_core']['title']['values']);
+      $title = (empty($asset_metadata['dublin_core']['title']['values']) ? '' : implode(', ', $asset_metadata['dublin_core']['title']['values']));
       $author_name = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
 
       $ticket = mediamosa_db::uuid($app_id);

@@ -11,4 +11,5 @@ dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_oembed.module
+files[] = mediamosa_oembed.output.test
 files[] = mediamosa_oembed.rest.inc

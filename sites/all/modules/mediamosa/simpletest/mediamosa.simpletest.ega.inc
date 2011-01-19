@@ -1160,6 +1160,33 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Get an mediaitem as oEmbed.
+   * Based on the call /services/oembed (GET)
+   */
+  protected function getOEmbed($mediafile_id = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_oembed_get::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_oembed_get::FORMAT => mediamosa_rest_call_oembed_get::FORMAT_XML,
+    );
+
+    // Set uri.
+    $uri = 'services/oembed';
+
+    // Do get call.
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
+
+    // Dump the response.
+    $this->verbose(print_r($response, TRUE));
+
+    // Get response.
+    $oembed = mediamosa_lib::simplexml2array($response['xml']);
+
+    // Return data.
+    return $oembed;
+  }
+
+  /**
    * Get asset supplement.
    * Based on the GET rest call /asset/$asset_id/supplement (GET)
    */
