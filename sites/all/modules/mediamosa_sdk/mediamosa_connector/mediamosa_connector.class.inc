@@ -31,7 +31,8 @@
  */
 
 /**
- * mediamosa_connector is a class which conains all functions for communication with VP-X
+ * mediamosa_connector is a class which conains all functions for communication
+ * with MediaMosa backend REST interface.
  */
 class mediamosa_connector {
 

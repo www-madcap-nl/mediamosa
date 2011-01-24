@@ -217,7 +217,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'title' => t('MP4Box'),
     'value' => $mp4box_found ? reset($exec_output) : 'Not installed',
     'severity' => _mediamosa_maintenance_status_okwarning($mp4box_found),
-    'description' => $mp4box_found ? '' : t('MP4Box is not installed, but is optional. You can find more information how to install Yamdi !here', array('!here' => $helper_links['mp4box'])),
+    'description' => $mp4box_found ? '' : t('MP4Box is not installed, but is optional. You can find more information how to install MP4Box !here', array('!here' => $helper_links['mp4box'])),
   );
 
   // Lav2yuv.

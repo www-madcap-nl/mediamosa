@@ -43,7 +43,7 @@ Other changes (not ticket related).
 - Fixed STILL_URI in object code with play proxy call. 
 - Added link to transcode profile in asset viewer under asset browser.
 - Added reference_id to asset/update REST call.
-
+- Changed robots.txt that it will disallow all crawling.
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------
