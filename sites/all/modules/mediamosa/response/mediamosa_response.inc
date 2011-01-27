@@ -101,6 +101,9 @@ class mediamosa_response extends mediamosa {
       return;
     }
 
+    // In case of exceptions, the output will be XML.
+    $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
+
     try {
       // Set the response handler.
       $previous_handler = set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
