@@ -131,6 +131,10 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $is_app_admin = FALSE;
     $play_call = TRUE;
 
+    $type = NULL;
+    $title = '';
+    $author_name = '';
+
     $output = array();
 
 
@@ -272,6 +276,9 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $height = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, 'height');
 
     }
+    else {
+      throw new mediamosa_exception_error_501();
+    }
 
 
     // Collect the data for output.
@@ -283,8 +290,8 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       'author_name' => $author_name,
       //'author_url' => NULL,
       //'cache_age' => NULL,
-      'provider_name' => ($provider_name ? $provider_name : 'MediaMosa'),
-      'provider_url' => ($provider_url ? $provider_url : 'http://mediamosa.org/'),
+      'provider_name' => (!empty($provider_name) && $provider_name ? $provider_name : 'MediaMosa'),
+      'provider_url' => (!empty($provider_url) && $provider_url ? $provider_url : 'http://mediamosa.org/'),
     );
 
     if (!empty($thumbnail_url)) {

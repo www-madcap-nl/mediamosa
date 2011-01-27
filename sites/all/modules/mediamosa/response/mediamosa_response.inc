@@ -158,8 +158,13 @@ class mediamosa_response extends mediamosa {
       exit();
     }
     catch (mediamosa_exception_error_404 $e) {
-      // Not dounf
+      // Not found
       header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+      exit();
+    }
+    catch (mediamosa_exception_error_501 $e) {
+      // Not implemented
+      header($_SERVER['SERVER_PROTOCOL'] . ' 501 Not Implemented');
       exit();
     }
     catch (mediamosa_exception_error $e) {

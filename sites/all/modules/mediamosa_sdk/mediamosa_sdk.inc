@@ -45,6 +45,7 @@ class mediamosa_sdk {
   const HTTP_NOT_FOUND = 404;
 
   const HTTP_INTERNAL_SERVER_ERROR = 500;
+  const HTTP_NOT_IMPLEMENTED = 501;
 
   const ERRORCODE_OKAY = 601;
   const ERRORCODE_TIME_RESTRICTION_START = 602;
