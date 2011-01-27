@@ -143,7 +143,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Rest calls browser'), 'admin/mediamosa/browse/restcall');

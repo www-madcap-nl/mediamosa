@@ -214,7 +214,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
@@ -271,7 +271,7 @@ function mediamosa_app_form($node, &$form_state) {
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');

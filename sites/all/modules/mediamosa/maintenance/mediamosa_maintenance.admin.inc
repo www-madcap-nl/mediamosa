@@ -41,58 +41,73 @@
  */
 
 /**
- * Menu callback; Provide the administration overview page.
+ * Provide a single block from the administration menu as a page.
+ * This function is often a destination for these blocks.
+ * For example, 'admin/structure/types' needs to have a destination to be valid
+ * in the Drupal menu system, but too much information there might be
+ * hidden, so we supply the contents of the block.
+ *
+ * @return
+ *   The output HTML.
  */
 function _mediamosa_maintenance_admin_page($path) {
-  $blocks = array();
+  $content = _mediamosa_maintenance_admin_menu_block(menu_get_item($path));
+  if ($content) {
+    $output = theme('admin_block_content', array('content' => $content));
+  }
+  else {
+    $output = t('You do not have any administrative items.');
+  }
+  return $output;
+}
 
-  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = :link_path AND module = 'system'", array(':link_path' => 'admin/mediamosa'))->fetchAssoc();
+/**
+ * Provide a single block on the administration overview page.
+ *
+ * Cloned from system_admin_menu_block().
+ *
+ * @param $item
+ *   The menu item to be displayed.
+ */
+function _mediamosa_maintenance_admin_menu_block($item) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!isset($item['mlid'])) {
+    $item += db_query("SELECT mlid, menu_name FROM {menu_links} ml WHERE ml.router_path = :path AND module = 'system'", array(':path' => $item['path']))->fetchAssoc();
+  }
 
-  if ($admin) {
-    $result = db_query("
-      SELECT m.*, ml.*
-      FROM {menu_links} ml
-      INNER JOIN {menu_router} m ON ml.router_path = m.path
-      WHERE ml.link_path != 'admin/help' AND menu_name = :menu_name AND ml.plid = :mlid AND hidden = -1", $admin, array('fetch' => PDO::FETCH_ASSOC));
+  if (isset($cache[$item['mlid']])) {
+    return $cache[$item['mlid']];
+  }
 
-    foreach ($result as $item) {
-      if ($item['path'] != $path) {
-        continue;
+  $content = array();
+  $query = db_select('menu_links', 'ml', array('fetch' => PDO::FETCH_ASSOC));
+  $query->join('menu_router', 'm', 'm.path = ml.router_path');
+  $query
+    ->fields('ml')
+    // Weight should be taken from {menu_links}, not {menu_router}.
+    ->fields('m', array_diff(drupal_schema_fields_sql('menu_router'), array('weight')))
+    ->condition('ml.plid', $item['mlid'])
+    ->condition('ml.menu_name', $item['menu_name'])
+    ->condition('ml.hidden', 0);
+
+  foreach ($query->execute() as $link) {
+    _menu_link_translate($link);
+    if ($link['access']) {
+      // The link description, either derived from 'description' in
+      // hook_menu() or customized via menu module is used as title attribute.
+      if (!empty($link['localized_options']['attributes']['title'])) {
+        $link['description'] = $link['localized_options']['attributes']['title'];
+        unset($link['localized_options']['attributes']['title']);
       }
-
-      _menu_link_translate($item);
-      if (!$item['access']) {
-        continue;
-      }
-      // The link description, either derived from 'description' in hook_menu()
-      // or customized via menu module is used as title attribute.
-      if (!empty($item['localized_options']['attributes']['title'])) {
-        $item['description'] = $item['localized_options']['attributes']['title'];
-        unset($item['localized_options']['attributes']['title']);
-      }
-      $block = $item;
-      $block['content'] = '';
-
-      // Fixing notice.
-      $item['tab_root_href'] = (!isset($item['tab_root_href'])  ? $item['href'] : '');
-
-      $block['content'] .= theme('admin_block_content', array('content' => system_admin_menu_block($item)));
-      if (!empty($block['content'])) {
-        $block['show'] = TRUE;
-      }
-
       // Prepare for sorting as in function _menu_tree_check_access().
       // The weight is offset so it is always positive, with a uniform 5-digits.
-      $blocks[(50000 + $item['weight']) . ' ' . $item['title'] . ' ' . $item['mlid']] = $block;
+      $key = (50000 + $link['weight']) . ' ' . drupal_strtolower($link['title']) . ' ' . $link['mlid'];
+      $content[$key] = $link;
     }
   }
-
-  if ($blocks) {
-    ksort($blocks);
-    return theme('admin_page', array('blocks' => $blocks));
-  }
-
-  return t('You do not have any administrative items.');
+  ksort($content);
+  $cache[$item['mlid']] = $content;
+  return $content;
 }
 
 /**

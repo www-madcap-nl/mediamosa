@@ -125,7 +125,7 @@ function _mediamosa_webservice_list() {
 function mediamosa_webservice_form($form, $form_state) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   $breadcrumb[] = l(t('Webservice listing'), 'admin/mediamosa/config/webservice');

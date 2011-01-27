@@ -404,7 +404,7 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
@@ -781,7 +781,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');

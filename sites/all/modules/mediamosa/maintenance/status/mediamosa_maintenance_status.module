@@ -199,7 +199,7 @@ function _mediamosa_maintenance_status_status() {
   // If we are set as Home page, the breadcrumb isn't set, let's do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 

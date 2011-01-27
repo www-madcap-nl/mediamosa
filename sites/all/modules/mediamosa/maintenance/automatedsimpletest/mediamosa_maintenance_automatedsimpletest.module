@@ -317,7 +317,7 @@ function _mediamosa_maintenance_automatedsimpletest($show_tests = NULL) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Simpletests'), 'admin/mediamosa/simpletests');
   drupal_set_breadcrumb($breadcrumb);
@@ -452,7 +452,7 @@ function _mediamosa_maintenance_automatedsimpletest_details($name) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Simpletests'), 'admin/mediamosa/simpletests');
   drupal_set_breadcrumb($breadcrumb);

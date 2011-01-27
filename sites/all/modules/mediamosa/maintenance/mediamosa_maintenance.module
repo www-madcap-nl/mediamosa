@@ -51,6 +51,28 @@ function mediamosa_maintenance_menu() {
     'weight' => -20,
   );
 
+
+  // Appearance.
+  $items['admin/mediamosa/browse'] = array(
+    'title' => 'Browse',
+    'description' => 'Browse through assets, mediafiles or even our REST call documentation.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/browse'),
+    'access arguments' => array('access mediamosa'),
+    'position' => 'left',
+    'weight' => -10,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  /*
+  $items['admin/mediamosa/browse/list'] = array(
+    'title' => 'List',
+    'description' => 'Browse through assets, mediafiles or even our REST call documentation.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+*/
+  /*
   $items['admin/mediamosa/browse'] = array(
     'title' => 'Browse',
     'access arguments' => array('access mediamosa'),
@@ -65,6 +87,7 @@ function mediamosa_maintenance_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
+*/
   $items['admin/mediamosa/config'] = array(
     'title' => 'Configuration',
     'access arguments' => array('access mediamosa'),
@@ -207,7 +230,7 @@ function _mediamosa_maintenance_status($show_tests = NULL) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 

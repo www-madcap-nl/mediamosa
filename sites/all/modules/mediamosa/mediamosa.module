@@ -91,7 +91,7 @@ function mediamosa_init() {
   // If we get here, then no REST interface is on.
 
   // Need some fixes on CSS.
-  drupal_add_css(drupal_get_path('module', 'mediamosa') . '/mediamosa.css', array('weight' => 10));
+  drupal_add_css(drupal_get_path('module', 'mediamosa') . '/mediamosa.css', array('group' => CSS_THEME, 'weight' => 1000));
 }
 
 /**
