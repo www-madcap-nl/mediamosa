@@ -47,6 +47,7 @@ class mediamosa_sdk {
   const HTTP_INTERNAL_SERVER_ERROR = 500;
   const HTTP_NOT_IMPLEMENTED = 501;
 
+  // All Ok.
   const ERRORCODE_OKAY = 601;
   const ERRORCODE_TIME_RESTRICTION_START = 602;
   const ERRORCODE_TIME_RESTRICTION_END = 603;
@@ -65,6 +66,8 @@ class mediamosa_sdk {
   const ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR = 616;
   const ERRORCODE_REST_NOT_FOUND = 617;
   const ERRORCODE_DIR_UNABLE_TO_CREATE = 618;
+  // When functions or mods are not available, like GD functions (image_*).
+  const ERRORCODE_MISSING_EXTENSION = 619;
 
   const ERRORCODE_ASSET_NOT_FOUND = 700;
   const ERRORCODE_MEDIAFILE_NOT_FOUND = 701;
@@ -185,7 +188,6 @@ class mediamosa_sdk {
 
   const ERRORCODE_MASTERSLAVE_DISALLOWED = 1403;
   const ERRORCODE_IMAGE_FILE_TOO_BIG = 1404;
-
   const ERRORCODE_MASTERSLAVE_OWN_APP = 1405;
 
   const ERRORCODE_INVALID_UPLOAD_TICKET = 1500;

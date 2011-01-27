@@ -262,16 +262,7 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_enabled() {
-    // If we are running an unit test, then we are enabled unless disable_app is specified.
-    if (mediamosa::in_simpletest_sandbox()) {
-      // The name of the http var.
-      $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
-
-      // Based if this is present, we always are APP on simpletest mode.
-      return isset($_SERVER[$disable_app]) ? FALSE : TRUE;
-    }
-
-    return (mediamosa::variable_get('mediamosa_app', FALSE) || self::is_app_upload_enabled() || self::is_app_download_enabled() || self::is_app_openapi_enabled());
+    return (self::is_app_app_enabled() || self::is_app_upload_enabled() || self::is_app_download_enabled() || self::is_app_openapi_enabled());
   }
 
   /**
@@ -280,7 +271,24 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_restricted_openapi() {
-    return self::is_app_openapi_enabled() && !mediamosa::variable_get('mediamosa_app', FALSE) && !self::is_app_upload_enabled() && !self::is_app_download_enabled();
+  	return self::is_app_openapi_enabled() && !self::is_app_app_enabled() && !self::is_app_upload_enabled() && !self::is_app_download_enabled();
+  }
+
+  /**
+   * Any app interface is always enabled during SimpleTest unless specified by
+   * the X-MediaMosa-Disable-App header item.
+   */
+  static public function is_app_simpletest() {
+    // If we are running an unit test, then we are enabled unless disable_app is specified.
+    if (!mediamosa::in_simpletest_sandbox()) {
+      return FALSE;
+    }
+
+    // The name of the http var.
+    $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
+
+      // Based if this is present, we always are APP on simpletest mode.
+    return isset($_SERVER[$disable_app]) ? FALSE : TRUE;
   }
 
   /**
@@ -289,7 +297,7 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_app_enabled() {
-    return mediamosa::variable_get('mediamosa_app', FALSE);
+  	return (mediamosa::variable_get('mediamosa_app', FALSE) || self::is_app_simpletest());
   }
 
   /**
@@ -298,7 +306,7 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_download_enabled() {
-    return mediamosa::variable_get('mediamosa_app_download', FALSE);
+  	return (mediamosa::variable_get('mediamosa_app_download', FALSE) || self::is_app_simpletest());
   }
 
   /**
@@ -307,7 +315,7 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_upload_enabled() {
-    return mediamosa::variable_get('mediamosa_app_upload', FALSE);
+    return (mediamosa::variable_get('mediamosa_app_upload', FALSE) || self::is_app_simpletest());
   }
 
   /**
@@ -316,7 +324,7 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_openapi_enabled() {
-    return mediamosa::variable_get('mediamosa_app_openapi', FALSE);
+    return (mediamosa::variable_get('mediamosa_app_openapi', FALSE) || self::is_app_simpletest());
   }
 
   /**

@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Jobs"
 description = "The jobs module handles, executes and manages queing of jobs."

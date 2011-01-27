@@ -1091,7 +1091,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Get an mediaitem.
+   * Get a mediaitem.
    * Based on the call /openapi/mediaItems (GET)
    */
   protected function getMediaItems($item_user_id = NULL, $group_id = NULL, $album_id = NULL, $mediafile_id = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
@@ -1160,7 +1160,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Get an mediaitem as oEmbed.
+   * Get a mediaitem as oEmbed.
    * Based on the call /services/oembed (GET)
    */
   protected function getOEmbed($mediafile_id = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {

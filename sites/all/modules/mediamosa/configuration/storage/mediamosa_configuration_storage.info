@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Storage"
 description = "The storage and mount settings."

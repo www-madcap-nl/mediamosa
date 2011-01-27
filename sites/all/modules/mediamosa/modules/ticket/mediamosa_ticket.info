@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Ticket"
 description = "The ticket module enables creation of timed expired tickets for access files, stills and other media."

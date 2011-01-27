@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -55,7 +55,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
@@ -98,7 +98,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   /**
@@ -186,9 +186,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
 
     $output = array();
 
-
     if ($mediafile_id) {
-
       // Mediafile.
 
       $type = self::TYPE_VIDEO;
@@ -237,10 +235,8 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
         $width = ($video_size['width'] ? $video_size['width'] : $maxwidth);
         $height = ($video_size['height'] ? $video_size['height'] : $maxheight);
       }
-
     }
     elseif ($still_id) {
-
       // Still.
 
       $type = self::TYPE_PHOTO;
@@ -277,12 +273,10 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
 
       $width = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, 'width');
       $height = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, 'height');
-
     }
     else {
       throw new mediamosa_exception_error_501();
     }
-
 
     // Collect the data for output.
 

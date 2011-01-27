@@ -39,15 +39,19 @@ TODO: (v2.4)
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
 
-MediaMosa 2.4 (build ????)
+MediaMosa 2.4 (build 1357)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
   "HTTP 501 Not implemented" error was introduced. Code was reorganized.
-Other changes (not ticket related).
-- Better REST call match: match_uri() static function was introduced, and check wildchar numbers.
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
 
-MediaMosa 2.3.5 (build 1272)
+Other changes (not ticket related).
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
+
+MediaMosa 2.3.5 (build 1274)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
   the default url to the still in asset call. (See ticket #456).
@@ -61,7 +65,7 @@ Other changes (not ticket related).
 - Fixed STILL_URI in object code with play proxy call. 
 - Added link to transcode profile in asset viewer under asset browser.
 - Added reference_id to asset/update REST call.
-
+- Changed robots.txt that it will disallow all crawling.
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------
@@ -523,7 +527,7 @@ Other changes (not ticket related).
   /mediafile/mediafile_id max. length 32 chars.
 - Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
   type instead of varchar(10).
-- PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
+- PHP function getimagesize() is now wrapped with mediamosa_gd::getimagesize().
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
 - Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
   asset_created.

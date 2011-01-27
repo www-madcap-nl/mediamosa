@@ -1,5 +1,9 @@
 
+MediaMosa Connector 2.0.2
+-------------------------
+- Added url validation on MediaMosa connector.
 
-Changes 2.0.1
--------------
+
+MediaMosa Connector 2.0.1
+-------------------------
 - Added wrapper for watchdog.

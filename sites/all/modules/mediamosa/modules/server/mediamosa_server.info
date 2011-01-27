@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Server"
 description = "The server module manage the different server settings and types."

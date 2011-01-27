@@ -362,12 +362,6 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
       $still[mediamosa_asset_mediafile_db::APP_ID],
       $still[mediamosa_asset_mediafile_db::OWNER_ID]
     );
-    mediamosa_aut::owner_check(
-      $app_id,
-      $user_id,
-      $watermark[mediamosa_asset_mediafile_db::APP_ID],
-      $watermark[mediamosa_asset_mediafile_db::OWNER_ID]
-    );
 
     $still_parameters = array(
       // Watermark.

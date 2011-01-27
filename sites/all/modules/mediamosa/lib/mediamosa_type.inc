@@ -103,33 +103,27 @@ class mediamosa_type {
         $lang2 = $mixed_param_value{0} . $mixed_param_value{2};
 
         // ISO 639-1.
-        $a_language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
+        $language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
 
-        $lang1_in_array = in_array(mediamosa_unicode::strtolower($lang1), $a_language_codes);
-        $lang2_in_array = in_array(mediamosa_unicode::strtolower($lang2), $a_language_codes);
+        $lang1_in_array = in_array(mediamosa_unicode::strtolower($lang1), $language_codes);
+        $lang2_in_array = in_array(mediamosa_unicode::strtolower($lang2), $language_codes);
         if (!$lang1_in_array && !$lang1_in_array) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        if ($lang1_in_array) {
-          $checked_param_value = $lang1;
-        }
-        else {
-          $checked_param_value = $lang2;
-        }
-
+        $checked_param_value = $lang1_in_array ? $lang1 : $lang2;
         break;
 
       case mediamosa_sdk::TYPE_LANGUAGE_CODE:
         // ISO 639-1.
-        $a_language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
+        $language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
 
-        if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), $a_language_codes)) {
+        if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), $language_codes)) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
         // To lower.
-        $checked_param_value = (string)mediamosa_unicode::strtolower($mixed_param_value);
+        $checked_param_value = (string) mediamosa_unicode::strtolower($mixed_param_value);
         break;
 
       case mediamosa_sdk::TYPE_APP_ID:
@@ -137,7 +131,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $mixed_param_value));
         }
 
-        $checked_param_value = (int)$mixed_param_value;
+        $checked_param_value = (int) $mixed_param_value;
 
         // If required, then value must be > 0, if not required, then we allow >= 0.
         if ($checked_param_value < 0) { // unsigned only
@@ -151,7 +145,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (int)$mixed_param_value;
+        $checked_param_value = (int) $mixed_param_value;
 
         // If required, then value must be > 0, if not required, then we allow >= 0.
         if ( ($is_required && $checked_param_value < 1) || (!$is_required && $checked_param_value < 0) ) { // unsigned only
@@ -189,19 +183,19 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_STATUS);
         }
 
-        $checked_param_value = (string)mediamosa_unicode::strtoupper($mixed_param_value);
+        $checked_param_value = (string) mediamosa_unicode::strtoupper($mixed_param_value);
         break;
 
       case mediamosa_sdk::TYPE_JOB_PROGRESS:
         // 0.000 to 1.000.
         if (
-          (!is_float($mixed_param_value) || (float)$mixed_param_value < 0 || (float)$mixed_param_value > 1 || mediamosa_unicode::strlen($mixed_param_value) > 5) &&
+          (!is_float($mixed_param_value) || (float) $mixed_param_value < 0 || (float) $mixed_param_value > 1 || mediamosa_unicode::strlen($mixed_param_value) > 5) &&
           $mixed_param_value != ''
         ) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_PROGRESS);
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_LIMIT:
@@ -216,7 +210,7 @@ class mediamosa_type {
         if (!is_numeric($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
-        $checked_param_value = (int)$mixed_param_value;
+        $checked_param_value = (int) $mixed_param_value;
         if ($checked_param_value < 0) { // unsigned only
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
@@ -227,7 +221,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (int)$mixed_param_value;
+        $checked_param_value = (int) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_COMMAND:
@@ -248,7 +242,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_ALPHA:
@@ -257,7 +251,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       // Check ticket id for download/still downloads.
@@ -266,7 +260,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_ALPHA_NUM:
@@ -281,7 +275,7 @@ class mediamosa_type {
       case mediamosa_sdk::TYPE_MEDIAFILE_ID:
       case mediamosa_sdk::TYPE_COLLECTION_ID:
       case mediamosa_sdk::TYPE_BATCH_ID:
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_PRINTABLE:
@@ -290,7 +284,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE_TAG:
@@ -303,14 +297,14 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_CQL_ASSET:
       case mediamosa_sdk::TYPE_CQL_COLLECTION:
       case mediamosa_sdk::TYPE_CQL_JOB:
       case mediamosa_sdk::TYPE_STRING:
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_XML_OAI:
@@ -329,7 +323,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_SUPPLEMENT);
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_XML_VALIDATED:
@@ -346,7 +340,7 @@ class mediamosa_type {
           }
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_FLOAT:
@@ -362,12 +356,12 @@ class mediamosa_type {
       case mediamosa_sdk::TYPE_SEARCH_INT:
       case mediamosa_sdk::TYPE_SEARCH_DATETIME:
       case mediamosa_sdk::TYPE_SEARCH_BOOL:
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_MIMETYPE:
         // @todo: some check here.
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_BOOL_IS_SLAVED:
@@ -409,7 +403,7 @@ class mediamosa_type {
 
       case mediamosa_sdk::TYPE_URI:
         // @todo: no check for URI type.
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_URL:
@@ -417,12 +411,12 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_URL_URI:
         // FIXME: need some checker here.
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
 
@@ -433,7 +427,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_DELETE:
@@ -441,7 +435,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_DOMAIN:
@@ -449,7 +443,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_REALM:
@@ -457,7 +451,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_REALM:
@@ -465,7 +459,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_DOMAIN:
@@ -473,7 +467,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_OPERATOR:
@@ -481,7 +475,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       case mediamosa_sdk::TYPE_FILENAME:
@@ -489,7 +483,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
-        $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string) $mixed_param_value;
         break;
 
       default:

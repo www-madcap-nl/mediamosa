@@ -152,9 +152,12 @@ class mediamosa_unicode {
     // Range from 0x00 to 0x1F and 0x80 to 0xFF need proper encoding.
     $text_result = '';
     for ($x = 0; $x < self::strlen($text); $x++) {
-      $char = self::substr($text, $x, 1);
+      // self::substr will try to get a valid UTF8 char. If not, it will return
+      // what it can (1 byte). Which is then invalid when < 32 or > 127. Unless
+      // TAB, LF or CR.
+    	$char = self::substr($text, $x, 1);
 
-      if (strlen($char) > 1 || ( (ord($char) >= 32 && ord($char) <= 127) || in_array(ord($char), array(0x09, 0x0A, 0x0D)))) {
+      if (strlen($char) > 1 || ( (ord($char) >= 32 && ord($char) < 128) || in_array(ord($char), array(0x09, 0x0A, 0x0D)))) {
         $text_result .= $char;
       }
       else {

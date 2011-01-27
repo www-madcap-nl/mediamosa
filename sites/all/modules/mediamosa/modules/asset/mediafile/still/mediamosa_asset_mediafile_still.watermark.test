@@ -29,10 +29,6 @@
  * MediaMosa still watermark unittests.
  */
 
-/**
-  * @file
-  * Unittest for watermark still.
-  */
 class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga {
 
   public static function getInfo() {
@@ -75,17 +71,16 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
     // Reproduce the process.
 
     // Get the original files.
-    $dest = imagecreatefromjpeg($still['filename']);
-    //$src = imagecreatefrompng($watermark['filename']);
-    $src = imagecreatefromjpeg($watermark['filename']);
+    $dest = mediamosa_gd::imagecreatefromjpeg($still['filename']);
+    $src = mediamosa_gd::imagecreatefromjpeg($watermark['filename']);
 
     // Values.
     $dst_x = 0;
     $dst_y = 0;
     $src_x = 0;
     $src_y = 0;
-    $src_w = imagesx($src);
-    $src_h = imagesy($src);
+    $src_w = mediamosa_gd::imagesx($src);
+    $src_h = mediamosa_gd::imagesy($src);
     $pct = $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_PCT];
 
     // Destination x calculation.
@@ -93,7 +88,7 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
       $dst_x = $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_X];
     }
     else {
-      $dst_x = imagesx($dest) - $src_w - $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_X];
+      $dst_x = mediamosa_gd::imagesx($dest) - $src_w - $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_X];
     }
 
     // Destination y calculation.
@@ -101,7 +96,7 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
       $dst_y = $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_Y];
     }
     else {
-      $dst_y = imagesy($dest) - $src_h - $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_Y];
+      $dst_y = mediamosa_gd::imagesy($dest) - $src_h - $parameters[mediamosa_rest_call_set_still_watermark::WATERMARK_DST_Y];
     }
 
     // Copymerge.
@@ -115,7 +110,7 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
     mediamosa_io::mkdir(mediamosa_io::dirname($still_filename_new));
 
     // Write still.
-    imagejpeg($dest, $still_filename_new);
+    mediamosa_gd::imagejpeg($dest, $still_filename_new);
 
     $this->verbose(t('Contoll still id = @still_id, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct', array(
       '@still_id' => $still_id_new,
@@ -129,39 +124,37 @@ class MediaMosaAssetMediafileStillWatermarkTestCase extends MediaMosaTestCaseEga
     )));
 
     // Destroye resources.
-    imagedestroy($dest);
-    imagedestroy($src);
+    mediamosa_gd::imagedestroy($dest);
+    mediamosa_gd::imagedestroy($src);
 
 
     // Check the two watermarked stills.
-    $im_rest = imagecreatefromjpeg($still_id_watermarked_filename);
-    $im_self = imagecreatefromjpeg($still_filename_new);
+    $im_rest = mediamosa_gd::imagecreatefromjpeg($still_id_watermarked_filename);
+    $im_self = mediamosa_gd::imagecreatefromjpeg($still_filename_new);
 
     // Check generation.
     $this->assertTrue($im_rest !== FALSE, 'Got image from still, REST created.');
     $this->assertTrue($im_self !== FALSE, 'Got image from still, self created.');
 
     if ($im_rest && $im_self) {
-      $color_rest = imagecolorat($im_rest, imagesx($im_rest) - 20, imagesy($im_rest) - 20);
-      $color_self = imagecolorat($im_self, imagesx($im_self) - 20, imagesy($im_self) - 20);
+      $color_rest = mediamosa_gd::imagecolorat($im_rest, mediamosa_gd::imagesx($im_rest) - 20, mediamosa_gd::imagesy($im_rest) - 20);
+      $color_self = mediamosa_gd::imagecolorat($im_self, mediamosa_gd::imagesx($im_self) - 20, mediamosa_gd::imagesy($im_self) - 20);
       $this->assertTrue($color_rest == $color_self, t('The watermarked stills checked and seems ok (color1 = @color1, color2 = @color2, x1 = @x1, x2 = @x2, y1 = @y1, y2 = @y2).', array(
         '@color1' => $color_rest,
         '@color2' => $color_self,
-        '@x1' => imagesx($im_rest) - 20,
-        '@x2' => imagesx($im_self) - 20,
-        '@y1' => imagesy($im_rest) - 20,
-        '@y2' => imagesy($im_self) - 20,
+        '@x1' => mediamosa_gd::imagesx($im_rest) - 20,
+        '@x2' => mediamosa_gd::imagesx($im_self) - 20,
+        '@y1' => mediamosa_gd::imagesy($im_rest) - 20,
+        '@y2' => mediamosa_gd::imagesy($im_self) - 20,
       )));
     }
 
     // Destroye resources.
-    imagedestroy($im_rest);
-    imagedestroy($im_self);
-
+    mediamosa_gd::imagedestroy($im_rest);
+    mediamosa_gd::imagedestroy($im_self);
 
     // Check the two watermarked still.
     $this->assertTrue(crc32(file_get_contents($still_id_watermarked_filename)) == crc32(file_get_contents($still_filename_new)), t('The watermarked stills are identical'));
-
 
     // Remove test image.
     mediamosa_io::unlink($still_filename_new);

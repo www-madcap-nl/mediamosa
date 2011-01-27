@@ -155,11 +155,6 @@ class mediamosa_asset_mediafile_still {
       '@still_params' => print_r($still_parameters, TRUE),
     )));
 
-    if (!function_exists('imagecopymerge')) {
-      self::log(t('GD imagecopymerge() function is not exist.'));
-      return;
-    }
-
     // Watermark image must exists.
     $watermark = mediamosa_asset_mediafile::get($still_parameters[self::WATERMARK_ID], $app_id, array(), mediamosa_asset_mediafile_db::IS_STILL_TRUE);
     if (empty($watermark[mediamosa_asset_mediafile_db::ID])) {
@@ -173,13 +168,13 @@ class mediamosa_asset_mediafile_still {
     // Get path to watermark.
     $watermark_filename = mediamosa_configuration_storage::mediafile_still_filename_get($watermark[mediamosa_asset_mediafile_db::ID]);
 
-    $still_size = mediamosa_io::getimagesize($still_filename);
+    $still_size = mediamosa_gd::getimagesize($still_filename);
     if (!$still_size) {
       self::log_mediafile($still_id, t('Watermark getimagesize error (still).'));
       return;
     }
 
-    $watermark_size = mediamosa_io::getimagesize($watermark_filename);
+    $watermark_size = mediamosa_gd::getimagesize($watermark_filename);
     if (!$watermark_size) {
       self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Watermark getimagesize error (watermark).'));
       return;
@@ -202,18 +197,18 @@ class mediamosa_asset_mediafile_still {
 
     // Destination.
     if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
-      $dest = imagecreatefromjpeg($still_filename);
+      $dest = mediamosa_gd::imagecreatefromjpeg($still_filename);
     }
     else {
-      $dest = imagecreatefrompng($still_filename);
+      $dest = mediamosa_gd::imagecreatefrompng($still_filename);
     }
 
     // Watermark.
     if ($types[$watermark_size[2]] == self::IMAGE_TYPE_JPG) {
-      $src = imagecreatefromjpeg($watermark_filename);
+      $src = mediamosa_gd::imagecreatefromjpeg($watermark_filename);
     }
     else {
-      $src = imagecreatefrompng($watermark_filename);
+      $src = mediamosa_gd::imagecreatefrompng($watermark_filename);
     }
 
     // Values.
@@ -221,8 +216,8 @@ class mediamosa_asset_mediafile_still {
     $dst_y = 0;
     $src_x = 0;
     $src_y = 0;
-    $src_w = imagesx($src);
-    $src_h = imagesy($src);
+    $src_w = mediamosa_gd::imagesx($src);
+    $src_h = mediamosa_gd::imagesy($src);
     $pct = $still_parameters[self::WATERMARK_PCT];
 
     // Destination x calculation.
@@ -230,7 +225,7 @@ class mediamosa_asset_mediafile_still {
       $dst_x = $still_parameters[self::WATERMARK_DST_X];
     }
     else {
-      $dst_x = imagesx($dest) - $src_w - $still_parameters[self::WATERMARK_DST_X];
+      $dst_x = mediamosa_gd::imagesx($dest) - $src_w - $still_parameters[self::WATERMARK_DST_X];
     }
 
     // Destination y calculation.
@@ -238,7 +233,7 @@ class mediamosa_asset_mediafile_still {
       $dst_y = $still_parameters[self::WATERMARK_DST_Y];
     }
     else {
-      $dst_y = imagesy($dest) - $src_h - $still_parameters[self::WATERMARK_DST_Y];
+      $dst_y = mediamosa_gd::imagesy($dest) - $src_h - $still_parameters[self::WATERMARK_DST_Y];
     }
 
     // Copymerge.
@@ -255,15 +250,15 @@ class mediamosa_asset_mediafile_still {
     }
     // Write still.
     if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
-      imagejpeg($dest, ($create_new_still ? $still_filename_new : $still_filename));
+      mediamosa_gd::imagejpeg($dest, ($create_new_still ? $still_filename_new : $still_filename));
     }
     else {
-      imagepng($dest, ($create_new_still ? $still_filename_new : $still_filename));
+      mediamosa_gd::imagepng($dest, ($create_new_still ? $still_filename_new : $still_filename));
     }
 
     // Destroye resources.
-    imagedestroy($dest);
-    imagedestroy($src);
+    mediamosa_gd::imagedestroy($dest);
+    mediamosa_gd::imagedestroy($src);
 
     // Response the new still id.
     if ($create_new_still) {
@@ -303,7 +298,7 @@ class mediamosa_asset_mediafile_still {
     // Handle watermark.
     self::create_watermark($still_id, $app_id, $still_parameters);
 
-    $size = mediamosa_io::getimagesize($still_filename);
+    $size = mediamosa_gd::getimagesize($still_filename);
     if (!$size) {
       mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
 

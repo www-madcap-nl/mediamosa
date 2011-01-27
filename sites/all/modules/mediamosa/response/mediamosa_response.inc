@@ -79,6 +79,19 @@ class mediamosa_response extends mediamosa {
 
   // ------------------------------------------------------------------ Public Functions
   /**
+   * Dispatch the REST request execution.
+   *
+   * @param array $rest_call
+   *  Array containing the data needed to run the REST call.
+   *
+   * @return
+   *  Returns optional override on the response type (XML/JSON etc).
+   */
+  protected function process_call(array $rest_call) {
+    // Now execute the call.
+    return $this->mediamosa_rest->process_call($rest_call);
+  }
+  /**
    * Process possible rest call.
    */
   public function process_rest() {
@@ -87,9 +100,6 @@ class mediamosa_response extends mediamosa {
     if (!mediamosa::is_app_enabled()) {
       return;
     }
-
-    // Default XML output.
-    $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
 
     try {
       // Set the response handler.
@@ -135,14 +145,12 @@ class mediamosa_response extends mediamosa {
         $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
-      // Save it.
-      $response_type = $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
+      // Process the call.
+      $response_type = $this->process_call($rest_call);
 
-      // Now execute the call.
-      $response_type_parameter = $this->mediamosa_rest->process_call($rest_call);
       // Check the response parameter.
-      if ($response_type_parameter) {
-        $response_type = $response_type_parameter;
+      if (empty($response_type)) {
+        $response_type = empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_rest_call::RESPONSE_TYPE_XML : $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
       }
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
@@ -201,11 +209,9 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    $output = $this->generate_output($response_type);
-
     // Stop and output our content.
     // Might run any added exit functions (drupal).
-    exit($output);
+    exit($this->generate_output($response_type));
   }
 
   /**
@@ -998,6 +1004,4 @@ class mediamosa_response extends mediamosa {
     // Call our parent error handler.
     return parent::mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller);
   }
-
-  // ------------------------------------------------------------------ Static Function.
 }

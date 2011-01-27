@@ -75,6 +75,9 @@ function mediamosa_permission() {
   );
 }
 
+/**
+ * Implements hook_init().
+ */
 function mediamosa_init() {
   // Possible PHP 5.3 autoloader bug.
   require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa/lib/mediamosa_debug.inc';
@@ -130,10 +133,9 @@ function mediamosa_theme() {
     ),
   );
 }
+
 /**
  * Format the MediaMosa version text.
- *
- * @ingroup themeable
  */
 function theme_mediamosa_version($variables) {
   // Get version info.
@@ -306,7 +308,7 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
 }
 
 /**
- * Implements hook_mediamosa_settings_collect().
+ * Implements hook_mediamosa_configuration_collect().
  */
 function mediamosa_mediamosa_configuration_collect() {
   $form['settings_cron'] = array(
