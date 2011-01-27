@@ -182,6 +182,19 @@ function mediamosa_connector_settings() {
 }
 
 /**
+ * Implement hook_settings_validate().
+ */
+function mediamosa_connector_settings_validate(&$form_state, $form) {
+
+  // Values.
+  $values = $form['values'];
+
+  if (!valid_url($values['mediamosa_connector_url'], TRUE)) {
+    form_set_error('mediamosa_connector_url', t('The URL is not well formatted. Use this format: http://mediamosa.local or http://localhost/mediamosa'));
+  }
+}
+
+/**
  * Implement hook_settings_submit().
  */
 function mediamosa_connector_settings_submit($form, &$form_state) {

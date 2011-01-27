@@ -43,6 +43,8 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT', 'MediaMosa Authorization');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OEMBED', 'MediaMosa oEmbed');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI', 'MediaMosa OpenAPI');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY', 'MediaMosa PlayProxy');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST', 'MediaMosa Simpletest Parents');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS', 'MediaMosa Statistics');
@@ -443,11 +445,22 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // Get the result ID.
-    $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
-    $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
+    if (!empty($out['xml']->header)) {
+      $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
+      $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
+    }
+    elseif (!empty($out['xml']->extension)) {
+      $result_id = empty($out['xml']->extension->request_result_id) ? 0 : (int) $out['xml']->extension->request_result_id;
+      $result_description = empty($out['xml']->extension->request_result_description) ? 'no description' : (string) $out['xml']->extension->request_result_description;
+    }
 
     // Look for a request_result_id.
-    $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+    if (isset($result_id) && isset($result_description)) {
+      $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+    }
+    else {
+      $this->assertTrue(TRUE, t('@method request to: "@uri".', array('@method' => $request_method, '@uri' => $uri)));
+    }
 
     $this->assertFalse($http_result[1] == 404, 'REST call was found');
 
@@ -625,6 +638,24 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function getTestImage_NotBlackJpg() {
     $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/notblack-001.jpeg';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
+   * Return the path+filename to the test image (jpg).
+   */
+  protected function getTestImage_Jpg() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/cat.jpg';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
+   * Return the path+filename to the test image (png).
+   */
+  protected function getTestImage_Png() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/cat.png';
     $this->pass(t('Got test video @video.', array('@video' => $filename)));
     return $filename;
   }

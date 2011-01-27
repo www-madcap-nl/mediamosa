@@ -288,7 +288,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   local video_stream, audio_stream, video_size, audio_codecs, audio_channels = find_best_streams(source_path, hash)
 
   -- Fix aac problems.
-  if audio_codecs ~= nil and audio_codecs == 'aac' and audio_channels ~= nil then
+  if dst_ext ~= "jpeg" and audio_codecs ~= nil and audio_codecs == 'aac' and audio_channels ~= nil then
     if audio_channels == '0' then
       -- Fix aac / 0 channel problem.
 

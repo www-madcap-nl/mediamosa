@@ -43,7 +43,21 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
   const STILL_ID = 'still_id';
   const TICKET_ID = 'ticket_id';
 
-    // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------------ Get Var Setup.
+  /**
+   * Match URI.
+   *
+   * @param string $uri
+   *
+   * @return boolean
+   *   TRUE, if match.
+   */
+  public static function match_uri($uri) {
+    $uri_parts = explode('/', $uri);
+    // Match if there isn't second argument, or the first is "ticket", or the length of the first is 1.
+    return (empty($uri_parts[2]) || (!empty($uri_parts[1]) && $uri_parts[1] == 'ticket') || (!empty($uri_parts[1]) && drupal_strlen($uri_parts[1]) == 1));
+  }
+
   public function get_var_setup() {
     $a_var_setup = array();
 

@@ -45,7 +45,6 @@ function mediamosa_profile_install() {
   variable_set('admin_theme', $default_theme);
   variable_set('node_admin_theme', 1);
 
-
   // Enable some standard blocks.
   $default_theme = variable_get('theme_default', 'seven');
 

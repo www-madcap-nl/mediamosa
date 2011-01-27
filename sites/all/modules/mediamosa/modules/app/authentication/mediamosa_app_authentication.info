@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Application authentication"
 description = "The authentication module handles application authentication."

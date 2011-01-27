@@ -97,6 +97,14 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
   const VIDEO_DURATION= 'video_duration';
   const FPS = 'fps';
 
+  // Watermark.
+  const WATERMARK_ID = 'watermark_id';
+  const WATERMARK_DST_X = 'watermark_dst_x';
+  const WATERMARK_DST_Y = 'watermark_dst_y';
+  const WATERMARK_PCT = 'watermark_pct';
+  const WATERMARK_V_ALIGN = 'watermark_v_align';
+  const WATERMARK_H_ALIGN = 'watermark_h_align';
+
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
@@ -170,19 +178,19 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills per mediafile.',
+          self::VAR_DESCRIPTION => 'Stills per mediafile (Used when still_type is NORMAL).',
         ),
         self::STILL_EVERY_SECOND => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills every second.',
+          self::VAR_DESCRIPTION => 'Stills every second (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start frame.',
+          self::VAR_DESCRIPTION => 'Still start frame (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end frame.',
+          self::VAR_DESCRIPTION => 'Still end frame (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::VIDEO_DURATION => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -192,6 +200,49 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Frame per second.',
         ),
+
+        // Watermark.
+        self::WATERMARK_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The watermark ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+        ),
+        self::WATERMARK_DST_X => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'X-coordinate of destination point of watermark.',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_X,
+        ),
+        self::WATERMARK_DST_Y => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Y-coordinate of destination point of watermark.',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_Y,
+        ),
+        self::WATERMARK_PCT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Alpha transparency of watermark (watermark visibility in percentage [0 - 100%]).',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_PCT,
+          self::VAR_RANGE_START => 0,
+          self::VAR_RANGE_END => 100,
+        ),
+        self::WATERMARK_V_ALIGN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Vertical align of watermark.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_LEFT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_RIGHT,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_V_ALIGN,
+        ),
+        self::WATERMARK_H_ALIGN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Horizontal align of watermark.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_TOP,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_H_ALIGN,
+        ),
+
       )
     );
 
@@ -209,6 +260,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
     $job_id = $this->get_param_value(self::JOB_ID);
     $job_type = $this->get_param_value(self::JOB_TYPE);
     $mediafile_id_src = $this->get_param_value(self::MEDIAFILE_SRC);
+    $watermark_id = $this->get_param_value(self::WATERMARK_ID);
 
     // Webservice must be enabled.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_JOBS, $a_app_ids);
@@ -229,6 +281,13 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
           'tag' => $this->get_param_value(self::TAG),
           'video_duration' => $this->get_param_value(self::VIDEO_DURATION),
           'fps' => $this->get_param_value(self::FPS),
+          // Watermark.
+          self::WATERMARK_ID => $watermark_id,
+          self::WATERMARK_DST_X => $this->get_param_value(self::WATERMARK_DST_X),
+          self::WATERMARK_DST_Y => $this->get_param_value(self::WATERMARK_DST_Y),
+          self::WATERMARK_PCT => $this->get_param_value(self::WATERMARK_PCT),
+          self::WATERMARK_V_ALIGN => $this->get_param_value(self::WATERMARK_V_ALIGN),
+          self::WATERMARK_H_ALIGN => $this->get_param_value(self::WATERMARK_H_ALIGN),
         );
 
         // Get params.

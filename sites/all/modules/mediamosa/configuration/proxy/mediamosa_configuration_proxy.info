@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Proxy"
 description = "The proxy settings."

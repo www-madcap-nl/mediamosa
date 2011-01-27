@@ -132,11 +132,181 @@ class mediamosa_gd {
    * @return string RGB value converted to hexidecimal
    */
   static public function rgb2hex($rgb = array()) {
-    $hex = "";
-    $hex =
-      mediamosa_unicode::substr('0' . dechex($rgb['red']), -2) .
-      mediamosa_unicode::substr('0' . dechex($rgb['green']), -2) .
-      mediamosa_unicode::substr('0' . dechex($rgb['blue']), -2);
-    return $hex;
+    return mediamosa_unicode::substr('0' . dechex($rgb['red']), -2) . mediamosa_unicode::substr('0' . dechex($rgb['green']), -2) . mediamosa_unicode::substr('0' . dechex($rgb['blue']), -2);
+  }
+
+  /**
+   * Wrapper for imagecopymerge() function.
+   *
+   * @link http://www.php.net/manual/en/function.imagecopymerge.php
+   *
+   * @param resource $dest
+   *  Destination image link resource.
+   * @param resource $src
+   *  Source image link resource.
+   * @param int $dst_x
+   *  x-coordinate of destination point.
+   * @param int $dst_y
+   *  y-coordinate of destination point.
+   * @param int $src_x
+   *  x-coordinate of source point.
+   * @param int $src_y
+   *  y-coordinate of source point.
+   * @param int $src_w
+   *  Source width.
+   * @param int $src_h
+   *  Source height.
+   * @param int $pct
+   *  The two images will be merged according to pct which can range from 0 to
+   *  100. When pct = 0, no action is taken, when 100 this function behaves
+   *  identically to imagecopy() for pallete images, while it implements alpha
+   *  transparency for true colour images.
+   */
+  static public function imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
+    if (!function_exists('imagecopymerge')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+  	return @imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+  }
+
+  /**
+   * Get the size of an image.
+   *
+   * @link http://www.php.net/manual/en/function.getimagesize.php
+   *
+   * @param string $filname
+   *  This parameter specifies the file you wish to retrieve information about.
+   *  It can reference a local file or (configuration permitting) a remote file
+   *  using one of the supported streams.
+   *
+   * @param array &$imageinfo
+   *  This optional parameter allows you to extract some extended information
+   *  from the image file. Currently, this will return the different JPG APP
+   *  markers as an associative array. Some programs use these APP markers to
+   *  embed text information in images. A very common one is to embed IPTC
+   *  information in the APP13 marker. You can use the iptcparse() function to
+   *  parse the binary APP13 marker into something readable.
+   */
+  static public function getimagesize($filename, array &$imageinfo = array()) {
+    if (!function_exists('getimagesize')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @getimagesize($filename, $imageinfo);
+  }
+
+  /**
+   * Create a new image from file or URL
+   *
+   * @link http://www.php.net/manual/en/function.imagecreatefromjpeg.php
+   *
+   * @param filename string
+   *  Path to the JPEG image.
+   *
+   * @return resource
+   *  Image resource identifier on success, FALSE on errors.
+   */
+  static public function imagecreatefromjpeg($filename) {
+    if (!function_exists('imagecreatefromjpeg')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @imagecreatefromjpeg($filename);
+  }
+
+  /**
+   * Create a new image from file or URL
+   *
+   * @link http://www.php.net/manual/en/function.imagecreatefrompng.php
+   *
+   * @param filename string
+   *  Path to the PNG image.
+   *
+   * @return resource
+   *  Image resource identifier on success, FALSE on errors.
+   */
+  static public function imagecreatefrompng($filename) {
+    if (!function_exists('imagecreatefrompng')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @imagecreatefrompng($filename);
+  }
+
+  /**
+   * Get image width
+   *
+   * @link http://www.php.net/manual/en/function.imagesx.php
+   *
+   * @param image resource
+   *
+   * @return int
+   *  Return the width of the image or false on errors.
+   */
+  static public function imagesx($image) {
+    if (!function_exists('imagesx')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @imagesx($image);
+  }
+
+  /**
+   * Get image height
+   *
+   * @link http://www.php.net/manual/en/function.imagesy.php
+   *
+   * @param image resource
+   *
+   * @return int
+   *  Return the height of the image or false on errors.
+   */
+  static public function imagesy($image) {
+    if (!function_exists('imagesy')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @imagesy($image);
+  }
+
+  /**
+   * Get the index of the color of a pixel
+   *
+   * @link http://www.php.net/manual/en/function.imagecolorat.php
+   *
+   * @param image resource
+   * @param x int
+   *  x-coordinate of the point.
+   * @param y int
+   *  y-coordinate of the point.
+   *
+   * @return int
+   *  The index of the color.
+   */
+  static public function imagecolorat($image, $x, $y) {
+    if (!function_exists('imagecolorat')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @imagecolorat($image, $x, $y);
+  }
+
+  /**
+   * Destroy an image
+   *
+   * @link http://www.php.net/manual/en/function.imagedestroy.php
+   *
+   * @param image resource
+   *
+   * @return bool
+   *  Returns TRUE on success or FALSE on failure.
+   */
+  function imagedestroy($image) {
+    if (!function_exists('imagedestroy')) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MISSING_EXTENSION, array('@extension' => 'GD library for PHP'));
+    }
+
+    return @imagedestroy($image);
   }
 }

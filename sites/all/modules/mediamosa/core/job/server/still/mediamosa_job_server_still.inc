@@ -73,16 +73,16 @@ class mediamosa_job_server_still {
     $destination = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
     while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
       $source = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
-      $im = imagecreatefromjpeg($source);
+      $im = mediamosa_gd::imagecreatefromjpeg($source);
 
       if ($im) {
         // Calculate the color variation.
         $size = getimagesize($source);
-        $rgb = imagecolorat($im, ($size[0] >> 1), ($size[1] >> 1));
+        $rgb = mediamosa_gd::imagecolorat($im, ($size[0] >> 1), ($size[1] >> 1));
         $r = ($rgb >> 16) & 0xFF;
         $g = ($rgb >> 8) & 0xFF;
         $b = $rgb & 0xFF;
-        $rgb = imagecolorat($im, ($size[0] >> 2), ($size[1] >> 2));
+        $rgb = mediamosa_gd::imagecolorat($im, ($size[0] >> 2), ($size[1] >> 2));
         $r2 = ($rgb >> 16) & 0xFF;
         $g2 = ($rgb >> 8) & 0xFF;
         $b2 = $rgb & 0xFF;

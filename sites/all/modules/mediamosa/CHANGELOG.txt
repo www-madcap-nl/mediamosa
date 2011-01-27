@@ -16,7 +16,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 - All require_once are local path. This works fine, but I'm seeing a lot of
-  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
+  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some
   study if we need to change our require_once.
 
 update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
@@ -25,9 +25,27 @@ update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERV
 Known bugs (no tickets (yet));
 - STILL_URI in object response during play proxy call is broken.
 
+
+OpenAPI development:
+- Alternative output formats (JSON, Atom, RSS)
+- OpenAPI interface
+- OpenAPI search
+- OpenSocial GET
+- OpenSocial POST
+
+
 TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
+
+
+MediaMosa 2.4 (build )
+--------------------------
+- Watermarking stills (See ticket #82).
+- oEmbed provider functionality (See ticket #413).
+
+Other changes (not ticket related).
+- Better REST call match: match_uri() static function was introduced, and check wildchar numbers.
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------
@@ -505,7 +523,7 @@ Other changes (not ticket related).
   /mediafile/mediafile_id max. length 32 chars.
 - Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
   type instead of varchar(10).
-- PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
+- PHP function getimagesize() is now wrapped with mediamosa_gd::getimagesize().
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
 - Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
   asset_created.
