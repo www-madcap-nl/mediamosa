@@ -347,3 +347,10 @@ class mediamosa_exception_error_404 extends mediamosa_exception_error_debug {
     parent::__construct(mediamosa_error::HTTP_NOT_FOUND);
   }
 }
+
+// Not implemented.
+class mediamosa_exception_error_501 extends mediamosa_exception_error_debug {
+  public function __construct() {
+    parent::__construct(mediamosa_error::HTTP_NOT_IMPLEMENTED);
+  }
+}

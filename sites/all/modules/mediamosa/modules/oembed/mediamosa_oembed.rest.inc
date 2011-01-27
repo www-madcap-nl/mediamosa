@@ -101,6 +101,55 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     return self::get_var_setup_default($var_setup, FALSE);
   }
 
+  /**
+   * Get the details of asset and mediafile.
+   * Common function for response video and photo.
+   *
+   * @param string $mediafile_id
+   * @param string $user_id
+   * @param string $group_id
+   * @param $aut_domain
+   * @param $aut_realm
+   * @param boolean $is_app_admin
+   * @param $play_call
+   *
+   * @return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket)
+   */
+  private function get_asset_mediafile_details($mediafile_id, $user_id = NULL, $group_id = NULL, $aut_domain = NULL, $aut_realm = NULL, $is_app_admin = FALSE, $play_call = TRUE) {
+    $app_ids = $this->get_param_value_app();
+    // Get the 1st app.
+    $app_id = reset($app_ids);
+
+    // Get the mediafile.
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+    $asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
+
+    // Test if access on unappropriate flag.
+    mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, $play_call);
+
+    // Check access.
+    mediamosa_aut::access_check_on_object(
+      mediamosa_aut::AUT_TYPE_MEDIAFILE,
+      $asset_id,
+      $mediafile_id,
+      $app_id,
+      $user_id,
+      $group_id,
+      $aut_domain,
+      $aut_realm,
+      $is_app_admin
+    );
+
+    $title = (empty($asset_metadata['dublin_core']['title']['values']) ? '' : implode(', ', $asset_metadata['dublin_core']['title']['values']));
+    $author_name = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
+
+    // Create ticket ID.
+    $ticket = mediamosa_db::uuid($app_id);
+
+    return array($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket);
+  }
+
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
@@ -131,48 +180,28 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $is_app_admin = FALSE;
     $play_call = TRUE;
 
+    $type = NULL;
+    $title = '';
+    $author_name = '';
+
     $output = array();
 
     if ($mediafile_id) {
       // Mediafile.
 
+      $type = self::TYPE_VIDEO;
+
       // Variables.
       $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT;
-      $still_id = NULL;
-
-      // Now get the mediafile.
-      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
-      $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
-      $asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
-
-      // Get the metadata.
-      $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
-
-      // Test if access on unappropriate flag.
-      mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, $play_call);
 
       // Check if allowed to play.
       mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
 
-      // Check access.
-      mediamosa_aut::access_check_on_object(
-        mediamosa_aut::AUT_TYPE_MEDIAFILE,
-        $asset_id,
-        $mediafile_id,
-        $app_id,
-        $user_id,
-        $group_id,
-        $aut_domain,
-        $aut_realm,
-        $is_app_admin
-      );
+      // Now get the mediafile.
+      list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $aut_domain, $aut_realm, $is_app_admin, $play_call);
 
-      $type = self::TYPE_VIDEO;
-      $title = (empty($asset_metadata['dublin_core']['title']['values']) ? '' : implode(', ', $asset_metadata['dublin_core']['title']['values']));
-      $author_name = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
-
-      // Create ticket ID.
-      $ticket = mediamosa_db::uuid($app_id);
+      // Get the metadata.
+      $mediafile['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       $filename = mediamosa_configuration_storage::mediafile_filename_get($mediafile);
       if (empty($mediafile[mediamosa_asset_mediafile_db::URI]) && file_exists($filename)) {
@@ -210,6 +239,8 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     elseif ($still_id) {
       // Still.
 
+      $type = self::TYPE_PHOTO;
+
       // Variables.
       $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL;
 
@@ -217,31 +248,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);
       $mediafile_id = $still[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
 
-      $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
-      $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
-      $asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
-
-      // Test if access on unappropriate flag.
-      mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, $play_call);
-
-      // Check access.
-      mediamosa_aut::access_check_on_object(
-        mediamosa_aut::AUT_TYPE_MEDIAFILE,
-        $asset_id,
-        $mediafile_id,
-        $app_id,
-        $user_id,
-        $group_id,
-        $aut_domain,
-        $aut_realm,
-        $is_app_admin
-      );
-
-      $type = self::TYPE_PHOTO;
-      $title = (empty($asset_metadata['dublin_core']['title']['values']) ? '' : implode(', ', $asset_metadata['dublin_core']['title']['values']));
-      $author_name = $mediafile[mediamosa_asset_mediafile_db::OWNER_ID];
-
-      $ticket = mediamosa_db::uuid($app_id);
+      list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $aut_domain, $aut_realm, $is_app_admin, $play_call);
 
       // Generate ticket or perm link?
       $ticket = mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin) ? $still_id : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
@@ -267,6 +274,9 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $width = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, 'width');
       $height = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($still_id, 'height');
     }
+    else {
+      throw new mediamosa_exception_error_501();
+    }
 
     // Collect the data for output.
 
@@ -277,8 +287,8 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       'author_name' => $author_name,
       //'author_url' => NULL,
       //'cache_age' => NULL,
-      'provider_name' => ($provider_name ? $provider_name : 'MediaMosa'),
-      'provider_url' => ($provider_url ? $provider_url : 'http://mediamosa.org/'),
+      'provider_name' => (!empty($provider_name) && $provider_name ? $provider_name : 'MediaMosa'),
+      'provider_url' => (!empty($provider_url) && $provider_url ? $provider_url : 'http://mediamosa.org/'),
     );
 
     if (!empty($thumbnail_url)) {
