@@ -602,32 +602,32 @@ function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_re
 
   $results_drupal['install_id'] = array(
     'title' => t('Interface installation ID'),
-    'value' => $conf['mediamosa_installation_id'],
+    'value' => mediamosa::get_server_id(),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results_drupal['app'] = array(
     'title' => t('App interface'),
-    'value' => $conf['mediamosa_app'] ? t('Enabled') : t('Disabled'),
+    'value' => mediamosa::is_app_app_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results_drupal['app_upload'] = array(
     'title' => t('Upload interface'),
-    'value' => $conf['mediamosa_app_upload'] ? t('Enabled') : t('Disabled'),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
-  );
-  $results_drupal['app_openapi'] = array(
-    'title' => t('Open API interface'),
-    'value' => $conf['mediamosa_app_openapi'] ? t('Enabled') : t('Disabled'),
+    'value' => mediamosa::is_app_upload_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results_drupal['app_download'] = array(
     'title' => t('Download interface'),
-    'value' => $conf['mediamosa_app_download'] ? t('Enabled') : t('Disabled'),
+    'value' => mediamosa::is_app_download_enabled() ? t('Enabled') : t('Disabled'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results_drupal['app_openapi'] = array(
+    'title' => t('Open API interface'),
+    'value' => mediamosa::is_app_openapi_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results_drupal['admin'] = array(
     'title' => t('Admin interface'),
-    'value' => $conf['mediamosa_admin'] ? t('Enabled') : t('Disabled'),
+    'value' => mediamosa::is_admin_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
 
