@@ -39,13 +39,16 @@ TODO: (v2.4)
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
 
-MediaMosa 2.4 (build )
+MediaMosa 2.4 (build 1357)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
 
 Other changes (not ticket related).
-- Better REST call match: match_uri() static function was introduced, and check wildchar numbers.
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------
