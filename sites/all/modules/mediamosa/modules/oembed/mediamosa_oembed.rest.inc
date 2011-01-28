@@ -184,6 +184,14 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $title = '';
     $author_name = '';
 
+    $thumbnail_url = NULL;
+    $thumbnail_width = NULL;
+    $thumbnail_height = NULL;
+    $html = NULL;
+    $url = NULL;
+    $width = NULL;
+    $height = NULL;
+
     $output = array();
 
     if ($mediafile_id) {
@@ -222,7 +230,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
           $mediafile,
           array()
         );
-        $url = $response['output'];
+        $html = $response['output'];
 
         $video_size = mediamosa_asset_mediafile_play_proxy::calc_video_size(
           isset($mediafile['metadata']['width']) ? $mediafile['metadata']['width'] : 0,
