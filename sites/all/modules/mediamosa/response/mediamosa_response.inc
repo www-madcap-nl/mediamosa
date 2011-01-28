@@ -144,17 +144,15 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (!isset($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+      if (empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
         $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
       // Process the call.
-      $response_type = $this->process_call($rest_call);
+      $this->process_call($rest_call);
 
       // Check the response parameter.
-      if (empty($response_type)) {
-        $response_type = empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_rest_call::RESPONSE_TYPE_XML : $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
-      }
+      $response_type = empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_rest_call::RESPONSE_TYPE_XML : $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.

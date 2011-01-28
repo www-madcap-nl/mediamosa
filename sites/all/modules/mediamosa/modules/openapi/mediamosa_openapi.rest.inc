@@ -373,7 +373,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
             mediamosa_rest_call::RESPONSE_TYPE_RSS,
             mediamosa_rest_call::RESPONSE_TYPE_JSON,
           ),
-          self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
+          self::VAR_DESCRIPTION => mediamosa::t('Optional parameter to specify the response output format.'),
         ),
 
         // Collection Request Parameters.
@@ -478,7 +478,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Standard Request Parameters.
-    $since = $this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE);
+    $since = addslashes($this->get_param_value(self::REQUEST_PARAMETER_UPDATEDSINCE_VALUE));
     $alt = $this->get_param_value(self::REQUEST_PARAMETER_FORMAT_VALUE);
 
     // Collection Request Parameters.
@@ -497,7 +497,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     $mediafile_id = addslashes($this->get_param_value(self::MEDIAITEM_ID));
 
     if ($since) {
-      $cql[] = 'videotimestamp>="' . $since . '"';
+      $cql[] = 'videotimestamp >= "' . $since . '"';
     }
 
     // We don't know, who the owner the page (USER_OWNER), that the current user visit.

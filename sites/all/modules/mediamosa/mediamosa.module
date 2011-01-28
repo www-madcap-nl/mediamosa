@@ -80,7 +80,7 @@ function mediamosa_permission() {
  */
 function mediamosa_init() {
   // Possible PHP 5.3 autoloader bug.
-  require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa/lib/mediamosa_debug.inc';
+  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa') . '/lib/mediamosa_debug.inc';
 
   // Create and get the core object.
   $mediamosa = mediamosa::get();
@@ -91,7 +91,7 @@ function mediamosa_init() {
   // If we get here, then no REST interface is on.
 
   // Need some fixes on CSS.
-  drupal_add_css(drupal_get_path('module', 'mediamosa') . '/mediamosa.css', array('group' => CSS_THEME, 'weight' => 1000));
+  drupal_add_css(drupal_get_path('module', 'mediamosa') . '/mediamosa.css', array('group' => CSS_THEME, 'weight' => 10));
 }
 
 /**

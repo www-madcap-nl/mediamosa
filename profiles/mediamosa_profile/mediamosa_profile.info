@@ -31,7 +31,6 @@ dependencies[] = color
 dependencies[] = help
 dependencies[] = menu
 dependencies[] = dblog
-dependencies[] = toolbar
 dependencies[] = simpletest
 
 dependencies[] = mediamosa

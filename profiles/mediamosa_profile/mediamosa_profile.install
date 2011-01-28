@@ -36,11 +36,11 @@
  */
 function mediamosa_profile_install() {
 
-  // Enable default theme, disable bartik.
-  theme_enable(array('seven'));
-  theme_disable(array('bartik'));
+  // Enable default theme, disable bartik, garland.
+  theme_enable(array('rubik'));
+  theme_disable(array('bartik', 'garland'));
 
-  $default_theme = 'seven';
+  $default_theme = 'rubik';
   variable_set('theme_default', $default_theme);
   variable_set('admin_theme', $default_theme);
   variable_set('node_admin_theme', 1);
@@ -117,4 +117,7 @@ function mediamosa_profile_install() {
 
   // Set display of warnings lower.
   variable_set('error_level', ERROR_REPORTING_HIDE);
+
+  // Flush all.
+  drupal_flush_all_caches();
 }

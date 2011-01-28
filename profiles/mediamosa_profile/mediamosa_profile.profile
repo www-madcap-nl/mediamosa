@@ -539,6 +539,9 @@ function mediamosa_profile_cron_settings_form() {
     '#value' => t('Continue'),
   );
 
+  // Flush all.
+  drupal_flush_all_caches();
+
   return $form;
 }
 

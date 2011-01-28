@@ -944,6 +944,12 @@ abstract class mediamosa_rest_call {
       // check() will throw when requirements are not met.
       $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_type::check($name, $param[self::PARAM_TYPE], $this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$name][self::PARAM_RANGE_START], $this->a_rest_args[$name][self::PARAM_RANGE_END], !empty($this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$name][self::PARAM_VALIDATED] = TRUE;
+
+      // If the type == mediamosa_sdk::TYPE_RESPONSE_TYPE and not empty, then
+      // change the response type of the REST call.
+      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_RESPONSE_TYPE && !empty($this->a_rest_args[$name][self::PARAM_VALUE])) {
+        $this->{self::RESPONSE_TYPE} = $this->a_rest_args[$name][self::PARAM_VALUE];
+      }
     }
   }
 

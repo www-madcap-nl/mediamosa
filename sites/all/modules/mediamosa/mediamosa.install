@@ -1845,4 +1845,30 @@ function mediamosa_update_7088() {
   ->execute();
 }
 
+/**
+ * Activate new 2.4 look.
+ */
+function mediamosa_update_7089() {
+  // Clear.
+  cache_clear_all();
+
+  // Enable default theme, disable bartik, garland.
+  theme_enable(array('rubik'));
+
+  $default_theme = 'rubik';
+  variable_set('theme_default', $default_theme);
+  variable_set('admin_theme', $default_theme);
+  variable_set('node_admin_theme', 1);
+
+  theme_disable(array('bartik', 'garland'));
+
+  // Disable toolbar.
+  module_disable(array('toolbar', 'dashboard'));
+
+  // And again.
+  drupal_flush_all_caches();
+}
+
+
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

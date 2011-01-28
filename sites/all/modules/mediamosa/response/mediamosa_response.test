@@ -45,7 +45,11 @@ class MediaMosaResponseTestCase extends MediaMosaTestCase {
 
     // Check we are in simpletest mode.
     $this->assertTrue(mediamosa::in_simpletest_sandbox(), 'We are in SimpleTest mode');
-    $this->assertTrue(mediamosa::is_app_enabled(), 'We are allowed to do REST calls on default interface');
+    $this->assertTrue(mediamosa::is_app_enabled(), 'We are allowed to do REST calls on interface');
+    $this->assertTrue(mediamosa::is_app_app_enabled(), 'We are allowed to do APP REST calls on interface');
+    $this->assertTrue(mediamosa::is_app_download_enabled(), 'We are allowed to do download REST calls on interface');
+    $this->assertTrue(mediamosa::is_app_upload_enabled(), 'We are allowed to do upload REST calls on interface');
+    $this->assertTrue(mediamosa::is_app_openapi_enabled(), 'We are allowed to do openAPI calls on interface');
 
     // At the end; the Greek word 'kosme':
     $parameters = array(
