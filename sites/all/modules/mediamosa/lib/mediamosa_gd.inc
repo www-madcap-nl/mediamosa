@@ -309,4 +309,55 @@ class mediamosa_gd {
 
     return @imagedestroy($image);
   }
+
+  /**
+   * Output image to browser or file
+   * @link http://php.net/manual/en/function.imagejpeg.php
+   * @param image resource
+   * @param filename string[optional] <p>
+   * The path to save the file to. If not set or &null;, the raw image stream
+   * will be outputted directly.
+   * </p>
+   * <p>
+   * To skip this argument in order to provide the
+   * quality parameter, use &null;.
+   * </p>
+   * @param quality int[optional] <p>
+   * quality is optional, and ranges from 0 (worst
+   * quality, smaller file) to 100 (best quality, biggest file). The
+   * default is the default IJG quality value (about 75).
+   * </p>
+   * @return bool Returns true on success or false on failure.
+   */
+  static public function imagejpeg($image, $filename = null, $quality = null) {
+    imagejpeg($image, $filename, $quality);
+  }
+
+  /**
+   * Output a PNG image to either the browser or a file
+   * @link http://php.net/manual/en/function.imagepng.php
+   * @param image resource
+   * @param filename string[optional] <p>
+   * The path to save the file to. If not set or &null;, the raw image stream
+   * will be outputted directly.
+   * </p>
+   * <p>
+   * &null; is invalid if the quality and
+   * filters arguments are not used.
+   * </p>
+   * @param quality int[optional] <p>
+   * Compression level: from 0 (no compression) to 9.
+   * </p>
+   * @param filters int[optional] <p>
+   * Allows reducing the PNG file size. It is a bitmask field which may be
+   * set to any combination of the PNG_FILTER_XXX
+   * constants. PNG_NO_FILTER or
+   * PNG_ALL_FILTERS may also be used to respectively
+   * disable or activate all filters.
+   * </p>
+   * @return bool Returns true on success or false on failure.
+   */
+  static public function imagepng($image, $filename = null, $quality = null, $filters = null) {
+    imagepng($image, $filename, $quality, $filters);
+  }
 }

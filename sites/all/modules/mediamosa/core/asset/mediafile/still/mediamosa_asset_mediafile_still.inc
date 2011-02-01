@@ -237,7 +237,7 @@ class mediamosa_asset_mediafile_still {
     }
 
     // Copymerge.
-    mediamosa_io::imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+    mediamosa_gd::imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
 
     // Save image.
     if ($create_new_still) {
