@@ -102,6 +102,27 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
   }
 
   /**
+   * Process the supplied parameters.
+   *
+   * @param array $var_setup
+   */
+  protected function process_rest_args(array $var_setup) {
+    parent::process_rest_args($var_setup);
+
+    $format = ($this->get_param_value(self::FORMAT) == self::FORMAT_JSON ? mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED : mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED);
+
+    $this->a_rest_args[self::FORMAT][self::PARAM_ALLOWED_VALUES] = array(
+      mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED,
+      mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED,
+    );
+
+    // Change the input value to the response value.
+    $this->set_param_value(self::FORMAT, $format);
+
+    return $var_setup;
+  }
+
+  /**
    * Get the details of asset and mediafile.
    * Common function for response video and photo.
    *
@@ -164,13 +185,8 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $still_id = $this->get_param_value(self::STILL_ID);
     $maxwidth = $this->get_param_value(self::MAXWIDTH);
     $maxheight = $this->get_param_value(self::MAXHEIGHT);
-    $format = $this->get_param_value(self::FORMAT);
     $provider_name = $this->get_param_value(self::PROVIDER_NAME);
     $provider_url = $this->get_param_value(self::PROVIDER_URL);
-
-    // Change the input value to the response value.
-    $format = ($format == self::FORMAT_JSON ? mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED : mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED);
-    $this->set_param_value(self::FORMAT, $format);
 
     // Variables.
     $user_id = NULL;

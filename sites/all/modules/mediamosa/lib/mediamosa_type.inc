@@ -246,7 +246,6 @@ class mediamosa_type {
         break;
 
       case mediamosa_sdk::TYPE_ALPHA:
-      case mediamosa_sdk::TYPE_RESPONSE_TYPE:
         if (!ctype_alpha($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
@@ -292,6 +291,7 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALUE_MUST_START_WITH_ALPHABETIC_CHAR, array('@param' => $param, '@type' => $param_type));
         }
 
+      case mediamosa_sdk::TYPE_RESPONSE_TYPE:
       case mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE:
         if (!ctype_alnum(str_replace('_', '', $mixed_param_value)) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
