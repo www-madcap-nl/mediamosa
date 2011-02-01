@@ -318,6 +318,8 @@ abstract class mediamosa_rest_call {
 
     // Call the function.
     $this->do_call();
+
+    return $this->{self::RESPONSE_TYPE};
   }
 
   /**

@@ -149,7 +149,7 @@ class mediamosa_response extends mediamosa {
       }
 
       // Process the call.
-      $this->process_call($rest_call);
+      $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = $this->process_call($rest_call);
 
       // Check the response parameter.
       $response_type = empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_rest_call::RESPONSE_TYPE_XML : $rest_call[mediamosa_rest_call::RESPONSE_TYPE];

@@ -370,12 +370,14 @@ class mediamosa_rest {
     }
 
     // Process the REST call.
-    $the_rest_call->process_call();
+    $response_type = $the_rest_call->process_call();
 
     // If offset was specified, then include it in the header.
     if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
       $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
+
+    return $response_type;
   }
 
   /**
