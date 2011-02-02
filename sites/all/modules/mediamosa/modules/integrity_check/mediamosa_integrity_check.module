@@ -187,11 +187,6 @@ function mediamosa_integrity_check_page() {
     return $ret;
   }
 
-  // Print a select field for choose the type.
-  $content[] = drupal_get_form('mediamosa_integrity_check_type_box');
-
-  $content[] = array('#markup' => 'For the following objects, an integrity problem has been detected:');
-
   // Headers and base queries.
   if ($type == 'missing mediafile') {
     $header = array(
@@ -256,57 +251,66 @@ function mediamosa_integrity_check_page() {
 
   $rows = array();
 
-  $result = $query->execute();
-  foreach ($result as $row) {
-    if ($type == 'missing mediafile') {
-      // Get the mediafile object.
-      $object = mediamosa_db::db_query("SELECT * FROM {#mediafile} WHERE #mediafile_id = :mediafile_id", array(
-        '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        ':mediafile_id' => $row['object_id'],
-      ))->fetchObject();
+  if (!empty($query)) {
+    $result = $query->execute();
+    foreach ($result as $row) {
+      if ($type == 'missing mediafile') {
+        // Get the mediafile object.
+        $object = mediamosa_db::db_query("SELECT * FROM {#mediafile} WHERE #mediafile_id = :mediafile_id", array(
+          '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          ':mediafile_id' => $row['object_id'],
+        ))->fetchObject();
 
-      if ($object) {
-        $asset_id = $object->asset_id;
+        if ($object) {
+          $asset_id = $object->asset_id;
+          $rows[] = array(
+            'data' => array(
+              'mediafile_id' => $row['object_id'],
+              'app_id' => $row['app_id'],
+              'owner_id' => $row['owner_id'],
+              'asset_id' => mediamosa_lib::l_asset($asset_id),
+              'created' => $row['created'],
+              'details' => $row['details'],
+              'select' => sprintf('<input type="checkbox" name="selected_ids[]" value="%s">', $row['id']),
+            ),
+          );
+        }
+      }
+      elseif ($type == 'missing mediarecord') {
         $rows[] = array(
           'data' => array(
             'mediafile_id' => $row['object_id'],
-            'app_id' => $row['app_id'],
-            'owner_id' => $row['owner_id'],
-            'asset_id' => mediamosa_lib::l_asset($asset_id),
-            'created' => $row['created'],
+            'size' => $row['size'],
+            'mtime' => $row['mtime'],
+            'ctime' => $row['ctime'],
             'details' => $row['details'],
             'select' => sprintf('<input type="checkbox" name="selected_ids[]" value="%s">', $row['id']),
           ),
         );
       }
     }
-    elseif ($type == 'missing mediarecord') {
-      $rows[] = array(
-        'data' => array(
-          'mediafile_id' => $row['object_id'],
-          'size' => $row['size'],
-          'mtime' => $row['mtime'],
-          'ctime' => $row['ctime'],
-          'details' => $row['details'],
-          'select' => sprintf('<input type="checkbox" name="selected_ids[]" value="%s">', $row['id']),
-        ),
-      );
-    }
+
+    // Print a select field for choose the type.
+    $content[] = drupal_get_form('mediamosa_integrity_check_type_box');
+
+    $content[] = array('#markup' => 'For the following objects, an integrity problem has been detected:');
+
+    $content[] = array('#markup' => theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no data.'))));
+    $content[] = array('#markup' => theme('pager'));
+
+    $form = mediamosa_integrity_check_delete_submit();
+    $content = array_merge($content, drupal_get_form('mediamosa_integrity_check_delete_submit'));
   }
 
-  $content[] = array('#markup' => theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no data.'))));
-  $content[] = array('#markup' => theme('pager'));
-
-  $form = mediamosa_integrity_check_delete_submit();
-  //$content[] = array('#markup' => drupal_render($form['delete']));
-  $content = array_merge($content, drupal_get_form('mediamosa_integrity_check_delete_submit'));
 
   if (!empty($start_check)) {
     $content = array_merge($content, $start_check);
   }
 
-  $content[] = array('#markup' => $post_page_info);
+  if (!empty($post_page_info)) {
+    $content[] = array('#markup' => $post_page_info);
+  }
 
   $content[] = array('#markup' => '<p>Last integrity run: ' . variable_get('mediamosa_integrity_run_date_start', 'never') . ' - ' . variable_get('mediamosa_integrity_run_date_end', 'never') . '</p>');
 

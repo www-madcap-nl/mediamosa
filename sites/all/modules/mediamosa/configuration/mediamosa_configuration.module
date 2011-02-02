@@ -36,7 +36,7 @@
 function mediamosa_configuration_permission() {
   return array(
     'administer mediamosa config global' =>  array(
-      'title' => t('Adminster configuration global settings.'),
+      'title' => t('Administer configuration global settings.'),
       'description' => t('Give administer rights for editing MediaMosa global configuration settings.'),
     ),
   );
