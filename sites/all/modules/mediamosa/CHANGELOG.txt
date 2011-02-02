@@ -51,6 +51,8 @@ Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
   wildchar numbers.
 - Added new theme.
+- Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
+    Still download test, Permanent still link.
 
 
 MediaMosa 2.3.5 (build 1274)
