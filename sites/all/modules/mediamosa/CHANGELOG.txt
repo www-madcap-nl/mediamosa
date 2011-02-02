@@ -50,6 +50,10 @@ MediaMosa 2.4 (build 1367)
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
   wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------
