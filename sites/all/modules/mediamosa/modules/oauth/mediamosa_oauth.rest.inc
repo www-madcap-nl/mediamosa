@@ -68,7 +68,7 @@ require_once 'sites/all/modules/mediamosa/lib/oauth/OAuth.php';
  * Method: GET
  */
 /*
-class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
+class mediamosa_rest_call_oauth extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const MEDIAFILE_ID = 'mediafile_id';
