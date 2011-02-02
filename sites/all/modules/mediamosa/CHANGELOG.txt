@@ -39,7 +39,7 @@ TODO: (v2.4)
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
 
-MediaMosa 2.4 (build 1369)
+MediaMosa 2.4 (build 1373)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
@@ -50,8 +50,11 @@ MediaMosa 2.4 (build 1369)
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
   wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
 - Added new theme.
-
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------

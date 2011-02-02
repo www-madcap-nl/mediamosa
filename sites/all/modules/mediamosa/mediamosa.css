@@ -36,7 +36,7 @@ DIV.form-item-mediafile-id {
 	background-position:-60px 0px;
 }
 
-.path-admin-mediamosa-config-connector span.icon, .path-admin-config-development-mediamosa-connector span.icon { 
+.path-admin-mediamosa-config-connector span.icon, .path-admin-config-media-mediamosa-connector span.icon { 
   background-image:url(images/mediamosa-icons.png);
 	background-position:-90px 0px;
 }

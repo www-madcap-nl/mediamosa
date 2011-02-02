@@ -119,7 +119,11 @@ function mediamosa_app_load(&$nodes) {
       $apps = unserialize($nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
     }
 
+    // Copy apps.
     $nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = $apps;
+
+    // Make sure timezone is set.
+    $nodes[$key]->{mediamosa_app_db::TIMEZONE} = empty($nodes[$key]->{mediamosa_app_db::TIMEZONE}) ? mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE : $nodes[$key]->{mediamosa_app_db::TIMEZONE};
   }
 }
 
@@ -147,7 +151,6 @@ function mediamosa_app_update($node) {
     // Update webservice.
     _mediamosa_app_update_webservice($node);
   }
-
 }
 
 /**

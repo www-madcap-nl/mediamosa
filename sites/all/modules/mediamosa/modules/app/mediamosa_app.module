@@ -191,7 +191,7 @@ function mediamosa_app_menu() {
 function mediamosa_app_permission() {
   return array(
     'administer mediamosa config app' =>  array(
-      'title' => t('Adminster MediaMosa applications.'),
+      'title' => t('Administer MediaMosa applications.'),
       'description' => t('Give administer rights for editing MediaMosa applications.'),
     ),
   );
