@@ -135,7 +135,7 @@ function mediamosa_server_menu() {
 function mediamosa_server_permission() {
   return array(
     'administer mediamosa config server' =>  array(
-      'title' => t('Adminster MediaMosa servers.'),
+      'title' => t('Administer MediaMosa servers.'),
       'description' => t('Give administer rights for editing MediaMosa servers.'),
     ),
   );
