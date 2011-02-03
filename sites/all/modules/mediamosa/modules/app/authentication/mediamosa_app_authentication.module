@@ -102,7 +102,7 @@ function mediamosa_app_authentication_mediamosa_register_rest_call_doc() {
 }
 
 /**
- * Implements hook_mediamosa_mediamosa_app_authorized().
+ * Implements hook_mediamosa_app_authorized().
  */
 function mediamosa_app_authentication_mediamosa_app_authorized() {
   // App already logged in?
