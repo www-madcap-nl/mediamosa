@@ -252,6 +252,8 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('REST call version'), check_plain($node->{mediamosa_app_db::ACTIVE_VERSION})),
     array(t('Owner'), check_plain($node->{mediamosa_app_db::OWNER})),
     array(t('Allowed Master/Slave Apps'), empty($allow_masterslave_apps) ? t('No applications allowed.') : implode(', ', $allow_masterslave_apps)),
+    array(t('oAuth consumer key'), empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) ? '' : check_plain($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY})),
+    array(t('oAuth consumer secret'), empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET}) ? '' : check_plain($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})),
   );
 
   // Add timestamps.
@@ -416,6 +418,32 @@ function mediamosa_app_form($node, &$form_state) {
     '#description' => t('Show external references in OAI (in field referenceId)?'),
     '#options' => array('TRUE' => t('show'), 'FALSE' => t('hide')),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::SHOW_EXTERNAL_ASSETS, $node, mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE),
+  );
+
+  $form['oauth'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('oAuth settings'),
+    '#description' => t('')
+  );
+  $form['oauth'][mediamosa_app_db::OAUTH_CONSUMER_KEY] = array(
+    '#type' => 'textfield',
+    '#title' => t('oAuth consumer key'),
+    '#description' => t('Unique oAuth consumer key.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_KEY, $node),
+  );
+  $form['oauth'][mediamosa_app_db::OAUTH_CONSUMER_SECRET] = array(
+    '#type' => 'textfield',
+    '#title' => t('oAuth consumer secret'),
+    '#description' => t('oAuth consumer secret. Required, if oAuth consumer key is given.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
+  );
+  // TODO: Remove.
+  $form['oauth']['oauth_client'] = array(
+    '#type' => 'item',
+    '#title' => l(t('oAuth client: '), 'admin/oauth_test'),
+    '#description' => t('Available oAuth client'),
   );
 
   $form['still'] = array(
@@ -726,5 +754,13 @@ function mediamosa_app_validate($node) {
   // Quota.
   if (!is_numeric($node->{mediamosa_app_db::QUOTA})) {
     form_set_error(mediamosa_app_db::QUOTA, t('Please enter a numerical value.'));
+  }
+
+  // oAuth.
+  if (
+    ( empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})) ||
+    ( !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET}))
+  ) {
+    form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('You can fill both oAuth key and secret or non of them.'));
   }
 }
