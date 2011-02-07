@@ -1889,5 +1889,16 @@ function mediamosa_update_7090() {
   );
 }
 
+/**
+ * Two new tables for oAuth.
+ */
+function mediamosa_update_7091() {
+  // Create nonce table.
+  mediamosa::drupal_install_schema(mediamosa_app_nonce_db::TABLE_NAME);
+
+  // Create token table.
+  mediamosa::drupal_install_schema(mediamosa_app_token_db::TABLE_NAME);
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

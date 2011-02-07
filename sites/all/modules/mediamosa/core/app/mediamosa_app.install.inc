@@ -31,6 +31,8 @@
 
 require_once 'mediamosa_app.inc';
 require_once 'mediamosa_app_db.inc';
+require_once 'authentication/mediamosa_app_nonce.install.inc';
+require_once 'authentication/mediamosa_app_token.install.inc';
 
 /**
  * Implements hook_install().
@@ -38,6 +40,9 @@ require_once 'mediamosa_app_db.inc';
 function _mediamosa_app_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_app_db::TABLE_NAME);
+
+  _mediamosa_app_nonce_install();
+  _mediamosa_app_token_install();
 }
 
 /**
@@ -46,6 +51,9 @@ function _mediamosa_app_install() {
 function _mediamosa_app_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_app_db::TABLE_NAME);
+
+  _mediamosa_app_nonce_uninstall();
+  _mediamosa_app_token_uninstall();
 }
 
 /**
