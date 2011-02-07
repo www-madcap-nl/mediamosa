@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.5 (build 1274)
+MediaMosa 2.3.5 (build 1275)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
   the default url to the still in asset call. (See ticket #456).
@@ -44,6 +44,8 @@ Other changes (not ticket related).
 - Added link to transcode profile in asset viewer under asset browser.
 - Added reference_id to asset/update REST call.
 - Changed robots.txt that it will disallow all crawling.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------

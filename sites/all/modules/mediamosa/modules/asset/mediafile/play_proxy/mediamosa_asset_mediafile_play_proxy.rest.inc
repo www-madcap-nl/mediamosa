@@ -304,19 +304,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $still_id_default = ($still_id ? $still_id : mediamosa_asset_mediafile_still::find_default($asset_id));
 
         if (!empty($still_id_default)) {
-          // Check access.
-          mediamosa_aut::access_check_on_object(
-            mediamosa_aut::AUT_TYPE_MEDIAFILE,
-            $asset_id,
-            $still_id_default,
-            $app_id,
-            $user_id,
-            $group_id,
-            $aut_domain,
-            $aut_realm,
-            $is_app_admin
-          );
-
           // Generate ticket or perm link?
           $ticket = mediamosa_asset_mediafile_still::is_still_permanent($still_id_default, $is_app_admin) ? $still_id_default : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id_default);
         }
