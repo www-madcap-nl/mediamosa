@@ -249,6 +249,9 @@ class mediamosa_sdk {
   const TYPE_URL_URI                     = 'URL'; // URL / URI type (checked with simple parse_url)
   const TYPE_AUT_GROUP_TYPE              = 'AUT_GROUP_TYPE';
   const TYPE_DELETE                      = 'DELETE';
+  const TYPE_OAUTH_SIGNATURE             = 'OAUTH_SIGNATURE';
+  const TYPE_OAUTH_SIGNATURE_METHOD      = 'OAUTH_SIGNATURE_METHOD';
+  const TYPE_OAUTH_VERSION               = 'OAUTH_VERSION';
 
   const TYPE_USER_ID                     = 'USER_ID';
   const TYPE_GROUP_ID                    = 'GROUP_ID';
@@ -333,6 +336,9 @@ class mediamosa_sdk {
       case self::TYPE_CQL_ASSET:
       case self::TYPE_CQL_COLLECTION:
       case self::TYPE_CQL_JOB:
+      case self::TYPE_OAUTH_SIGNATURE:
+      case self::TYPE_OAUTH_SIGNATURE_METHOD:
+      case self::TYPE_OAUTH_VERSION:
         return self::TYPE_STRING;
 
       case self::TYPE_SEARCH_INT:

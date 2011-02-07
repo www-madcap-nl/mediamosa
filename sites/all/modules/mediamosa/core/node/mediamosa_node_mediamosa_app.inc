@@ -440,9 +440,10 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
   );
   // TODO: Remove.
+
   $form['oauth']['oauth_client'] = array(
     '#type' => 'item',
-    '#title' => l(t('oAuth client: '), 'admin/oauth_test'),
+    '#title' => l(t('oAuth client: '), 'admin/oauth_test/' . $node->nid),
     '#description' => t('Available oAuth client'),
   );
 
