@@ -439,13 +439,15 @@ function mediamosa_app_form($node, &$form_state) {
     '#description' => t('oAuth consumer secret. Required, if oAuth consumer key is given.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
   );
-  // TODO: Remove.
 
-  $form['oauth']['oauth_client'] = array(
-    '#type' => 'item',
-    '#title' => l(t('oAuth client: '), 'admin/oauth_test/' . $node->nid),
-    '#description' => t('Available oAuth client'),
-  );
+  // TODO: Remove.
+  if (isset($node->nid)) {
+    $form['oauth']['oauth_client'] = array(
+      '#type' => 'item',
+      '#title' => l(t('oAuth client: '), 'admin/oauth_test/' . $node->nid),
+      '#description' => t('Available oAuth client'),
+    );
+  }
 
   $form['still'] = array(
     '#type' => 'fieldset',
@@ -762,6 +764,14 @@ function mediamosa_app_validate($node) {
     ( empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})) ||
     ( !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET}))
   ) {
-    form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('You can fill both oAuth key and secret or non of them.'));
+    form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('You must fill both oAuth key and secret or non of them.'));
+  }
+  // The consumer key must be unique.
+  if (!empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})) {
+    $app = mediamosa_app::get_by_oauth_consumer_key($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY});
+
+    if ($app && $app['nid'] != $node->nid) {
+      form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('This oAuth consumer key is already exists.'));
+    }
   }
 }

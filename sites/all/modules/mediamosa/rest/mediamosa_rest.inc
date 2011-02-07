@@ -326,6 +326,14 @@ class mediamosa_rest {
         return FALSE;
       }
 
+      // Check the allowed paths.
+      foreach (module_implements('mediamosa_allowed_path') as $module) {
+        $allowed_path = module_invoke($module, 'mediamosa_allowed_path');
+        if ($allowed_path) {
+          return FALSE;
+        }
+      }
+
       // Throw so mediamosa handles the output.
       throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND, array(
         '@uri' => print_r($uri, TRUE),

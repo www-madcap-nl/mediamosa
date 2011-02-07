@@ -103,6 +103,26 @@ class mediamosa_app_oauth {
   }
 
   /**
+   * Get token.
+   *
+   * @param $token_key
+   *
+   * @return $token
+   */
+  static public function get_token($token_key) {
+    $query = db_select(mediamosa_app_token_db::TABLE_NAME, 'token');
+
+    $query->fields('token', array());
+    $query->condition('token.' . mediamosa_app_token_db::TOKEN_KEY, $token_key);
+
+    $result = $query->execute();
+
+    $token = $result->fetchAssoc();
+
+    return $token;
+  }
+
+  /**
    * Save nonce.
    *
    * @param $nonce
@@ -134,6 +154,23 @@ class mediamosa_app_oauth {
 
     mediamosa_db::db_insert(mediamosa_app_token_db::TABLE_NAME)
     ->fields($parameters)
+    ->execute();
+  }
+
+  /**
+   * Update token.
+   *
+   * @param $parameters
+   */
+  static public function update_token($token_key, $parameters) {
+    $time = time();
+    $parameters += array(
+      mediamosa_app_token_db::CHANGED => $time,
+    );
+
+    $num_updated = mediamosa_db::db_update(mediamosa_app_token_db::TABLE_NAME)
+    ->fields($parameters)
+    ->condition(mediamosa_app_token_db::TOKEN_KEY, $token_key)
     ->execute();
   }
 
@@ -195,12 +232,6 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
   private $access_token;
   private $nonce;
   */
-
-  const TOKEN_TYPE_REQUEST = 'request';
-  const TOKEN_TYPE_ACCESS = 'access';
-  const APP_ID_NON = 0;
-  const APP_IS_AUTHORIZED_NO = 0;
-  const APP_IS_AUTHORIZED_YES = 1;
 
   function __construct() {
     /*
@@ -321,22 +352,21 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
       mediamosa_app_token_db::TOKEN_KEY => $request_token->key,
       // Same as $token_secret.
       mediamosa_app_token_db::SECRET => $request_token->secret,
-      mediamosa_app_token_db::TYPE => self::TOKEN_TYPE_REQUEST,
-      mediamosa_app_token_db::APP_ID => self::APP_ID_NON,
+      mediamosa_app_token_db::TYPE => mediamosa_app_token_db::TYPE_REQUEST,
+      mediamosa_app_token_db::APP_ID => mediamosa_app_token_db::APP_ID_NON,
       mediamosa_app_token_db::CONSUMER_KEY => $consumer->key,
-      mediamosa_app_token_db::AUTHORIZED => self::APP_IS_AUTHORIZED_NO,
+      mediamosa_app_token_db::AUTHORIZED => mediamosa_app_token_db::AUTHORIZED_NO,
       mediamosa_app_token_db::CALLBACK_URL => $callback_url,
     );
     mediamosa_app_oauth::save_token($parameters);
 
     return $request_token;
-    /*
+
     // TODO ?
-    if ($consumer->key == $this->consumer->key) {
-      return $this->request_token;
-    }
-    return NULL;
-    */
+    //if ($consumer->key == $this->consumer->key) {
+    //  return $this->request_token;
+    //}
+    //return NULL;
   }
 
   /**

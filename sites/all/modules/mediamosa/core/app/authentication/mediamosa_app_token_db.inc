@@ -43,10 +43,15 @@ class mediamosa_app_token_db {
   const EXPIRES = 'expires';
   const TYPE = 'type';
   const TYPE_LENGTH = 7;
+  const TYPE_REQUEST = 'request';
+  const TYPE_ACCESS = 'access';
   const APP_ID = 'app_id';
+  const APP_ID_NON = 0;
   const CONSUMER_KEY = 'consumer_key';
   const CONSUMER_KEY_LENGTH = 255;
   const AUTHORIZED = 'authorized';
+  const AUTHORIZED_NO = 0;
+  const AUTHORIZED_YES = 1;
   const CALLBACK_URL = 'callback_url';
   const CALLBACK_URL_LENGTH = 255;
 }
