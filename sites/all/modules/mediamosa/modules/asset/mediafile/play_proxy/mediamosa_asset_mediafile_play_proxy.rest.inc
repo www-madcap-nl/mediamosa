@@ -413,20 +413,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
             // make a play or download symlink.
             if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-
-              // Check access.
-              mediamosa_aut::access_check_on_object(
-                mediamosa_aut::AUT_TYPE_MEDIAFILE,
-                $asset_id,
-                $t_stills['still_id'],
-                $app_id,
-                $user_id,
-                $group_id,
-                $aut_domain,
-                $aut_realm,
-                $is_app_admin
-              );
-
               // Generate ticket or perm link?
               $ticket_still = mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin) ? $t_stills['still_id'] : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
             }
