@@ -119,6 +119,12 @@ class mediamosa_app_oauth {
 
     $token = $result->fetchAssoc();
 
+    // Safety element.
+    if ($token[mediamosa_app_token_db::EXPIRES] && $token[mediamosa_app_token_db::EXPIRES] <= time()) {
+      self::delete_token($token_key);
+      $token = NULL;
+    }
+
     return $token;
   }
 
