@@ -234,7 +234,11 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
   parse_str($callback['query'], $query);
   // Add key.
   $query['oauth_token'] = $oauth_token->key;
-  // TODO oauth_verifier. What is it? How does it work? Just mimic now:
+  // TODO oauth_verifier. What is it exacly? How does it work? Just mimic now.
+  // The original doc said it is "The verification code".
+  // http://tools.ietf.org/html/rfc5849
+  // Maybe we can implement a better verification later with it.
+  // Although the verification seems ok without it.
   $query['oauth_verifier'] = mt_rand(100000, 999999);
   $callback['query'] = http_build_query($query, 'idx_', '&');
 
