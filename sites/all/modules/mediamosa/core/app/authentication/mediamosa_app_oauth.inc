@@ -59,7 +59,7 @@ class mediamosa_app_oauth {
 
   // ------------------------------------------------------------------ Consts.
   const CLEAN_UP_EXPIRE_TIME = 300;
-  const REQUEST_TOKEN_EXPIRE_TIME = 7200;
+  const TOKEN_EXPIRE_TIME = 7200;
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -149,7 +149,7 @@ class mediamosa_app_oauth {
     $parameters += array(
       mediamosa_app_token_db::CREATED => $time,
       mediamosa_app_token_db::CHANGED => $time,
-      mediamosa_app_token_db::EXPIRES => $time + self::REQUEST_TOKEN_EXPIRE_TIME,
+      mediamosa_app_token_db::EXPIRES => $time + self::TOKEN_EXPIRE_TIME,
     );
 
     mediamosa_db::db_insert(mediamosa_app_token_db::TABLE_NAME)
@@ -160,6 +160,7 @@ class mediamosa_app_oauth {
   /**
    * Update token.
    *
+   * @param string $token_key
    * @param $parameters
    */
   static public function update_token($token_key, $parameters) {
@@ -172,6 +173,17 @@ class mediamosa_app_oauth {
     ->fields($parameters)
     ->condition(mediamosa_app_token_db::TOKEN_KEY, $token_key)
     ->execute();
+  }
+
+  /**
+   * Delete token.
+   *
+   * @param string $token_key
+   */
+  static public function delete_token($token_key) {
+    $num_deleted = db_delete(mediamosa_app_token_db::TABLE_NAME)
+      ->condition(mediamosa_app_token_db::TOKEN_KEY, $token_key)
+      ->execute();
   }
 
   /**
@@ -226,31 +238,15 @@ class MediaMosaOAuthServer extends OAuthServer {
  * MediaMosa data store.
  */
 class MediaMosaOAuthDataStore extends OAuthDataStore {
-  /*
-  private $consumer;
-  private $request_token;
-  private $access_token;
-  private $nonce;
-  */
-
-  function __construct() {
-    /*
-    $this->consumer = new OAuthConsumer("key", "secret", NULL);
-    $this->request_token = new OAuthToken("requestkey", "requestsecret", 1);
-    $this->access_token = new OAuthToken("accesskey", "accesssecret", 1);
-    $this->nonce = "nonce";
-    */
-  }
-
   /**
    * Check if consumer exists from a given consumer key.
    *
    * @param string $consumer_key
    *   The consumer key.
-   * @param bool $provider_consumer
-   *  Whether the consumer should be a provider consumer
+   *
    * @return OAuthConsumer
    *  The consumer
+   *
    * @throws OAuthException
    *  An exception is thrown when the consumer cannot be found
    */
@@ -274,38 +270,29 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
    *  The type of the token: 'request' or 'access'.
    * @param string $token
    *  The token key.
-   * @param bool $provider_token
-   *  Whether the token should be a provider token
+   *
    * @return DrupalOauthToken
    *  The matching token
+   *
    * @throws OAuthException
    *  An exception is thrown when the token cannot be found or doesn't match
    */
   function lookup_token($consumer, $token_type, $token) {
-    echo '*** TODO: lookup_token';
-    die;
-    /*
-    $token_attrib = $token_type . "_token";
-    if ($consumer->key == $this->consumer->key && $token == $this->$token_attrib->key) {
-      return $this->$token_attrib;
-    }
-    return NULL;
-    */
-  }
-  /*
-  public function lookup_token($consumer, $token_type, $token, $provider_token=TRUE) {
-    $token = DrupalOAuthToken::load($token, $provider_token);
+    $token = mediamosa_app_oauth::get_token($token);
+
     if ($token) {
-      if ($token->type==$token_type
-          && $token->consumer_key==$consumer->key
-          && $token->provider_token==$provider_token) {
-        return $token;
+      if ($token['type'] == $token_type && $token['consumer_key'] == $consumer->key) {
+        $access_token = new OAuthToken($token['token_key'], $token['secret']);
+        return $access_token;
       }
-      throw new OAuthException('No matching token was found, token type or consumer key mismatch');
+      else {
+        throw new OAuthException('No matching token was found, token type or consumer key mismatch');
+      }
     }
-    throw new OAuthException('Token not found');
+    else {
+      throw new OAuthException('Token not found');
+    }
   }
-  */
 
   /**
    * Check if the nonce value exists. If not, generate one.
@@ -319,6 +306,7 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
    *   A new nonce value, in case a one doesn't current exit.
    * @param int $timestamp
    *   The current time.
+   *
    * @return string
    *   The existing nonce value or NULL in
    *   case it doesn't exist.
@@ -339,6 +327,9 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
    *
    * @param OAuthConsumer $consumer
    *  The consumer to generate a token for.
+   * @param string $callback_url
+   *  The callback url.
+   *
    * @return DrupalOAuthToken
    *  The request token
    */
@@ -377,35 +368,40 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
    * @param OAuthConsumer $consumer
    *   The service consumer information.
    */
-  function new_access_token($token, $consumer) {
-    echo '*** TODO: new_access_token';
-    die;
-    /*
-    if ($consumer->key == $this->consumer->key && $token->key == $this->request_token->key) {
-      return $this->access_token;
-    }
-    return NULL;
-    */
-  }
-  /*
-  function new_access_token($token_old, $consumer, $verifier = null) {
-    module_load_include('inc', 'oauth_common');
-
-    if ($token_old && $token_old->authorized) {
-      $token_new = new DrupalOAuthToken(user_password(32), user_password(32), array(
-        'type'            => 'access',
-        'uid'             => $token_old->uid,
-        'consumer_key'    => $consumer->key,
-        'provider_token'  => TRUE,
-        'services'        => $token_old->services,
-        'authorized'      => 1,
-      ));
-      $token_old->delete();
-      $token_new->write();
-      return $token_new;
+  function new_access_token($token_old, $consumer) {
+    if (!$token_old) {
+      throw new OAuthException('Invalid request token');
     }
 
-    throw new OAuthException('Invalid request token');
+    $token = mediamosa_app_oauth::get_token($token_old->key);
+
+    if ($token[mediamosa_app_token_db::AUTHORIZED] != mediamosa_app_token_db::AUTHORIZED_YES ||
+        $token[mediamosa_app_token_db::CONSUMER_KEY] != $consumer->key) {
+      throw new OAuthException('Invalid request token');
+    }
+
+    // Delete the old request token.
+    mediamosa_app_oauth::delete_token($token[mediamosa_app_token_db::TOKEN_KEY]);
+
+    // Create the new access token.
+
+    $token_key = user_password(32);
+    $token_secret = user_password(32);
+    $access_token = new OAuthToken($token_key, $token_secret);
+
+    $parameters = array(
+      // Same as $token_key.
+      mediamosa_app_token_db::TOKEN_KEY => $access_token->key,
+      // Same as $token_secret.
+      mediamosa_app_token_db::SECRET => $access_token->secret,
+      mediamosa_app_token_db::TYPE => mediamosa_app_token_db::TYPE_ACCESS,
+      mediamosa_app_token_db::APP_ID => $token[mediamosa_app_token_db::APP_ID],
+      mediamosa_app_token_db::CONSUMER_KEY => $consumer->key,
+      mediamosa_app_token_db::AUTHORIZED => mediamosa_app_token_db::AUTHORIZED_YES,
+      mediamosa_app_token_db::CALLBACK_URL => '',
+    );
+    mediamosa_app_oauth::save_token($parameters);
+
+    return $access_token;
   }
-  */
 }

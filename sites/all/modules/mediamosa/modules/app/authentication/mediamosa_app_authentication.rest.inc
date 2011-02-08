@@ -211,7 +211,7 @@ class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
       $token .= '&oauth_callback_confirmed=true';
     } catch (OAuthException $e) {
       print($e->getMessage() . "\n<hr />\n");
-      print_r($req);
+      //print_r($req);
       die();
     }
 
@@ -238,6 +238,7 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
   const OAUTH_VERSION_10 = '1.0';
   const OAUTH_TOKEN = 'oauth_token';
   const OAUTH_VERIFIER = 'oauth_verifier';
+  // TODO: oauth_session_handle?
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
@@ -293,7 +294,7 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
         self::OAUTH_VERIFIER => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_OAUTH_VERIFIER,
           self::VAR_DESCRIPTION => 'The verification code.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
       )
     );
@@ -327,13 +328,12 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
     $oauth_server->add_signature_method($plaintext_method);
     //$oauth_server->add_signature_method($rsa_method);
 
-
     try {
       $req = OAuthRequest::from_request();
       $token = $oauth_server->fetch_access_token($req);
     } catch (OAuthException $e) {
       print($e->getMessage() . "\n<hr />\n");
-      print_r($req);
+      //print_r($req);
       die();
     }
 
