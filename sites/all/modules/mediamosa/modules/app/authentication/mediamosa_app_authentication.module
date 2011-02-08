@@ -216,7 +216,22 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
 
   $token = mediamosa_app_oauth::get_token($parameters['oauth_token']);
 
-  drupal_goto($token[mediamosa_app_token_db::CALLBACK_URL]);
+  $oauth_token = new OAuthToken($token['token_key'], $token['secret']);
+
+  // Get the callback url, and add there the token parameter.
+  $callback = mediamosa_http::parse_url($token[mediamosa_app_token_db::CALLBACK_URL]);
+
+  $query = array();
+  parse_str($callback['query'], $query);
+  // Add key.
+  $query['oauth_token'] = $oauth_token->key;
+  $callback['query'] = http_build_query($query, 'idx_', '&');
+
+  $callback_url = mediamosa_http::build_url($callback);
+
+  // Go to the callback url.
+  header('Location: ' . $callback_url, TRUE, 302);
+  exit;
 }
 
 /**
