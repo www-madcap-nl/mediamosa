@@ -40,6 +40,17 @@ class mediamosa_lib {
 
   // ------------------------------------------------------------------ Static Functions.
   /**
+   * Purge session.
+   *
+   * @param string $name
+   */
+  static public function purge_session($name) {
+    if (!empty($_SESSION[$name])) {
+      unset($_SESSION[$name]);
+    }
+  }
+
+  /**
    * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
    * to a normal boolean value TRUE/FALSE
    *

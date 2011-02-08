@@ -256,11 +256,11 @@ function _mediamosa_oauth_test() {
   $output .= 'Start...<br />' . PHP_EOL;
 
   // Clean up.
-  unset($_SESSION['final_oauth_token']);
-  unset($_SESSION['final_oauth_token_secret']);
-  unset($_SESSION['oauth_token']);
-  unset($_SESSION['oauth_token_secret']);
-  unset($_SESSION['nid']);
+  mediamosa_lib::purge_session('final_oauth_token');
+  mediamosa_lib::purge_session('final_oauth_token_secret');
+  mediamosa_lib::purge_session('oauth_token');
+  mediamosa_lib::purge_session('oauth_token_secret');
+  mediamosa_lib::purge_session('nid');
 
 
   // oAuth base parameters.
@@ -334,8 +334,8 @@ function _mediamosa_oauth_test_phase2() {
   $output .= 'Start...<br />' . PHP_EOL;
 
   // Clean up.
-  unset($_SESSION['final_oauth_token']);
-  unset($_SESSION['final_oauth_token_secret']);
+  mediamosa_lib::purge_session('final_oauth_token');
+  mediamosa_lib::purge_session('final_oauth_token_secret');
 
   // oAuth base parameters.
 
@@ -343,10 +343,14 @@ function _mediamosa_oauth_test_phase2() {
   // $mediamosa_cron_url_app
   //$callback_url = 'http://mediamosa/admin/oauth_test_phase2';
 
-  if (empty($_SESSION['oauth_token']) && !empty($_SESSION['nid'])) {
+  if (empty($_SESSION['oauth_token']) && !empty($_SESSION['nid']) && is_numeric($_SESSION['nid'])) {
     $output .= l(t('Start again'), 'admin/oauth_test/' . $_SESSION['nid']);
     return $output;
     //drupal_goto('admin/oauth_test/' . $_SESSION['nid']);
+  }
+  if (empty($_SESSION['nid'])) {
+    $output .= l(t('Start again'), 'admin/oauth_test/19');
+    return $output;
   }
 
   $nid = $_SESSION['nid'];
@@ -390,11 +394,11 @@ function _mediamosa_oauth_test_phase2() {
   $output .= '<pre>Access token: ' . print_r($accOAuthData, TRUE) . '</pre><br />' . PHP_EOL;
 
   // Clean up.
-  unset($_SESSION['final_oauth_token']);
-  unset($_SESSION['final_oauth_token_secret']);
-  unset($_SESSION['oauth_token']);
-  unset($_SESSION['oauth_token_secret']);
-  //unset($_SESSION['nid']);
+  mediamosa_lib::purge_session('final_oauth_token');
+  mediamosa_lib::purge_session('final_oauth_token_secret');
+  mediamosa_lib::purge_session('oauth_token');
+  mediamosa_lib::purge_session('oauth_token_secret');
+  //mediamosa_lib::purge_session('nid');
 
   if (!empty($accOAuthData['oauth_token']) && !empty($accOAuthData['oauth_token_secret'])) {
     $_SESSION['final_oauth_token'] = $accOAuthData['oauth_token'];
@@ -437,7 +441,7 @@ function _mediamosa_oauth_test_phase2() {
 
   // Etc.
 
-  $output .= l(t('New test'), 'admin/oauth_test') . '<br />' . PHP_EOL;
+  $output .= l(t('New test'), 'admin/oauth_test/' . $nid) . '<br />' . PHP_EOL;
 
   $output .= '... end.<br />' . PHP_EOL;
   return $output;
@@ -574,6 +578,56 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
     $_GET['app_id'] = $_SESSION['mediamosa_app']['app_id'];
     return TRUE;
   }
+
+  // oAuth.
+
+  // oAuth server.
+  $oauth_server = new MediaMosaOAuthServer(new MediaMosaOAuthDataStore());
+
+  $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
+  $plaintext_method = new OAuthSignatureMethod_PLAINTEXT();
+  //$rsa_method = new TestOAuthSignatureMethod_RSA_SHA1();
+
+  $oauth_server->add_signature_method($hmac_method);
+  $oauth_server->add_signature_method($plaintext_method);
+  //$oauth_server->add_signature_method($rsa_method);
+
+  try {
+    $req = OAuthRequest::from_request();
+
+    // Validate the input.
+    $consumer_key = $req->get_parameter('oauth_consumer_key');
+    $token_key = $req->get_parameter('oauth_token');
+    $signature = $req->get_parameter('oauth_signature');
+    $signature_methode = $req->get_parameter('oauth_signature_method');
+    $timestamp = $req->get_parameter('oauth_timestamp');
+    $nonce = $req->get_parameter('oauth_nonce');
+
+    if (!empty($consumer_key) && !empty($token_key) && !empty($signature) && !empty($signature_methode) && !empty($timestamp) && !empty($nonce)) {
+      // Is there app with that consumer key?
+      $app = mediamosa_app::get_by_oauth_consumer_key($consumer_key);
+      if ($app) {
+        // Is there an apropriate token?
+        $token_stored = mediamosa_app_oauth::get_token($token_key);
+        if ($token_stored && $token_stored[mediamosa_app_token_db::TYPE] == mediamosa_app_token_db::TYPE_ACCESS) {
+          list($consumer, $token) = $oauth_server->verify_request($req);
+          // Is it match?
+          if ($consumer->key == $consumer_key && $token->key == $token_key) {
+            // Grant access.
+            $_GET['app_id'] = $token_stored[mediamosa_app_token_db::APP_ID];
+            return TRUE;
+          }
+        }
+      }
+    }
+  }
+  catch (OAuthException $e) {
+    print($e->getMessage() . "\n<hr />\n");
+    //print_r($req);
+    die();
+  }
+
+  // White list.
 
   // If IP white list is set, then we are 'simulated' authorized.
   $ip_address_whitelist = variable_get('mediamosa_debug_ip_whitelist', '');
