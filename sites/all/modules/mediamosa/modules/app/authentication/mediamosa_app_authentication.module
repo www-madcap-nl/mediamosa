@@ -181,6 +181,11 @@ function _mediamosa_oauth_authorize() {
 function _mediamosa_oauth_authorize_validate($form, &$form_state) {
   $values = $form_state['values'];
 
+  if (empty($values['allow'])) {
+    form_set_error('error', t('Error! Use this !link to leave this page.', array('!link' => l(t('link'), 'http://mediamosa.org'))));
+    return;
+  }
+
   if (!$values['allow']) {
     form_set_error('allow', t('If you want to allow, that an other application have full access to your client application, then you must check the checkbox at the bottom of page.'));
   }
@@ -203,6 +208,10 @@ function _mediamosa_oauth_authorize_validate($form, &$form_state) {
 
 function _mediamosa_oauth_authorize_submit($form, &$form_state) {
   $values = $form_state['values'];
+
+  if (empty($values['allow'])) {
+    return;
+  }
 
   $app = mediamosa_app::get_by_name($values['client_app_name']);
 
@@ -300,7 +309,7 @@ function _mediamosa_oauth_test() {
 
   // User authorization.
 
-  $req_token = new OAuthConsumer($reqOAuthData['oauth_token'], $reqOAuthData['oauth_token_secret'], $callback_url);
+  $req_token = new OAuthConsumer($reqOAuthData['oauth_token'], $reqOAuthData['oauth_token_secret']);
 
   $acc_req = OAuthRequest::from_consumer_and_token($test_consumer, $req_token, "GET", $oauth_authorize);
   $acc_req->sign_request($sig_method, $test_consumer, $req_token);
@@ -332,7 +341,13 @@ function _mediamosa_oauth_test_phase2() {
 
   // TODO: app url
   // $mediamosa_cron_url_app
-  $callback_url = 'http://mediamosa/admin/oauth_test_phase2';
+  //$callback_url = 'http://mediamosa/admin/oauth_test_phase2';
+
+  if (empty($_SESSION['oauth_token']) && !empty($_SESSION['nid'])) {
+    $output .= l(t('Start again'), 'admin/oauth_test/' . $_SESSION['nid']);
+    return $output;
+    //drupal_goto('admin/oauth_test/' . $_SESSION['nid']);
+  }
 
   $nid = $_SESSION['nid'];
 
@@ -348,12 +363,12 @@ function _mediamosa_oauth_test_phase2() {
   $oauth_access_token = 'http://openapi.mediamosa.local/openapi/oauth/access_token';
 
   $sig_method = new OAuthSignatureMethod_HMAC_SHA1();
-  $test_consumer = new OAuthConsumer($consumer_key, $consumer_secret, $callback_url);
+  $test_consumer = new OAuthConsumer($consumer_key, $consumer_secret);
 
 
   // Access token.
 
-  $acc_token = new OAuthConsumer($_SESSION['oauth_token'], $_SESSION['oauth_token_secret'], $callback_url);
+  $acc_token = new OAuthConsumer($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
 
   $parameters = array();
   if ($_GET['oauth_verifier']) {
@@ -379,24 +394,46 @@ function _mediamosa_oauth_test_phase2() {
   unset($_SESSION['final_oauth_token_secret']);
   unset($_SESSION['oauth_token']);
   unset($_SESSION['oauth_token_secret']);
-  unset($_SESSION['nid']);
+  //unset($_SESSION['nid']);
 
   if (!empty($accOAuthData['oauth_token']) && !empty($accOAuthData['oauth_token_secret'])) {
     $_SESSION['final_oauth_token'] = $accOAuthData['oauth_token'];
     $_SESSION['final_oauth_token_secret'] = $accOAuthData['oauth_token_secret'];
   }
 
-  // Use REST call without authorization.
+  // Use REST call with authorization.
+
+  $rest_url = 'http://app1.mediamosa.local/asset?limit=1';
+
+  $acc_token = new OAuthConsumer($_SESSION['final_oauth_token'], $_SESSION['final_oauth_token_secret']);
+
+  $parameters = array(
+    'limit' => 1,
+  );
+  $rest_req = OAuthRequest::from_consumer_and_token($test_consumer, $acc_token, "GET", $rest_url, $parameters);
+  $rest_req->sign_request($sig_method, $test_consumer, $acc_token);
 
   // Request parameters.
-  $url = 'http://app1.mediamosa.local/asset?limit=1';
+  $url = $rest_req;
   $headers = array();
   $method = 'GET';
   $data = NULL;
   $retry = 3;
   $response = drupal_http_request($url, $headers, $method, $data, $retry);
 
-  $output .= '<pre>REST call: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
+  $output .= '<pre>REST call with authentication: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
+
+  // Use REST call without authorization.
+
+  // Request parameters.
+  $url = $rest_url;
+  $headers = array();
+  $method = 'GET';
+  $data = NULL;
+  $retry = 3;
+  $response = drupal_http_request($url, $headers, $method, $data, $retry);
+
+  $output .= '<pre>REST call without authentication: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
 
   // Etc.
 
