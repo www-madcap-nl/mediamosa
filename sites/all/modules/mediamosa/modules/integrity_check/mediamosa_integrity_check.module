@@ -51,26 +51,11 @@ function mediamosa_integrity_check_menu() {
     'title' => 'File integrity',
     'description' => 'Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.',
     'page callback' => 'mediamosa_integrity_check_page',
-    'access arguments' => array('view integrity'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
   );
 
   return $items;
-}
-
-/**
- * Implements hook_perm().
- */
-function mediamosa_integrity_check_permission() {
-  return array(
-    'view integrity' => array(
-      'title' => t('View integrity'),
-      'description' => t('Allow view permission for integrity module.'),
-    ),
-    'administer integrity' => array(
-      'title' => t('Administer integrity module'),
-      'description' => t('Perform administration tasks for integrity module.'),
-    ),
-  );
 }
 
 /**

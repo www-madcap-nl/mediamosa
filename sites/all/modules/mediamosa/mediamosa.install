@@ -1817,4 +1817,13 @@ function mediamosa_update_7086() {
   );
 }
 
+/**
+ * Clearing cache and rebuild registry.
+ */
+function mediamosa_update_7087() {
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

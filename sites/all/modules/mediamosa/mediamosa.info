@@ -16,6 +16,7 @@ dependencies[] = mediamosa_sdk
 
 ; Core class.
 files[] = mediamosa.module
+files[] = mediamosa.permission.class.inc
 files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install
@@ -325,3 +326,4 @@ files[] = patch/mediamosa_cookie_domain.test
 
 ; Core tests.
 files[] = mediamosa.timezone.test
+

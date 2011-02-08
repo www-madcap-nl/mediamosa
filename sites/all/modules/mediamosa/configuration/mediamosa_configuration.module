@@ -31,18 +31,6 @@
   */
 
 /**
- * Implements hook_permission().
- */
-function mediamosa_configuration_permission() {
-  return array(
-    'administer mediamosa config global' =>  array(
-      'title' => t('Adminster configuration global settings.'),
-      'description' => t('Give administer rights for editing MediaMosa global configuration settings.'),
-    ),
-  );
-}
-
-/**
  * Implements hook_help().
  */
 function mediamosa_configuration_help($path, $arg) {
@@ -66,13 +54,13 @@ function mediamosa_configuration_menu() {
     'description' => 'The configuration of global MediaMosa settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_configuration_form'),
-    'access arguments' => array('administer mediamosa config global'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_GLOBAL),
     'file' => 'mediamosa_configuration.inc',
   );
 
   $items['admin/mediamosa/config/global/list'] = array(
     'title' => 'Configure',
-    'access arguments' => array('administer mediamosa config global'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );

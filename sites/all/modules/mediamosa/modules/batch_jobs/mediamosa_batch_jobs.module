@@ -49,7 +49,8 @@ function mediamosa_batch_jobs_menu() {
     'title' => 'Batch jobs',
     'description' => 'Batch jobs.',
     'page callback' => 'mediamosa_batch_jobs_current',
-    'access arguments' => array('view batch job administration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_NORMAL_ITEM
   );
@@ -57,7 +58,8 @@ function mediamosa_batch_jobs_menu() {
     'title' => 'Current ftp batch job',
     'description' => 'Display the current job.',
     'page callback' => 'mediamosa_batch_jobs_current',
-    'access arguments' => array('view batch job administration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 1
@@ -66,7 +68,8 @@ function mediamosa_batch_jobs_menu() {
     'title' => 'Queue',
     'description' => 'Display the job queue.',
     'page callback' => 'mediamosa_batch_jobs_queue',
-    'access arguments' => array('view batch job administration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 2
@@ -76,7 +79,8 @@ function mediamosa_batch_jobs_menu() {
     'description' => 'Remove an item from the queue.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_batch_jobs_delete_confirm', 1),
-    'access arguments' => array('view batch job administration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_CALLBACK,
     'weight' => 3
@@ -85,7 +89,8 @@ function mediamosa_batch_jobs_menu() {
     'title' => 'History',
     'description' => 'Display the job history.',
     'page callback' => 'mediamosa_batch_jobs_history',
-    'access arguments' => array('view batch job administration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_LOCAL_TASK,
     'weight' => 4
@@ -94,7 +99,8 @@ function mediamosa_batch_jobs_menu() {
     'title' => 'Log',
     'description' => 'Display the job log.',
     'page callback' => 'mediamosa_batch_jobs_log',
-    'access arguments' => array('view batch job administration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE_BATCH),
     'file' => 'mediamosa_batch_jobs.callbacks.inc',
     'type' => MENU_CALLBACK,
     'weight' => 5

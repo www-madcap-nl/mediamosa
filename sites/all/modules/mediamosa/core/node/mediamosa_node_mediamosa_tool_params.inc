@@ -141,10 +141,10 @@ function mediamosa_tool_params_view($node, $view_mode = 'full') {
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-  $breadcrumb[] = l(t('Tool params'), 'admin/mediamosa/config/tool_params');
+  $breadcrumb[] = l(t('Tool parameters'), 'admin/mediamosa/config/tool_params');
   drupal_set_breadcrumb($breadcrumb);
 
   // Default parameters.

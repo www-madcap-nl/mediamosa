@@ -40,11 +40,12 @@ function mediamosa_maintenance_menu() {
     'title' => 'MediaMosa',
     'description' => 'MediaMosa is open source software to build a Full Featured, Webservice Oriented Media Management and Distribution platform.',
     'page callback' => '_mediamosa_maintenance_status_status',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS),
     'weight' => -20,
     'position' => ''
   );
-  // Tabs
+  // Tabs.
   $items['admin/mediamosa/status'] = array(
     'title' => 'Status',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -53,7 +54,8 @@ function mediamosa_maintenance_menu() {
 
   $items['admin/mediamosa/browse'] = array(
     'title' => 'Browse',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE),
     'page callback' => '_mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/browse'),
     'file' => 'mediamosa_maintenance.admin.inc',
@@ -65,9 +67,11 @@ function mediamosa_maintenance_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
+
   $items['admin/mediamosa/config'] = array(
     'title' => 'Configuration',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG),
     'page callback' => '_mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/config'),
     'file' => 'mediamosa_maintenance.admin.inc',
@@ -81,29 +85,29 @@ function mediamosa_maintenance_menu() {
 
   $items['admin/mediamosa/asset/%/mediafile/%/delete'] = array(
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_maintenance_mediafile_delete', 3, 5),
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
+    'page arguments' => array('_mediamosa_maintenance_mediafile_delete', 3, 5),
+    'access arguments' => array(mediamosa_permission::MEDIAFILE_DELETE),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/mediafile/%/analyse'] = array(
-    'page callback' => 'mediamosa_maintenance_mediafile_analyse',
+    'page callback' => '_mediamosa_maintenance_mediafile_analyse',
     'page arguments' => array(3, 5),
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES),
+    'access arguments' => array(mediamosa_permission::MEDIAFILE_ANALYSE),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/mediafile/%/download'] = array(
-    'page callback' => 'mediamosa_maintenance_mediafile_download',
+    'page callback' => '_mediamosa_maintenance_mediafile_download',
     'page arguments' => array(3, 5),
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES),
+    'access arguments' => array(mediamosa_permission::MEDIAFILE_DOWNLOAD),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/job/%/delete'] = array(
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_maintenance_job_delete', 3, 5),
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
+    'page arguments' => array('_mediamosa_maintenance_job_delete', 3, 5),
+    'access arguments' => array(mediamosa_permission::MEDIAFILE_DELETE),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
@@ -197,23 +201,4 @@ function mediamosa_maintenance_enable() {
 
   // Rebuild.
   menu_rebuild();
-}
-
-/**
- * Generate the status page.
- */
-function _mediamosa_maintenance_status($show_tests = NULL) {
-
-  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
-  drupal_set_breadcrumb($breadcrumb);
-
-  if (!module_exists('mediamosa_maintenance_status')) {
-    return t('Status page disabled, enable status module.');
-  }
-
-  return 'Work in progress, simpletest page turned off, see configuration';
 }

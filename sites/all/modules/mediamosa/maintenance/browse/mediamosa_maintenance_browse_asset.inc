@@ -404,7 +404,7 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
@@ -591,9 +591,9 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   $item_count = count($result['items']);
 
   // Cache rights.
-  $may_delete = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES);
-  $may_analyse = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES);
-  $may_download = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES);
+  $may_delete = user_access(mediamosa_permission::MEDIAFILE_DELETE);
+  $may_analyse = user_access(mediamosa_permission::MEDIAFILE_ANALYSE);
+  $may_download = user_access(mediamosa_permission::MEDIAFILE_DOWNLOAD);
 
   $allowed_still_fields = array(
     'mediafile_id',
@@ -781,7 +781,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');

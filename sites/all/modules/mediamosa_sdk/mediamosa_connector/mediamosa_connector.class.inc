@@ -101,9 +101,9 @@ class mediamosa_connector {
    * @param array $options
    *   (optional) An array which can have one or more of following keys:
    *   - user_id (mediamosa)
-   *       The user_id of the Mediamosa call. Default is empty.
+   *       The user_id of the MediaMosa call. Default is empty.
    *   - group_id (mediamosa)
-   *       The group_id of the Mediamosa call. Default is empty.
+   *       The group_id of the MediaMosa call. Default is empty.
    *   - fatal
    *       Boolean value, TRUE makes the call throw an exception if the call
    *       failed. That means, failed to call, failed to access the rest etc.
@@ -177,9 +177,9 @@ class mediamosa_connector {
       $result_id = (int) $response->xml->header->request_result_id;
       $result_description = $response->xml->header->request_result_description;
 
-      if ($fatal && !in_array($result_id, array(mediamosa_sdk::ERRORCODE_OKAY, mediamosa_sdk::ERRORCODE_EMPTY_RESULT))) {
+      if ($fatal && !in_array($result_id, array(mediamosa_sdk::ERRORCODE_OKAY, MediaMosa_sdk::ERRORCODE_EMPTY_RESULT))) {
         if (empty($result_description)) {
-          throw new Exception(strtr('Unable to execute Mediamosa REST call @uri (@code)', array('@uri' => $uri, '@code' => $result_id)), $result_id);
+          throw new Exception(strtr('Unable to execute MediaMosa REST call @uri (@code)', array('@uri' => $uri, '@code' => $result_id)), $result_id);
         }
 
         throw new Exception(strtr('@description (@code)', array('@description' => $result_description, '@code' => $result_id)), $result_id);
@@ -190,7 +190,7 @@ class mediamosa_connector {
 
     // When fatal, throw exception.
     if ($fatal) {
-      throw new Exception(strtr('Unable to execute Mediamosa REST call !uri', array('!uri' => $uri)));
+      throw new Exception(strtr('Unable to execute MediaMosa REST call !uri', array('!uri' => $uri)));
     }
 
     return FALSE;

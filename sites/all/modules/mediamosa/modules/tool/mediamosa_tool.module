@@ -94,15 +94,15 @@ function mediamosa_tool_menu() {
   $items = array();
 
   $items['admin/mediamosa/config/tool_params'] = array(
-    'title' => 'Tool params',
+    'title' => 'Tool parameters',
     'description' => 'Tool params are used by the transcoding profiles.',
     'page callback' => '_mediamosa_tool_params_list',
-    'access arguments' => array('administer mediamosa configuration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TOOLPARAMS),
   );
 
   $items['admin/mediamosa/config/tool_params/list'] = array(
     'title' => 'List',
-    'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );

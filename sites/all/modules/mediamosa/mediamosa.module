@@ -43,36 +43,222 @@ require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
  * Implements hook_permission().
  */
 function mediamosa_permission() {
-  return array(
-    mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS =>  array(
+
+  // Text.
+  $text_master_switch = 'Master switch which allows to view all MediaMosa @type pages. If you set this master switch, then there is no need to enable its subsections permissions. These are granted by the master switch.';
+  $text_view_switch = 'Allows user to view the @type page.';
+
+  $perms = array(
+    // Administer MediaMosa.
+    mediamosa_permission::ADMIN_MEDIAMOSA =>  array(
+      'title' => t('Administer MediaMosa'),
+      'description' => t('Administer MediaMosa is the super user that allows the user to do everything on MediaMosa backend.'),
+      'restrict access' => TRUE,
+    ),
+
+    // Access to sections/pages.
+    mediamosa_permission::ACCESS_STATUS => array(
+      'title' => t('Access MediaMosa status pages'),
+      'description' => t($text_master_switch, array('@type' => 'status')),
+    ),
+    mediamosa_permission::ACCESS_STATUS_FRONT => array(
+      'title' => t('Access MediaMosa status page (front)'),
+      'description' => t($text_view_switch, array('@type' => 'status front')),
+    ),
+    mediamosa_permission::ACCESS_STATUS_SERVERS => array(
+      'title' => t('Access MediaMosa status page (server info)'),
+      'description' => t($text_view_switch, array('@type' => 'status servers status')),
+    ),
+    mediamosa_permission::ACCESS_STATUS_JOB => array(
+      'title' => t('Access MediaMosa status page (jobs)'),
+      'description' => t($text_view_switch, array('@type' => 'status job')),
+    ),
+
+    mediamosa_permission::ACCESS_BROWSE =>  array(
+      'title' => t('Access MediaMosa browse'),
+      'description' => t($text_master_switch, array('@type' => 'browse')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_ASSETS => array(
+      'title' => t('Access MediaMosa browse (assets)'),
+      'description' => t($text_view_switch, array('@type' => 'assets')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_COLLECTIONS =>  array(
+      'title' => t('Access MediaMosa browse (collections)'),
+      'description' => t($text_view_switch, array('@type' => 'collections')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_RESTCALLS =>  array(
+      'title' => t('Access MediaMosa browse (REST calls)'),
+      'description' => t($text_view_switch, array('@type' => 'restcalls')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_REVISIONS =>  array(
+      'title' => t('Access MediaMosa browse (revisions)'),
+      'description' => t($text_view_switch, array('@type' => 'revisions')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_LOG =>  array(
+      'title' => t('Access MediaMosa browse (log)'),
+      'description' => t($text_view_switch, array('@type' => 'log')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_ERRORCODES =>  array(
+      'title' => t('Access MediaMosa browse (errorcodes)'),
+      'description' => t($text_view_switch, array('@type' => 'errorcodes')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_TESTING =>  array(
+      'title' => t('Access MediaMosa browse (errorcodes)'),
+      'description' => t($text_view_switch, array('@type' => 'testing')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_BATCH =>  array(
+      'title' => t('Access MediaMosa browse (batch jobs)'),
+      'description' => t($text_view_switch, array('@type' => 'batch jobs')),
+    ),
+    mediamosa_permission::ACCESS_BROWSE_FILE_INTEGRITY =>  array(
+      'title' => t('Access MediaMosa browse (errorcodes)'),
+      'description' => t($text_view_switch, array('@type' => 'file integrity')),
+    ),
+
+    mediamosa_permission::ACCESS_STATS =>  array(
+      'title' => t('Access MediaMosa statistics'),
+      'description' => t($text_master_switch, array('@type' => 'statistics')),
+    ),
+    mediamosa_permission::ACCESS_STATS_DISKSPACE_USED => array(
+      'title' => t('Access MediaMosa statistics (diskspace used)'),
+      'description' => t($text_view_switch, array('@type' => 'statistics diskspace used')),
+    ),
+    mediamosa_permission::ACCESS_STATS_LATEST_COLLECTIONS => array(
+      'title' => t('Access MediaMosa statistics (latest collections)'),
+      'description' => t($text_view_switch, array('@type' => 'statistics latest collections')),
+    ),
+    mediamosa_permission::ACCESS_STATS_LATEST_MEDIAFILES => array(
+      'title' => t('Access MediaMosa statistics (latest mediafiles)'),
+      'description' => t($text_view_switch, array('@type' => 'statistics latest mediafiles')),
+    ),
+    mediamosa_permission::ACCESS_STATS_SEARCH_WORDS => array(
+      'title' => t('Access MediaMosa statistics (used words)'),
+      'description' => t($text_view_switch, array('@type' => 'statistics the most used words during search')),
+    ),
+    mediamosa_permission::ACCESS_STATS_STREAM_REQUEST => array(
+      'title' => t('Access MediaMosa statistics (streaming requests)'),
+      'description' => t($text_view_switch, array('@type' => 'statistics streaming per file')),
+    ),
+
+    mediamosa_permission::ACCESS_CONFIG =>  array(
+      'title' => t('Access MediaMosa configuration'),
+      'description' => t($text_master_switch, array('@type' => 'configuration')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_SERVERS => array(
+      'title' => t('Access MediaMosa configuration (servers)'),
+      'description' => t($text_view_switch, array('@type' => 'servers')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_APPS => array(
+      'title' => t('Access MediaMosa configuration (client applications)'),
+      'description' => t($text_view_switch, array('@type' => 'client applications')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_DEVELOPMENT => array(
+      'title' => t('Access MediaMosa configuration (REST call developer)'),
+      'description' => t($text_view_switch, array('@type' => 'REST call developer')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_TOOLPARAMS => array(
+      'title' => t('Access MediaMosa configuration (tool parameters)'),
+      'description' => t($text_view_switch, array('@type' => 'tool parameters')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_TRANSCODE_PROFILES => array(
+      'title' => t('Access MediaMosa configuration (transcode profiles)'),
+      'description' => t($text_view_switch, array('@type' => 'transcode profiles')),
+    ),
+    mediamosa_permission::ACCESS_CONFIG_WEBSERVICES => array(
+      'title' => t('Access MediaMosa configuration (webservices)'),
+      'description' => t($text_view_switch, array('@type' => 'webservices')),
+    ),
+
+
+
+
+
+/*
+    // Jobs.
+    mediamosa_permission::JOB_DELETE =>  array(
       'title' => t('Delete jobs'),
       'description' => t('Users with this permission may delete jobs.'),
     ),
-    mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES =>  array(
+
+    // MediaFile.
+    mediamosa_permission::MEDIAFILE_DELETE =>  array(
       'title' => t('Delete mediafiles'),
       'description' => t('Users with this permission may delete mediafiles.'),
     ),
-    mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES =>  array(
+    mediamosa_permission::MEDIAFILE_ANALYSE =>  array(
       'title' => t('Analyse mediafiles'),
       'description' => t('Users with this permission may start analyse jobs for mediafiles.'),
     ),
-    mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES =>  array(
+    mediamosa_permission::MEDIAFILE_DOWNLOAD =>  array(
       'title' => t('Download mediafiles'),
       'description' => t('Users with this permission may download mediafiles.'),
-    ),
-    'access mediamosa' =>  array(
-      'title' => t('Access MediaMosa Administration'),
-      'description' => t('Access MediaMosa pages.'),
-    ),
-    'access mediamosa config' =>  array(
-      'title' => t('Access MediaMosa Configuration'),
-      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
-    ),
-    'administer mediamosa' =>  array(
-      'title' => t('Administer MediaMosa'),
-      'description' => t('Administer rights MediaMosa.'),
-    ),
+    ),*/
   );
+
+
+
+  // Done, return them.
+  return $perms;
+}
+
+/**
+ * Check access menu item.
+ *
+ * @param sting/array $perms
+ *  array containing permissions, right on one of them is access.
+ */
+function _mediamosa_user_access($perms) {
+  global $user;
+
+  if (is_array($perms)) {
+    foreach ($perms as $perm) {
+      if (_mediamosa_user_access($perm)) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  // Explode on parts.
+  $parts = explode('|', $perms);
+
+  // Now work from right to left.
+  $perm = array();
+  foreach ($parts as $part) {
+    $perm[] = $part;
+
+    if (user_access(implode('|', $perm))) {
+      return TRUE;
+    }
+  }
+
+  // One part? Then skip the user role check.
+  if (count($parts) == 1) {
+    return FALSE;
+  }
+
+  // Get the roles.
+  $role_permissions = user_role_permissions($user->roles);
+  if (empty($role_permissions[$user->uid])) {
+    return FALSE;
+  }
+
+  $perms .= '|';
+
+  // If part of role is there
+  foreach ($role_permissions[$user->uid] as $role_permission => $switch) {
+    if (empty($switch)) {
+      continue;
+    }
+
+    // Part of role?
+    if ($perms == substr($role_permission, 0, drupal_strlen($perms))) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 /**

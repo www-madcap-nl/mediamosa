@@ -91,7 +91,8 @@ function mediamosa_app_menu() {
     'title' => 'Client applications',
     'description' => 'List all MediaMosa End User Applications.',
     'page callback' => '_mediamosa_app_list',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_APPS),
   );
 
   $items['admin/mediamosa/config/app/list'] = array(
@@ -186,18 +187,6 @@ function mediamosa_app_menu() {
 }
 
 /**
- * Implements hook_permission().
- */
-function mediamosa_app_permission() {
-  return array(
-    'administer mediamosa config app' =>  array(
-      'title' => t('Adminster MediaMosa applications.'),
-      'description' => t('Give administer rights for editing MediaMosa applications.'),
-    ),
-  );
-}
-
-/**
  * Show a listing of apps.
  */
 function _mediamosa_app_list() {
@@ -278,7 +267,7 @@ function _mediamosa_app_contacts($app_id) {
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');

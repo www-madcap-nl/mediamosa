@@ -39,13 +39,13 @@ function mediamosa_server_menu() {
     'title' => 'Servers',
     'description' => 'List all MediaMosa servers.',
     'page callback' => '_mediamosa_server_list',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_SERVERS),
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
 
   $items['admin/mediamosa/config/server/list'] = array(
     'title' => 'List',
-    'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
@@ -127,18 +127,6 @@ function mediamosa_server_menu() {
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
   );
   return $items;
-}
-
-/**
- * Implements hook_permission().
- */
-function mediamosa_server_permission() {
-  return array(
-    'administer mediamosa config server' =>  array(
-      'title' => t('Adminster MediaMosa servers.'),
-      'description' => t('Give administer rights for editing MediaMosa servers.'),
-    ),
-  );
 }
 
 /**

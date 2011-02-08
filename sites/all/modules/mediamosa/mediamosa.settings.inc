@@ -193,12 +193,6 @@ class mediamosa_settings {
   const UI_TAB_WEIGHT_DELETE = -3;
   const UI_TAB_WEIGHT_REVISIONS = 0;
 
-  // Drupal permissions.
-  const MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES = 'delete mediamosa mediafiles';
-  const MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS = 'delete mediamosa jobs';
-  const MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES = 'analyse mediamosa mediafiles';
-  const MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES = 'download mediamosa mediafiles';
-
   // Run at;
   const MEDIAMOSA_RUN = 'mediamosa_run';
   const MEDIAMOSA_RUN_15_MINUTES  = 'mediamosa_run_15_minutes';

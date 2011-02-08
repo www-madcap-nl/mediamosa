@@ -254,7 +254,7 @@ function _mediamosa_node_revision_overview($node) {
       // Reset the breadcrum.
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
-      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
@@ -265,7 +265,7 @@ function _mediamosa_node_revision_overview($node) {
       // Reset the breadcrum.
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
-      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Server listing'), 'admin/mediamosa/config/server');
@@ -276,7 +276,7 @@ function _mediamosa_node_revision_overview($node) {
       // Reset the breadcrum.
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
-      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Transcode profiles'), 'admin/mediamosa/config/transcode_profile');
@@ -287,10 +287,10 @@ function _mediamosa_node_revision_overview($node) {
       // Reset the breadcrum.
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
-      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-      $breadcrumb[] = l(t('Tool params'), 'admin/mediamosa/config/tool_params');
+      $breadcrumb[] = l(t('Tool parameters'), 'admin/mediamosa/config/tool_params');
       drupal_set_breadcrumb($breadcrumb);
       break;
 
@@ -298,7 +298,7 @@ function _mediamosa_node_revision_overview($node) {
       // Reset the breadcrum.
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
-      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       drupal_set_breadcrumb($breadcrumb);

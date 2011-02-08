@@ -67,33 +67,32 @@ function mediamosa_maintenance_status_menu() {
     'title' => 'Status',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'page callback' => '_mediamosa_maintenance_status_status',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_FRONT),
     'weight' => 0,
   );
   $items['admin/mediamosa/status/server'] = array(
     'title' => 'Server',
     'type' => MENU_LOCAL_TASK,
     'page callback' => '_mediamosa_maintenance_status_server',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_SERVERS),
     'weight' => 10,
   );
   $items['admin/mediamosa/status/job'] = array(
     'title' => 'Job',
     'type' => MENU_LOCAL_TASK,
     'page callback' => '_mediamosa_maintenance_status_job',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_JOB),
     'weight' => 20,
   );
   $items['admin/mediamosa/status/job/list'] = array(
     'title' => 'Job',
     'type' => MENU_CALLBACK,
     'page callback' => '_mediamosa_maintenance_status_job_list',
-    'access arguments' => array('access mediamosa'),
-  );
-  $items['admin/mediamosa/status/refresh'] = array(
-    'type' => MENU_CALLBACK,
-    'page callback' => '_mediamosa_maintenance_status_refresh',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_STATUS_JOB),
   );
 
   return $items;
@@ -199,7 +198,7 @@ function _mediamosa_maintenance_status_status() {
   // If we are set as Home page, the breadcrumb isn't set, let's do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 
@@ -289,6 +288,14 @@ function _mediamosa_maintenance_status_server() {
   drupal_add_js('misc/form.js');
   drupal_add_js('misc/collapse.js');
 
+  // If we are set as Home page, the breadcrumb isn't set, let's do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = t('Servers');
+  drupal_set_breadcrumb($breadcrumb);
+
   $result = mediamosa_server::get_status_enabled(array(
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
     mediamosa_server_db::SERVER_TYPE_STILL,
@@ -315,6 +322,14 @@ function _mediamosa_maintenance_status_job() {
   $output = '';
 
   drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
+
+  // If we are set as Home page, the breadcrumb isn't set, let's do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = t('Job');
+  drupal_set_breadcrumb($breadcrumb);
 
   // Jobhandler.
 

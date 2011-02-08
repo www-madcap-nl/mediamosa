@@ -46,12 +46,14 @@ function mediamosa_connector_menu() {
 
   $items['admin/config/development/mediamosa/connector/list'] = array(
     'title' => 'MediaMosa connector',
-    'access arguments' => array('administer mediamosa connector settings'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   // Include in the mediamosa menus too.
-  if (module_exists('mediamosa_maintenance')) {
+  if (class_exists('mediamosa_permission')) {
+    $items['admin/config/development/mediamosa/connector']['access arguments'] = mediamosa_permission::ACCESS_CONFIG . '|connector';
+    $items['admin/config/development/mediamosa/connector']['access callback'] = mediamosa_permission::CALLBACK_USER_ACCESS;
+
     $items['admin/mediamosa/config/connector'] = $items['admin/config/development/mediamosa/connector'];
     $items['admin/mediamosa/config/connector/list'] = $items['admin/config/development/mediamosa/connector/list'];
   }
@@ -63,6 +65,15 @@ function mediamosa_connector_menu() {
  * Implement hook_permission().
  */
 function mediamosa_connector_permission() {
+
+  if (class_exists('mediamosa_permission')) {
+    return array(
+      mediamosa_permission::ACCESS_CONFIG . '|connector' => array(
+        'title' => t('MediaMosa connector configuration administer permissions'),
+        'description' => t('Manage the configuration of MediaMosa connector to be edited.')
+      ),
+    );
+  }
 
   return array(
     'administer mediamosa connector settings' => array(

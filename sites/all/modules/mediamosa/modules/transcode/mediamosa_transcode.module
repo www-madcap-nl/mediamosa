@@ -197,12 +197,12 @@ function mediamosa_transcode_menu() {
     'title' => 'Transcode profiles',
     'description' => 'Transcoding profiles are used by the transcoding software. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.',
     'page callback' => '_mediamosa_transcode_profile_list',
-    'access arguments' => array('administer mediamosa configuration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TRANSCODE_PROFILES),
   );
 
   $items['admin/mediamosa/config/transcode_profile/list'] = array(
     'title' => 'List',
-    'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );

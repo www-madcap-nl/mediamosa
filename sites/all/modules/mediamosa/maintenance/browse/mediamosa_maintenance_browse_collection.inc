@@ -351,7 +351,7 @@ function _mediamosa_browse_collection_page_view($coll_id) {
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Collection browser'), 'admin/mediamosa/browse/collection');

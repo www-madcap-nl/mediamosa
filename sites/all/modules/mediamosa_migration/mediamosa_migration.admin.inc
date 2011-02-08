@@ -26,7 +26,7 @@
 
 /**
  * @file
- * Mediamosa Migration.
+ * MediaMosa Migration.
  */
 
 module_load_include('inc', 'mediamosa_migration', 'mediamosa_migration');

@@ -243,9 +243,36 @@ class mediamosa_app {
    */
   static public function get_number_of_apps() {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
-//      ->fields('app')
       ->countQuery()
       ->execute()
       ->fetchField();
+  }
+
+  /**
+   * Get all apps.
+   *
+   * @return array
+   */
+  static public function get_all_apps_cached($options = array(), $reset = FALSE) {
+    $apps = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+
+    $options += array(
+      'order_by' => mediamosa_app_db::APP_NAME,
+      'order_direction' => 'ASC',
+    );
+
+    $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
+    $query->fields('app', array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME));
+
+    // Order the results
+    if (isset($order_by)) {
+      $query->orderBy($order_by, $order_direction);
+    }
+
+    // Dont change with ->fetchAll(), some callers expect the object here.
+    $apps[$options['order_by']][$options['order_direction']] = $query->execute()->fetchAll();
+
+    // Return the apps.
+    return $apps[$options['order_by']][$options['order_direction']];
   }
 }

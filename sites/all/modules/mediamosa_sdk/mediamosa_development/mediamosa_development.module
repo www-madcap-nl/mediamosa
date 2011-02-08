@@ -32,6 +32,16 @@
  * Implements hook_permission().
  */
 function mediamosa_development_permission() {
+  if (class_exists('mediamosa_permission')) {
+    return array(
+      mediamosa_permission::ACCESS_CONFIG  . '|development' => array(
+      //'access mediamosa development' =>  array(
+      'title' => t('Access MediaMosa development module'),
+        'description' => t('Enables the user to access the development module. Should only be used for development and testing purposes.'),
+      ),
+    );
+  }
+
   return array(
     'access mediamosa development' =>  array(
       'title' => t('Access MediaMosa development module'),
@@ -63,7 +73,8 @@ function mediamosa_development_menu() {
     'description' => 'With this form you can execute REST calls directly.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_development_rest_form'),
-    'access arguments' => array('access mediamosa development'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_DEVELOPMENT),
     'file' => 'mediamosa_development.admin.inc',
   );
   $items['admin/config/development/mediamosa/development/list'] = array(
@@ -74,7 +85,8 @@ function mediamosa_development_menu() {
   $items['admin/config/development/mediamosa/development/js/restcall'] = array(
     'page callback' => '_ajax_execute_rest_call',
     'delivery callback' => 'ajax_deliver',
-    'access arguments' => array('access mediamosa development'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_DEVELOPMENT),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_development.admin.inc',
   );
@@ -82,13 +94,17 @@ function mediamosa_development_menu() {
   $items['admin/config/development/mediamosa/development/set_rest_call/%/%'] = array(
     'page callback' => '_mediamosa_development_set_rest_call',
     'page arguments' => array(5, 6),
-    'access arguments' => array('access mediamosa development'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_DEVELOPMENT),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_development.admin.inc',
   );
 
   // Include in the mediamosa menus too.
-  if (module_exists('mediamosa_maintenance')) {
+  if (class_exists('mediamosa_permission')) {
+    $items['admin/mediamosa/config/development']['access arguments'] = mediamosa_permission::ACCESS_CONFIG . '|development';
+    $items['admin/mediamosa/config/development']['access callback'] = mediamosa_permission::CALLBACK_USER_ACCESS;
+
     $items['admin/mediamosa/config/development'] = $items['admin/config/development/mediamosa/development'];
     $items['admin/mediamosa/config/development/list'] = $items['admin/config/development/mediamosa/development/list'];
   }

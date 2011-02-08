@@ -52,12 +52,12 @@ function mediamosa_webservice_menu() {
     'title' => 'Webservice management',
     'description' => 'List of all webservices and global availibity of services',
     'page callback' => '_mediamosa_webservice_list',
-    'access arguments' => array('access mediamosa'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_WEBSERVICES),
   );
 
   $items['admin/mediamosa/config/webservice/list'] = array(
     'title' => 'List',
-    'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
@@ -65,7 +65,8 @@ function mediamosa_webservice_menu() {
     'title' => 'Edit',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_webservice_form', 4),
-    'access arguments' => array('administer mediamosa config server'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_WEBSERVICES),
     'type' => MENU_CALLBACK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
   );
@@ -125,7 +126,7 @@ function _mediamosa_webservice_list() {
 function mediamosa_webservice_form($form, $form_state) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Administration'), 'admin');
   $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   $breadcrumb[] = l(t('Webservice listing'), 'admin/mediamosa/config/webservice');
