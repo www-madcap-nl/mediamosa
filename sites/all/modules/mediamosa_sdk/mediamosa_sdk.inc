@@ -252,6 +252,8 @@ class mediamosa_sdk {
   const TYPE_OAUTH_SIGNATURE             = 'OAUTH_SIGNATURE';
   const TYPE_OAUTH_SIGNATURE_METHOD      = 'OAUTH_SIGNATURE_METHOD';
   const TYPE_OAUTH_VERSION               = 'OAUTH_VERSION';
+  const TYPE_OAUTH_TOKEN                 = 'OAUTH_TOKEN';
+  const TYPE_OAUTH_VERIFIER              = 'OAUTH_VERIFIER';
 
   const TYPE_USER_ID                     = 'USER_ID';
   const TYPE_GROUP_ID                    = 'GROUP_ID';
@@ -339,6 +341,8 @@ class mediamosa_sdk {
       case self::TYPE_OAUTH_SIGNATURE:
       case self::TYPE_OAUTH_SIGNATURE_METHOD:
       case self::TYPE_OAUTH_VERSION:
+      case self::TYPE_OAUTH_TOKEN:
+      case self::TYPE_OAUTH_VERIFIER:
         return self::TYPE_STRING;
 
       case self::TYPE_SEARCH_INT:

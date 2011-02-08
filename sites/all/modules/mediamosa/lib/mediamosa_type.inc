@@ -306,6 +306,8 @@ class mediamosa_type {
       case mediamosa_sdk::TYPE_OAUTH_SIGNATURE:
       case mediamosa_sdk::TYPE_OAUTH_SIGNATURE_METHOD:
       case mediamosa_sdk::TYPE_OAUTH_VERSION:
+      case mediamosa_sdk::TYPE_OAUTH_TOKEN:
+      case mediamosa_sdk::TYPE_OAUTH_VERIFIER:
       case mediamosa_sdk::TYPE_STRING:
         $checked_param_value = (string) $mixed_param_value;
         break;

@@ -225,6 +225,8 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
   parse_str($callback['query'], $query);
   // Add key.
   $query['oauth_token'] = $oauth_token->key;
+  // TODO oauth_verifier. What is it? How does it work? Just mimic now:
+  $query['oauth_verifier'] = mt_rand(100000, 999999);
   $callback['query'] = http_build_query($query, 'idx_', '&');
 
   $callback_url = mediamosa_http::build_url($callback);
@@ -294,6 +296,7 @@ function _mediamosa_oauth_test() {
 
   $_SESSION['oauth_token'] = $reqOAuthData['oauth_token'];
   $_SESSION['oauth_token_secret'] = $reqOAuthData['oauth_token_secret'];
+  $_SESSION['nid'] = $nid;
 
   header("Location: $acc_req");
 
@@ -310,15 +313,14 @@ function _mediamosa_oauth_test_phase2() {
   $output = '';
   $output .= 'Start...<br />' . PHP_EOL;
 
-  // TODO remove
-  return $output;
-
 
   // oAuth base parameters.
 
   // TODO: app url
   // $mediamosa_cron_url_app
   $callback_url = 'http://mediamosa/admin/oauth_test_phase2';
+
+  $nid = $_SESSION['nid'];
 
   $app = mediamosa_app::get_by_nid($nid);
   $consumer_key = $app['oauth_consumer_key'];
