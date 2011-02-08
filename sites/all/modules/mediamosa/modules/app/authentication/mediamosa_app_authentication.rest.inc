@@ -104,6 +104,8 @@ class mediamosa_rest_call_check_cookie extends mediamosa_rest_call {
   }
 }
 
+// oAuth calls.
+
 /*
  * URI: /login/oauth/request_token
  * Method: GET
@@ -194,24 +196,14 @@ class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
     $oauth_signature = $this->get_param_value(self::OAUTH_SIGNATURE);
     $oauth_version = $this->get_param_value(self::OAUTH_VERSION);
 
-    // oAuth server.
-    $oauth_server = new MediaMosaOAuthServer(new MediaMosaOAuthDataStore());
-
-    $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
-    $plaintext_method = new OAuthSignatureMethod_PLAINTEXT();
-    //$rsa_method = new TestOAuthSignatureMethod_RSA_SHA1();
-
-    $oauth_server->add_signature_method($hmac_method);
-    $oauth_server->add_signature_method($plaintext_method);
-    //$oauth_server->add_signature_method($rsa_method);
-
     try {
+      $oauth_server = mediamosa_app_oauth::create_server();
+
       $req = OAuthRequest::from_request();
       $token = $oauth_server->fetch_request_token($req);
       $token .= '&oauth_callback_confirmed=true';
     } catch (OAuthException $e) {
       print($e->getMessage() . "\n<hr />\n");
-      //print_r($req);
       die();
     }
 
@@ -239,6 +231,8 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
   const OAUTH_TOKEN = 'oauth_token';
   const OAUTH_VERIFIER = 'oauth_verifier';
   // TODO: oauth_session_handle?
+  // The Yahoo doc uses this parameter, but not others.
+  // http://developer.yahoo.com/oauth/guide/oauth-auth-flow.html
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
@@ -317,23 +311,13 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
     $oauth_token = $this->get_param_value(self::OAUTH_TOKEN);
     $oauth_verifier = $this->get_param_value(self::OAUTH_VERIFIER);
 
-    // oAuth server.
-    $oauth_server = new MediaMosaOAuthServer(new MediaMosaOAuthDataStore());
-
-    $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
-    $plaintext_method = new OAuthSignatureMethod_PLAINTEXT();
-    //$rsa_method = new TestOAuthSignatureMethod_RSA_SHA1();
-
-    $oauth_server->add_signature_method($hmac_method);
-    $oauth_server->add_signature_method($plaintext_method);
-    //$oauth_server->add_signature_method($rsa_method);
-
     try {
+      $oauth_server = mediamosa_app_oauth::create_server();
+
       $req = OAuthRequest::from_request();
       $token = $oauth_server->fetch_access_token($req);
     } catch (OAuthException $e) {
       print($e->getMessage() . "\n<hr />\n");
-      //print_r($req);
       die();
     }
 

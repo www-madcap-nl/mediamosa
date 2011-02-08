@@ -74,6 +74,26 @@ class mediamosa_app_oauth {
   }
 
   /**
+   * Create oAuth server with signature methods.
+   *
+   * @return OAuthServer $oauth_server.
+   */
+  static public function create_server() {
+    // oAuth server.
+    $oauth_server = new MediaMosaOAuthServer(new MediaMosaOAuthDataStore());
+
+    $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
+    $plaintext_method = new OAuthSignatureMethod_PLAINTEXT();
+    //$rsa_method = new TestOAuthSignatureMethod_RSA_SHA1();
+
+    $oauth_server->add_signature_method($hmac_method);
+    $oauth_server->add_signature_method($plaintext_method);
+    //$oauth_server->add_signature_method($rsa_method);
+
+    return $oauth_server;
+  }
+
+  /**
    * Get nonce.
    *
    * @param $nonce
@@ -358,12 +378,6 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
     mediamosa_app_oauth::save_token($parameters);
 
     return $request_token;
-
-    // TODO ?
-    //if ($consumer->key == $this->consumer->key) {
-    //  return $this->request_token;
-    //}
-    //return NULL;
   }
 
   /**

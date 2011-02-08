@@ -581,17 +581,6 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
 
   // oAuth.
 
-  // oAuth server.
-  $oauth_server = new MediaMosaOAuthServer(new MediaMosaOAuthDataStore());
-
-  $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
-  $plaintext_method = new OAuthSignatureMethod_PLAINTEXT();
-  //$rsa_method = new TestOAuthSignatureMethod_RSA_SHA1();
-
-  $oauth_server->add_signature_method($hmac_method);
-  $oauth_server->add_signature_method($plaintext_method);
-  //$oauth_server->add_signature_method($rsa_method);
-
   try {
     $req = OAuthRequest::from_request();
 
@@ -610,6 +599,8 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
         // Is there an apropriate token?
         $token_stored = mediamosa_app_oauth::get_token($token_key);
         if ($token_stored && $token_stored[mediamosa_app_token_db::TYPE] == mediamosa_app_token_db::TYPE_ACCESS) {
+          $oauth_server = mediamosa_app_oauth::create_server();
+
           list($consumer, $token) = $oauth_server->verify_request($req);
           // Is it match?
           if ($consumer->key == $consumer_key && $token->key == $token_key) {
