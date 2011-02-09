@@ -207,7 +207,7 @@ function _mediamosa_oauth_authorize() {
 function _mediamosa_oauth_authorize_validate($form, &$form_state) {
   $values = $form_state['values'];
 
-  if (empty($values['allow'])) {
+  if (!isset($values['allow'])) {
     form_set_error('error', t('Error! Use this !link to leave this page.', array('!link' => l(t('link'), 'http://mediamosa.org'))));
     return;
   }
@@ -412,7 +412,7 @@ function _mediamosa_oauth_test_phase2() {
   $acc_req->sign_request($sig_method, $test_consumer, $acc_token);
 
   // Request parameters.
-  $url = $acc_req;
+  $url = $acc_req->to_url();
   $headers = array();
   $method = 'GET';
   $data = NULL;
@@ -448,7 +448,7 @@ function _mediamosa_oauth_test_phase2() {
   $rest_req->sign_request($sig_method, $test_consumer, $acc_token);
 
   // Request parameters.
-  $url = $rest_req;
+  $url = $rest_req->to_url();
   $headers = array();
   $method = 'GET';
   $data = NULL;
