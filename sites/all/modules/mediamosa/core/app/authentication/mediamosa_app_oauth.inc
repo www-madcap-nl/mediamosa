@@ -25,7 +25,7 @@
  */
 
 /**
- * sites/all/modules/mediamosa/lib/oauth/OAuth.php:
+ * sites/all/modules/mediamosa/core/app/authentication/3rdparty/OAuth.php:
  *
  * The MIT License
  *
