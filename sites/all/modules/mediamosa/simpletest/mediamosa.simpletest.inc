@@ -706,6 +706,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
     $node->{mediamosa_app_db::TIMEZONE} = $fields[mediamosa_app_db::TIMEZONE];
+    $node->{mediamosa_app_db::OAUTH_CONSUMER_KEY} = $this->randomName();
+    $node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET} = user_password();
 
     node_save($node);
 

@@ -12,4 +12,5 @@ core = 7.x
 ; Used files.
 files[] = mediamosa_app_authentication.module
 files[] = mediamosa_app_authentication.test
+files[] = mediamosa_app_authentication.oauth.test
 files[] = mediamosa_app_authentication.rest.inc
