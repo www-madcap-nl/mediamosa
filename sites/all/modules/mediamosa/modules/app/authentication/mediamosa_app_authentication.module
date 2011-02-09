@@ -61,21 +61,19 @@
 function mediamosa_app_authentication_menu() {
   $items = array();
 
-  // TODO remove:
-  $items['admin/oauth_test'] = array(
-    'title' => 'oAuth test',
-    'page callback' => '_mediamosa_oauth_test',
-    'access arguments' => array('oauth login'),
-    'type' => MENU_CALLBACK,
-  );
-
-  // TODO remove:
-  $items['admin/oauth_test_phase2'] = array(
-    'title' => 'oAuth test - page 2',
-    'page callback' => '_mediamosa_oauth_test_phase2',
-    'access arguments' => array('oauth login'),
-    'type' => MENU_CALLBACK,
-  );
+  // This is for later development.
+  //$items['admin/oauth_test'] = array(
+  //  'title' => 'oAuth test',
+  //  'page callback' => '_mediamosa_oauth_test',
+  //  'access arguments' => array('oauth login'),
+  //  'type' => MENU_CALLBACK,
+  //);
+  //$items['admin/oauth_test_phase2'] = array(
+  //  'title' => 'oAuth test - page 2',
+  //  'page callback' => '_mediamosa_oauth_test_phase2',
+  //  'access arguments' => array('oauth login'),
+  //  'type' => MENU_CALLBACK,
+  //);
 
   $items['openapi/oauth/authorize'] = array(
     'title' => 'oAuth authorization',
@@ -277,13 +275,16 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
 
 /**
  * Helper function for testing oAuth.
- * TODO: Remove.
  */
 function _mediamosa_oauth_test() {
   $nid = arg(2);
 
   $output = '';
   $output .= 'Start...<br />' . PHP_EOL;
+
+  if (!$nid) {
+    return $output;
+  }
 
   // Clean up.
   mediamosa_lib::purge_session('final_oauth_token');
@@ -295,9 +296,7 @@ function _mediamosa_oauth_test() {
 
   // oAuth base parameters.
 
-  // TODO: app url
-  // $mediamosa_cron_url_app
-  $callback_url = 'http://mediamosa/admin/oauth_test_phase2';
+  $callback_url = url('admin/oauth_test_phase2', array('absolute' => TRUE));
 
   $app = mediamosa_app::get_by_nid($nid);
   $consumer_key = $app['oauth_consumer_key'];
@@ -306,6 +305,7 @@ function _mediamosa_oauth_test() {
     return t('Consumer key or secret is missing.');
   }
 
+  // TODO: Fix it!
   $oauth_request_token = 'http://openapi.mediamosa.local/openapi/oauth/request_token';
   $oauth_authorize = 'http://openapi.mediamosa.local/openapi/oauth/authorize';
   $oauth_access_token = 'http://openapi.mediamosa.local/openapi/oauth/access_token';
@@ -353,7 +353,6 @@ function _mediamosa_oauth_test() {
 
 /**
  * Helper function for testing oAuth - page 2.
- * TODO: Remove.
  */
 function _mediamosa_oauth_test_phase2() {
   $output = '';
@@ -364,10 +363,6 @@ function _mediamosa_oauth_test_phase2() {
   mediamosa_lib::purge_session('final_oauth_token_secret');
 
   // oAuth base parameters.
-
-  // TODO: app url
-  // $mediamosa_cron_url_app
-  //$callback_url = 'http://mediamosa/admin/oauth_test_phase2';
 
   if (empty($_SESSION['oauth_token']) && !empty($_SESSION['nid']) && is_numeric($_SESSION['nid'])) {
     $output .= l(t('Start again'), 'admin/oauth_test/' . $_SESSION['nid']);
@@ -388,6 +383,7 @@ function _mediamosa_oauth_test_phase2() {
     return t('Consumer key or secret is missing.');
   }
 
+  // TODO: Fix it!
   $oauth_request_token = 'http://openapi.mediamosa.local/openapi/oauth/request_token';
   $oauth_authorize = 'http://openapi.mediamosa.local/openapi/oauth/authorize';
   $oauth_access_token = 'http://openapi.mediamosa.local/openapi/oauth/access_token';
