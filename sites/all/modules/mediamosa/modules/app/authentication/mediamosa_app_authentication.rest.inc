@@ -141,10 +141,10 @@ class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
           self::VAR_ALLOWED_VALUES => array(
             self::OAUTH_SIGNATURE_METHOD_HMAC_SHA1,
             self::OAUTH_SIGNATURE_METHOD_PLAINTEXT,
-            // TODO: Implement RSA.
+            // TODO: implement RSA?
             //self::OAUTH_SIGNATURE_METHOD_RSA_SHA1,
           ),
-          //self::VAR_DEFAULT_VALUE => self::OAUTH_SIGNATURE_METHOD_RSA_SHA1,
+          //self::VAR_DEFAULT_VALUE => self::OAUTH_SIGNATURE_METHOD_HMAC_SHA1,
         ),
         self::OAUTH_TIMESTAMP => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -230,7 +230,7 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
   const OAUTH_VERSION_10 = '1.0';
   const OAUTH_TOKEN = 'oauth_token';
   const OAUTH_VERIFIER = 'oauth_verifier';
-  // TODO: oauth_session_handle?
+  // TODO: Do we implement "oauth_session_handle"?
   // The Yahoo doc uses this parameter, but not others.
   // http://developer.yahoo.com/oauth/guide/oauth-auth-flow.html
 
@@ -250,10 +250,10 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
           self::VAR_ALLOWED_VALUES => array(
             self::OAUTH_SIGNATURE_METHOD_HMAC_SHA1,
             self::OAUTH_SIGNATURE_METHOD_PLAINTEXT,
-            // TODO: Implement RSA.
+            // TODO: implement RSA?
             //self::OAUTH_SIGNATURE_METHOD_RSA_SHA1,
           ),
-          //self::VAR_DEFAULT_VALUE => self::OAUTH_SIGNATURE_METHOD_RSA_SHA1,
+          //self::VAR_DEFAULT_VALUE => self::OAUTH_SIGNATURE_METHOD_HMAC_SHA1,
         ),
         self::OAUTH_TIMESTAMP => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,

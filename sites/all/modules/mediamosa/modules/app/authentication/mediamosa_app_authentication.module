@@ -234,11 +234,11 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
   parse_str($callback['query'], $query);
   // Add key.
   $query['oauth_token'] = $oauth_token->key;
-  // TODO oauth_verifier. What is it exacly? How does it work? Just mimic now.
+  // TODO oauth_verifier. What is it exacly? Just mimic now.
   // The original doc said it is "The verification code".
   // http://tools.ietf.org/html/rfc5849
-  // Maybe we can implement a better verification later with it.
-  // Although the verification seems ok without it.
+  // Maybe we can implement a better verification later using this.
+  // Although the verification seems ok without this "oauth_token".
   $query['oauth_verifier'] = mt_rand(100000, 999999);
   $callback['query'] = http_build_query($query, 'idx_', '&');
 
@@ -577,6 +577,9 @@ function mediamosa_app_authentication_mediamosa_register_rest_call_doc() {
  * Implements hook_mediamosa_app_authorized().
  */
 function mediamosa_app_authentication_mediamosa_app_authorized() {
+
+  // DBUS.
+
   // App already logged in?
   if (isset($_SESSION['mediamosa_app']) && isset($_SESSION['mediamosa_app']['app_id'])) {
     $_GET['app_id'] = $_SESSION['mediamosa_app']['app_id'];
@@ -637,5 +640,6 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
   }
 
   // Access denied.
+
   return FALSE;
 }
