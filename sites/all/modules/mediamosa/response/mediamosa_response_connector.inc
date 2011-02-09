@@ -48,17 +48,47 @@ class mediamosa_response_connector extends mediamosa_response {
    *  GET/POST parameters.
    */
   static public function static_do_restcall($uri, $method = 'GET', array $params = array()) {
+
+    // Just to save time.
+    $app_access = &drupal_static(__CLASS__ . '::' . __FUNCTION__, array());
+
+    // If we don't provide any app_ids, then we'll need to limit the access.
     if (empty($params['app_id'])) {
-      // Because the rule is the 1st is always the leading application, we don't
-      // have one here, so use 0 instead.
-      $params['app_id'] = array_merge(array(0), mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol());
+      if (user_access(mediamosa_permission::ADMIN_MEDIAMOSA)) {
+        // Because the rule is the 1st is always the leading application, we don't
+        // have one here, so use 0 instead.
+        $params['app_id'] = array_merge(array(0), mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol());
+      }
+      else {
+        if (empty($app_access)) {
+          // Add the main app as default (is ignored, but now the $app_access
+          // is no longer empty;
+          $app_access = array(0);
+
+          // Now get all the apps.
+          $apps = mediamosa_app::get_all_apps_cached();
+
+          // Now we are not MediaMosa admin, we'll limit the access based on the
+          // app roles.
+          foreach ($apps as $app) {
+            // Now check them one by one till we know access, when access, add
+            // the app id.
+            if (_mediamosa_user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app[mediamosa_app_db::APP_ID])) {
+              $app_access[] = $app[mediamosa_app_db::APP_ID];
+            }
+          }
+        }
+
+        // Limit the access to its apps.
+        $params['app_id'] = $app_access;
+      }
     }
 
     // Create response object.
-    $o_mediamosa_reponse = new mediamosa_response_connector();
+    $mediamosa_reponse = new mediamosa_response_connector();
 
     // Do REST call.
-    return $o_mediamosa_reponse->do_restcall($uri, $method, $params);
+    return $mediamosa_reponse->do_restcall($uri, $method, $params);
   }
 
   /**

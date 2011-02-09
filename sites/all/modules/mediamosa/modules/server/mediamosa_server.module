@@ -172,11 +172,13 @@ function _mediamosa_server_list() {
   $l_options = array('query' => drupal_get_destination());
 
   foreach ($result as $server) {
-
-    $actions = array(
-      l(t('Edit'), 'node/' . $server->{mediamosa_app_db::NID} . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/config/server/' . $server->{mediamosa_app_db::NID} . '/delete', $l_options),
-    );
+    $actions = array();
+    if (node_access('update', $server->{mediamosa_server_db::NID})) {
+      $actions[] = l(t('Edit'), 'node/' . $server->{mediamosa_server_db::NID} . '/edit', $l_options);
+    }
+    if (node_access('delete', $server->{mediamosa_server_db::NID})) {
+      $actions[] = l(t('Delete'), 'admin/mediamosa/config/server/' . $server->{mediamosa_server_db::NID} . '/delete', $l_options);
+    }
 
     $statuses = array(
       mediamosa_server_db::SERVER_STATUS_ON => t('On'),
@@ -191,7 +193,7 @@ function _mediamosa_server_list() {
        'title' => array('data' => l($server->{mediamosa_server_db::SERVER_NAME}, 'admin/mediamosa/config/server/' . $server->{mediamosa_server_db::NID}), 'field' => mediamosa_server_db::SERVER_NAME),
         t($server->{mediamosa_server_db::SERVER_URI}),
         $statuses[$server->{mediamosa_server_db::SERVER_STATUS}],
-        implode(' | ', $actions),
+        empty($actions) ? '-' : implode(' | ', $actions),
       ),
     );
   }

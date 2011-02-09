@@ -274,3 +274,27 @@ function mediamosa_transcode_menu() {
 
   return $items;
 }
+
+/**
+ * Implements hook_node_access().
+ */
+function mediamosa_transcode_node_access($node, $op, $account) {
+  // A string is given when the node is created.
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // We only support our type.
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // Just for debugging.
+  assert($node->{mediamosa_app_db::APP_ID});
+
+  // Build the role we need.
+  $role_needed = mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $node->{mediamosa_app_db::APP_ID} . '|transcode_profile|' . $op;
+
+  // If we have to role, then we allow the action.
+  return _mediamosa_user_access($role_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
+}

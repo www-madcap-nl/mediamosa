@@ -265,9 +265,7 @@ class mediamosa_app {
     $query->fields('app', array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME));
 
     // Order the results
-    if (isset($order_by)) {
-      $query->orderBy($order_by, $order_direction);
-    }
+    $query->orderBy($options['order_by'], $options['order_direction']);
 
     // Dont change with ->fetchAll(), some callers expect the object here.
     $apps[$options['order_by']][$options['order_direction']] = $query->execute()->fetchAll();

@@ -195,7 +195,16 @@ function mediamosa_permission() {
     ),*/
   );
 
+  // Add the roles of the apps.
+  $apps = mediamosa_app::get_all_apps_cached();
 
+  // Get the apps.
+  foreach ($apps as $app) {
+    $perms[mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app[mediamosa_app_db::APP_ID]] = array(
+      'title' => t('Content owner of client application ' . $app[mediamosa_app_db::APP_NAME]),
+      'description' => t('Making the user content owner of this client application will give limited access to the assets, mediafiles and other content of its client application.'),
+    );
+  }
 
   // Done, return them.
   return $perms;
