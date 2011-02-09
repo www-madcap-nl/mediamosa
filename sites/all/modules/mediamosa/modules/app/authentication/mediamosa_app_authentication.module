@@ -326,11 +326,7 @@ function _mediamosa_oauth_test() {
 
   // Request parameters.
   $url = $req_req->to_url();
-  $headers = array();
-  $method = 'GET';
-  $data = NULL;
-  $retry = 3;
-  $response = drupal_http_request($url, $headers, $method, $data, $retry);
+  $response = drupal_http_request($url);
 
   $output .= '<pre>Request token: ' . print_r($response->data, TRUE) . '</pre><br />' . PHP_EOL;
   parse_str($response->data, $reqOAuthData);
@@ -413,11 +409,7 @@ function _mediamosa_oauth_test_phase2() {
 
   // Request parameters.
   $url = $acc_req->to_url();
-  $headers = array();
-  $method = 'GET';
-  $data = NULL;
-  $retry = 3;
-  $response = drupal_http_request($url, $headers, $method, $data, $retry);
+  $response = drupal_http_request($url);
 
   $output .= '<pre>Access token: ' . print_r($response->data, TRUE) . '</pre><br />' . PHP_EOL;
   parse_str($response->data, $accOAuthData);
@@ -449,11 +441,7 @@ function _mediamosa_oauth_test_phase2() {
 
   // Request parameters.
   $url = $rest_req->to_url();
-  $headers = array();
-  $method = 'GET';
-  $data = NULL;
-  $retry = 3;
-  $response = drupal_http_request($url, $headers, $method, $data, $retry);
+  $response = drupal_http_request($url);
 
   $output .= '<pre>REST call with authentication: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
 
@@ -461,11 +449,7 @@ function _mediamosa_oauth_test_phase2() {
 
   // Request parameters.
   $url = $rest_url;
-  $headers = array();
-  $method = 'GET';
-  $data = NULL;
-  $retry = 3;
-  $response = drupal_http_request($url, $headers, $method, $data, $retry);
+  $response = drupal_http_request($url);
 
   $output .= '<pre>REST call without authentication: ' . htmlspecialchars(print_r($response->data, TRUE)) . '</pre><br />' . PHP_EOL;
 
