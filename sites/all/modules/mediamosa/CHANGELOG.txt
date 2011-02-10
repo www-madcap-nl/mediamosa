@@ -57,6 +57,11 @@ Other changes (not ticket related).
 - Added new theme.
 - Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
     Still download test, Permanent still link.
+- Fixed: asset-collection relation delete all REST call. Returned SQL error when
+  no relations where present.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+  
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------

@@ -90,6 +90,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     $still_id = $this->get_param_value(self::STILL_ID);
     $ticket_id = $this->get_param_value(self::TICKET_ID);
 
+
     if (!$ticket_id && !$still_id) {
       throw new mediamosa_exception_error(mediamosa_error::HTTP_FORBIDDEN);
 
@@ -110,7 +111,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       }
     }
     elseif ($still_id) {
-
       //
       // Permanent link.
       //

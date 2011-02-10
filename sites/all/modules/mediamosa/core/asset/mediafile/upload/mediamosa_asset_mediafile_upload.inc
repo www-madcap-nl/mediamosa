@@ -52,7 +52,6 @@ class mediamosa_asset_mediafile_upload {
    *
    */
   static public function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
-
     // Set to false.
     $is_app_admin = FALSE;
 
