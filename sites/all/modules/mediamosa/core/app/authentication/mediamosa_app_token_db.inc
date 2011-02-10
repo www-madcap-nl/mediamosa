@@ -28,10 +28,10 @@
  * @file
  * App database class object.
  */
-class mediamosa_app_token_db {
+class mediamosa_app_oauth_token_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_app_token';
+  const TABLE_NAME = 'mediamosa_app_oauth_token';
 
   // Database fields;
   const TOKEN_KEY = 'token_key';

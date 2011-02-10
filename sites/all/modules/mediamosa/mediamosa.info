@@ -91,10 +91,10 @@ files[] = core/app/authentication/mediamosa_app_authentication.inc
 
 ; oAuth related classes.
 files[] = core/app/authentication/mediamosa_app_oauth.inc
-files[] = core/app/authentication/mediamosa_app_nonce_db.inc
-files[] = core/app/authentication/mediamosa_app_nonce.install.inc
-files[] = core/app/authentication/mediamosa_app_token_db.inc
-files[] = core/app/authentication/mediamosa_app_token.install.inc
+files[] = core/app/authentication/mediamosa_app_oauth_nonce_db.inc
+files[] = core/app/authentication/mediamosa_app_oauth_nonce.install.inc
+files[] = core/app/authentication/mediamosa_app_oauth_token_db.inc
+files[] = core/app/authentication/mediamosa_app_oauth_token.install.inc
 ; oAuth base class. Origin: http://oauth.googlecode.com/svn/code/php/
 files[] = core/app/authentication/3rdparty/OAuth.php
 

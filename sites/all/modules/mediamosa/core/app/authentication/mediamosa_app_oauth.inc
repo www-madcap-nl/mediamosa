@@ -103,16 +103,16 @@ class mediamosa_app_oauth {
    * @return $nonce
    */
   static public function get_nonce($nonce, $timestamp, $token) {
-    $query = db_select(mediamosa_app_nonce_db::TABLE_NAME, 'nonce');
+    $query = db_select(mediamosa_app_oauth_nonce_db::TABLE_NAME, 'nonce');
 
-    $query->fields('nonce', array(mediamosa_app_nonce_db::NONCE));
-    $query->condition('nonce.' . mediamosa_app_nonce_db::NONCE, $nonce);
-    $query->condition('nonce.' . mediamosa_app_nonce_db::TIMESTAMP, $timestamp, '<=');
+    $query->fields('nonce', array(mediamosa_app_oauth_nonce_db::NONCE));
+    $query->condition('nonce.' . mediamosa_app_oauth_nonce_db::NONCE, $nonce);
+    $query->condition('nonce.' . mediamosa_app_oauth_nonce_db::TIMESTAMP, $timestamp, '<=');
     if (empty($token->key)) {
-      $query->isNull('nonce.' . mediamosa_app_nonce_db::TOKEN);
+      $query->isNull('nonce.' . mediamosa_app_oauth_nonce_db::TOKEN);
     }
     else {
-      $query->condition('nonce.' . mediamosa_app_nonce_db::TOKEN, $token->key);
+      $query->condition('nonce.' . mediamosa_app_oauth_nonce_db::TOKEN, $token->key);
     }
 
     $result = $query->execute();
@@ -130,17 +130,17 @@ class mediamosa_app_oauth {
    * @return $token
    */
   static public function get_token($token_key) {
-    $query = db_select(mediamosa_app_token_db::TABLE_NAME, 'token');
+    $query = db_select(mediamosa_app_oauth_token_db::TABLE_NAME, 'token');
 
     $query->fields('token', array());
-    $query->condition('token.' . mediamosa_app_token_db::TOKEN_KEY, $token_key);
+    $query->condition('token.' . mediamosa_app_oauth_token_db::TOKEN_KEY, $token_key);
 
     $result = $query->execute();
 
     $token = $result->fetchAssoc();
 
     // Safety element.
-    if ($token[mediamosa_app_token_db::EXPIRES] && $token[mediamosa_app_token_db::EXPIRES] <= time()) {
+    if ($token[mediamosa_app_oauth_token_db::EXPIRES] && $token[mediamosa_app_oauth_token_db::EXPIRES] <= time()) {
       self::delete_token($token_key);
       $token = NULL;
     }
@@ -156,11 +156,11 @@ class mediamosa_app_oauth {
    * @param $token
    */
   static public function save_nonce($nonce, $timestamp, $token) {
-    mediamosa_db::db_insert(mediamosa_app_nonce_db::TABLE_NAME)
+    mediamosa_db::db_insert(mediamosa_app_oauth_nonce_db::TABLE_NAME)
     ->fields(array(
-      mediamosa_app_nonce_db::NONCE => $nonce,
-      mediamosa_app_nonce_db::TIMESTAMP => $timestamp,
-      mediamosa_app_nonce_db::TOKEN => !empty($token->key) ? $token->key : NULL,
+      mediamosa_app_oauth_nonce_db::NONCE => $nonce,
+      mediamosa_app_oauth_nonce_db::TIMESTAMP => $timestamp,
+      mediamosa_app_oauth_nonce_db::TOKEN => !empty($token->key) ? $token->key : NULL,
     ))
     ->execute();
   }
@@ -173,12 +173,12 @@ class mediamosa_app_oauth {
   static public function save_token($parameters) {
     $time = time();
     $parameters += array(
-      mediamosa_app_token_db::CREATED => $time,
-      mediamosa_app_token_db::CHANGED => $time,
-      mediamosa_app_token_db::EXPIRES => $time + self::TOKEN_EXPIRE_TIME,
+      mediamosa_app_oauth_token_db::CREATED => $time,
+      mediamosa_app_oauth_token_db::CHANGED => $time,
+      mediamosa_app_oauth_token_db::EXPIRES => $time + self::TOKEN_EXPIRE_TIME,
     );
 
-    mediamosa_db::db_insert(mediamosa_app_token_db::TABLE_NAME)
+    mediamosa_db::db_insert(mediamosa_app_oauth_token_db::TABLE_NAME)
     ->fields($parameters)
     ->execute();
   }
@@ -192,12 +192,12 @@ class mediamosa_app_oauth {
   static public function update_token($token_key, $parameters) {
     $time = time();
     $parameters += array(
-      mediamosa_app_token_db::CHANGED => $time,
+      mediamosa_app_oauth_token_db::CHANGED => $time,
     );
 
-    $num_updated = mediamosa_db::db_update(mediamosa_app_token_db::TABLE_NAME)
+    $num_updated = mediamosa_db::db_update(mediamosa_app_oauth_token_db::TABLE_NAME)
     ->fields($parameters)
-    ->condition(mediamosa_app_token_db::TOKEN_KEY, $token_key)
+    ->condition(mediamosa_app_oauth_token_db::TOKEN_KEY, $token_key)
     ->execute();
   }
 
@@ -207,8 +207,8 @@ class mediamosa_app_oauth {
    * @param string $token_key
    */
   static public function delete_token($token_key) {
-    $num_deleted = db_delete(mediamosa_app_token_db::TABLE_NAME)
-      ->condition(mediamosa_app_token_db::TOKEN_KEY, $token_key)
+    $num_deleted = db_delete(mediamosa_app_oauth_token_db::TABLE_NAME)
+      ->condition(mediamosa_app_oauth_token_db::TOKEN_KEY, $token_key)
       ->execute();
   }
 
@@ -220,8 +220,8 @@ class mediamosa_app_oauth {
       DELETE FROM {#mediamosa_app_token}
       WHERE #expires != 0 AND #expires <= :expires
     ", array(
-      '#mediamosa_app_token' => mediamosa_app_token_db::TABLE_NAME,
-      '#expires' => mediamosa_app_token_db::EXPIRES,
+      '#mediamosa_app_token' => mediamosa_app_oauth_token_db::TABLE_NAME,
+      '#expires' => mediamosa_app_oauth_token_db::EXPIRES,
       ':expires' => time(),
     ));
   }
@@ -234,8 +234,8 @@ class mediamosa_app_oauth {
       DELETE FROM {#mediamosa_app_nonce}
       WHERE #timestamp < :timestamp
     ", array(
-      '#mediamosa_app_nonce' => mediamosa_app_nonce_db::TABLE_NAME,
-      '#timestamp' => mediamosa_app_nonce_db::TIMESTAMP,
+      '#mediamosa_app_nonce' => mediamosa_app_oauth_nonce_db::TABLE_NAME,
+      '#timestamp' => mediamosa_app_oauth_nonce_db::TIMESTAMP,
       ':timestamp' => time() - self::CLEAN_UP_EXPIRE_TIME,
     ));
   }
@@ -366,14 +366,14 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
 
     $parameters = array(
       // Same as $token_key.
-      mediamosa_app_token_db::TOKEN_KEY => $request_token->key,
+      mediamosa_app_oauth_token_db::TOKEN_KEY => $request_token->key,
       // Same as $token_secret.
-      mediamosa_app_token_db::SECRET => $request_token->secret,
-      mediamosa_app_token_db::TYPE => mediamosa_app_token_db::TYPE_REQUEST,
-      mediamosa_app_token_db::APP_ID => mediamosa_app_token_db::APP_ID_NON,
-      mediamosa_app_token_db::CONSUMER_KEY => $consumer->key,
-      mediamosa_app_token_db::AUTHORIZED => mediamosa_app_token_db::AUTHORIZED_NO,
-      mediamosa_app_token_db::CALLBACK_URL => $callback_url,
+      mediamosa_app_oauth_token_db::SECRET => $request_token->secret,
+      mediamosa_app_oauth_token_db::TYPE => mediamosa_app_oauth_token_db::TYPE_REQUEST,
+      mediamosa_app_oauth_token_db::APP_ID => mediamosa_app_oauth_token_db::APP_ID_NON,
+      mediamosa_app_oauth_token_db::CONSUMER_KEY => $consumer->key,
+      mediamosa_app_oauth_token_db::AUTHORIZED => mediamosa_app_oauth_token_db::AUTHORIZED_NO,
+      mediamosa_app_oauth_token_db::CALLBACK_URL => $callback_url,
     );
     mediamosa_app_oauth::save_token($parameters);
 
@@ -395,13 +395,13 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
 
     $token = mediamosa_app_oauth::get_token($token_old->key);
 
-    if ($token[mediamosa_app_token_db::AUTHORIZED] != mediamosa_app_token_db::AUTHORIZED_YES ||
-        $token[mediamosa_app_token_db::CONSUMER_KEY] != $consumer->key) {
+    if ($token[mediamosa_app_oauth_token_db::AUTHORIZED] != mediamosa_app_oauth_token_db::AUTHORIZED_YES ||
+        $token[mediamosa_app_oauth_token_db::CONSUMER_KEY] != $consumer->key) {
       throw new OAuthException('Invalid request token');
     }
 
     // Delete the old request token.
-    mediamosa_app_oauth::delete_token($token[mediamosa_app_token_db::TOKEN_KEY]);
+    mediamosa_app_oauth::delete_token($token[mediamosa_app_oauth_token_db::TOKEN_KEY]);
 
     // Create the new access token.
 
@@ -411,14 +411,14 @@ class MediaMosaOAuthDataStore extends OAuthDataStore {
 
     $parameters = array(
       // Same as $token_key.
-      mediamosa_app_token_db::TOKEN_KEY => $access_token->key,
+      mediamosa_app_oauth_token_db::TOKEN_KEY => $access_token->key,
       // Same as $token_secret.
-      mediamosa_app_token_db::SECRET => $access_token->secret,
-      mediamosa_app_token_db::TYPE => mediamosa_app_token_db::TYPE_ACCESS,
-      mediamosa_app_token_db::APP_ID => $token[mediamosa_app_token_db::APP_ID],
-      mediamosa_app_token_db::CONSUMER_KEY => $consumer->key,
-      mediamosa_app_token_db::AUTHORIZED => mediamosa_app_token_db::AUTHORIZED_YES,
-      mediamosa_app_token_db::CALLBACK_URL => '',
+      mediamosa_app_oauth_token_db::SECRET => $access_token->secret,
+      mediamosa_app_oauth_token_db::TYPE => mediamosa_app_oauth_token_db::TYPE_ACCESS,
+      mediamosa_app_oauth_token_db::APP_ID => $token[mediamosa_app_oauth_token_db::APP_ID],
+      mediamosa_app_oauth_token_db::CONSUMER_KEY => $consumer->key,
+      mediamosa_app_oauth_token_db::AUTHORIZED => mediamosa_app_oauth_token_db::AUTHORIZED_YES,
+      mediamosa_app_oauth_token_db::CALLBACK_URL => '',
     );
     mediamosa_app_oauth::save_token($parameters);
 

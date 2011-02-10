@@ -127,7 +127,7 @@ function _mediamosa_oauth_authorize() {
   $callback = $req->get_parameter('oauth_callback');
   $token = mediamosa_app_oauth::get_token($token_key);
 
-  if (!$token || $token[mediamosa_app_token_db::TYPE] != mediamosa_app_token_db::TYPE_REQUEST) {
+  if (!$token || $token[mediamosa_app_oauth_token_db::TYPE] != mediamosa_app_oauth_token_db::TYPE_REQUEST) {
     drupal_set_message(t('Please include a valid OAuth token in your request.'), 'error');
 
     $form['error'] = array(
@@ -138,7 +138,7 @@ function _mediamosa_oauth_authorize() {
     return $form;
   }
 
-  $app = mediamosa_app::get_by_oauth_consumer_key($token[mediamosa_app_token_db::CONSUMER_KEY]);
+  $app = mediamosa_app::get_by_oauth_consumer_key($token[mediamosa_app_oauth_token_db::CONSUMER_KEY]);
 
 
   $form['oauth_parameters'] = array(
@@ -226,7 +226,7 @@ function _mediamosa_oauth_authorize_validate($form, &$form_state) {
 
   $token = mediamosa_app_oauth::get_token($parameters['oauth_token']);
 
-  if (!$token || $token[mediamosa_app_token_db::CONSUMER_KEY] != $app[mediamosa_app_db::OAUTH_CONSUMER_KEY]) {
+  if (!$token || $token[mediamosa_app_oauth_token_db::CONSUMER_KEY] != $app[mediamosa_app_db::OAUTH_CONSUMER_KEY]) {
     form_set_error('client_app_name', t('The client application is not valid for this authentication.'));
   }
 }
@@ -244,8 +244,8 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
   $parameters = unserialize($values['oauth_parameters']);
 
   mediamosa_app_oauth::update_token($parameters['oauth_token'], array(
-    mediamosa_app_token_db::APP_ID => $app[mediamosa_app_db::APP_ID],
-    mediamosa_app_token_db::AUTHORIZED => mediamosa_app_token_db::AUTHORIZED_YES,
+    mediamosa_app_oauth_token_db::APP_ID => $app[mediamosa_app_db::APP_ID],
+    mediamosa_app_oauth_token_db::AUTHORIZED => mediamosa_app_oauth_token_db::AUTHORIZED_YES,
   ));
 
   $token = mediamosa_app_oauth::get_token($parameters['oauth_token']);
@@ -253,7 +253,7 @@ function _mediamosa_oauth_authorize_submit($form, &$form_state) {
   $oauth_token = new OAuthToken($token['token_key'], $token['secret']);
 
   // Get the callback url, and add there the token parameter.
-  $callback = mediamosa_http::parse_url($token[mediamosa_app_token_db::CALLBACK_URL]);
+  $callback = mediamosa_http::parse_url($token[mediamosa_app_oauth_token_db::CALLBACK_URL]);
 
   $query = array();
   parse_str($callback['query'], $query);
@@ -620,14 +620,14 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
       if ($app) {
         // Is there an apropriate token?
         $token_stored = mediamosa_app_oauth::get_token($token_key);
-        if ($token_stored && $token_stored[mediamosa_app_token_db::TYPE] == mediamosa_app_token_db::TYPE_ACCESS) {
+        if ($token_stored && $token_stored[mediamosa_app_oauth_token_db::TYPE] == mediamosa_app_oauth_token_db::TYPE_ACCESS) {
           $oauth_server = mediamosa_app_oauth::create_server();
 
           list($consumer, $token) = $oauth_server->verify_request($req);
           // Is it match?
           if ($consumer->key == $consumer_key && $token->key == $token_key) {
             // Grant access.
-            $_GET['app_id'] = $token_stored[mediamosa_app_token_db::APP_ID];
+            $_GET['app_id'] = $token_stored[mediamosa_app_oauth_token_db::APP_ID];
             return TRUE;
           }
         }

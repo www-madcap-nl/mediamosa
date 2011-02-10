@@ -170,8 +170,8 @@ class MediaMosaAppAuthenticationOAuthTestCase extends MediaMosaTestCaseEga {
     //$this->drupalPost($acc_req, $edit, t('Authenticate'));
     // We simulate the submit process now.
     mediamosa_app_oauth::update_token($reqOAuthData['oauth_token'], array(
-      mediamosa_app_token_db::APP_ID => $app_id,
-      mediamosa_app_token_db::AUTHORIZED => mediamosa_app_token_db::AUTHORIZED_YES,
+      mediamosa_app_oauth_token_db::APP_ID => $app_id,
+      mediamosa_app_oauth_token_db::AUTHORIZED => mediamosa_app_oauth_token_db::AUTHORIZED_YES,
     ));
 
     // ---------------------------------------------------------------------------

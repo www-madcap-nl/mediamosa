@@ -1894,10 +1894,10 @@ function mediamosa_update_7090() {
  */
 function mediamosa_update_7091() {
   // Create nonce table.
-  mediamosa::drupal_install_schema(mediamosa_app_nonce_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_app_oauth_nonce_db::TABLE_NAME);
 
   // Create token table.
-  mediamosa::drupal_install_schema(mediamosa_app_token_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_app_oauth_token_db::TABLE_NAME);
 }
 
 

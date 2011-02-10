@@ -28,10 +28,10 @@
  * @file
  * App database class object.
  */
-class mediamosa_app_nonce_db {
+class mediamosa_app_oauth_nonce_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_app_nonce';
+  const TABLE_NAME = 'mediamosa_app_oauth_nonce';
 
   // Database fields;
   const NONCE = 'nonce';
