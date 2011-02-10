@@ -61,20 +61,22 @@
 function mediamosa_app_authentication_menu() {
   $items = array();
 
+  /*
   // This is for later development.
   // See: mediamosa_app_form() of sites/all/modules/mediamosa/core/node/mediamosa_node_mediamosa_app.inc
-  //$items['admin/oauth_test'] = array(
-  //  'title' => 'oAuth test',
-  //  'page callback' => '_mediamosa_oauth_test',
-  //  'access arguments' => array('oauth login'),
-  //  'type' => MENU_CALLBACK,
-  //);
-  //$items['admin/oauth_test_phase2'] = array(
-  //  'title' => 'oAuth test - page 2',
-  //  'page callback' => '_mediamosa_oauth_test_phase2',
-  //  'access arguments' => array('oauth login'),
-  //  'type' => MENU_CALLBACK,
-  //);
+  $items['admin/oauth_test'] = array(
+    'title' => 'oAuth test',
+    'page callback' => '_mediamosa_oauth_test',
+    'access arguments' => array('oauth login'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/oauth_test_phase2'] = array(
+    'title' => 'oAuth test - page 2',
+    'page callback' => '_mediamosa_oauth_test_phase2',
+    'access arguments' => array('oauth login'),
+    'type' => MENU_CALLBACK,
+  );
+   */
 
   $items['openapi/oauth/authorize'] = array(
     'title' => 'oAuth authorization',
