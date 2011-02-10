@@ -31,8 +31,8 @@
 
 require_once 'mediamosa_app.inc';
 require_once 'mediamosa_app_db.inc';
-require_once 'authentication/mediamosa_app_nonce.install.inc';
-require_once 'authentication/mediamosa_app_token.install.inc';
+require_once 'authentication/mediamosa_app_oauth_nonce.install.inc';
+require_once 'authentication/mediamosa_app_oauth_token.install.inc';
 
 /**
  * Implements hook_install().
