@@ -46,6 +46,7 @@ MediaMosa 2.4 (build 1386)
   "HTTP 501 Not implemented" error was introduced. Code was reorganized.
 - Added support for OpenApi. OpenApi has its own core module and needs to be
   turned on to be used. (See ticket #428).
+- oAuth development (See ticket #10).
 
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
