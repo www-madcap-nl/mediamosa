@@ -297,6 +297,23 @@ class mediamosa_sdk {
   // Use to select what is slaved to other apps.
   const TYPE_BOOL_IS_SLAVED              = 'BOOL_IS_SLAVED';
 
+  // Job constants.
+  const JOB_STATUS = 'status';
+  const JOB_STATUS_WAITING = 'WAITING';
+  const JOB_STATUS_INPROGRESS = 'INPROGRESS';
+  const JOB_STATUS_FINISHED = 'FINISHED';
+  const JOB_STATUS_FAILED = 'FAILED';
+  const JOB_STATUS_CANCELLED = 'CANCELLED';
+  const JOB_STATUS_CANCELLING = 'CANCELING';// Future exp; THIS IS NOT YET ADDED TO THE ENUM IN DB 'job' table.
+  const PROGRESS = 'progress';
+  const JOB_TYPE = 'job_type';
+  const JOB_TYPE_TRANSCODE = 'TRANSCODE';
+  const JOB_TYPE_RETRANSCODE = 'RETRANSCODE';
+  const JOB_TYPE_STILL = 'STILL';
+  const JOB_TYPE_UPLOAD = 'UPLOAD';
+  const JOB_TYPE_ANALYSE = 'ANALYSE';
+  const JOB_TYPE_DELETE_MEDIAFILE = 'DELETE_MEDIAFILE';
+
   // ---------------------------------------------------------------- Functions.
   /**
    * Return the base URL for the SDK menu/URL.
@@ -355,5 +372,14 @@ class mediamosa_sdk {
     }
 
     return $type;
+  }
+
+  /**
+   * Returns the database stamp as a viewable date.
+   *
+   * @param string $datestamp (YYYY-MM-DD 00:00:00)
+   */
+  static public function datestamp2date($datestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
+    return format_date(strtotime($datestamp), $type, $format, $timezone, $langcode);
   }
 }
