@@ -441,6 +441,7 @@ function mediamosa_app_form($node, &$form_state) {
   );
 
   // This is for later development / test.
+  // See: hook_menu() of sites/all/modules/mediamosa/modules/app/authentication/mediamosa_app_authentication.module
   //if (isset($node->nid)) {
   //  $form['oauth']['oauth_client'] = array(
   //    '#type' => 'item',
