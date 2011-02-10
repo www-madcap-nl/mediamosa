@@ -39,7 +39,7 @@ TODO: (v2.4)
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
 
-MediaMosa 2.4 (build 1386)
+MediaMosa 2.4 (build 1424)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
