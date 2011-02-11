@@ -117,11 +117,26 @@ function mediamosa_app_authentication_permission() {
 }
 
 /**
+ * Implements MODULE_preprocess_HOOK().
+ */
+function mediamosa_app_authentication_preprocess_page(&$variables) {
+  if (arg(0) != 'openapi' || arg(1) != 'oauth' || arg(2) != 'authorize') {
+    return;
+  }
+
+  unset($variables['page']['content']['user_login']);
+  unset($variables['page']['content']['mediamosa_mediamosa-version']);
+}
+
+/**
  * Client authorization.
  * Menu callback function.
  */
 function _mediamosa_oauth_authorize() {
   $form = array();
+
+  drupal_set_breadcrumb(array());
+  drupal_set_title('');
 
   $req = OAuthRequest::from_request();
 
@@ -150,7 +165,7 @@ function _mediamosa_oauth_authorize() {
 
   $form['client_application'] = array(
     '#type' => 'fieldset',
-    '#collapsible' => TRUE,
+    '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('This is the user authentication page for oAuth'),
     '#description' => t('If you want to enable, that other applications and / or pages access the data of your client application, you should log in now. Otherwise please, ignore this page and leave it.')
