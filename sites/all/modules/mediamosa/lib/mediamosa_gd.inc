@@ -329,7 +329,7 @@ class mediamosa_gd {
    * </p>
    * @return bool Returns true on success or false on failure.
    */
-  static public function imagejpeg($image, $filename = null, $quality = null) {
+  static public function imagejpeg($image, $filename = NULL, $quality = NULL) {
     imagejpeg($image, $filename, $quality);
   }
 
@@ -357,7 +357,7 @@ class mediamosa_gd {
    * </p>
    * @return bool Returns true on success or false on failure.
    */
-  static public function imagepng($image, $filename = null, $quality = null, $filters = null) {
+  static public function imagepng($image, $filename = NULL, $quality = NULL, $filters = NULL) {
     imagepng($image, $filename, $quality, $filters);
   }
 }
