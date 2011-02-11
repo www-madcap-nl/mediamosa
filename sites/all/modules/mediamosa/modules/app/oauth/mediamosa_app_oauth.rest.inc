@@ -56,7 +56,7 @@
   */
 
 /*
- * URI: /login/oauth/request_token
+ * URI: /openapi/oauth/request_token
  * Method: GET
  */
 class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
@@ -145,23 +145,18 @@ class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
     $oauth_signature = $this->get_param_value(self::OAUTH_SIGNATURE);
     $oauth_version = $this->get_param_value(self::OAUTH_VERSION);
 
-    try {
-      $oauth_server = mediamosa_app_oauth::create_server();
+    $oauth_server = mediamosa_app_oauth::create_server();
 
-      $req = OAuthRequest::from_request();
-      $token = $oauth_server->fetch_request_token($req);
-      $token .= '&oauth_callback_confirmed=true';
-    } catch (OAuthException $e) {
-      print($e->getMessage() . "\n<hr />\n");
-      die();
-    }
+    $req = OAuthRequest::from_request();
+    $token = $oauth_server->fetch_request_token($req);
+    $token .= '&oauth_callback_confirmed=true';
 
     $mediamosa->add_item($token);
   }
 }
 
 /*
- * URI: /login/oauth/access_token
+ * URI: /openapi/oauth/access_token
  * Method: GET
  */
 class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
@@ -260,15 +255,10 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
     $oauth_token = $this->get_param_value(self::OAUTH_TOKEN);
     $oauth_verifier = $this->get_param_value(self::OAUTH_VERIFIER);
 
-    try {
-      $oauth_server = mediamosa_app_oauth::create_server();
+    $oauth_server = mediamosa_app_oauth::create_server();
 
-      $req = OAuthRequest::from_request();
-      $token = $oauth_server->fetch_access_token($req);
-    } catch (OAuthException $e) {
-      print($e->getMessage() . "\n<hr />\n");
-      die();
-    }
+    $req = OAuthRequest::from_request();
+    $token = $oauth_server->fetch_access_token($req);
 
     $mediamosa->add_item($token);
   }

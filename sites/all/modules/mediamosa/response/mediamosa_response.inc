@@ -161,6 +161,11 @@ class mediamosa_response extends mediamosa {
       // We redirect and exit.
       exit();
     }
+    // oAuth exceptions.
+    catch (OAuthException $e) {
+      print($e->getMessage());
+      exit();
+    }
     catch (mediamosa_exception_error_403 $e) {
       // Forbidden
       header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
