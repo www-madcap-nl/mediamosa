@@ -58,7 +58,7 @@
 /**
  * Implementation of hook_menu().
  */
-function mediamosa_app_authentication_menu() {
+function mediamosa_app_oauth_menu() {
   $items = array();
 
   /*
@@ -92,7 +92,7 @@ function mediamosa_app_authentication_menu() {
 /**
  * Implementation of hook_mediamosa_allowed_path().
  */
-function mediamosa_app_authentication_mediamosa_allowed_path() {
+function mediamosa_app_oauth_mediamosa_allowed_path() {
   global $conf;
 
   if (mediamosa::in_simpletest_sandbox()) {
@@ -107,7 +107,7 @@ function mediamosa_app_authentication_mediamosa_allowed_path() {
 /**
  * Implementation of hook_permission().
  */
-function mediamosa_app_authentication_permission() {
+function mediamosa_app_oauth_permission() {
   return array(
     'oauth login' => array(
       'title' => t('Log in with oAuth'),
@@ -119,7 +119,7 @@ function mediamosa_app_authentication_permission() {
 /**
  * Implements MODULE_preprocess_HOOK().
  */
-function mediamosa_app_authentication_preprocess_page(&$variables) {
+function mediamosa_app_oauth_preprocess_page(&$variables) {
   if (arg(0) != 'openapi' || arg(1) != 'oauth' || arg(2) != 'authorize') {
     return;
   }
@@ -486,42 +486,15 @@ function _mediamosa_oauth_test_phase2() {
 /**
  * Implementation of hook_cron().
  */
-function mediamosa_app_authentication_cron() {
+function mediamosa_app_oauth_cron() {
   mediamosa_app_oauth::clean_up();
 }
 
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
-function mediamosa_app_authentication_mediamosa_register_rest_call() {
+function mediamosa_app_oauth_mediamosa_register_rest_call() {
   $rest_calls = array();
-
-  $rest_calls['login'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_ident',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_authentication',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-  );
-
-  $rest_calls['login'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login'][mediamosa_rest_call::METHOD_POST];
-
-
-  $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_check_cookie',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_authentication',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-  );
-
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET];
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_DEPRECATED;
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_1_1_0;
-
-  // oAuth.
 
   $rest_calls['openapi/oauth/request_token'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_oauth_request_token',
@@ -551,41 +524,9 @@ function mediamosa_app_authentication_mediamosa_register_rest_call() {
 /**
  * Implements hook_mediamosa_register_rest_call_doc().
  */
-function mediamosa_app_authentication_mediamosa_register_rest_call_doc() {
+function mediamosa_app_oauth_mediamosa_register_rest_call_doc() {
   $rest_calls = array();
 
-  $rest_calls['login'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::TITLE => 'Log onto MediaMosa and authenticate as user end application',
-    mediamosa_rest_call::DESCRIPTION => 'Log onto MediaMosa and authenticate as user end application.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '/login<br /><br />dbus = "AUTH DBUS_COOKIE_SHA1 myuser"',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-  <item>
-    DATA vpx 0 2541e50e009440742ea00f61fbf5b612
-  </item>
-</items>',
-  );
-
-  $rest_calls['login'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login'][mediamosa_rest_call::METHOD_POST];
-
-
-  $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Shows the contents of your cookie',
-    mediamosa_rest_call::DESCRIPTION => 'Shows the contents of your cookie, for debugging purposes.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '/login/cookie',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-  <item id="1">
-    <SESS84ff6063a88f1185a7aa>28b53dd9bd4e22922bccfc354</SESS84ff6063a88f1185a7aa>
-  </item>
-</items>',
-  );
-
-  $rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET] = $rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET];
-
-  // oAuth.
-
-  // login/oauth/request_token
   $rest_calls['openapi/oauth/request_token'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'oAuth request token.',
     mediamosa_rest_call::DESCRIPTION => 'The Consumer obtains an unauthorized Request Token.',
@@ -608,18 +549,7 @@ function mediamosa_app_authentication_mediamosa_register_rest_call_doc() {
 /**
  * Implements hook_mediamosa_app_authorized().
  */
-function mediamosa_app_authentication_mediamosa_app_authorized() {
-
-  // DBUS.
-
-  // App already logged in?
-  if (isset($_SESSION['mediamosa_app']) && isset($_SESSION['mediamosa_app']['app_id'])) {
-    $_GET['app_id'] = $_SESSION['mediamosa_app']['app_id'];
-    return TRUE;
-  }
-
-  // oAuth.
-
+function mediamosa_app_oauth_mediamosa_app_authorized() {
   try {
     $req = OAuthRequest::from_request();
 
@@ -656,22 +586,6 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
     //print_r($req);
     die();
   }
-
-  // White list.
-
-  // If IP white list is set, then we are 'simulated' authorized.
-  $ip_address_whitelist = variable_get('mediamosa_debug_ip_whitelist', '');
-
-  // Get the IP Address.
-  $a_ip_address_whitelist = explode('|', $ip_address_whitelist);
-
-  // If our IP address is in the white list, then we are 'authorized', but only
-  // if you also set the app_id.
-  if (in_array($_SERVER['REMOTE_ADDR'], $a_ip_address_whitelist) && !empty($_REQUEST['app_id'])) {
-    return TRUE;
-  }
-
-  // Access denied.
 
   return FALSE;
 }

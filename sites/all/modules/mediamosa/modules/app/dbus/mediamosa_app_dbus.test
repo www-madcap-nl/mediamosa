@@ -40,7 +40,7 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
   }
 
   function setUp() {
-    parent::setUp('mediamosa_app_authentication');
+    parent::setUp('mediamosa_app_dbus');
 
     // Create and login user
     $rest_user = $this->drupalCreateUser(array('administer mediamosa'));

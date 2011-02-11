@@ -35,7 +35,8 @@ dependencies[] = simpletest
 
 dependencies[] = mediamosa
 dependencies[] = mediamosa_app
-dependencies[] = mediamosa_app_authentication
+dependencies[] = mediamosa_app_dbus
+dependencies[] = mediamosa_app_oauth
 dependencies[] = mediamosa_asset
 dependencies[] = mediamosa_aut
 dependencies[] = mediamosa_batch_jobs
