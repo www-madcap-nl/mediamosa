@@ -440,15 +440,17 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
   );
 
+  /*
   // This is for later development / test.
   // See: hook_menu() of sites/all/modules/mediamosa/modules/app/authentication/mediamosa_app_oauth.module
-  //if (isset($node->nid)) {
-  //  $form['oauth']['oauth_client'] = array(
-  //    '#type' => 'item',
-  //    '#title' => l(t('oAuth client test'), 'admin/oauth_test/' . $node->nid),
-  //    '#description' => t('Available oAuth client'),
-  //  );
-  //}
+  if (isset($node->nid)) {
+    $form['oauth']['oauth_client'] = array(
+      '#type' => 'item',
+      '#title' => l(t('oAuth client test'), 'admin/oauth_test/' . $node->nid),
+      '#description' => t('Available oAuth client'),
+    );
+  }
+   */
 
   $form['still'] = array(
     '#type' => 'fieldset',
