@@ -84,6 +84,11 @@ class mediamosa_openapi_response extends mediamosa_response {
     $this->response['xml_header']['itemsPerPage'] = $this->item_count;
     $this->response['xml_header']['totalResults'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
 
+    if ($this->response['header']['request_result'] == 'error') {
+      $this->response['xml_header']['request_result_description'] = $this->response['header']['request_result_description'];
+    }
+
+
     if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
       self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
     }

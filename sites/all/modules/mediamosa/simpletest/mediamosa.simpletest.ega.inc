@@ -74,7 +74,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create and setup the CORE module.
     $args = array_unique(array_merge(array(
       'mediamosa_user',
-      'mediamosa_app_authentication',
+      'mediamosa_app_dbus',
+      'mediamosa_app_oauth',
       'mediamosa_asset',
       'mediamosa_aut',
       'mediamosa_collection',

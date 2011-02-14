@@ -55,85 +55,8 @@
   * The REST calls of the Application Authentication.
   */
 
-/**
- * URI: /login
- * Login onto MediaMosa.
- */
-class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
-
-  // ------------------------------------------------------------------ Consts.
-  const DBUS = 'dbus';
-
-  // ------------------------------------------------------------------ Functions (public).
-  public function get_var_setup() {
-    $a_var_setup = array();
-
-    $a_var_setup[mediamosa_rest_call::VARS] = array(
-      self::DBUS => array(
-        mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-        mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-        mediamosa_rest_call::VAR_DESCRIPTION => 'The DBUS login value.',
-      )
-    );
-
-    // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
-  }
-
-  public function do_call() {
-    $mediamosa = mediamosa::get();
-
-    // Get the dbus line.
-    $dbus = $this->get_param_value(mediamosa_rest_call_app_ident::DBUS);
-
-    // Login.
-    $result = mediamosa_app_authentication::app_dbus_protocol($dbus);
-
-    // Must return OK.
-    if (mediamosa_unicode::substr($result, 0, 5) == 'ERROR' || mediamosa_unicode::substr($result, 0, 8) == 'REJECTED') {
-      $mediamosa->set_result(mediamosa_response::ERROR, mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR, 'DBUS ' . $result);
-    }
-    else {
-      $mediamosa->set_result(mediamosa_response::SUCCESS, mediamosa_error::ERRORCODE_OKAY, 'DBUS authentication protocol');
-    }
-
-    $mediamosa->add_item(array('dbus' => $result));
-  }
-}
-
-/**
- * URI: /check_cookie (deprecated)
- *      /login/cookie
- *
- * Retrieve cookie information.
- */
-class mediamosa_rest_call_check_cookie extends mediamosa_rest_call {
-
-  // ------------------------------------------------------------------ Consts.
-
-  // ------------------------------------------------------------------ Functions (public).
-  public function get_var_setup() {
-    $a_var_setup = array();
-
-    // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
-  }
-
-  public function do_call() {
-    $mediamosa = mediamosa::get();
-
-    // Output cookie.
-    $mediamosa->add_item($_COOKIE);
-
-    // Ok.
-    $mediamosa->set_result_okay();
-  }
-}
-
-// oAuth calls.
-
 /*
- * URI: /login/oauth/request_token
+ * URI: /openapi/oauth/request_token
  * Method: GET
  */
 class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
@@ -222,23 +145,18 @@ class mediamosa_rest_call_oauth_request_token extends mediamosa_rest_call {
     $oauth_signature = $this->get_param_value(self::OAUTH_SIGNATURE);
     $oauth_version = $this->get_param_value(self::OAUTH_VERSION);
 
-    try {
-      $oauth_server = mediamosa_app_oauth::create_server();
+    $oauth_server = mediamosa_app_oauth::create_server();
 
-      $req = OAuthRequest::from_request();
-      $token = $oauth_server->fetch_request_token($req);
-      $token .= '&oauth_callback_confirmed=true';
-    } catch (OAuthException $e) {
-      print($e->getMessage() . "\n<hr />\n");
-      die();
-    }
+    $req = OAuthRequest::from_request();
+    $token = $oauth_server->fetch_request_token($req);
+    $token .= '&oauth_callback_confirmed=true';
 
     $mediamosa->add_item($token);
   }
 }
 
 /*
- * URI: /login/oauth/access_token
+ * URI: /openapi/oauth/access_token
  * Method: GET
  */
 class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
@@ -337,15 +255,10 @@ class mediamosa_rest_call_oauth_access_token extends mediamosa_rest_call {
     $oauth_token = $this->get_param_value(self::OAUTH_TOKEN);
     $oauth_verifier = $this->get_param_value(self::OAUTH_VERIFIER);
 
-    try {
-      $oauth_server = mediamosa_app_oauth::create_server();
+    $oauth_server = mediamosa_app_oauth::create_server();
 
-      $req = OAuthRequest::from_request();
-      $token = $oauth_server->fetch_access_token($req);
-    } catch (OAuthException $e) {
-      print($e->getMessage() . "\n<hr />\n");
-      die();
-    }
+    $req = OAuthRequest::from_request();
+    $token = $oauth_server->fetch_access_token($req);
 
     $mediamosa->add_item($token);
   }

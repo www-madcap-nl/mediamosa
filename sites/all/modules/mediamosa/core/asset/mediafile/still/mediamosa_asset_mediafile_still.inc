@@ -54,6 +54,8 @@ class mediamosa_asset_mediafile_still {
   const IMAGE_TYPE_JPG = 'JPG';
   const IMAGE_TYPE_PNG = 'PNG';
 
+  const SAVE_QUALITY = 100;
+
   // ------------------------------------------------------------------ Static Function.
 
   /**
@@ -237,6 +239,17 @@ class mediamosa_asset_mediafile_still {
     }
 
     // Copymerge.
+    self::log_debug_high(t('Call imagecopymerge. (dest = @dest, src = @src, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct)', array(
+      '@dest' => print_r($dest, TRUE),
+      '@src' => print_r($src, TRUE),
+      '@dst_x' => print_r($dst_x, TRUE),
+      '@dst_y' => print_r($dst_y, TRUE),
+      '@src_x' => print_r($src_x, TRUE),
+      '@src_y' => print_r($src_y, TRUE),
+      '@src_w' => print_r($src_w, TRUE),
+      '@src_h' => print_r($src_h, TRUE),
+      '@pct' => print_r($pct, TRUE),
+    )));
     mediamosa_gd::imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
 
     // Save image.
@@ -250,10 +263,10 @@ class mediamosa_asset_mediafile_still {
     }
     // Write still.
     if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
-      mediamosa_gd::imagejpeg($dest, ($create_new_still ? $still_filename_new : $still_filename));
+      mediamosa_gd::imagejpeg($dest, ($create_new_still ? $still_filename_new : $still_filename), self::SAVE_QUALITY);
     }
     else {
-      mediamosa_gd::imagepng($dest, ($create_new_still ? $still_filename_new : $still_filename));
+      mediamosa_gd::imagepng($dest, ($create_new_still ? $still_filename_new : $still_filename), self::SAVE_QUALITY);
     }
 
     // Destroye resources.
