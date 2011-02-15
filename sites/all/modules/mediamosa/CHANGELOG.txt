@@ -50,6 +50,7 @@ Other changes (not ticket related).
   where not master-slaved, while original mediafile was.
 - SDK code was syncronized with the SDK repository (6 and 7).
 - Ticket 103: Streaming ticket table clean up development.
+- Simpletest REST call development.
   
 
 MediaMosa 2.3.5 (build 1274)
