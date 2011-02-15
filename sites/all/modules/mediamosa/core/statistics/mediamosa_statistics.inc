@@ -55,6 +55,11 @@ class mediamosa_statistics {
    * Float to integer conversion number.
    */
   const LOG_FLOAT = 1000;
+  /**
+   * Ticket clean up time in hours.
+   * 30 days. 24x30 = 720.
+   */
+  const TICKET_TIMEOUT = 720;
 
   /**
    * Log for statistics.
@@ -609,13 +614,23 @@ class mediamosa_statistics {
     // Store the play tickets only.
     if ($ticket_type == mediamosa_ticket::TICKET_TYPE_PLAY) {
       // The ticket id should be unique, then just simply store.
-      $tid = db_insert(mediamosa_streaming_ticket_db::TABLE_NAME)
+      $tid = mediamosa_db::db_insert(mediamosa_streaming_ticket_db::TABLE_NAME)
         ->fields(array(
           mediamosa_streaming_ticket_db::TICKET_ID => $ticket_id,
           mediamosa_streaming_ticket_db::APP_ID => $app_id,
           mediamosa_streaming_ticket_db::MEDIAFILE_ID => $mediafile_id,
+          mediamosa_streaming_ticket_db::TIMEOUT => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, self::TICKET_TIMEOUT),
         ))
         ->execute();
     }
+  }
+
+  /**
+   * Delete mediamosa_streaming_ticket table rows.
+   */
+  static public function delete_streaming_ticket() {
+    $num_deleted = mediamosa_db::db_delete(mediamosa_streaming_ticket_db::TABLE_NAME)
+      ->condition(mediamosa_streaming_ticket_db::TIMEOUT, mediamosa_datetime::utc_current_timestamp_now(), '<')
+      ->execute();
   }
 }

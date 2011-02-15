@@ -38,4 +38,5 @@ class mediamosa_streaming_ticket_db {
   const TICKET_ID = 'ticket_id';
   const APP_ID = 'app_id';
   const MEDIAFILE_ID = 'mediafile_id';
+  const TIMEOUT = 'timeout';
 }
