@@ -115,7 +115,7 @@ class mediamosa_datetime {
   }
 
   /**
-   * Return the current time UTC and in SQL datetime format
+   * Return the current time UTC in SQL datetime format
    * (YYYY-MM-DD HH:MM:SS)
    *
    * @param $no_reset
@@ -133,6 +133,29 @@ class mediamosa_datetime {
 
     $utc_timestamp = (string)mediamosa_db::db_query('SELECT UTC_TIMESTAMP')->fetchField();
     return $utc_timestamp;
+  }
+
+  /**
+   * Return the current time UTC with additional hours in SQL datetime format
+   * (YYYY-MM-DD HH:MM:SS)
+   *
+   * @param $no_reset
+   *   Boolean to control whether the timestamp is re-created or the static is
+   *   used (if set).
+   * @param $hours
+   *   Hours to add.
+   *
+   * @return timestamp
+   */
+  static public function utc_current_timestamp_add_hours($reset = FALSE, $hours) {
+    static $utc_timestamp_add_hours = array();
+
+    if (isset($utc_timestamp_add_hours[$hours]) && !$reset) {
+      return $utc_timestamp_add_hours[$hours];
+    }
+
+    $utc_timestamp_add_hours[$hours] = (string)mediamosa_db::db_query('SELECT DATE_ADD(UTC_TIMESTAMP, INTERVAL :hours HOUR)', array(':hours' => $hours))->fetchField();
+    return $utc_timestamp_add_hours[$hours];
   }
 
   /**

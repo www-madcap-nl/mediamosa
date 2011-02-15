@@ -53,6 +53,9 @@ function mediamosa_statistics_cron() {
       // than the cron interval).
       variable_set('mediamosa_statistics_cron_last_run', $now);
       mediamosa_statistics::calculate_used_diskspace($year, $month);
+
+      // Clean up mediamosa_streaming_ticket table.
+      mediamosa_statistics::delete_streaming_ticket();
     }
 
     // Do the statistics cron REST call for streaming statistics.

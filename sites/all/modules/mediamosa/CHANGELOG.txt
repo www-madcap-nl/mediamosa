@@ -46,6 +46,7 @@ Other changes (not ticket related).
 - Changed robots.txt that it will disallow all crawling.
 - Removed access check on stills, this was causing access denied on stills that
   where not master-slaved, while original mediafile was.
+- Ticket 103: Streaming ticket table clean up development.
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------

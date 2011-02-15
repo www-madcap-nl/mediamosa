@@ -80,6 +80,12 @@ function mediamosa_streaming_ticket_schema() {
         'not null' => TRUE,
         'description' => 'The parent mediafile ID.',
       ),
+      mediamosa_streaming_ticket_db::TIMEOUT => array(
+        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE,
+        'description' => 'The date and time, when the ticket expires.',
+      ),
     ),
     'primary key' => array(mediamosa_streaming_ticket_db::ID),
     'unique keys' => array(
@@ -90,6 +96,8 @@ function mediamosa_streaming_ticket_schema() {
     ),
     'indexes' => array(
       'idx_mediafileid'  => array(mediamosa_streaming_ticket_db::MEDIAFILE_ID),
+      'idx_ticket_id'  => array(mediamosa_streaming_ticket_db::TICKET_ID),
+      'idx_timeout'  => array(mediamosa_streaming_ticket_db::TIMEOUT),
     ),
   );
 

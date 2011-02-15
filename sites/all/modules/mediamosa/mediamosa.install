@@ -1826,4 +1826,38 @@ function mediamosa_update_7087() {
   cache_clear_all();
 }
 
+/**
+ * Change mediamosa_streaming_ticket table.
+ * Add new field: time.
+ * Add new indexes: ticket_id, time.
+ */
+function mediamosa_update_7088() {
+  // Add time field.
+  db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
+
+  // Ticket id.
+  db_add_index(
+    'mediamosa_streaming_ticket',
+    'idx_ticket_id',
+    array(
+      mediamosa_streaming_ticket_db::TICKET_ID,
+    )
+  );
+
+  // Time.
+  db_add_index(
+    'mediamosa_streaming_ticket',
+    'idx_timeout',
+    array(
+      mediamosa_streaming_ticket_db::TIMEOUT,
+    )
+  );
+
+  // Add value to time fields.
+  db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
+    ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, mediamosa_statistics::TICKET_TIMEOUT),
+  ));
+}
+
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
