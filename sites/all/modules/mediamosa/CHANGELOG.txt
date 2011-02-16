@@ -29,13 +29,20 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 2.3.6 (build 1282)
+----------------------------
+- Streaming ticket table clean up development (See ticket #103).
+
+Other changes (not ticket related)
+- Added extended role and access rights to drupal for MediaMosa users that
+  require specific rights on MediaMosa backend.
+
 MediaMosa 2.3.5 (build 1277)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
   the default url to the still in asset call. (See ticket #456).
 - Fixed bug where invalid char would cause malformed XML (See ticket #446).
 - Fixed LUA for video with 0 audio channels (See vpcore ticket #227).
-- Streaming ticket table clean up development (See ticket #103).
 
 Other changes (not ticket related).
 - Fixed asset Solr delete, it didn't delete the Solr index correctly. 

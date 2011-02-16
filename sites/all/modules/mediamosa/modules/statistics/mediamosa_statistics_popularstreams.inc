@@ -102,7 +102,7 @@ function mediamosa_statistics_popularstreams_list_form() {
       $row['app_id'],
       mediamosa_lib::l_asset($row['asset_id'], $title),
       check_plain($row['owner_id']),
-      );
+    );
   }
 
   /**
