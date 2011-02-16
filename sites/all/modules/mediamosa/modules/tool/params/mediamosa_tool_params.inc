@@ -34,6 +34,14 @@
  */
 function _mediamosa_tool_params_list() {
 
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
   $header = array(
     array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL),

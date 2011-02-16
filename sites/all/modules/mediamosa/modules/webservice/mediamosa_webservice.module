@@ -79,6 +79,14 @@ function mediamosa_webservice_menu() {
  */
 function _mediamosa_webservice_list() {
 
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
   $header = array(
     array('data' => t('ID'), 'field' => 'w.' . mediamosa_webservice_db::ID, 'sort' => 'asc'),
     array('data' => t('Handle'), 'field' => 'w.' . mediamosa_webservice_db::HANDLE, 'sort' => 'asc'),
@@ -96,18 +104,19 @@ function _mediamosa_webservice_list() {
   // Get destination.
   $l_options = array('query' => drupal_get_destination());
 
+  $actions = array();
+  if (_mediamosa_user_access(mediamosa_permission::UPDATE_CONFIG_WEBSERVICES)) {
+    $actions[] = l(t('Edit'), 'admin/mediamosa/config/webservice/' . $row->{mediamosa_webservice_db::ID} . '/edit', $l_options);
+  }
+
   $rows = array();
   foreach ($result as $row) {
-    $actions = array(
-      l(t('Edit'), 'admin/mediamosa/config/webservice/' . $row->{mediamosa_webservice_db::ID} . '/edit', $l_options),
-    );
-
     $rows[] = array(
       $row->{mediamosa_webservice_db::ID},
       $row->{mediamosa_webservice_db::HANDLE},
       $row->{mediamosa_webservice_db::DESCRIPTION},
       $row->{mediamosa_webservice_db::STATUS} == mediamosa_webservice_db::STATUS_TRUE ? t('On') : t('<b>Off</b>'),
-      implode(' | ', $actions),
+      empty($actions) ? '-' : implode(' | ', $actions),
     );
   }
 

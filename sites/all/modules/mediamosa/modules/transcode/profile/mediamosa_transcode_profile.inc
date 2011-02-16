@@ -53,6 +53,14 @@ function _mediamosa_get_apps() {
  */
 function _mediamosa_transcode_profile_list() {
 
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
   // Get the apps.
   $apps = _mediamosa_get_apps();
 
@@ -83,35 +91,45 @@ function _mediamosa_transcode_profile_list() {
     $query->condition(mediamosa_transcode_profile_db::APP_ID, $app_ids, 'IN');
   }
 
-  $result = $query->orderByHeader($header)
+  $transcode_profiles = $query->orderByHeader($header)
     ->limit(mediamosa_settings::maintenance_items_per_page())
-    ->execute();
+    ->execute()->fetchAll();
+
+  // Collect the node IDs.
+  $nids = array();
+  foreach ($transcode_profiles as $transcode_profile) {
+    $nids[] = $transcode_profile[mediamosa_app_db::NID];
+  }
+
+  // Get the nodes.
+  $nodes = node_load_multiple($nids);
 
   // Get destination.
   $l_options = array('query' => drupal_get_destination());
 
   $rows = array();
-  foreach ($result as $row) {
+  foreach ($transcode_profiles as $transcode_profile) {
     $actions = array();
-    if (node_access('update', $row[mediamosa_transcode_profile_db::NID])) {
-      $actions[] = l(t('Edit'), 'admin/mediamosa/config/transcode_profile/' . $row[mediamosa_transcode_profile_db::NID] . '/edit', $l_options);
+    if (node_access('update', $nodes[$transcode_profile[mediamosa_transcode_profile_db::NID]])) {
+      $actions[] = l(t('Edit'), 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID] . '/edit', $l_options);
     }
-    if (node_access('delete', $row[mediamosa_transcode_profile_db::NID])) {
-      $actions[] = l(t('Delete'), 'admin/mediamosa/config/transcode_profile/' . $row[mediamosa_transcode_profile_db::NID] . '/delete', $l_options);
+    if (node_access('delete', $nodes[$transcode_profile[mediamosa_transcode_profile_db::NID]])) {
+      $actions[] = l(t('Delete'), 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID] . '/delete', $l_options);
     }
 
-    $owner = isset($apps[$row[mediamosa_transcode_profile_db::APP_ID]]) ? $apps[$row[mediamosa_transcode_profile_db::APP_ID]] : t('Unknown owner');
+    $owner = isset($apps[$transcode_profile[mediamosa_transcode_profile_db::APP_ID]]) ? $apps[$transcode_profile[mediamosa_transcode_profile_db::APP_ID]] : t('Unknown owner');
     $rows[] = array(
-      'title' => array('data' => l($row[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $row[mediamosa_transcode_profile_db::NID]), 'field' => $row[mediamosa_transcode_profile_db::PROFILE]),
-      'transcode_profile_id' => $row[mediamosa_transcode_profile_db::ID],
-      'description' => $row[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE],
-      'tool' => $row[mediamosa_transcode_profile_db::TOOL],
+      'title' => array('data' => l($transcode_profile[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $transcode_profile[mediamosa_transcode_profile_db::NID]), 'field' => $transcode_profile[mediamosa_transcode_profile_db::PROFILE]),
+      'transcode_profile_id' => $transcode_profile[mediamosa_transcode_profile_db::ID],
+      'description' => $transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE],
+      'tool' => $transcode_profile[mediamosa_transcode_profile_db::TOOL],
       'owner' => $owner,
       empty($actions) ? '-' : implode(' | ', $actions),
     );
   }
 
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no transcode profiles. Click on the <em>Add</em> tab to create one.')));
-  $output .= theme('pager');
-  return $output;
+  $output = array();
+  $output[] = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no transcode profiles. Click on the <em>Add</em> tab to create one.')));
+  $output[] = theme('pager');
+  return implode('', $output);
 }

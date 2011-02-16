@@ -38,6 +38,12 @@ module_load_include('inc', 'mediamosa_statistics', 'mediamosa_statistics');
 function mediamosa_statistics_streamrequests_form() {
 
   $build = array();
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Statistics'), 'admin/mediamosa/statistics');
+  drupal_set_breadcrumb($breadcrumb);
 
   $build['mediamosa_statistics_filter'] = drupal_get_form('mediamosa_statistics_filter_form', MEDIAMOSA_STATISTICS_FILTER_TYPE_STREAMREQUESTS);
   $build['mediamosa_statistics_list'] = drupal_get_form('mediamosa_statistics_streamrequests_list_form');

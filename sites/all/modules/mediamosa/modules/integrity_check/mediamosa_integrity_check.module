@@ -302,6 +302,13 @@ function mediamosa_integrity_check_page() {
  * Start integrity check.
  */
 function mediamosa_integrity_check_start() {
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  drupal_set_breadcrumb($breadcrumb);
+
   $form = array();
 
   $form['start'] = array(
@@ -331,8 +338,8 @@ function mediamosa_integrity_check_start_validate($form, &$form_state) {
  */
 function mediamosa_integrity_check_start_submit($form, &$form_state) {
   // Rights check.
-  if (!user_access('administer integrity')) {
-    drupal_set_message(t('You have no "administer integrity" rights.'), 'error');
+  if (!user_access(mediamosa_permission::ACCESS_START_FILE_INTEGRITY_START)) {
+    drupal_set_message(t('You have no rights to start the integrity check.'), 'error');
     return;
   }
 

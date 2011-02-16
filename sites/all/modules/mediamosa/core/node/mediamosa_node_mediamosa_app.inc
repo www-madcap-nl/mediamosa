@@ -249,14 +249,35 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('REST call version'), check_plain($node->{mediamosa_app_db::ACTIVE_VERSION})),
     array(t('Owner'), check_plain($node->{mediamosa_app_db::OWNER})),
     array(t('Allowed Master/Slave Apps'), empty($allow_masterslave_apps) ? t('No applications allowed.') : implode(', ', $allow_masterslave_apps)),
+    array(t('Allowed Master/Slave Apps'), empty($allow_masterslave_apps) ? t('No applications allowed.') : implode(', ', $allow_masterslave_apps)),
   );
 
   // Add timestamps.
   $rows[] = array(t('Created'), format_date($node->created, 'short'));
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
 
-  $node->content['app'] = array(
-    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
+  $rows_contact = array(
+    array(t('Technical name'), check_plain($node->technical_name)),
+    array(t('Technical phone'), check_plain($node->technical_phone)),
+    array(t('Technical email'), check_plain($node->technical_email)),
+    array(t('Administrative name'), check_plain($node->administrative_name)),
+    array(t('Administrative phone'), check_plain($node->administrative_phone)),
+    array(t('Administrative email'), check_plain($node->administrative_email)),
+  );
+
+  $node->content = array(
+    'app_title' => array(
+      '#markup' => '<h1>Client application data</h1>',
+    ),
+    'app' => array(
+      '#markup' => theme('table', array('header' => array(t('Item'), t('Value')), 'rows' => $rows))
+    ),
+    'contact_title' => array(
+      '#markup' => '<h1>Client application technical and administrative contact information</h1>',
+    ),
+    'contact' => array(
+      '#markup' => theme('table', array('header' => array(t('Item'), t('Value')), 'rows' => $rows_contact))
+    ),
   );
 
   return $node;

@@ -44,6 +44,12 @@
  * Menu callback; Provide the administration overview page.
  */
 function _mediamosa_maintenance_admin_page($path) {
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  drupal_set_breadcrumb($breadcrumb);
+
   $blocks = array();
 
   $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = :link_path AND module = 'system'", array(':link_path' => 'admin/mediamosa'))->fetchAssoc();

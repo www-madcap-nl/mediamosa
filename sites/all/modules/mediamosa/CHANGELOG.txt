@@ -35,6 +35,7 @@ MediaMosa 2.3.5 (build 1277)
   the default url to the still in asset call. (See ticket #456).
 - Fixed bug where invalid char would cause malformed XML (See ticket #446).
 - Fixed LUA for video with 0 audio channels (See vpcore ticket #227).
+- Streaming ticket table clean up development (See ticket #103).
 
 Other changes (not ticket related).
 - Fixed asset Solr delete, it didn't delete the Solr index correctly. 
@@ -46,7 +47,7 @@ Other changes (not ticket related).
 - Changed robots.txt that it will disallow all crawling.
 - Removed access check on stills, this was causing access denied on stills that
   where not master-slaved, while original mediafile was.
-- Ticket 103: Streaming ticket table clean up development.
+
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------

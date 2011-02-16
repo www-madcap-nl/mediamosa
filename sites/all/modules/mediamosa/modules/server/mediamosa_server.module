@@ -152,6 +152,14 @@ function mediamosa_server_mediamosa_register_rest_call() {
  * Show the mediamosa servers.
  */
 function _mediamosa_server_list() {
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
   $rows = array();
 
   $header = array(
@@ -162,22 +170,33 @@ function _mediamosa_server_list() {
     t('Operations'),
   );
 
-  $query = db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('PagerDefault')->extend('TableSort');
-  $query->fields('ms');
-  $query->orderByHeader($header);
-  $query->limit(mediamosa_settings::maintenance_items_per_page());
-  $result = $query->execute();
+  // Get the servers.
+  $servers = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('PagerDefault')->extend('TableSort')
+    ->fields('ms')
+    ->limit(mediamosa_settings::maintenance_items_per_page())
+    ->orderByHeader($header)
+    ->execute()
+    ->fetchAll();
+
+  // Collect the node IDs.
+  $nids = array();
+  foreach ($servers as $server) {
+    $nids[] = $server[mediamosa_server_db::NID];
+  }
+
+  // Get the nodes.
+  $nodes = node_load_multiple($nids);
 
   // Get destination.
   $l_options = array('query' => drupal_get_destination());
 
-  foreach ($result as $server) {
+  foreach ($servers as $server) {
     $actions = array();
-    if (node_access('update', $server->{mediamosa_server_db::NID})) {
-      $actions[] = l(t('Edit'), 'node/' . $server->{mediamosa_server_db::NID} . '/edit', $l_options);
+    if (node_access('update', $nodes[$server[mediamosa_server_db::NID]])) {
+      $actions[] = l(t('Edit'), 'node/' . $server[mediamosa_server_db::NID] . '/edit', $l_options);
     }
-    if (node_access('delete', $server->{mediamosa_server_db::NID})) {
-      $actions[] = l(t('Delete'), 'admin/mediamosa/config/server/' . $server->{mediamosa_server_db::NID} . '/delete', $l_options);
+    if (node_access('delete', $nodes[$server[mediamosa_server_db::NID]])) {
+      $actions[] = l(t('Delete'), 'admin/mediamosa/config/server/' . $server[mediamosa_server_db::NID] . '/delete', $l_options);
     }
 
     $statuses = array(
@@ -189,10 +208,10 @@ function _mediamosa_server_list() {
     $rows[] = array('data' =>
       array(
         // Cells
-        t($server->{mediamosa_server_db::SERVER_TYPE}),
-       'title' => array('data' => l($server->{mediamosa_server_db::SERVER_NAME}, 'admin/mediamosa/config/server/' . $server->{mediamosa_server_db::NID}), 'field' => mediamosa_server_db::SERVER_NAME),
-        t($server->{mediamosa_server_db::SERVER_URI}),
-        $statuses[$server->{mediamosa_server_db::SERVER_STATUS}],
+        t($server[mediamosa_server_db::SERVER_TYPE]),
+       'title' => array('data' => l($server[mediamosa_server_db::SERVER_NAME], 'admin/mediamosa/config/server/' . $server[mediamosa_server_db::NID]), 'field' => mediamosa_server_db::SERVER_NAME),
+        t($server[mediamosa_server_db::SERVER_URI]),
+        $statuses[$server[mediamosa_server_db::SERVER_STATUS]],
         empty($actions) ? '-' : implode(' | ', $actions),
       ),
     );

@@ -35,6 +35,12 @@ define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
  * Build the form for browsing collections.
  */
 function _mediamosa_browse_collection_page($op = 'list') {
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  drupal_set_breadcrumb($breadcrumb);
 
   $build = array();
 

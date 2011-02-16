@@ -97,7 +97,6 @@ function mediamosa_app_menu() {
 
   $items['admin/mediamosa/config/app/list'] = array(
     'title' => 'List',
-    'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
@@ -191,6 +190,14 @@ function mediamosa_app_menu() {
  */
 function _mediamosa_app_list() {
 
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
   // Our header.
   $header = array(
     array('data' => t('App ID'), 'field' => 'a.' . mediamosa_app_db::APP_ID),
@@ -199,40 +206,49 @@ function _mediamosa_app_list() {
     t('Offline webservices'),
     array('data' => t('Owner'), 'field' => 'a.' . mediamosa_app_db::OWNER),
     array('data' => t('Status'), 'field' => 'a.' . mediamosa_app_db::ACTIVE),
-    t('Contacts'),
     t('Operations')
   );
 
   // Get the app nodes.
-  $result = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
+  $apps = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
     ->fields('a')
     ->limit(mediamosa_settings::maintenance_items_per_page())
     ->orderByHeader($header)
-    ->execute();
+    ->execute()
+    ->fetchAll();
+
+  // Collect the node IDs.
+  $nids = array();
+  foreach ($apps as $app) {
+    $nids[] = $app[mediamosa_app_db::NID];
+  }
+
+  // Get the nodes.
+  $nodes = node_load_multiple($nids);
 
   // Get all statuses of webservices per app.
-  $a_webservice_statuses = mediamosa_webservice_app::webservice_get_all_status();
+  $webservice_statuses = mediamosa_webservice_app::webservice_get_all_status();
 
   // Get destination.
   $l_options = array('query' => drupal_get_destination());
 
-  $apps = $rows = array();
-  foreach ($result as $app) {
+  $rows = array();
+  foreach ($apps as $app) {
     $app_id = $app[mediamosa_app_db::APP_ID];
 
     $actions = array();
-    if (node_access('update', $app[mediamosa_app_db::NID])) {
+    if (node_access('update', $nodes[$app[mediamosa_app_db::NID]])) {
       $actions[] = l(t('Edit'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/edit', $l_options);
     }
-    if (node_access('delete', $app[mediamosa_app_db::NID])) {
+    if (node_access('delete', $nodes[$app[mediamosa_app_db::NID]])) {
       $actions[] = l(t('Delete'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/delete', $l_options);
     }
 
-    $a_offline_webservices = array();
-    if (isset($a_webservice_statuses[$app_id])) {
-      foreach ($a_webservice_statuses[$app_id] as $handle => $status) {
+    $offline_webservices = array();
+    if (isset($webservice_statuses[$app_id])) {
+      foreach ($webservice_statuses[$app_id] as $handle => $status) {
         if (!$status) {
-          $a_offline_webservices[] = $handle;
+          $offline_webservices[] = $handle;
         }
       }
     }
@@ -241,10 +257,9 @@ function _mediamosa_app_list() {
       $app[mediamosa_app_db::APP_ID],
       'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
       $app[mediamosa_app_db::QUOTA],
-      implode(', ', $a_offline_webservices),
+      implode(', ', $offline_webservices),
       $app[mediamosa_app_db::OWNER],
       $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? t('Enabled') : t('<b>Disabled</b>'),
-      l(t('Contacts'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::APP_ID] . '/contacts'),
       empty($actions) ? '-' : implode(' | ', $actions),
     );
   }
@@ -279,14 +294,14 @@ function _mediamosa_app_contacts($app_id) {
   $response = t('Technical and administrative contact for a client application.');
 
   $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault');
-  $result = $query
+  $apps = $query
     ->fields('a')
     ->condition('a.app_id', $app_id)
     ->limit(mediamosa_settings::maintenance_items_per_page())
     ->execute();
 
   $apps = array();
-  foreach ($result as $app) {
+  foreach ($apps as $app) {
     $apps[] = array(
       $app[mediamosa_app_db::APP_ID],
       $app[mediamosa_app_db::TECHNICAL_NAME],

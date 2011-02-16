@@ -73,7 +73,7 @@ class mediamosa {
 
   // Drupal usage for getting the current URI.
   public function get_request_uri() {
-    return trim(mediamosa_unicode::substr(implode('/', arg()), mediamosa_unicode::strlen(MEDIAMOSA_MENU_PATH)), '/');
+    return trim(implode('/', arg()), '/');
   }
 
   // Return the request_uri var, which can be /rest/?foo=foo
