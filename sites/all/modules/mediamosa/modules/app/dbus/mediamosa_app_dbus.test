@@ -28,7 +28,7 @@
   * @file
   * Unittests for authentication module.
   */
-class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
+class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
 
   public static function getInfo() {
     return array(

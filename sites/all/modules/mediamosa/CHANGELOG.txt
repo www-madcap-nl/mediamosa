@@ -25,7 +25,7 @@ TODO: (v2.4)
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
 
-MediaMosa 2.4 (build 1435)
+MediaMosa 2.4 (build 1437)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
@@ -49,7 +49,8 @@ Other changes (not ticket related).
 - Removed access check on stills, this was causing access denied on stills that
   where not master-slaved, while original mediafile was.
 - SDK code was syncronized with the SDK repository (6 and 7).
-  
+- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+  module.
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------
