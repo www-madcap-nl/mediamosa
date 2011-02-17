@@ -36,6 +36,7 @@ MediaMosa 2.3.6 (build 1283)
 Other changes (not ticket related)
 - Added extended role and access rights to drupal for MediaMosa users that
   require specific rights on MediaMosa backend.
+- Work around for still_type = scene, if there isn't video duration.
 
 MediaMosa 2.3.5 (build 1277)
 ----------------------------

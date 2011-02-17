@@ -36,6 +36,10 @@ class mediamosa_job_server {
    * Black still interval.
    */
   const BLACK_STILL_INTERVAL = 30;
+  /**
+   * Video duration max value in second.
+   */
+  const VIDEO_DURATION_MAX = 99999;
 
   /**
    * Log for job_server.
@@ -816,6 +820,20 @@ class mediamosa_job_server {
       $still_parameters = unserialize($job_server_still[mediamosa_job_server_still_db::STILL_PARAMETERS]);
       $fps = (int) $still_parameters['fps'];
       $video_duration = (int) $still_parameters['video_duration'];
+
+      // Video duration check, if still_type = scene.
+      if (!$video_duration && $still_parameters['still_type'] == mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE) {
+        // Some videos don't have video durations according to FFMpeg.
+        // If we want to create multiple stills, we usually need this information calculating other data.
+        // But in case of scene detection we have a work around, we can put the video duration on a maximum value.
+        self::log_debug_high_mediafile($mediafile_id, t('No video duration, when still_type = scene. Try to get the complete video. video_duration = @video_duration, start_frame = @start_frame, end_frame = @end_frame.', array(
+          '@video_duration' => print_r($video_duration, TRUE),
+          '@start_frame' => print_r($start_frame, TRUE),
+          '@end_frame' => print_r($end_frame, TRUE),
+        )));
+        $video_duration = self::VIDEO_DURATION_MAX;
+      }
+
       $start_frame = min(max(0, (int) $still_parameters['start_frame']), max(0, $video_duration - 1));
       if (isset($still_parameters['end_frame']) && (int) $still_parameters['end_frame']) {
         $end_frame = min(max(0, (int) $still_parameters['end_frame']), max(0, $video_duration - 1));
@@ -832,6 +850,11 @@ class mediamosa_job_server {
       // When video_duration is 0, then fall back to the original behaviour.
       if (!$video_duration || $start_frame == $end_frame) {
         $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
+        self::log_debug_high_mediafile($mediafile_id, t('No video duration or start frame = end frame. Fall back to still_type = NONE. video_duration = @video_duration, start_frame = @start_frame, end_frame = @end_frame.', array(
+          '@video_duration' => print_r($video_duration, TRUE),
+          '@start_frame' => print_r($start_frame, TRUE),
+          '@end_frame' => print_r($end_frame, TRUE),
+        )));
       }
 
       // Make sure still_type is uppercase.
@@ -842,21 +865,24 @@ class mediamosa_job_server {
         case 'NORMAL':
           if (!is_numeric($still_parameters['still_per_mediafile']) || $still_parameters['still_per_mediafile'] < 1) {
             $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
-            $error_description = 'Still_per_mediafile parameter is missing. Still creation fall back to still_type = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE';
+            $error_description = 'Still_per_mediafile parameter is missing. Still creation fall back to still_type = NONE';
+            self::log_debug_high_mediafile($mediafile_id, t('Still_per_mediafile parameter is missing. Still creation fall back to still_type = NONE.'));
           }
           break;
 
         case 'SECOND':
           if (!is_numeric($still_parameters['still_every_second']) || $still_parameters['still_every_second'] < 0) {
             $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
-            $error_description = 'Still_every_second parameter is missing. Still creation fall back to still_type = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE';
+            $error_description = 'Still_every_second parameter is missing. Still creation fall back to still_type = NONE';
+            self::log_debug_high_mediafile($mediafile_id, t('Still_every_second parameter is missing. Still creation fall back to still_type = NONE.'));
           }
           break;
 
         case 'SCENE':
           if (!$fps) {
             $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
-            $error_description = 'FPS parameter is 0. Still creation fall back to still_type = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE';
+            $error_description = 'FPS parameter is 0. Still creation fall back to still_type = NONE';
+            self::log_debug_high_mediafile($mediafile_id, t('FPS parameter is 0. Still creation fall back to still_type = NONE.'));
           }
           break;
 
