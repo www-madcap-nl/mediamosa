@@ -217,6 +217,7 @@ class mediamosa_settings {
   const MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES = 'delete mediamosa mediafiles';
   const MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS = 'delete mediamosa jobs';
   const MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES = 'analyse mediamosa mediafiles';
+  const MEDIAMOSA_PERMISSION_RETRANSCODE_MEDIAMOSA_MEDIAFILES = 'retranscode mediamosa mediafiles';
   const MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES = 'download mediamosa mediafiles';
 
   // Run at;

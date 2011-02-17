@@ -329,6 +329,35 @@ function mediamosa_maintenance_mediafile_analyse($asset_id, $mediafile_id) {
 }
 
 /**
+ * Start a retranscode of a mediafile.
+ *
+ * @param $asset_id
+ * @param $mediafile_id
+ */
+function mediamosa_maintenance_mediafile_retranscode($asset_id, $mediafile_id) {
+
+  // REST uri.
+  $uri = strtr('mediafile/@mediafile_id/retranscode', array('@mediafile_id' => $mediafile_id));
+
+  // Get the asset.
+  $asset = mediamosa_asset::get($asset_id);
+
+  if ($asset) {
+    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
+    $result = mediamosa_response_connector::static_do_restcall_drupal($uri, 'POST', $params);
+
+    if (mediamosa_response_connector::static_result_okay($result)) {
+      drupal_set_message(t('Retranscode started.'));
+      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+    }
+  }
+
+  // Set failed.
+  drupal_set_message(t('Failed to start retranscode.'));
+  drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+}
+
+/**
  * start download proxy call.
  */
 function mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {

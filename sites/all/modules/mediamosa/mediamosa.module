@@ -56,6 +56,10 @@ function mediamosa_permission() {
       'title' => t('Analyse mediafiles'),
       'description' => t('Users with this permission may start analyse jobs for mediafiles.'),
     ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_RETRANSCODE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Retranscode mediafiles'),
+      'description' => t('Users with this permission may start retranscode jobs for mediafiles.'),
+    ),
     mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES =>  array(
       'title' => t('Download mediafiles'),
       'description' => t('Users with this permission may download mediafiles.'),

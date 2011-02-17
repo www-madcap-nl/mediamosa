@@ -34,6 +34,7 @@ MediaMosa 2.4 (build 1437)
   turned on to be used. (See ticket #428).
 - oAuth development (See ticket #10).
 - Owner check for /asset/$asset_id/joblist (See ticket #356).
+- Retranscode improvement (See ticket #467).
 
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 

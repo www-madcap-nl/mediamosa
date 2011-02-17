@@ -593,6 +593,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   // Cache rights.
   $may_delete = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES);
   $may_analyse = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES);
+  $may_retranscode = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_RETRANSCODE_MEDIAMOSA_MEDIAFILES);
   $may_download = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES);
 
   $allowed_still_fields = array(
@@ -618,6 +619,13 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $actions[] = '<b>' . trim($item['filename']) . '</b>';
     $actions[] = $may_delete ? l(t('Delete'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/delete', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No delete right');
     $actions[] = $may_analyse ? l(t('Analyze'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/analyse', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No analyse right');
+    // Retranscode.
+    if ($item[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE && $item[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID]) {
+      $actions[] = $may_retranscode ? l(t('Retranscode'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/retranscode', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No retranscode right');
+    }
+    else {
+      $actions[] = t('Original file');
+    }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);
 
