@@ -794,7 +794,10 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $offset =  $this->get_param_value_offset();
 
     // Must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+
+    // Must be owner / app_admin to get data.
+    mediamosa_aut::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     $item_count_total = NULL;
 
