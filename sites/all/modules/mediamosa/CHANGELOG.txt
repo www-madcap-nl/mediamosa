@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.6 (build 1283)
+MediaMosa 2.3.6 (build 1285)
 ----------------------------
 - Streaming ticket table clean up development (See ticket #103).
 
