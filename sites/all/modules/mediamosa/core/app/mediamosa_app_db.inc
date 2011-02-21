@@ -60,6 +60,10 @@ class mediamosa_app_db {
   const SHOW_EXTERNAL_ASSETS = 'show_external_assets';
   const SHOW_EXTERNAL_ASSETS_TRUE = 'TRUE';
   const SHOW_EXTERNAL_ASSETS_FALSE = 'FALSE';
+  const OAUTH_CONSUMER_KEY = 'oauth_consumer_key';
+  const OAUTH_CONSUMER_KEY_LENGTH = 255;
+  const OAUTH_CONSUMER_SECRET = 'oauth_consumer_secret';
+  const OAUTH_CONSUMER_SECRET_LENGTH = 255;
   const ALLOW_MASTERSLAVE_APPS = 'allow_masterslave_apps';
   const DESCRIPTION = 'description';
   const DESCRIPTION_LENGTH = 255;

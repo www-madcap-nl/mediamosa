@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.3.5.1277"
+version = "2.4.0.1437"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -89,6 +89,15 @@ files[] = core/app/mediamosa_app.install.inc
 
 ; App Authentication class.
 files[] = core/app/authentication/mediamosa_app_authentication.inc
+
+; oAuth related classes.
+files[] = core/app/authentication/mediamosa_app_oauth.inc
+files[] = core/app/authentication/mediamosa_app_oauth_nonce_db.inc
+files[] = core/app/authentication/mediamosa_app_oauth_nonce.install.inc
+files[] = core/app/authentication/mediamosa_app_oauth_token_db.inc
+files[] = core/app/authentication/mediamosa_app_oauth_token.install.inc
+; oAuth base class. Origin: http://oauth.googlecode.com/svn/code/php/
+files[] = core/app/authentication/3rdparty/OAuth.php
 
 ; Webservice class.
 files[] = core/webservice/mediamosa_webservice_db.inc
@@ -234,6 +243,9 @@ files[] = core/node/mediamosa_node_mediamosa_transcoding_profile.inc
 files[] = core/node/revision/mediamosa_node_revision_db.inc
 files[] = core/node/revision/mediamosa_node_revision.inc
 files[] = core/node/revision/mediamosa_node_revision.install.inc
+
+; OpenAPI class.
+files[] = core/openapi/mediamosa_openapi.inc
 
 ; Statistics
 files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.inc

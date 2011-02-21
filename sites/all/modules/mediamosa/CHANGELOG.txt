@@ -3,7 +3,6 @@
 START CHANGELOG:
 
 Known issues;
-- MediaMosa 2.3.x seem to work fine with PHP 5.3, although needs more testing.
 - Servers (processor, download, upload etc) that are installed on a subdir are
   not correctly retrieved on the server status page. (See ticket #367).
 - TODO: Tool params should validate the values, when the user save the node:
@@ -11,24 +10,59 @@ Known issues;
   * Tool parameter is unique.
   * Allowed value is a ";" separated string.
   * Default value is exists in the allowed values.
-- Watchdog (admin/reports/dblog) bug: The combination with type and severity
-  with one of the asset id, mediafile id or free text search causes
-  PDOException. It seems a Drupal 7 core bug. We will check it again after
-  the Drupal 7 core update.
-- All require_once are local path. This works fine, but I'm seeing a lot of
-  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
-  study if we need to change our require_once.
 
-update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
-update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR) where val_datetime is not null and val_char is not null;
 
-Known bugs (no tickets (yet));
-- STILL_URI in object response during play proxy call is broken.
+OpenAPI development:
+- Alternative output formats (JSON, Atom, RSS)
+- OpenAPI interface
+- OpenAPI search
+- OpenSocial GET
+- OpenSocial POST
+
 
 TODO: (v2.4)
-- OAI delete support.
+- OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 2.4 (build 1437)
+--------------------------
+- Watermarking stills (See ticket #82).
+- oEmbed provider functionality (See ticket #413).
+  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
+- oAuth development (See ticket #10).
+
+Other changes (not ticket related).
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
+- Added new theme.
+- Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
+    Still download test, Permanent still link.
+- Fixed: asset-collection relation delete all REST call. Returned SQL error when
+  no relations where present.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+- SDK code was syncronized with the SDK repository (6 and 7).
+- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+  module.
+
+MediaMosa 2.3.7 (build 1285)
+----------------------------
+
+Other changes (not ticket related)
+- Work around for still_type = scene, if there isn't video duration.
+
+MediaMosa 2.3.6 (build 1283)
+----------------------------
+- Streaming ticket table clean up development (See ticket #103).
+- Added extended role and access rights to drupal for MediaMosa users that
+  require specific rights on MediaMosa backend (See vpcore ticket #129).
+  
 MediaMosa 2.3.5 (build 1277)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
@@ -509,7 +543,7 @@ Other changes (not ticket related).
   /mediafile/mediafile_id max. length 32 chars.
 - Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
   type instead of varchar(10).
-- PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
+- PHP function getimagesize() is now wrapped with mediamosa_gd::getimagesize().
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
 - Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
   asset_created.

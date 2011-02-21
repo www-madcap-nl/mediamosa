@@ -1,4 +1,4 @@
-; $Id $
+; $Id$
 
 name = "Debug"
 description = "The debug settings."

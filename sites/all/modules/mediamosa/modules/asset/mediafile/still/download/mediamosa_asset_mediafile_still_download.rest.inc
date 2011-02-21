@@ -43,7 +43,23 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
   const STILL_ID = 'still_id';
   const TICKET_ID = 'ticket_id';
 
-    // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------------ Get Var Setup.
+  /**
+   * Match URI.
+   *
+   * @param string $uri
+   *
+   * @return boolean
+   *   TRUE, if match.
+   */
+  public static function match_uri($uri) {
+    $delta = (mediamosa::get()->in_simpletest_sandbox() ? 2 : 1);
+    $uri_parts = explode('/', $uri);
+
+    // Match if there isn't second argument, or the first is "ticket", or the length of the first is 1.
+    return (empty($uri_parts[$delta + 1]) || (!empty($uri_parts[$delta]) && $uri_parts[$delta] == 'ticket') || (!empty($uri_parts[$delta]) && drupal_strlen($uri_parts[$delta]) == 1));
+  }
+
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -74,6 +90,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     $still_id = $this->get_param_value(self::STILL_ID);
     $ticket_id = $this->get_param_value(self::TICKET_ID);
 
+
     if (!$ticket_id && !$still_id) {
       throw new mediamosa_exception_error(mediamosa_error::HTTP_FORBIDDEN);
 
@@ -94,7 +111,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       }
     }
     elseif ($still_id) {
-
       //
       // Permanent link.
       //

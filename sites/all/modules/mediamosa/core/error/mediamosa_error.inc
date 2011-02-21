@@ -54,7 +54,7 @@ class mediamosa_error extends mediamosa_sdk {
     // If errorcode was specified, get that one specific.
     if ($errorcode && $order_by == mediamosa_error_db::CODE) {
       if (isset($codes[$order_by][$order_direction][$errorcode])) {
-        return array($errorcode => (array)$codes[$order_by][$order_direction][$errorcode]);
+        return array($errorcode => (array) $codes[$order_by][$order_direction][$errorcode]);
       }
 
       return array();

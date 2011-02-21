@@ -97,42 +97,60 @@ class mediamosa_rest {
 
     // Now find a match.
     foreach ($rest_calls[$request_method] as $uri => $rest_call) {
-      $a_uri_parts = ($uri != '' ? explode('/', $uri) : array());
+      $uri_parts_array = ($uri != '' ? explode('/', $uri) : array());
 
       // Number of parts must match.
-      if (count($request_uris) != count($a_uri_parts)) {
+      if (count($request_uris) != count($uri_parts_array)) {
         continue;
       }
 
       // Both empty? Then we match '/'.
-      if (!count($request_uris) && !count($a_uri_parts)) {
+      if (!count($request_uris) && !count($uri_parts_array)) {
         $rest_call[mediamosa_rest_call::URI] = $uri;
         $rest_call_return = $rest_call;
         break;
       }
 
       // Build the REGEX so we can see if it matches.
-      $a_regex = array();
-      foreach ($a_uri_parts as $pos => $uri_part) {
+      $regex_array = array();
+      foreach ($uri_parts_array as $pos => $uri_part) {
         if (mediamosa_unicode::substr($uri_part, 0, 2) == '#$') {
-          $a_regex[] = "[0-9]*(:[a-zA-Z]+)?";
+          $regex_array[] = "[0-9]*(:[a-zA-Z]+)?";
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $request_uris[$pos];
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
-          $a_regex[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
+          $regex_array[] = "[^\\/]*"; // MediaMosa is completly lose, any char EXCEPT /.
           $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $request_uris[$pos];
         }
         else {
-          $a_regex[] = $uri_part;
+          $regex_array[] = $uri_part;
         }
       }
 
       // Does it match with our REGEX?
-      $s_regex = '@^' . implode('/', $a_regex) . '$@';
-      if (preg_match($s_regex, $request_uri)) {
-        $rest_call[mediamosa_rest_call::URI] = $uri;
-        $rest_call_return = $rest_call;
-        break;
+      $regex_string = '@^' . implode('/', $regex_array) . '$@';
+      if (preg_match($regex_string, $request_uri)) {
+        // Check the match_uri() static function.
+        if (method_exists($rest_call[mediamosa_rest_call::CLASS_NAME], mediamosa_rest_call::MATCH_URI_FUNCTION)) {
+          if (!call_user_func(array($rest_call[mediamosa_rest_call::CLASS_NAME], mediamosa_rest_call::MATCH_URI_FUNCTION), $request_uri)) {
+            continue;
+          }
+        }
+
+        // Check the number of wildchar parts.
+        // Less wildchar means better match.
+        $uri_parts = explode('/', $uri);
+        $wildchar = 0;
+        foreach ($uri_parts as $uri_part) {
+          if (drupal_substr($uri_part, 0, 1) == '$') {
+            $wildchar++;
+          }
+        }
+        if (!$rest_call_return || $rest_call_return[mediamosa_rest_call::URI_WILDCHAR] > $wildchar) {
+          $rest_call[mediamosa_rest_call::URI] = $uri;
+          $rest_call[mediamosa_rest_call::URI_WILDCHAR] = $wildchar;
+          $rest_call_return = $rest_call;
+        }
       }
     }
 
@@ -202,11 +220,40 @@ class mediamosa_rest {
       $limit = -1; // get all.
     }
 
+    // Restriction for just a few specific calls.
+    $current_interface = array();
+    if (mediamosa::is_app_app_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_APP;
+    }
+    if (mediamosa::is_app_upload_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_UPLOAD;
+    }
+    if (mediamosa::is_app_download_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD;
+    }
+    if (mediamosa::is_app_openapi_enabled()) {
+      $current_interface[] = mediamosa_rest_call::FOR_INTERFACE_OPENAPI;
+    }
+
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
+
       foreach ($rest_call_2 as $method => $rest_call) {
         if ($offset && $offset--) {
           $pos++;
+          continue;
+        }
+
+        // TODO Upload, Download restriction.
+        if (empty($rest_call[mediamosa_rest_call::FOR_INTERFACE])) {
+          $rest_call[mediamosa_rest_call::FOR_INTERFACE] = array(
+            mediamosa_rest_call::FOR_INTERFACE_APP,
+            mediamosa_rest_call::FOR_INTERFACE_UPLOAD,
+            mediamosa_rest_call::FOR_INTERFACE_DOWNLOAD,
+          );
+        }
+        $intersec = array_intersect($current_interface, $rest_call[mediamosa_rest_call::FOR_INTERFACE]);
+        if (empty($intersec)) {
           continue;
         }
 
@@ -279,6 +326,14 @@ class mediamosa_rest {
         return FALSE;
       }
 
+      // Check the allowed paths.
+      foreach (module_implements('mediamosa_allowed_path') as $module) {
+        $allowed_path = module_invoke($module, 'mediamosa_allowed_path');
+        if ($allowed_path) {
+          return FALSE;
+        }
+      }
+
       // Throw so mediamosa handles the output.
       throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND, array(
         '@uri' => print_r($uri, TRUE),
@@ -323,12 +378,14 @@ class mediamosa_rest {
     }
 
     // Process the REST call.
-    $the_rest_call->process_call();
+    $response_type = $the_rest_call->process_call();
 
     // If offset was specified, then include it in the header.
     if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
       $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
+
+    return $response_type;
   }
 
   /**

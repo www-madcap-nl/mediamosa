@@ -75,7 +75,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID.',
+          self::VAR_DESCRIPTION => 'The user ID and owner of the asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
