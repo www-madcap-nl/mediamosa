@@ -250,7 +250,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         ),
         self::FRAMETIME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still frametime.',
+          self::VAR_DESCRIPTION => 'Still frametime (in seconds) for still_type NONE.',
         ),
         self::WIDTH => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,

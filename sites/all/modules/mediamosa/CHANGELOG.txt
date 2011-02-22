@@ -56,6 +56,7 @@ Other changes (not ticket related).
 - Work around for still_type = scene, if there isn't video duration.
 - Add install hook for mediamosa_app_authentication to migrate to new DBUS 
   module.
+- Better text for FRAMETIME parameter.
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------

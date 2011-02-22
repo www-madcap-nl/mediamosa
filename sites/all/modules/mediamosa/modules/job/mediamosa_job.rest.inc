@@ -453,7 +453,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::FRAMETIME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still frametime (in seconds).',
+          self::VAR_DESCRIPTION => 'Still frametime (in seconds) for still_type NONE.',
         ),
         // Watermark.
         self::WATERMARK_ID => array(
