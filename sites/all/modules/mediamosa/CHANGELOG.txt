@@ -57,6 +57,7 @@ Other changes (not ticket related).
 - Add install hook for mediamosa_app_authentication to migrate to new DBUS 
   module.
 - Better text for FRAMETIME parameter.
+- FFMpeg 2 pass encoding fix.
 
 MediaMosa 2.3.5 (build 1274)
 ----------------------------
