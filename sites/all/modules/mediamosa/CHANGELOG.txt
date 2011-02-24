@@ -35,6 +35,7 @@ MediaMosa 2.4 (build 1437)
 - oAuth development (See ticket #10).
 - Owner check for /asset/$asset_id/joblist (See ticket #356).
 - Retranscode improvement (See ticket #467).
+- ACL problem when using replace fix (See ticket #503).
 
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
