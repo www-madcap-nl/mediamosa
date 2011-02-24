@@ -540,7 +540,8 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
   $rows = array();
   foreach ($result['items'] as $item) {
     $delete = (in_array((string)$item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/' . $asset_id . '/job/' . $item['id'] . '/delete') : '';
-    $rows[] = array(
+    // We will sort jobs by ID.
+    $rows[$item['id']] = array(
       $item['id'],
       $item['job_type'],
       $item['status'],
@@ -551,6 +552,7 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
       $delete,
     );
   }
+  ksort($rows);
   $header = array(
     t('ID'),
     t('Type'),
