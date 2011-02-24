@@ -604,28 +604,29 @@ class mediamosa_aut {
    * @param integer $app_id
    * @param string $user_id
    * @param string $aut_type
-   * @param array $a_object
+   * @param array $object
    *  Make sure its an object that is within the same app_id as the user
    *  Or else it will be denied access
-   * @param array $a_app_ids
+   * @param array $app_ids
    *  Reserved, not supported yet.
-   * @param array $a_aut_user_ids
-   * @param array $a_aut_group_ids
-   * @param array $a_aut_domains
-   * @param array $a_aut_realms
-   * @param array $a_rights
-   * @param array $is_app_admin
+   * @param array $aut_user_ids
+   * @param array $aut_group_ids
+   * @param array $aut_domains
+   * @param array $aut_realms
+   * @param bool $replace
+   * @param array $rights
    *  For future expansion
+   * @param array $is_app_admin
    */
-  static public function rights_set($app_id, $user_id, $aut_type, array $object, array $a_app_ids, array $a_aut_user_ids, array $a_aut_group_ids, array $a_aut_domains, array $a_aut_realms, $b_replace = TRUE, array $a_rights = array(mediamosa_aut::RIGHT_ACCESS), $is_app_admin = FALSE) {
-    assert(count($a_rights));
+  static public function rights_set($app_id, $user_id, $aut_type, array $object, array $app_ids, array $aut_user_ids, array $aut_group_ids, array $aut_domains, array $aut_realms, $replace = TRUE, array $rights = array(mediamosa_aut::RIGHT_ACCESS), $is_app_admin = FALSE) {
+    assert(count($rights));
     assert($aut_type == mediamosa_aut::AUT_TYPE_MEDIAFILE || $aut_type == mediamosa_aut::AUT_TYPE_ASSET || $aut_type == mediamosa_aut::AUT_TYPE_COLLECTION); // media files for now
 
-    assert(!is_null($a_app_ids));
-    assert(!is_null($a_aut_user_ids));
-    assert(!is_null($a_aut_group_ids));
-    assert(!is_null($a_aut_domains));
-    assert(!is_null($a_aut_realms));
+    assert(!is_null($app_ids));
+    assert(!is_null($aut_user_ids));
+    assert(!is_null($aut_group_ids));
+    assert(!is_null($aut_domains));
+    assert(!is_null($aut_realms));
 
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
@@ -656,7 +657,7 @@ class mediamosa_aut {
     $rights_set = $rights_set_user_usergroup = $rights_set_domain_realm = FALSE;
 
     // Replace old existing rights.
-    if ($b_replace) {
+    if ($replace) {
       mediamosa_aut::rights_clear($app_id, $user_id, $aut_type, $object, $is_app_admin);
     }
     else {
@@ -665,25 +666,25 @@ class mediamosa_aut {
     }
 
 
-    $a_result = array();
+    $result = array();
 
     // Link app access.
     // Master / Slave;
     // Only the owner can share his media to another app
     // The other app is then called 'master', and the media shared is the slave.
-    foreach ($a_app_ids as $app_id_master) {
+    foreach ($app_ids as $app_id_master) {
 
       try {
         mediamosa_aut_app_master_slave::create($aut_object_id, $aut_type, $app_id_master, $app_id);
 
-        $a_result[] = array(
+        $result[] = array(
           'type' => mediamosa_aut::AUT_NAME_TYPE_APP,
           'value' => $app_id_master,
           'a_error' => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           'type' => mediamosa_aut::AUT_NAME_TYPE_APP,
           'value' => $app_id_master,
           'a_error' => $e->mediamosa_exception_error_array_get(),
@@ -692,9 +693,9 @@ class mediamosa_aut {
     }
 
     // Link users access
-    foreach ($a_aut_user_ids as $s_aut_user_id) {
+    foreach ($aut_user_ids as $aut_user_id) {
       try {
-        $aut_id = mediamosa_aut_name::create($app_id, $s_aut_user_id, mediamosa_aut::AUT_NAME_TYPE_USER);
+        $aut_id = mediamosa_aut_name::create($app_id, $aut_user_id, mediamosa_aut::AUT_NAME_TYPE_USER);
         if (!$aut_id) {
           throw new mediamosa_exception_error_unexpected_error();
         }
@@ -703,24 +704,24 @@ class mediamosa_aut {
         mediamosa_aut_object::link_to_object($aut_object_id, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_type, $aut_id);
 
         $rights_set = $rights_set_user_usergroup = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER,
-          "value" => $s_aut_user_id,
+          "value" => $aut_user_id,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER,
-          "value" => $s_aut_user_id,
+          "value" => $aut_user_id,
           "a_error" => $e->mediamosa_exception_error_array_get(),
         );
       }
     }
 
-    foreach ($a_aut_group_ids as $s_aut_group_id) {
+    foreach ($aut_group_ids as $aut_group_id) {
       try {
-        $aut_id = mediamosa_aut_name::create($app_id, $s_aut_group_id, mediamosa_aut::AUT_NAME_TYPE_USER_GROUP);
+        $aut_id = mediamosa_aut_name::create($app_id, $aut_group_id, mediamosa_aut::AUT_NAME_TYPE_USER_GROUP);
         assert($aut_id);
         if (!$aut_id) {
           throw new mediamosa_exception_error_unexpected_error();
@@ -730,26 +731,26 @@ class mediamosa_aut {
         mediamosa_aut_object::link_to_object($aut_object_id, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_type, $aut_id);
 
         $rights_set = $rights_set_user_usergroup = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER_GROUP,
-          "value" => $s_aut_group_id,
+          "value" => $aut_group_id,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER_GROUP,
-          "value" => $s_aut_group_id,
+          "value" => $aut_group_id,
           "a_error" => $e->mediamosa_exception_error_array_get(),
         );
       }
     }
 
-    foreach ($a_aut_domains as $s_aut_domain) {
+    foreach ($aut_domains as $aut_domain) {
       try {
         // Check if domain is group
-        if (mediamosa_aut::is_group_domain($s_aut_domain)) { //[...].group domain
-          $aut_id = mediamosa_aut_group::create($app_id, $s_aut_domain, mediamosa_aut::AUT_NAME_TYPE_DOMAIN);
+        if (mediamosa_aut::is_group_domain($aut_domain)) { //[...].group domain
+          $aut_id = mediamosa_aut_group::create($app_id, $aut_domain, mediamosa_aut::AUT_NAME_TYPE_DOMAIN);
           if (!$aut_id) {
             throw new mediamosa_exception_error_unexpected_error();
           }
@@ -758,7 +759,7 @@ class mediamosa_aut {
           mediamosa_aut_object::link_to_object($aut_object_id, mediamosa_aut_object_db::AUT_TYPE_GROUP, $aut_type, $aut_id);
         }
         else {
-          $aut_id = mediamosa_aut_name::create($app_id, $s_aut_domain, mediamosa_aut::AUT_NAME_TYPE_DOMAIN);
+          $aut_id = mediamosa_aut_name::create($app_id, $aut_domain, mediamosa_aut::AUT_NAME_TYPE_DOMAIN);
           if (!$aut_id) {
             throw new mediamosa_exception_error_unexpected_error();
           }
@@ -768,26 +769,26 @@ class mediamosa_aut {
         }
 
         $rights_set = $rights_set_domain_realm = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_DOMAIN,
-          "value" => $s_aut_domain,
+          "value" => $aut_domain,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_DOMAIN,
-          "value" => $s_aut_domain,
+          "value" => $aut_domain,
           "a_error" => $e->mediamosa_exception_error_array_get(),
         );
       }
     }
 
-    foreach ($a_aut_realms as $s_aut_realm) {
+    foreach ($aut_realms as $aut_realm) {
       try {
         // They can also define groups here...
-        if (mediamosa_aut::is_group_realm($s_aut_realm)) { //@[...].group realm
-          $aut_id = mediamosa_aut_group::create($app_id, $s_aut_realm, mediamosa_aut::AUT_NAME_TYPE_REALM);
+        if (mediamosa_aut::is_group_realm($aut_realm)) { //@[...].group realm
+          $aut_id = mediamosa_aut_group::create($app_id, $aut_realm, mediamosa_aut::AUT_NAME_TYPE_REALM);
           assert($aut_id);
           if (!$aut_id) {
             throw new mediamosa_exception_error_unexpected_error();
@@ -797,7 +798,7 @@ class mediamosa_aut {
           mediamosa_aut_object::link_to_object($aut_object_id, mediamosa_aut_object_db::AUT_TYPE_GROUP, $aut_type, $aut_id);
         }
         else {
-          $aut_id = mediamosa_aut_name::create($app_id, $s_aut_realm, mediamosa_aut::AUT_NAME_TYPE_REALM);
+          $aut_id = mediamosa_aut_name::create($app_id, $aut_realm, mediamosa_aut::AUT_NAME_TYPE_REALM);
           if (!$aut_id) {
             throw new mediamosa_exception_error_unexpected_error();
           }
@@ -807,16 +808,16 @@ class mediamosa_aut {
         }
 
         $rights_set = $rights_set_domain_realm = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_REALM,
-          "value" => $s_aut_realm,
+          "value" => $aut_realm,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_REALM,
-          "value" => $s_aut_realm,
+          "value" => $aut_realm,
           "a_error" => $e->mediamosa_exception_error_array_get(),
         );
       }
@@ -911,7 +912,7 @@ class mediamosa_aut {
       }
     }
 
-    return $a_result;
+    return $result;
   }
 
   /**
