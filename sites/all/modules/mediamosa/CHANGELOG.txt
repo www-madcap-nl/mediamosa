@@ -32,6 +32,7 @@ TODO: (v2.4)
 MediaMosa 2.3.6 (build 1285)
 ----------------------------
 - Streaming ticket table clean up development (See ticket #103).
+- ACL problem when using replace fix (See ticket #503).
 
 Other changes (not ticket related)
 - Added extended role and access rights to drupal for MediaMosa users that

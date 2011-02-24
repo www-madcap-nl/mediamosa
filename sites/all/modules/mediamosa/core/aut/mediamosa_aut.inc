@@ -512,6 +512,93 @@ class mediamosa_aut {
   }
 
   /**
+   * Get is protected field.
+   *
+   * @param integer $app_id
+   * @param string $user_id
+   * @param string $aut_type
+   * @param array $a_object
+   *  Make sure its an object that is within the same app_id as the user
+   *  Or else it will be denied access
+   * @param array $is_app_admin
+   *  For future expansion
+   *
+   *  @return array($is_protected, $rights_set_user_usergroup, $rights_set_domain_realm)
+   */
+  static public function is_protected_get($app_id, $user_id, $aut_type, array $object, $is_app_admin = FALSE) {
+    switch ($aut_type) {
+      case mediamosa_aut::AUT_TYPE_MEDIAFILE:
+        $owner_id = $object['owner_id'];
+        $object_app_id = $object['app_id'];
+        $aut_object_id = $object['mediafile_id'];
+        break;
+
+      case mediamosa_aut::AUT_TYPE_ASSET:
+        $owner_id = $object['owner_id'];
+        $object_app_id = $object['app_id'];
+        $aut_object_id = $object['asset_id'];
+        break;
+
+      case mediamosa_aut::AUT_TYPE_COLLECTION:
+        $owner_id = $object['owner_id'];
+        $object_app_id = $object['app_id'];
+        $aut_object_id = $object['coll_id'];
+        break;
+
+      default:
+        throw new mediamosa_exception_error_unexpected_error();
+    }
+
+    $is_protected = NULL;
+    $rights_set_user_usergroup = FALSE;
+    $rights_set_domain_realm = FALSE;
+
+    switch ($aut_type) {
+      case mediamosa_aut::AUT_TYPE_MEDIAFILE:
+        // Need to be either owner + same app or slave of object.
+        mediamosa_aut::owner_check_ext($aut_type, $aut_object_id, $app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
+
+        $query = db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+        $query
+          ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
+          ->fields('mf', array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+        $result = $query->execute();
+        $is_protected = $result->fetchField();
+
+        if ($is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_USER_USERGROUP || $is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE) {
+          $rights_set_user_usergroup = TRUE;
+        }
+        if ($is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM || $is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE) {
+          $rights_set_domain_realm = TRUE;
+        }
+
+        break;
+
+      case mediamosa_aut::AUT_TYPE_ASSET:
+        // Only owners (with the same app_id) can get access (for now)
+        mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
+
+        $query = db_select(mediamosa_asset_db::TABLE_NAME, 'mf');
+        $query
+          ->condition(mediamosa_asset_db::ID, $aut_object_id)
+          ->fields('mf', array(mediamosa_asset_db::IS_PROTECTED));
+        $result = $query->execute();
+        $is_protected = $result->fetchField();
+
+        if ($is_protected == mediamosa_asset_db::IS_PROTECTED_USER_USERGROUP || $is_protected == mediamosa_asset_db::IS_PROTECTED_TRUE) {
+          $rights_set_user_usergroup = TRUE;
+        }
+        if ($is_protected == mediamosa_asset_db::IS_PROTECTED_DOMAIN_REALM || $is_protected == mediamosa_asset_db::IS_PROTECTED_TRUE) {
+          $rights_set_domain_realm = TRUE;
+        }
+
+        break;
+    }
+
+    return array($is_protected, $rights_set_user_usergroup, $rights_set_domain_realm);
+  }
+
+  /**
    * Sets rights on the object
    *
    * @param integer $app_id
@@ -566,12 +653,17 @@ class mediamosa_aut {
     // Only owners (with the same app_id) can change access (for now)
     mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
 
+    $rights_set = $rights_set_user_usergroup = $rights_set_domain_realm = FALSE;
+
     // Replace old existing rights.
     if ($b_replace) {
       mediamosa_aut::rights_clear($app_id, $user_id, $aut_type, $object, $is_app_admin);
     }
+    else {
+      // Get ACL rights, evaluate rights->isprotected.
+      list($is_protected, $rights_set_user_usergroup, $rights_set_domain_realm) = mediamosa_aut::is_protected_get($app_id, $user_id, $aut_type, $object, $is_app_admin);
+    }
 
-    $rights_set = $rights_set_user_usergroup = $rights_set_domain_realm = FALSE;
 
     $a_result = array();
 
