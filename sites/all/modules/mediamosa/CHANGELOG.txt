@@ -43,7 +43,7 @@ MediaMosa 2.3.7 (build 1298)
 - ACL did not correctly set its protected flags when using parameter 'replace'
   with value 'FALSE' (See ticket #503).
 - CQL will now correctly search with dates, by allowing the dates to be in the
-  timezone of the client.
+  timezone of the client (See ticket #236).
 
 Other changes (not ticket related)
 
