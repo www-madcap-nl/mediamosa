@@ -249,19 +249,20 @@ class mediamosa_core_cql {
   }
 
   /**
-   * Fill the a_var_setup with allowed parameters for search.
+   * Fill the var_setup with allowed parameters for search.
+   *
    * @param array $a_var_setup
    */
-  static public function get_var_setup_search_asset(array $app_ids, array $a_var_setup, array $a_search) {
+  static public function get_var_setup_search_asset(array $app_ids, array $var_setup, array $search) {
 
     // Enrich with normal search.
-    $a_var_setup = self::get_var_setup_search($a_var_setup, $a_search);
+    $var_setup = self::get_var_setup_search($var_setup, $search);
 
     // Now add custom allowed metadata and own.
-    $a_metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
+    $metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
 
-    foreach ($a_metadata_properties as $param => $a_metadata_property) {
-      switch ($a_metadata_property['propdef_type']) {
+    foreach ($metadata_properties as $param => $metadata_property) {
+      switch ($metadata_property['propdef_type']) {
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
           $type = mediamosa_sdk::TYPE_SEARCH_STRING;
           break;
@@ -275,13 +276,13 @@ class mediamosa_core_cql {
           break;
       }
 
-      $a_var_setup[mediamosa_rest_call::VARS][$param] = array(
+      $var_setup[mediamosa_rest_call::VARS][$param] = array(
         mediamosa_rest_call::VAR_TYPE => $type,
-        mediamosa_rest_call::VAR_DESCRIPTION => sprintf('Metadata (%s) search parameter, try to use CQL instead.', $a_metadata_property['propgroup_name']),
+        mediamosa_rest_call::VAR_DESCRIPTION => sprintf('Metadata (%s) search parameter, try to use CQL instead.', $metadata_property['propgroup_name']),
         mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       );
 
-      $a_var_setup[mediamosa_rest_call::VARS][$param . '_match'] = array(
+      $var_setup[mediamosa_rest_call::VARS][$param . '_match'] = array(
         mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_SEARCH_MATCH,
         mediamosa_rest_call::VAR_DESCRIPTION => 'Type matching for search parameter, try to use CQL instead.',
         mediamosa_rest_call::VAR_DEFAULT_VALUE => 'contains',
@@ -289,7 +290,7 @@ class mediamosa_core_cql {
       );
     }
 
-    return $a_var_setup;
+    return $var_setup;
   }
 }
 
@@ -326,6 +327,22 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   // Override... do not support prox.
   public function mediamosa_cql_context_is_boolean($str) {
     return (array_search(mediamosa_unicode::strtolower($str), array('and', 'or', 'not')) === FALSE) ? FALSE : TRUE;
+  }
+
+  /**
+   * Converts a any date into a db mysql date (YYYY-MM-DD HH:MM:SS)
+   *
+   * Will convert to timezone set in CQL object.
+   *
+   * Overridden for use of application timezone.
+   *
+   * @param string $date
+   *  The paramter to convert.
+   * @param string $timezone
+   *  Supply timezone for conversion.
+   */
+  protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC') {
+    return parent::mediamosa_cql_str_date_2_db_date($date, mediamosa::get_restcall_timezone());
   }
 
   /**
@@ -708,6 +725,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
 
         break;
+
       case mediamosa_sdk::TYPE_BOOL:
         $str_search_term = (mediamosa_unicode::strtolower($str_search_term) == "true" ? "TRUE" : "FALSE");
         $str_quotes = '\'';
@@ -834,10 +852,12 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
             $a_sub_parts[] = sprintf("%s >= %s", $str_table_column, intval($a_within[0]));
             $a_sub_parts[] = sprintf("%s <= %s", $str_table_column, intval($a_within[1]));
             break;
+
           case mediamosa_sdk::TYPE_DATETIME:
             $a_sub_parts[] = sprintf("%s >= '%s'", $str_table_column, $this->mediamosa_cql_context_sql_escape($this->mediamosa_cql_str_date_2_db_date($a_within[0])));
             $a_sub_parts[] = sprintf("%s <= '%s'", $str_table_column, $this->mediamosa_cql_context_sql_escape($this->mediamosa_cql_str_date_2_db_date($a_within[1])));
             break;
+
           default:
             $a_sub_parts[] = sprintf("%s%s >= '%s'", $str_binary, $str_table_column, $this->mediamosa_cql_context_sql_escape($a_within[0]));
             $a_sub_parts[] = sprintf("%s%s <= '%s'", $str_binary, $str_table_column, $this->mediamosa_cql_context_sql_escape($a_within[1]));
@@ -1061,11 +1081,13 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             $type = mediamosa_sdk::TYPE_INT;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
+
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
             $column = 'val_datetime';
             $type = mediamosa_sdk::TYPE_DATETIME;
             $table = mediamosa_asset_metadata_db::TABLE_NAME;
             break;
+
           default:
             assert(0);
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
