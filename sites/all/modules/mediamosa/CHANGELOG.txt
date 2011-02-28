@@ -36,7 +36,7 @@ Other changes (not ticket related)
 - Work around for still_type = scene, if there isn't video duration.
 
 
-MediaMosa 2.3.7 (build 1298)
+MediaMosa 2.3.7 (build 1301)
 ----------------------------
 - FFMpeg 2 pass encoding fix  (See ticket #502).
 - Doesn't do 2 pass encoding on audio file (See ticket #501).
