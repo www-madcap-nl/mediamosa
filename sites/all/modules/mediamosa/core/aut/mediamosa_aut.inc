@@ -666,7 +666,7 @@ class mediamosa_aut {
     }
 
 
-    $a_result = array();
+    $result = array();
 
     // Link app access.
     // Master / Slave;
@@ -677,14 +677,14 @@ class mediamosa_aut {
       try {
         mediamosa_aut_app_master_slave::create($aut_object_id, $aut_type, $app_id_master, $app_id);
 
-        $a_result[] = array(
+        $result[] = array(
           'type' => mediamosa_aut::AUT_NAME_TYPE_APP,
           'value' => $app_id_master,
           'a_error' => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           'type' => mediamosa_aut::AUT_NAME_TYPE_APP,
           'value' => $app_id_master,
           'a_error' => $e->mediamosa_exception_error_array_get(),
@@ -704,14 +704,14 @@ class mediamosa_aut {
         mediamosa_aut_object::link_to_object($aut_object_id, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_type, $aut_id);
 
         $rights_set = $rights_set_user_usergroup = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER,
           "value" => $aut_user_id,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER,
           "value" => $aut_user_id,
           "a_error" => $e->mediamosa_exception_error_array_get(),
@@ -731,14 +731,14 @@ class mediamosa_aut {
         mediamosa_aut_object::link_to_object($aut_object_id, mediamosa_aut_object_db::AUT_TYPE_NAME, $aut_type, $aut_id);
 
         $rights_set = $rights_set_user_usergroup = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER_GROUP,
           "value" => $aut_group_id,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_USER_GROUP,
           "value" => $aut_group_id,
           "a_error" => $e->mediamosa_exception_error_array_get(),
@@ -769,14 +769,14 @@ class mediamosa_aut {
         }
 
         $rights_set = $rights_set_domain_realm = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_DOMAIN,
           "value" => $aut_domain,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_DOMAIN,
           "value" => $aut_domain,
           "a_error" => $e->mediamosa_exception_error_array_get(),
@@ -808,14 +808,14 @@ class mediamosa_aut {
         }
 
         $rights_set = $rights_set_domain_realm = TRUE;
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_REALM,
           "value" => $aut_realm,
           "a_error" => FALSE,
         );
       }
       catch (mediamosa_exception_error $e) {
-        $a_result[] = array(
+        $result[] = array(
           "type" => mediamosa_aut::AUT_NAME_TYPE_REALM,
           "value" => $aut_realm,
           "a_error" => $e->mediamosa_exception_error_array_get(),
@@ -912,7 +912,7 @@ class mediamosa_aut {
       }
     }
 
-    return $a_result;
+    return $result;
   }
 
   /**
