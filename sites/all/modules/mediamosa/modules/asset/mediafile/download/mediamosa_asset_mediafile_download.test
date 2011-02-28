@@ -56,7 +56,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     parent::setUp('mediamosa_asset');
 
     // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
+    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA));
     $this->drupalLogin($rest_user);
 
     // Truncate current and insert new.

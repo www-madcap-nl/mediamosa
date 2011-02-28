@@ -206,6 +206,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
         $is_case_sensitive = TRUE;
 
         if ($str_relation != 'within') {
+          // Convert to DB Date.
+          $str_search_term = $this->mediamosa_cql_str_date_2_db_date($str_search_term);
+
           $str = '0000-01-01T00:00:00Z';
           $str_search_term = $str_search_term . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($str_search_term));
         }
@@ -388,6 +391,9 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
         switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
           case mediamosa_sdk::TYPE_DATETIME:
+            $values[0] = $this->mediamosa_cql_str_date_2_db_date($values[0]);
+            $values[1] = $this->mediamosa_cql_str_date_2_db_date($values[1]);
+
             $str = '0000-01-01T00:00:00Z';
             $values[0] = $values[0] . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($values[0]));
             $values[1] = $values[1] . mediamosa_unicode::substr($str, mediamosa_unicode::strlen($values[1]));
