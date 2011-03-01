@@ -826,10 +826,8 @@ class mediamosa_job_server {
         // Some videos don't have video durations according to FFMpeg.
         // If we want to create multiple stills, we usually need this information calculating other data.
         // But in case of scene detection we have a work around, we can put the video duration on a maximum value.
-        self::log_debug_high_mediafile($mediafile_id, t('No video duration, when still_type = scene. Try to get the complete video. video_duration = @video_duration, start_frame = @start_frame, end_frame = @end_frame.', array(
+        self::log_debug_high_mediafile($mediafile_id, t('No video duration, when still_type = scene. Try to get the complete video. video_duration = @video_duration.', array(
           '@video_duration' => print_r($video_duration, TRUE),
-          '@start_frame' => print_r($start_frame, TRUE),
-          '@end_frame' => print_r($end_frame, TRUE),
         )));
         $video_duration = self::VIDEO_DURATION_MAX;
       }
@@ -1187,17 +1185,22 @@ class mediamosa_job_server {
       return array();
     }
 
-    $a_result = $a_lines = array();
+    $result = $lines = array();
+
+    // Set default.
+    $result += array(
+      'Errors' => 'none',
+    );
 
     // FIXME: move to mediamosa_io
     $handle = fopen($statusfile, "r");
     while (!feof($handle)) {
-      $a_lines[] = fgets($handle);
+      $lines[] = fgets($handle);
     }
     fclose($handle);
 
     // strip the garbage from the file
-    foreach ($a_lines as $line) {
+    foreach ($lines as $line) {
       if (mediamosa_unicode::strpos($line, ':') === FALSE) {
         continue;
       }
@@ -1207,14 +1210,14 @@ class mediamosa_job_server {
         $value = '0.000';
       }
       elseif ($name == "Progress" || $name == "Status" || $name == "Errors") {
-        $a_result[$name] = trim($value);
+        $result[$name] = trim($value);
       }
       elseif ($name == 'ffmpeg-output') {
-        $a_result[$name] = implode("\n", explode('}-{', trim($value)));
+        $result[$name] = implode("\n", explode('}-{', trim($value)));
       }
     }
 
-    return ($orig ? implode('', $a_lines) : $a_result);
+    return ($orig ? implode('', $lines) : $result);
   }
 
   /**

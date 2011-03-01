@@ -179,7 +179,6 @@ function mediamosa_server_node_revision_delete($node) {
  * Implements hook_view().
  */
 function mediamosa_server_view($node, $view_mode = 'full') {
-
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administration'), 'admin');
@@ -198,8 +197,10 @@ function mediamosa_server_view($node, $view_mode = 'full') {
   // The fields we want to show.
   $fields = array(
     mediamosa_server_db::SERVER_URI => t('URI / URL'),
-    mediamosa_server_db::URI_UPLOAD_PROGRESS => t('URI upload progress'),
+    mediamosa_server_db::URI_UPLOAD_PROGRESS => t('URI upload progress (client)'),
     mediamosa_server_db::CONTAINERS => t('Containers'),
+    mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE => t('URI upload progress server type'),
+    mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER => t('URI upload progress server'),
     mediamosa_server_db::SLOTS => t('Slots'),
     mediamosa_server_db::TOOLS => t('Tools'),
     mediamosa_server_db::OBJECT_CODE => t('Object Code'),
@@ -211,6 +212,8 @@ function mediamosa_server_view($node, $view_mode = 'full') {
     case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
     case mediamosa_server_db::SERVER_TYPE_STILL:
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE]);
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER]);
       unset($fields[mediamosa_server_db::CONTAINERS]);
       unset($fields[mediamosa_server_db::OBJECT_CODE]);
       unset($fields[mediamosa_server_db::SLOTS]);
@@ -218,11 +221,15 @@ function mediamosa_server_view($node, $view_mode = 'full') {
       break;
     case mediamosa_server_db::SERVER_TYPE_STREAMING:
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE]);
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER]);
       unset($fields[mediamosa_server_db::SLOTS]);
       unset($fields[mediamosa_server_db::TOOLS]);
       break;
     case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
       unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE]);
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER]);
       unset($fields[mediamosa_server_db::CONTAINERS]);
       unset($fields[mediamosa_server_db::OBJECT_CODE]);
       break;
@@ -395,13 +402,42 @@ function mediamosa_server_form($node, &$form_state) {
   }
 
   if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_UPLOAD))) {
+    // Check if APC is loaded.
+    $apc_detected = extension_loaded('apc');
+
+    // Get a server upload.
+    $server_upload = mediamosa_server::get_random_upload();
+
     $form['mediamosa_server'][mediamosa_server_db::URI_UPLOAD_PROGRESS] = array(
       '#type' => 'textfield',
       '#title' => t('URI upload progress'),
       '#required' => TRUE,
-      '#description' => t('Optional URI for client side upload progress information.'),
+      '#description' => t('Optional URI for client side upload progress information. This URL should match the REST call /mediafile/uploadprogress, e.g. http://upload.mediamosa.local/uploadprogress?id={PROGRESS_ID}'),
       '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI_UPLOAD_PROGRESS, $node),
       '#maxlength' => mediamosa_server_db::URI_UPLOAD_PROGRESS_LENGTH,
+    );
+
+    $options = array(
+      'apc' => t('Use APC extension (@detected)', array('@detected' => $apc_detected ? t('APC extension has been detected on this server') : t('APC extension has not been detected on this server'))),
+      'proxy' => t('Use nginx / lighttpd upload progress'),
+    );
+
+    $form['mediamosa_server'][mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE] = array(
+      '#type' => 'select',
+      '#options' => $options,
+      '#title' => t('Choose upload progress for mediafiles.'),
+      '#description' => t(' The APC upload progress requires the APC extension. The nginx and lighttpd extensions require the URL setting below to indentify the progress proxy URL.'),
+      '#required' => FALSE,
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE, $node),
+    );
+
+    $parse_url = mediamosa_http::parse_url($server_upload[mediamosa_server_db::SERVER_URI]);
+    $form['mediamosa_server'][mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER] = array(
+      '#type' => 'textfield',
+      '#title' => t('Supply the url to query the progress on nginx / lighttpd'),
+      '#description' => t("This url is only required for nginx / lighttpd upload progress. By default this should be the upload server URL plus '/progress?X-Progress-ID={PROGRESS_ID}' and will be queried by MediaMosa on the default upload server. (example; http://@host/progress?X-Progress-ID={PROGRESS_ID}). You should define the URL for progress in your httpd server configuration and make sure the URL is used before it handles the MediaMosa URL.", array('@host' => $parse_url['host'])),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER, $node),
+      '#required' => FALSE,
     );
   }
 
