@@ -766,11 +766,11 @@ class mediamosa_job_server {
       return $execution_string;
     }
 
-    // bewerk de parameters zodat er een mooie string ontstaat.
-    $parameters = mediamosa_lib::create_named_array($command, ';', ':');
+    // Create parameter sting from the command.
     $parameter_string = "'";
-    foreach ($parameters as $name => $value) {
-      $parameter_string .= sprintf('%s %s ', $name, $value);
+    $a_pairs = explode(';', $command);
+    foreach ($a_pairs as $pair) {
+      $parameter_string .= str_replace(':' , ' ', $pair) . ' ';
     }
 
     $parameter_string .= "'";

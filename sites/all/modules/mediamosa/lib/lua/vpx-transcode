@@ -2,7 +2,7 @@
 -- -*- lua -*-
 
 --
--- Copyright (c) 2008 Madcap BV (http://www.madcap.nl)
+-- Copyright (c) 2008, 2009, 2010, 2011 Madcap BV (http://www.madcap.nl)
 -- All rights reserved.
 --
 -- Permission is granted for use, copying, modification, distribution,
@@ -105,8 +105,16 @@ function convert_units(amount, unit)
   end
 end
 
---Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
---Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.1(eng): Video: vc1, yuv420p, 384x288 [PAR 1:1 DAR 4:3], 776 kb/s, 25 fps, 25 tbr, 1k tbn, 25 tbc
+-- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
+-- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tb(r)
+-- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
+-- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
+-- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
+-- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
+
 local ln_video = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
   codec * COMMA *
@@ -120,21 +128,6 @@ local ln_video = space * "Stream #" * float * language * COLON *
     ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
   ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
-
--- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
--- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tb(r)
--- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
--- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
--- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
--- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
-local ln_video_best = space * "Stream #" * float * language * COLON *
-  "Video" * COLON *
-  codecs * COMMA *
-  ((word * COMMA) + lpeg.Cc("unknown")) *
-  (dimension + lpeg.Cc("unknown")) *
-  (aspectratio + lpeg.Cc("unknown")) * COMMA *
-  ((number * "kb/s" * COMMA) + lpeg.Cc("unknown")) *
-  ((float * "tb(" * lpeg.S("rmc") * ")") + (number * "tbr" * COMMA))
 
 local status_file
 local status_tmp
@@ -177,6 +170,29 @@ end
 
 function mkpath(path, file)
   return string.format("%s/%s/%s", path, string.sub(file, 1, 1), file)
+end
+
+function has_video_stream(source_path, hash)
+  local filename = mkpath(source_path, hash)
+  local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
+  -- print(command)
+  local fd = io.popen(command, "r")
+  local line = fd:read("*l")
+  local has_video = false
+
+  while line do
+    -- log[#log+1] = line
+
+    local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
+
+    if streamtype == "Video" then
+      has_video = true
+    end
+    line = fd:read("*l")
+  end
+  fd:close()
+
+  return has_video
 end
 
 function find_best_streams(source_path, hash)
@@ -233,13 +249,11 @@ function find_best_streams(source_path, hash)
       audio_codecs = codecs
       audio_channels = channels
     elseif streamtype == "Video" then
-      --local stream, codecs, colorspace, size, ar, bitrate, fps = lpeg.match(ln_video_best, line)
       local stream, codecs, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
+      if bitrate == nil or bitrate == 'unknown' then
+        bitrate = br2
+      end
       log_out("video: detected stream: %s", stream)
-      --[[if codecs == nil then
-        add_error("The video input stream uses an unknown codec")
-        codecs = {}
-      end--]]
       if video_max_bitrate_stream == nil then
         log_out("video: initial stream found %s @ %s kbps", stream, bitrate)
         video_max_bitrate = tonumber(bitrate)
@@ -288,7 +302,7 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   local video_stream, audio_stream, video_size, audio_codecs, audio_channels = find_best_streams(source_path, hash)
 
   -- Fix aac problems.
-  if audio_codecs ~= nil and audio_codecs == 'aac' and audio_channels ~= nil then
+  if dst_ext ~= "jpeg" and audio_codecs ~= nil and audio_codecs == 'aac' and audio_channels ~= nil then
     if audio_channels == '0' then
       -- Fix aac / 0 channel problem.
 
@@ -486,16 +500,16 @@ local tmp_dir = hash .. "_dir"
 status_file = destination_path .. "/" .. hash .. ".status"
 status_tmp = destination_path .. "/" .. hash .. ".status.tmp"
 
--- Example for normal encoding: /home/pforgacs/src/mediamosa2/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -ab 256000 -ar 44100 -vcodec libx264 -vpre hq '
+-- Example for normal encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -ab 256000 -ar 44100 -vcodec libx264 -vpre hq '
 
--- Example for 2 pass encoding: /home/pforgacs/src/mediamosa2/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -pass 2 -ab 256000 -ar 44100 -vcodec libx264 '
+-- Example for 2 pass encoding: /home/pforgacs/src/mediamosa/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data jNAZadDlRdTbpnSPFhKlH5AP mp4 '-b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower -pass 2 -vpre baseline -s 640x480 -vf 'pad=640 480 0 0 black' '
 
 local pass_start, pass_end = string.find(params, "-pass 2")
 local vcodec = "-vcodec libx264"
 local vcodec_start, vcodec_end = string.find(params, vcodec)
 
--- Is it a 2 pass encoding?
-if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end ~= nil then
+-- Is it a 2 pass encoding with video stream?
+if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end ~= nil and has_video_stream(source_path, hash) then
   local fd
 
   -- 2 pass h264 encoding.
@@ -503,28 +517,25 @@ if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end 
   -- Prepare the transcoding parameters.
   local params_start = string.sub(params, 1, pass_start - 1)
   local params_end = string.sub(params, pass_end + 1, string.len(params))
+
   local params_pass1 = params_start .. "-an -pass 1 -passlogfile " .. hash .. params_end .. " -threads 0 "
   local params_pass2 = params_start .. "-pass 2 -passlogfile " .. hash .. params_end .. " -threads 0 "
 
-  vcodec_start, vcodec_end = string.find(params_pass1, vcodec)
-  params_start = string.sub(params_pass1, 1, vcodec_end)
-  params_end = string.sub(params_pass1, vcodec_end + 1, string.len(params_pass1))
-  params_pass1 = params_start .. " -vpre slow_firstpass" .. params_end
-
-  vcodec_start, vcodec_end = string.find(params_pass2, vcodec)
-  params_start = string.sub(params_pass2, 1, vcodec_end)
-  params_end = string.sub(params_pass2, vcodec_end + 1, string.len(params_pass2))
-  params_pass2 = params_start .. " -vpre slow" .. params_end
+  vpre_start, vpre_end = string.find(params_pass1, "-vpre ")
+  vpre_start, vpre_end = string.find(params_pass1, " ", vpre_end + 1)
+  params_start = string.sub(params_pass1, 1, vpre_end - 1)
+  params_end = string.sub(params_pass1, vpre_end, string.len(params_pass1))
+  params_pass1 = params_start .. "_firstpass" .. params_end
 
   -- Temporary directory for dealing with the temporary files.
   command("cd " .. destination_path .. "; mkdir " .. tmp_dir)
 
-  -- Example: ffmpeg -i /srv/mediamosa2/data/O/OW35AQyoPNUSi4iINunmS2nr -b 800000 -acodec libfaac -an -pass 1 -ab 256000 -ar 44100 -vcodec libx264 -vpre slow_firstpass  -threads 0  -map 0.1 -y /srv/mediamosa2/data/transcode/OW35AQyoPNUSi4iINunmS2nr.mp4
+  -- Example: ffmpeg -i /srv/mediamosa2/data/j/jNAZadDlRdTbpnSPFhKlH5AP  -b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower_firstpass -an -pass 1 -passlogfile jNAZadDlRdTbpnSPFhKlH5AP -vpre baseline -s 640x480 -vf pad=640 -threads 0  -map 0.1 -an -y /srv/mediamosa2/data/transcode/jNAZadDlRdTbpnSPFhKlH5AP.mp4
 
   -- 1st phase.
   transcode(source_path, destination_path, hash, dst_ext, params_pass1, 1, tmp_dir)
 
-  -- Example: ffmpeg -i /srv/mediamosa2/data/O/OW35AQyoPNUSi4iINunmS2nr -b 800000 -acodec libfaac -pass 2 -ab 256000 -ar 44100 -vcodec libx264 -vpre slow  -threads 0  -map 0.1 -map 0.0 -y /srv/mediamosa2/data/transcode/OW35AQyoPNUSi4iINunmS2nr.mp4
+  -- Example: ffmpeg -i /srv/mediamosa2/data/j/jNAZadDlRdTbpnSPFhKlH5AP  -b 800000 -r 25 -acodec libfaac -ab 256000 -ar 44100 -ac 2 -vcodec libx264 -vpre slower -pass 2 -passlogfile jNAZadDlRdTbpnSPFhKlH5AP -vpre baseline -s 640x480 -vf pad=640 -threads 0  -map 0.1 -map 0.0 -y /srv/mediamosa2/data/transcode/jNAZadDlRdTbpnSPFhKlH5AP.mp4
 
   -- Second phase.
   transcode(source_path, destination_path, hash, dst_ext, params_pass2, 2, tmp_dir)
