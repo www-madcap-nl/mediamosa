@@ -1859,5 +1859,34 @@ function mediamosa_update_7088() {
   ));
 }
 
+/**
+ * Change mediamosa_asset_metadata_property table.
+ * Add new field: is_hidden.
+ * Add new index: is_hidden.
+ */
+function mediamosa_update_7089() {
+  // Add is_hidden field.
+  db_add_field(
+    mediamosa_asset_metadata_property_db::TABLE_NAME,
+    mediamosa_asset_metadata_property_db::IS_HIDDEN,
+    array(
+      'description' => t('True if the property is hidden.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+      'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+    )
+  );
+
+  // Is_hidden.
+  db_add_index(
+    mediamosa_asset_metadata_property_db::TABLE_NAME,
+    'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
+    array(
+      mediamosa_asset_metadata_property_db::IS_HIDDEN,
+    )
+  );
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

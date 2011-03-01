@@ -475,6 +475,9 @@ class mediamosa_asset {
    *  Include stills.
    * @param $show_collections
    *  Include collection information.
+   * @param $add_has_streamable_mediafile
+   * @param $view_hidden_metadata
+   *   Show hidden metadata.
    */
   static public function asset_collect(
     array $asset_ids,
@@ -487,7 +490,8 @@ class mediamosa_asset {
     $is_app_admin = FALSE,
     $show_stills = TRUE,
     $show_collections = FALSE,
-    $add_has_streamable_mediafiles = FALSE
+    $add_has_streamable_mediafiles = FALSE,
+    $view_hidden_metadata = FALSE
   ) {
 
     // Something to collect?
@@ -496,7 +500,7 @@ class mediamosa_asset {
     }
 
     $prop_ids = array();
-    $metadata_definitions_fulls = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
+    $metadata_definitions_fulls = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids, array('dublin_core', 'qualified_dublin_core', 'czp'), $view_hidden_metadata);
     foreach ($metadata_definitions_fulls as $metadata_definitions_full) {
       $prop_ids[] = $metadata_definitions_full['propdef_id'];
     }
@@ -663,7 +667,8 @@ class mediamosa_asset {
       $is_app_admin,
       $show_stills,
       $show_collections,
-      $add_has_streamable_mediafiles
+      $add_has_streamable_mediafiles,
+      $view_hidden_metadata
     );
   }
 
@@ -677,6 +682,9 @@ class mediamosa_asset {
    * @param boolean $show_stills
    * @param boolean $show_collections
    *  Include collections (was hack on _GET)
+   * @param $add_has_streamable_mediafiles,
+   * @param $view_hidden_metadata
+   *   Show hidden metadata,
    */
   static public function enrich_response_asset(
     array $items,
@@ -690,7 +698,9 @@ class mediamosa_asset {
     $is_app_admin,
     $show_stills = TRUE,
     $show_collections = FALSE,
-    $add_has_streamable_mediafiles = FALSE) {
+    $add_has_streamable_mediafiles = FALSE,
+    $view_hidden_metadata = FALSE
+  ) {
 
     $collections = array();
 
@@ -700,7 +710,7 @@ class mediamosa_asset {
     $app_id = reset($app_ids);
 
     // Get the metadata definitions.
-    $metadata_definitions_fulls = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
+    $metadata_definitions_fulls = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids, array('dublin_core', 'qualified_dublin_core', 'czp'), $view_hidden_metadata);
 
     // Need to get collections?
     if ($show_collections) {

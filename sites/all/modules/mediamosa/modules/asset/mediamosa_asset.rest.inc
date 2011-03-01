@@ -256,6 +256,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const SHOW_STILLS = 'show_stills';
   const SHOW_COLLECTIONS = 'show_collections';
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
+  const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
 
   // ------------------------------------------------------------------ Public Functions.
   static public function get_search_params() {
@@ -367,6 +368,11 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search and store it in the header parameter 'item_count_total'. Performance will drasticly improve with value 'FALSE' if you don't need to know the total number of assets in your scope result. If you provide 'FALSE', then 'item_count_total' value in the header will always be the number of items returned, same as 'item_count'.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+        self::VIEW_HIDDEN_METADATA => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "View hidden metadata.",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
 
         // Old fasion search params.
@@ -504,6 +510,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // Calculate the total.
     $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
 
+    // View hidden metadata.
+    $view_hidden_metadata = $this->get_param_value(self::VIEW_HIDDEN_METADATA);
+
     // Get CQL.
     $cql = $this->get_param_value(self::CQL);
 
@@ -553,7 +562,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         $this->get_param_value(self::IS_APP_ADMIN),
         $this->get_param_value(self::SHOW_STILLS),
         $this->get_param_value(self::SHOW_COLLECTIONS),
-        TRUE
+        TRUE,
+        $view_hidden_metadata
       );
 
       foreach ($items as $item) {
@@ -715,6 +725,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const SHOW_COLLECTIONS = 'show_collections';
   const TAG = 'tag';
   const IS_OAI = 'is_oai';
+  const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -769,6 +780,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Generate additonal asset data for OAI output.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::VIEW_HIDDEN_METADATA => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "View hidden metadata.",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
       )
     );
 
@@ -789,6 +805,9 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     if ($this->isset_given_param(self::USER_ID)) {
       $this->set_param_value(self::AUT_USER_ID, $this->get_param_value(self::USER_ID));
     }
+
+    // View hidden metadata.
+    $view_hidden_metadata = $this->get_param_value(self::VIEW_HIDDEN_METADATA);
 
     $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
     $a_aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
@@ -827,7 +846,9 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
       $aut_realm,
       $is_app_admin,
       $show_stills,
-      $show_collections
+      $show_collections,
+      FALSE,
+      $view_hidden_metadata
     );
 
     // Add mediafiles.
@@ -874,6 +895,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const SHOW_COLLECTIONS = 'show_collections';
   const TAG = 'tag';
   const IS_OAI = 'is_oai';
+  const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -929,6 +951,11 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Generate additonal asset data for OAI output.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::VIEW_HIDDEN_METADATA => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "View hidden metadata.",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
       )
     );
 
@@ -955,6 +982,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         if ($this->isset_given_param(self::USER_ID)) {
           $this->set_param_value(self::AUT_USER_ID, $this->get_param_value(self::USER_ID));
         }
+
+        // View hidden metadata.
+        $view_hidden_metadata = $this->get_param_value(self::VIEW_HIDDEN_METADATA);
 
         $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
         $a_aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
@@ -989,7 +1019,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           $aut_realm,
           $is_app_admin,
           $show_stills,
-          $show_collections
+          $show_collections,
+          FALSE,
+          $view_hidden_metadata
         );
 
         // Fix app_id.
