@@ -3,7 +3,7 @@
 name = "Application authentication by oAuth"
 description = "The oAuth authentication module handles application authentication."
 package = "MediaMosa - Modules"
-version = "2.3.0"
+version = "2.4.0"
 core = 7.x
 
 ; Dependencies (module names)
