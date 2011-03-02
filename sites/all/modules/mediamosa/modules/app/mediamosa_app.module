@@ -167,14 +167,6 @@ function mediamosa_app_menu() {
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
   );
 
-  $items['admin/mediamosa/config/app/%/contacts'] = array(
-    'title' => 'Client application contacts',
-    'type' => MENU_CALLBACK,
-    'page callback' => '_mediamosa_app_contacts',
-    'page arguments' => array(4),
-    'access arguments' => array('administer mediamosa config app'),
-  );
-
   $items['admin/mediamosa/config/app/js/form'] = array(
     'page callback' => '_mediamosa_app_ajax_generate_shared_key',
     'delivery callback' => 'ajax_deliver',
