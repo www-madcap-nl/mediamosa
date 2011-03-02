@@ -1818,51 +1818,136 @@ function mediamosa_update_7086() {
 }
 
 /**
+ * Create new errorcode in database.
  * Clearing cache and rebuild registry.
  */
 function mediamosa_update_7087() {
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID',
+      mediamosa_error_db::MESSAGE => 'Open client application ID is missing for OpenAPI',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID,
+    ))
+  ->execute();
+
   // Rebuild the registry.
   registry_rebuild();
   cache_clear_all();
 }
 
 /**
+ * Create new 'missing extension' errorcode in database.
  * Change mediamosa_streaming_ticket table.
  * Add new field: time.
  * Add new indexes: ticket_id, time.
  */
 function mediamosa_update_7088() {
-  // Add time field.
-  db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
 
-  // Ticket id.
-  db_add_index(
-    'mediamosa_streaming_ticket',
-    'idx_ticket_id',
-    array(
-      mediamosa_streaming_ticket_db::TICKET_ID,
-    )
-  );
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_MISSING_EXTENSION',
+      mediamosa_error_db::MESSAGE => "Unable to complete request, missing/requires '@extension'",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_MISSING_EXTENSION,
+    ))
+  ->execute();
+}
+/**
+ * Activate new 2.4 look.
+ */
+function mediamosa_update_7089() {
+  // Clear.
+  cache_clear_all();
 
-  // Time.
-  db_add_index(
-    'mediamosa_streaming_ticket',
-    'idx_timeout',
-    array(
-      mediamosa_streaming_ticket_db::TIMEOUT,
-    )
-  );
+  // Enable default theme, disable bartik, garland.
+  theme_enable(array('rubik'));
 
-  // Add value to time fields.
-  db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
-    ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, mediamosa_statistics::TICKET_TIMEOUT),
-  ));
+  $default_theme = 'rubik';
+  variable_set('theme_default', $default_theme);
+  variable_set('admin_theme', $default_theme);
+  variable_set('node_admin_theme', 1);
+
+  theme_disable(array('bartik', 'garland'));
+
+  // Disable toolbar.
+  module_disable(array('toolbar', 'dashboard'));
+
+  // And again.
+  drupal_flush_all_caches();
 }
 
 /**
+ * Update the mediamosa_app table schema with oAuth fields.
+ */
+function mediamosa_update_7090() {
+  // oAuth consumer key.
+  db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+
+  // oAuth consumer secret.
+  db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+
+  // only add the main search query.
+  db_add_index(
+    'mediamosa_app',
+    'idx_oauth_consumer_key',
+    array(
+      mediamosa_app_db::OAUTH_CONSUMER_KEY,
+    )
+  );
+}
+
+/**
+ * Two new tables for oAuth.
  * Add new fields to mediamosa_server table to support new upload progress.
  */
-function mediamosa_update_7089() {
+function mediamosa_update_7091() {
+
+  if (!db_table_exists(mediamosa_app_oauth_nonce_db::TABLE_NAME)) {
+    // Create nonce table.
+    mediamosa::drupal_install_schema(mediamosa_app_oauth_nonce_db::TABLE_NAME);
+  }
+
+  if (!db_table_exists(mediamosa_app_oauth_token_db::TABLE_NAME)) {
+    // Create token table.
+    mediamosa::drupal_install_schema(mediamosa_app_oauth_token_db::TABLE_NAME);
+  }
+}
+
+/**
+ * Create new 'missing extension' errorcode in database.
+ * Change mediamosa_streaming_ticket table.
+ * Add new field: time.
+ * Add new indexes: ticket_id, time.
+ */
+function mediamosa_update_7092() {
+
+  // Make sure we don't cause problems with 2.3.6 release.
+  if (!db_field_exists('mediamosa_streaming_ticket', 'timeout')) {
+    // Add time field.
+    db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
+
+    // Add value to time fields.
+    db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
+      ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, mediamosa_statistics::TICKET_TIMEOUT),
+    ));
+
+    // Index for Ticket id.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_ticket_id',
+      array(
+        mediamosa_streaming_ticket_db::TICKET_ID,
+      )
+    );
+
+    // Index for time.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_timeout',
+      array(
+        mediamosa_streaming_ticket_db::TIMEOUT,
+      )
+    );
+  }
 
   if (!db_field_exists(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER)) {
     $spec = array(

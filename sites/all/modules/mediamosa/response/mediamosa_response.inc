@@ -38,8 +38,8 @@ class mediamosa_response extends mediamosa {
 
   // ------------------------------------------------------------------ Members
   // The stored response.
-  private $response = array();
-  private $response_success = FALSE;
+  protected $response = array();
+  protected $response_success = FALSE;
 
   // The rest class object.
   protected $mediamosa_rest = NULL;
@@ -49,10 +49,10 @@ class mediamosa_response extends mediamosa {
   protected $request_method;
 
   // Start in miliseconds when call was made.
-  private $f_start_time = 0;
+  protected $f_start_time = 0;
 
   // Content_type to use for output.
-  private $content_type;
+  protected $content_type;
 
   // Public counters.
   public $item_count = 0;
@@ -79,6 +79,19 @@ class mediamosa_response extends mediamosa {
 
   // ------------------------------------------------------------------ Public Functions
   /**
+   * Dispatch the REST request execution.
+   *
+   * @param array $rest_call
+   *  Array containing the data needed to run the REST call.
+   *
+   * @return
+   *  Returns optional override on the response type (XML/JSON etc).
+   */
+  protected function process_call(array $rest_call) {
+    // Now execute the call.
+    return $this->mediamosa_rest->process_call($rest_call);
+  }
+  /**
    * Process possible rest call.
    */
   public function process_rest() {
@@ -88,7 +101,7 @@ class mediamosa_response extends mediamosa {
       return;
     }
 
-    // Default XML output.
+    // In case of exceptions, the output will be XML.
     $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
 
     try {
@@ -131,15 +144,15 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (!isset($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+      if (empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
         $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
-      // Save it.
-      $response_type = $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
+      // Process the call.
+      $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = $this->process_call($rest_call);
 
-      // Now execute the call.
-      $this->mediamosa_rest->process_call($rest_call);
+      // Check the response parameter.
+      $response_type = empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_rest_call::RESPONSE_TYPE_XML : $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.
@@ -148,14 +161,24 @@ class mediamosa_response extends mediamosa {
       // We redirect and exit.
       exit();
     }
+    // oAuth exceptions.
+    catch (OAuthException $e) {
+      print($e->getMessage());
+      exit();
+    }
     catch (mediamosa_exception_error_403 $e) {
       // Forbidden
       header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
       exit();
     }
     catch (mediamosa_exception_error_404 $e) {
-      // Not dounf
+      // Not found
       header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+      exit();
+    }
+    catch (mediamosa_exception_error_501 $e) {
+      // Not implemented
+      header($_SERVER['SERVER_PROTOCOL'] . ' 501 Not Implemented');
       exit();
     }
     catch (mediamosa_exception_error $e) {
@@ -192,6 +215,15 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
+    // Stop and output our content.
+    // Might run any added exit functions (drupal).
+    exit($this->generate_output($response_type));
+  }
+
+  /**
+   * Generate output.
+   */
+  public function generate_output($response_type) {
     // Make sure its set.
     $output = '';
 
@@ -214,10 +246,38 @@ class mediamosa_response extends mediamosa {
           }
           break;
 
+        case mediamosa_rest_call::RESPONSE_TYPE_JSON:
+          header('Content-Type: application/json; charset=utf-8');
+          $output = $this->generate_json();
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
+          header('Content-Type: application/atom+xml; charset=utf-8');
+          $output = $this->generate_atom();
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_RSS:
+          header('Content-Type: application/rss+xml; charset=utf-8');
+          $output = $this->generate_rss();
+          break;
+
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
         default:
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml();
+          break;
+
+        // Oembed.
+
+        case mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED:
+          header('Content-Type: application/json; charset=utf-8');
+          $output = $this->generate_json_oembed();
+          break;
+
+        case mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED:
+        default:
+          header('Content-Type: text/xml; charset=utf-8');
+          $output = $this->generate_xml_oembed();
           break;
       }
     }
@@ -226,9 +286,7 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    // Stop and output our content.
-    // Might run any added exit functions (drupal).
-    exit($output);
+    return $output;
   }
 
   /**
@@ -426,6 +484,352 @@ class mediamosa_response extends mediamosa {
   }
 
   /**
+   * Generate the JSON output.
+   *
+   * @return string
+   */
+  public function generate_json() {
+    return drupal_json_encode($this->response);
+  }
+
+  /**
+   * Generate the JSON output for oEmbed.
+   *
+   * @return string
+   */
+  public function generate_json_oembed() {
+    $response = array();
+
+    foreach ($this->response['items'] as $item) {
+      foreach ($item as $key => $value) {
+        $response[$key] = $value;
+      }
+    }
+
+    return drupal_json_encode($response);
+  }
+
+  /**
+   * Generate the XML output for oEmbed.
+   *
+   * @return string
+   */
+  public function generate_xml_oembed() {
+    // Create the SimpleXML element.
+    $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><oembed></oembed>');
+
+    foreach ($this->response['items'] as $item) {
+      foreach ($item as $key => $value) {
+        $this->generate_plain_xml_add_child($xml_response, $key, $value);
+      }
+    }
+
+    $dom_document = new DOMDocument('1.0', 'UTF-8');
+    $dom_document->formatOutput = TRUE;
+
+    $dom_document_node = dom_import_simplexml($xml_response);
+    $dom_document_node = $dom_document->importNode($dom_document_node, TRUE);
+    $dom_document->appendChild($dom_document_node);
+    return $dom_document->saveXML();
+  }
+
+  /**
+   * Generate the Atom output.
+   *
+   * @return string
+   */
+  public function generate_atom() {
+    global $base_url;
+
+    $this->response['header']['request_process_time'] = $this->get_processed_time();
+
+    $this->response['header']['item_count_total'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
+    $this->response['header']['item_offset'] = $this->item_offset;
+    $this->response['header']['item_count'] = $this->item_count;
+
+    if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
+      self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
+    }
+
+    // Sort the header.
+    ksort($this->response['header']);
+
+    // Log the rest call.
+    $this->log_event_restcall();
+
+    // Create the SimpleXML element.
+    $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><feed xmlns="http://www.w3.org/2005/Atom"></feed>');
+
+
+    // Author.
+    $xml_element = $xml_response->addChild('author');
+    $this->generate_plain_xml_add_child($xml_element, 'name', mediamosa_settings::ATOM_NAME);
+
+    // Generator.
+    $xml_element = $xml_response->addChild('generator', mediamosa_settings::ATOM_GENERATOR);
+    $xml_element->addAttribute('uri', mediamosa_settings::ATOM_GENERATOR_URI);
+    $xml_element->addAttribute('version', mediamosa_settings::ATOM_GENERATOR_VERSION);
+
+    // Icon.
+    $xml_element = $xml_response->addChild('icon', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_ICON);
+
+    // Id.
+    $xml_element = $xml_response->addChild('id', mediamosa_settings::ATOM_ID);
+
+    // Link.
+    $xml_element = $xml_response->addChild('link');
+    $xml_element->addAttribute('href', $base_url);
+
+    // Logo.
+    $xml_element = $xml_response->addChild('logo', $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_LOGO);
+
+    // Subtitle.
+    $xml_element = $xml_response->addChild('subtitle', mediamosa_settings::ATOM_SUBTITLE);
+    $xml_element->addAttribute('type', 'text');
+
+    // Title.
+    $xml_element = $xml_response->addChild('title', mediamosa_settings::ATOM_TITLE);
+    $xml_element->addAttribute('type', 'text');
+
+    // Updated.
+    $xml_element = $xml_response->addChild('updated', mediamosa_datetime::time_to_rfc_3339());
+
+    //
+    // Extension.
+    //
+    $xml_extension = $xml_response->addChild('extension');
+
+    foreach ($this->response['header'] as $key => $value) {
+      $this->generate_plain_xml_add_child($xml_extension, $key, $value);
+    }
+
+    if (!empty($this->response['errors'])) {
+      $xml_response_errors = $xml_extension->addChild('errors');
+
+      foreach ($this->response['errors'] as $key => $error) {
+        $xml_response_errors->addChild('error', htmlspecialchars($error));
+      }
+    }
+
+    //
+    // Entry.
+    //
+    foreach ($this->response['items'] as $item) {
+      $xml_response_item = $xml_response->addChild('entry');
+
+      $mediafile_id = '';
+      if (!empty($item['mediafiles']['mediafile'])) {
+        $mediafiles = $item['mediafiles']['mediafile'];
+        $mediafile = reset($mediafiles);
+        $mediafile_id = $mediafile['mediafile_id'];
+      }
+      elseif (!empty($item['mediafile_id'])) {
+        $mediafile_id = $item['mediafile_id'];
+      }
+      $link = $base_url . '/openapi/play/' . $mediafile_id;
+
+      // Author.
+      $xml_element = $xml_response_item->addChild('author');
+      $this->generate_plain_xml_add_child($xml_element, 'name', !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : mediamosa_settings::ATOM_NAME);
+
+      // Category.
+      $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+      $table_alias = $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
+      $query
+        ->condition('ac.' . mediamosa_asset_collection_db::ASSET_ID, $item['asset_id'])
+        ->fields('c', array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))
+        ->range(0, mediamosa_settings::ATOM_ENTRY_CATEGORY_MAX);
+      $result = $query->execute();
+      foreach ($result as $record) {
+        $xml_element = $xml_response_item->addChild('category');
+        $this->generate_plain_xml_add_child($xml_element, 'term', $record[mediamosa_collection_db::ID]);
+        $this->generate_plain_xml_add_child($xml_element, 'label', $record[mediamosa_collection_db::TITLE]);
+      }
+
+      // Content.
+      $xml_element = $xml_response_item->addChild('content');
+      $xml_element->addAttribute('type', 'xhtml');
+      // Description part.
+      if (!empty($item['dublin_core']['description'][0])) {
+        $xml_element_div = $xml_element->addChild('div', $item['dublin_core']['description'][0]);
+        $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      }
+      // Image.
+      if (!empty($item['vpx_still_url'])) {
+        $xml_element_div = $xml_element->addChild('div');
+        $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        $xml_element_div_img = $xml_element_div->addChild('img');
+        $xml_element_div_img->addAttribute('src', $item['vpx_still_url']);
+      }
+      // "More" link.
+      $xml_element_div = $xml_element->addChild('div');
+      $xml_element_div->addAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      $xml_element_div_link = $xml_element_div->addChild('a', 'more');
+      $xml_element_div_link->addAttribute('href', $link);
+      // MediaItem part.
+      if (!empty($item['mediaitem'])) {
+        $xml_element_mediaitem = $xml_element->addChild('mediaItem');
+        $xml_element_mediaitem->addAttribute('xmlns', 'http://ns.opensocial.org/2008/opensocial');
+
+        foreach ($item['mediaitem'] as $key => $value) {
+          //$xml_element_mediaitem_content = $xml_element_mediaitem->addChild($key, $value);
+          $this->generate_plain_xml_add_child($xml_element_mediaitem, $key, $value);
+        }
+
+        // Unset "mediaitem". We won't use it in the "extension".
+        unset($item['mediaitem']);
+      }
+
+      // Contributor.
+      if (!empty($item['dublin_core']['contributor'][0])) {
+        $xml_element = $xml_response_item->addChild('contributor');
+        $this->generate_plain_xml_add_child($xml_element, 'name', $item['dublin_core']['contributor'][0]);
+      }
+
+      // Id.
+      $xml_element = $xml_response_item->addChild('id', mediamosa_settings::ATOM_ENTRY_ID . $item['asset_id']);
+
+      // Link.
+      $xml_element = $xml_response_item->addChild('link');
+      $xml_element->addAttribute('href', $link);
+
+      // Published.
+      if (!empty($item['dublin_core']['date'][0])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['dublin_core']['date'][0], 'dc_date', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $xml_element = $xml_response_item->addChild('published', mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+
+      // Rights.
+      if (!empty($item['dublin_core']['rights'][0])) {
+        $xml_element = $xml_response_item->addChild('rights', $item['dublin_core']['rights'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Summary.
+      if (!empty($item['qualified_dublin_core']['description_abstract'][0])) {
+        $xml_element = $xml_response_item->addChild('summary', $item['qualified_dublin_core']['description_abstract'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Title.
+      if (!empty($item['dublin_core']['title'][0])) {
+        $xml_element = $xml_response_item->addChild('title', $item['dublin_core']['title'][0]);
+        $xml_element->addAttribute('type', 'text');
+      }
+
+      // Updated.
+      if (!empty($item['videotimestampmodified'])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['videotimestampmodified'], 'videotimestampmodified', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $xml_element = $xml_response_item->addChild('updated', mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+
+      // Extension.
+      $xml_extension = $xml_response_item->addChild('extension');
+      // Process items with a maximum recursion depth (last parameter).
+      //
+      foreach ($item as $key => $value) {
+        $this->generate_plain_xml_add_child($xml_extension, $key, $value);
+      }
+    }
+
+    $dom_document = new DOMDocument('1.0', 'UTF-8');
+    $dom_document->formatOutput = TRUE;
+
+    $dom_document_node = dom_import_simplexml($xml_response);
+    $dom_document_node = $dom_document->importNode($dom_document_node, TRUE);
+    $dom_document->appendChild($dom_document_node);
+    return $dom_document->saveXML();
+  }
+
+  /**
+   * Generate the RSS output.
+   *
+   * @return string
+   */
+  public function generate_rss() {
+    global $base_url, $language_content;
+
+    $channel = array(
+      'lastBuildDate' => mediamosa_datetime::time_to_rfc_822(),
+      'generator' => mediamosa_settings::RSS_GENERATOR,
+      'image' => array(
+        'url' => $base_url . (drupal_substr($base_url, -1) == '/' ? '' : '/') . mediamosa_settings::PATH_LOGO,
+      ),
+    );
+
+    $item_length = variable_get('feed_item_length', 'fulltext');
+    $namespaces = array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/');
+    $teaser = ($item_length == 'teaser');
+
+    // Items.
+    $items = '';
+    foreach ($this->response['items'] as $item) {
+      $mediafile_id = '';
+      if (!empty($item['mediafiles']['mediafile'])) {
+        $mediafiles = $item['mediafiles']['mediafile'];
+        $mediafile = reset($mediafiles);
+        $mediafile_id = $mediafile['mediafile_id'];
+      }
+      elseif (!empty($item['mediafile_id'])) {
+        $mediafile_id = $item['mediafile_id'];
+      }
+      $link = $base_url . '/openapi/play/' . $mediafile['mediafile_id'];
+
+      // Base data.
+      $title = !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : '';
+      $description = !empty($item['dublin_core']['description'][0]) ? $item['dublin_core']['description'][0] : '';
+      // Image and "more" link.
+      $description = '<p>' . $description . '</p>' . (!empty($item['vpx_still_url']) ? '<p><img src="' . $item['vpx_still_url']. '"></p>' : '') . '<p><a href="' . $link . '" target="_blank">more</a></p>';
+
+      // More data.
+      $args = array();
+      $args[] = array('key' => 'author', 'value' => !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : '');
+      if (!empty($item['dublin_core']['date'][0])) {
+        $timestamp = mediamosa_datetime::date8601_to_timestamp($item['dublin_core']['date'][0], 'dc_date', mediamosa_sdk::TYPE_DATETIME, 'U');
+        $args[] = array('key' => 'pubDate', 'value' => mediamosa_datetime::time_to_rfc_3339($timestamp));
+      }
+      $args[] = array('key' => 'guid', 'value' => $item['asset_id'] . ' at ' . $base_url, 'attributes' => array('isPermaLink' => 'false'));
+      $args[] = array('key' => 'dc:creator', 'value' => !empty($item['dublin_core']['creator'][0]) ? $item['dublin_core']['creator'][0] : '');
+
+      // Category.
+      $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+      $table_alias = $query->join(mediamosa_collection_db::TABLE_NAME, 'c', 'c.coll_id = ac.coll_id');
+      $query
+        ->condition('ac.' . mediamosa_asset_collection_db::ASSET_ID, $item['asset_id'])
+        ->fields('c', array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))
+        ->range(0, mediamosa_settings::ATOM_ENTRY_CATEGORY_MAX);
+      $result = $query->execute();
+      foreach ($result as $record) {
+        if ($record[mediamosa_collection_db::TITLE]) {
+          $args[] = array('key' => 'category', 'value' => $record[mediamosa_collection_db::TITLE]);
+        }
+      }
+
+      // Add the item to the RSS.
+      $items .= format_rss_item($title, $link, $description, $args);
+    }
+
+
+    $channel_defaults = array(
+      'version'     => '2.0',
+      'title'       => t('MediaMosa RSS feed at @place', array('@place' => variable_get('site_name', 'Drupal'),)),
+      'link'        => $base_url,
+      'description' => variable_get('feed_description', ''),
+      'language'    => $language_content->language,
+    );
+    $channel_extras = array_diff_key($channel, $channel_defaults);
+    $channel = array_merge($channel_defaults, $channel);
+
+    $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+    $output .= "<rss version=\"" . $channel["version"] . "\" xml:base=\"" . $base_url . "\" " . drupal_attributes($namespaces) . ">\n";
+    $output .= format_rss_channel($channel['title'], $channel['link'], $channel['description'], $items, $channel['language'], $channel_extras);
+    $output .= "</rss>\n";
+
+    drupal_add_http_header('Content-Type', 'application/rss+xml; charset=utf-8');
+    return $output;
+  }
+
+  /**
    * Generate the XML output.
    *
    * @return string
@@ -499,7 +903,7 @@ class mediamosa_response extends mediamosa {
    * @param integer $max_depth
    * @return NULL or added item.
    */
-  private function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
+  protected function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
     if (!--$max_depth) {
       return NULL;
     }
@@ -606,6 +1010,4 @@ class mediamosa_response extends mediamosa {
     // Call our parent error handler.
     return parent::mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller);
   }
-
-  // ------------------------------------------------------------------ Static Function.
 }

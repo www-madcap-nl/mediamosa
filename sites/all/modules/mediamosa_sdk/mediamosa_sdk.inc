@@ -45,7 +45,9 @@ class mediamosa_sdk {
   const HTTP_NOT_FOUND = 404;
 
   const HTTP_INTERNAL_SERVER_ERROR = 500;
+  const HTTP_NOT_IMPLEMENTED = 501;
 
+  // All Ok.
   const ERRORCODE_OKAY = 601;
   const ERRORCODE_TIME_RESTRICTION_START = 602;
   const ERRORCODE_TIME_RESTRICTION_END = 603;
@@ -64,6 +66,8 @@ class mediamosa_sdk {
   const ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR = 616;
   const ERRORCODE_REST_NOT_FOUND = 617;
   const ERRORCODE_DIR_UNABLE_TO_CREATE = 618;
+  // When functions or mods are not available, like GD functions (image_*).
+  const ERRORCODE_MISSING_EXTENSION = 619;
 
   const ERRORCODE_ASSET_NOT_FOUND = 700;
   const ERRORCODE_MEDIAFILE_NOT_FOUND = 701;
@@ -184,7 +188,6 @@ class mediamosa_sdk {
 
   const ERRORCODE_MASTERSLAVE_DISALLOWED = 1403;
   const ERRORCODE_IMAGE_FILE_TOO_BIG = 1404;
-
   const ERRORCODE_MASTERSLAVE_OWN_APP = 1405;
 
   const ERRORCODE_INVALID_UPLOAD_TICKET = 1500;
@@ -211,6 +214,8 @@ class mediamosa_sdk {
 
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
 
+  const ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID = 2100;
+
   const ERRORCODE_INVALID_REST_CALL = 3000;
 
   // ---------------------------------------------------------------- Var Types.
@@ -227,6 +232,7 @@ class mediamosa_sdk {
   const TYPE_ALPHA_NUM                   = 'ALPHA_NUM'; // [A-Za-z0-9]
   const TYPE_ALPHA_NUM_UNDERSCORE        = 'ALPHA_NUM_UNDERSCORE'; // [A-Za-z0-9_]
   const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
+  const TYPE_RESPONSE_TYPE               = 'RESPONSE_TYPE';
   const TYPE_STRING                      = 'STRING';
   const TYPE_DATETIME                    = 'DATETIME';
   const TYPE_DATETIME_UTC                = 'DATETIME_UTC'; // Is in UTC (already).
@@ -243,6 +249,11 @@ class mediamosa_sdk {
   const TYPE_URL_URI                     = 'URL'; // URL / URI type (checked with simple parse_url)
   const TYPE_AUT_GROUP_TYPE              = 'AUT_GROUP_TYPE';
   const TYPE_DELETE                      = 'DELETE';
+  const TYPE_OAUTH_SIGNATURE             = 'OAUTH_SIGNATURE';
+  const TYPE_OAUTH_SIGNATURE_METHOD      = 'OAUTH_SIGNATURE_METHOD';
+  const TYPE_OAUTH_VERSION               = 'OAUTH_VERSION';
+  const TYPE_OAUTH_TOKEN                 = 'OAUTH_TOKEN';
+  const TYPE_OAUTH_VERIFIER              = 'OAUTH_VERIFIER';
 
   const TYPE_USER_ID                     = 'USER_ID';
   const TYPE_GROUP_ID                    = 'GROUP_ID';
@@ -259,6 +270,7 @@ class mediamosa_sdk {
   const TYPE_REALM                       = 'REALM';
   const TYPE_FILENAME                    = 'FILENAME';
   const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
+  const TYPE_LANGUAGE_CODE_ISO_639_3     = 'LANGUAGE_CODE_ISO_639_3';
 
   const TYPE_CQL_ASSET                   = 'CQL_ASSET';
   const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';
@@ -284,6 +296,23 @@ class mediamosa_sdk {
 
   // Use to select what is slaved to other apps.
   const TYPE_BOOL_IS_SLAVED              = 'BOOL_IS_SLAVED';
+
+  // Job constants.
+  const JOB_STATUS = 'status';
+  const JOB_STATUS_WAITING = 'WAITING';
+  const JOB_STATUS_INPROGRESS = 'INPROGRESS';
+  const JOB_STATUS_FINISHED = 'FINISHED';
+  const JOB_STATUS_FAILED = 'FAILED';
+  const JOB_STATUS_CANCELLED = 'CANCELLED';
+  const JOB_STATUS_CANCELLING = 'CANCELING';// Future exp; THIS IS NOT YET ADDED TO THE ENUM IN DB 'job' table.
+  const PROGRESS = 'progress';
+  const JOB_TYPE = 'job_type';
+  const JOB_TYPE_TRANSCODE = 'TRANSCODE';
+  const JOB_TYPE_RETRANSCODE = 'RETRANSCODE';
+  const JOB_TYPE_STILL = 'STILL';
+  const JOB_TYPE_UPLOAD = 'UPLOAD';
+  const JOB_TYPE_ANALYSE = 'ANALYSE';
+  const JOB_TYPE_DELETE_MEDIAFILE = 'DELETE_MEDIAFILE';
 
   // ---------------------------------------------------------------- Functions.
   /**
@@ -326,6 +355,11 @@ class mediamosa_sdk {
       case self::TYPE_CQL_ASSET:
       case self::TYPE_CQL_COLLECTION:
       case self::TYPE_CQL_JOB:
+      case self::TYPE_OAUTH_SIGNATURE:
+      case self::TYPE_OAUTH_SIGNATURE_METHOD:
+      case self::TYPE_OAUTH_VERSION:
+      case self::TYPE_OAUTH_TOKEN:
+      case self::TYPE_OAUTH_VERIFIER:
         return self::TYPE_STRING;
 
       case self::TYPE_SEARCH_INT:
@@ -338,5 +372,14 @@ class mediamosa_sdk {
     }
 
     return $type;
+  }
+
+  /**
+   * Returns the database stamp as a viewable date.
+   *
+   * @param string $datestamp (YYYY-MM-DD 00:00:00)
+   */
+  static public function datestamp2date($datestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
+    return format_date(strtotime($datestamp), $type, $format, $timezone, $langcode);
   }
 }

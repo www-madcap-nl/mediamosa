@@ -36,7 +36,7 @@
 function mediamosa_connector_menu() {
   $items = array();
 
-  $items['admin/config/development/mediamosa/connector'] = array(
+  $items['admin/config/media/mediamosa/connector'] = array(
     'title' => 'MediaMosa connector',
     'description' => 'The MediaMosa connector enables other modules to connect on the MediaMosa REST interface. The configuration needs username, password and URL to connect to MediaMosa. You need to create or have a MediaMosa application login.',
     'page callback' => 'drupal_get_form',
@@ -44,7 +44,7 @@ function mediamosa_connector_menu() {
     'access arguments' => array('administer mediamosa connector settings'),
   );
 
-  $items['admin/config/development/mediamosa/connector/list'] = array(
+  $items['admin/config/media/mediamosa/connector/list'] = array(
     'title' => 'MediaMosa connector',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
@@ -190,6 +190,19 @@ function mediamosa_connector_settings() {
   $form = system_settings_form($form);
 
   return $form;
+}
+
+/**
+ * Implement hook_settings_validate().
+ */
+function mediamosa_connector_settings_validate(&$form_state, $form) {
+
+  // Values.
+  $values = $form['values'];
+
+  if (!valid_url($values['mediamosa_connector_url'], TRUE)) {
+    form_set_error('mediamosa_connector_url', t('The URL is not well formatted. Use this format: http://mediamosa.local or http://localhost/mediamosa'));
+  }
 }
 
 /**

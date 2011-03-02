@@ -66,6 +66,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR' => '@var is specified more than once (GET / POST / URI), but has different values (value 1; @value1 / value 2; @value2)',
     'ERRORCODE_REST_NOT_FOUND' => 'The REST call with uri_id @uri_id was not found',
     'ERRORCODE_DIR_UNABLE_TO_CREATE' => "Unable to create directory '@location', reason: @reason",
+    'ERRORCODE_MISSING_EXTENSION' => "Unable to complete request, missing/requires '@extension'",
 
     'ERRORCODE_ASSET_NOT_FOUND' => "The asset with ID '@asset_id' was not found in the database",
     'ERRORCODE_MEDIAFILE_NOT_FOUND' => "The mediafile with ID '@mediafile_id' was not found in the database",
@@ -209,6 +210,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_TRANSCODE_PROFILE_EXISTS' => "Transcode profile with name '@profile_name' already exists",
     'ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND' => "Transcode profile with ID '@profile_id' was not found",
     'ERRORCODE_INVALID_STILL_TICKET' => "Invalid still ticket with ID '@ticket_id'",
+    'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID' => "Open client application is missing for OpenAPI",
     'ERRORCODE_INVALID_REST_CALL' => "Invalid REST call with ID '@rest_call'",
   );
 

@@ -31,8 +31,256 @@
   */
 
 class mediamosa_asset_mediafile_still {
+  // ------------------------------------------------------------------ Constants.
+  // Watermark.
+  const WATERMARK_ID = 'watermark_id';
+  const WATERMARK_DST_X = 'watermark_dst_x';
+  const WATERMARK_DST_Y = 'watermark_dst_y';
+  const WATERMARK_PCT = 'watermark_pct';
+  const WATERMARK_V_ALIGN = 'watermark_v_align';
+  const WATERMARK_H_ALIGN = 'watermark_h_align';
+  // Values.
+  const WATERMARK_VALUE_LEFT = 'left';
+  const WATERMARK_VALUE_RIGHT = 'right';
+  const WATERMARK_VALUE_TOP = 'top';
+  const WATERMARK_VALUE_BOTTOM = 'bottom';
+  // Default values.
+  const WATERMARK_DEFAULT_DST_X = 0;
+  const WATERMARK_DEFAULT_DST_Y = 0;
+  const WATERMARK_DEFAULT_PCT = 75;
+  const WATERMARK_DEFAULT_V_ALIGN = self::WATERMARK_VALUE_LEFT;
+  const WATERMARK_DEFAULT_H_ALIGN = self::WATERMARK_VALUE_TOP;
+
+  const IMAGE_TYPE_JPG = 'JPG';
+  const IMAGE_TYPE_PNG = 'PNG';
+
+  const SAVE_QUALITY = 100;
 
   // ------------------------------------------------------------------ Static Function.
+
+  /**
+   * Log message.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_asset_mediafile_still');
+  }
+
+  /**
+   * Log mediafile ids.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
+    mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'mediamosa_asset_mediafile_still');
+  }
+
+  /**
+   * Log message (low prio, is only logged when mediamosa_debug is lvl 5 or higher).
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_debug($message, array $variables = array()) {
+    mediamosa_debug::log($message, $variables, 'mediamosa_asset_mediafile_still');
+  }
+
+  /**
+   * Log message (High prio, is only logged when mediamosa_debug is lvl 10 or higher).
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_debug_high($message, array $variables = array()) {
+    mediamosa_debug::log_high($message, $variables, 'mediamosa_asset_mediafile_still');
+  }
+
+  /**
+   * Get the image types.
+   *
+   * @return array $types
+   */
+  static public function get_types() {
+    // Assign usefull values for the third index of getimagesize() function.
+    $types = array(
+      1 => 'GIF',
+      2 => 'JPG',
+      3 => 'PNG',
+      4 => 'SWF',
+      5 => 'PSD',
+      6 => 'BMP',
+      7 => 'TIFF(intel byte order)',
+      8 => 'TIFF(motorola byte order)',
+      9 => 'JPC',
+      10 => 'JP2',
+      11 => 'JPX',
+      12 => 'JB2',
+      13 => 'SWC',
+      14 => 'IFF',
+      15 => 'WBMP',
+      16 => 'XBM',
+    );
+
+    return $types;
+  }
+  /**
+   * Create watermark.
+   *
+   * @param string $still_id
+   * @param int $app_id
+   * @param array $still_parameters
+   * @param boolean $create_new_still
+   *
+   * @return boolean
+   *   FALSE, in case of error, TRUE, in case of success, $still_id_new, in case of $create_new_still == TRUE
+   */
+  static public function create_watermark($still_id, $app_id, $still_parameters, $create_new_still = FALSE) {
+
+    // If there isn't watermark_id, then we don't watermarking the still image.
+    if (empty($still_parameters[self::WATERMARK_ID])) {
+      return FALSE;
+    }
+
+    self::log_debug_high(t('Start watermarking. (still_id = @still_id, app_id = @app_id, new still = @new_still, still_params = @still_params)', array(
+      '@still_id' => print_r($still_id, TRUE),
+      '@app_id' => print_r($app_id, TRUE),
+      '@new_still' => ($create_new_still ? t('yes') : t('no')),
+      '@still_params' => print_r($still_parameters, TRUE),
+    )));
+
+    // Watermark image must exists.
+    $watermark = mediamosa_asset_mediafile::get($still_parameters[self::WATERMARK_ID], $app_id, array(), mediamosa_asset_mediafile_db::IS_STILL_TRUE);
+    if (empty($watermark[mediamosa_asset_mediafile_db::ID])) {
+      self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Watermark id is not exist.'));
+      return;
+    }
+
+    // Get path to still.
+    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+
+    // Get path to watermark.
+    $watermark_filename = mediamosa_configuration_storage::mediafile_still_filename_get($watermark[mediamosa_asset_mediafile_db::ID]);
+
+    $still_size = mediamosa_gd::getimagesize($still_filename);
+    if (!$still_size) {
+      self::log_mediafile($still_id, t('Watermark getimagesize error (still).'));
+      return;
+    }
+
+    $watermark_size = mediamosa_gd::getimagesize($watermark_filename);
+    if (!$watermark_size) {
+      self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Watermark getimagesize error (watermark).'));
+      return;
+    }
+
+    // Check the image types.
+    $types = self::get_types();
+    if (empty($types[$still_size[2]]) || empty($types[$watermark_size[2]])) {
+      self::log(t('Image type is not suitable for watermarking'));
+      return;
+    }
+    if ($types[$still_size[2]] != self::IMAGE_TYPE_JPG && $types[$still_size[2]] != self::IMAGE_TYPE_PNG) {
+      self::log_mediafile($still_id, t('Image type is not suitable for watermarking (still)'));
+      return;
+    }
+    if ($types[$watermark_size[2]] != self::IMAGE_TYPE_JPG && $types[$watermark_size[2]] != self::IMAGE_TYPE_PNG) {
+      self::log_mediafile($still_parameters[self::WATERMARK_ID], t('Image type is not suitable for watermarking (watermark)'));
+      return;
+    }
+
+    // Destination.
+    if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
+      $dest = mediamosa_gd::imagecreatefromjpeg($still_filename);
+    }
+    else {
+      $dest = mediamosa_gd::imagecreatefrompng($still_filename);
+    }
+
+    // Watermark.
+    if ($types[$watermark_size[2]] == self::IMAGE_TYPE_JPG) {
+      $src = mediamosa_gd::imagecreatefromjpeg($watermark_filename);
+    }
+    else {
+      $src = mediamosa_gd::imagecreatefrompng($watermark_filename);
+    }
+
+    // Values.
+    $dst_x = 0;
+    $dst_y = 0;
+    $src_x = 0;
+    $src_y = 0;
+    $src_w = mediamosa_gd::imagesx($src);
+    $src_h = mediamosa_gd::imagesy($src);
+    $pct = $still_parameters[self::WATERMARK_PCT];
+
+    // Destination x calculation.
+    if ($still_parameters[self::WATERMARK_V_ALIGN] == self::WATERMARK_VALUE_LEFT) {
+      $dst_x = $still_parameters[self::WATERMARK_DST_X];
+    }
+    else {
+      $dst_x = mediamosa_gd::imagesx($dest) - $src_w - $still_parameters[self::WATERMARK_DST_X];
+    }
+
+    // Destination y calculation.
+    if ($still_parameters[self::WATERMARK_H_ALIGN] == self::WATERMARK_VALUE_TOP) {
+      $dst_y = $still_parameters[self::WATERMARK_DST_Y];
+    }
+    else {
+      $dst_y = mediamosa_gd::imagesy($dest) - $src_h - $still_parameters[self::WATERMARK_DST_Y];
+    }
+
+    // Copymerge.
+    self::log_debug_high(t('Call imagecopymerge. (dest = @dest, src = @src, dst_x = @dst_x, dst_y = @dst_y, src_x = @src_x, src_y = @src_y, src_w = @src_w, src_h = @src_h, pct = @pct)', array(
+      '@dest' => print_r($dest, TRUE),
+      '@src' => print_r($src, TRUE),
+      '@dst_x' => print_r($dst_x, TRUE),
+      '@dst_y' => print_r($dst_y, TRUE),
+      '@src_x' => print_r($src_x, TRUE),
+      '@src_y' => print_r($src_y, TRUE),
+      '@src_w' => print_r($src_w, TRUE),
+      '@src_h' => print_r($src_h, TRUE),
+      '@pct' => print_r($pct, TRUE),
+    )));
+    mediamosa_gd::imagecopymerge($dest, $src, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct);
+
+    // Save image.
+    if ($create_new_still) {
+      // New still.
+      $still_id_new = mediamosa_db::uuid($app_id);
+      $still_filename_new = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_new);
+
+      // Create possible missing directories.
+      mediamosa_io::mkdir(mediamosa_io::dirname($still_filename_new));
+    }
+    // Write still.
+    if ($types[$still_size[2]] == self::IMAGE_TYPE_JPG) {
+      mediamosa_gd::imagejpeg($dest, ($create_new_still ? $still_filename_new : $still_filename), self::SAVE_QUALITY);
+    }
+    else {
+      mediamosa_gd::imagepng($dest, ($create_new_still ? $still_filename_new : $still_filename), self::SAVE_QUALITY);
+    }
+
+    // Destroye resources.
+    mediamosa_gd::imagedestroy($dest);
+    mediamosa_gd::imagedestroy($src);
+
+    // Response the new still id.
+    if ($create_new_still) {
+      return $still_id_new;
+    }
+
+    return TRUE;
+  }
+
   /**
    * Create a still
    *
@@ -60,7 +308,10 @@ class mediamosa_asset_mediafile_still {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
-    $size = mediamosa_io::getimagesize($still_filename);
+    // Handle watermark.
+    self::create_watermark($still_id, $app_id, $still_parameters);
+
+    $size = mediamosa_gd::getimagesize($still_filename);
     if (!$size) {
       mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
 

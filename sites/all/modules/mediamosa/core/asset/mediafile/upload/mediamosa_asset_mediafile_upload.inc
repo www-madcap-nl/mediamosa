@@ -52,7 +52,6 @@ class mediamosa_asset_mediafile_upload {
    *
    */
   static public function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
-
     // Set to false.
     $is_app_admin = FALSE;
 
@@ -172,14 +171,16 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Upload still
    *
-   * @param array $mediafile
    * @param string $ticket_id
    * @param boolean $is_method_put
    * @param string $tag
    * @param string $completed_url
    * @param string $filename_put
+   * @param int $order
+   * @param boolean $default
+   * @param array $still_parameters
    */
-  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE) {
+  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array()) {
 
     // Set to false.
     $is_app_admin = FALSE;
@@ -250,6 +251,10 @@ class mediamosa_asset_mediafile_upload {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
     }
 
+    $still_parameters += array(
+      'still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+    );
+
     // Create still.
     mediamosa_asset_mediafile_still::create(
       $mediafile['asset_id'],
@@ -259,7 +264,7 @@ class mediamosa_asset_mediafile_upload {
       $ticket[mediamosa_ticket_db::GROUP_ID],
       $order,
       $default,
-      array('still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE),
+      $still_parameters,
       NULL,
       $mediafile[mediamosa_asset_mediafile_db::ID],
       $tag
@@ -391,6 +396,63 @@ class mediamosa_asset_mediafile_upload {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Specific function for POST data upload
+   *
+   * @param string $filename
+   *  Destination filename.
+   *
+   * @return int $written_bytes
+   *   Number of the written bytes.
+   */
+  static public function handle_upload_post($filename) {
+    $filename_after_upload = NULL;
+
+    // If mediafile exists, rename it.
+    if (file_exists($filename)) {
+      $filename_after_upload = $filename;
+      $filename .= '.upload_temp';
+    }
+
+    // Open the new file
+    $filename_file = @fopen($filename, 'w');
+    if (!$filename_file) {
+      throw new mediamosa_exception(0, "Unable to write to '" . $filename . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+    }
+
+    // Open the stream
+    $stream = fopen('php://input', 'r');
+    if (!$stream) {
+      throw new mediamosa_exception(0, 'Unable to open stream', mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+    }
+
+    $written_bytes = 0;
+
+    /// Read a chunk.
+    $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
+
+    while ($kb) {
+      $written_bytes += @fwrite($filename_file, $kb);
+      if (!$written_bytes) {
+        return FALSE;
+      }
+
+      // Read a chunk.
+      $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
+    }
+
+    // Close all open handles.
+    @fclose($filename_file);
+    @fclose($stream);
+
+    // Ok rename when required.
+    if (isset($filename_after_upload)) {
+      mediamosa_io::rename($filename, $filename_after_upload);
+    }
+
+    return $written_bytes;
   }
 
   /**

@@ -99,6 +99,14 @@ class mediamosa_node_revision {
       foreach ($revision_data as $key => $value) {
         $nodes[$node->nid]->$key = $value;
       }
+
+      // oAuth fix for earlier node rervisions.
+      if ($node->type == mediamosa_node::MEDIAMOSA_NODE_TYPE_APP) {
+        if (!isset($revision_data[mediamosa_app_db::OAUTH_CONSUMER_KEY]) && !isset($revision_data[mediamosa_app_db::OAUTH_CONSUMER_SECRET])) {
+          $nodes[$node->nid]->{mediamosa_app_db::OAUTH_CONSUMER_KEY} = '';
+          $nodes[$node->nid]->{mediamosa_app_db::OAUTH_CONSUMER_SECRET} = '';
+        }
+      }
     }
 
     return $nodes;

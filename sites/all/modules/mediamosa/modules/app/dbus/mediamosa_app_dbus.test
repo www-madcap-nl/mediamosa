@@ -28,7 +28,7 @@
   * @file
   * Unittests for authentication module.
   */
-class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
+class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
 
   public static function getInfo() {
     return array(
@@ -40,10 +40,10 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
   }
 
   function setUp() {
-    parent::setUp('mediamosa_app_authentication');
+    parent::setUp('mediamosa_app_dbus');
 
     // Create and login user
-    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA));
+    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
     $this->drupalLogin($rest_user);
   }
 
