@@ -263,7 +263,7 @@ function mediamosa_solr_mediamosa_asset_index_delete($asset_id) {
   }
   else {
     // Queue, so they are deleted when indexed.
-    mediamosa_solr::queue_assets($reindex_info['asset_ids']);
+    mediamosa_solr::queue_assets(array($asset_id));
   }
 }
 

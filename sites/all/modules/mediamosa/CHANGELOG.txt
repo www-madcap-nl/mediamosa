@@ -56,6 +56,8 @@ MediaMosa 2.3.7 (build 1285)
 
 Other changes (not ticket related)
 - Work around for still_type = scene, if there isn't video duration.
+- Fixed bug where asset would be queued when sorl was not enabled as module and
+  would try and fail to queue the asset.
 
 MediaMosa 2.3.6 (build 1283)
 ----------------------------
