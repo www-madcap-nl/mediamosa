@@ -38,6 +38,7 @@ class MediaMosaSolrTestCaseEga extends MediaMosaTestCaseEgaJob {
       'name' => 'SOLR - basic tests',
       'description' => 'Run basic tests if all options are working for the MediaMosa Solr setup.',
       'group' => 'MediaMosa Solr',
+      'automatic_run_disabled' => module_exists('mediamosa_solr') ? FALSE : TRUE,
     );
   }
 

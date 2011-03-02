@@ -57,21 +57,24 @@ function mediamosa_maintenance_browse_test_form($form) {
   // Generate the list of tests arranged by group.
   $groups = simpletest_test_get_all();
   foreach ($groups as $group => $tests) {
-
     if (drupal_strtolower(drupal_substr($group, 0, drupal_strlen('mediamosa'))) != 'mediamosa') {
       continue;
     }
 
-    $form['tests']['table'][$group] = array(
-      '#collapsed' => TRUE,
-    );
-
     foreach ($tests as $class => $info) {
+      if (!empty($info['automatic_run_disabled'])) {
+        continue;
+      }
+
       $form['tests']['table'][$group][$class] = array(
         '#type' => 'checkbox',
         '#title' => $info['name'],
         '#description' => $info['description'],
       );
+    }
+
+    if (!empty($form['tests']['table'][$group])) {
+      $form['tests']['table'][$group]['#collapsed'] = TRUE;
     }
   }
 
