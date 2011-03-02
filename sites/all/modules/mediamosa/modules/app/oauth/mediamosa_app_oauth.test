@@ -69,7 +69,7 @@ class MediaMosaAppAuthenticationOAuthTestCase extends MediaMosaTestCaseEga {
     parent::setUp('mediamosa_app_oauth');
 
     // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa', 'oauth login'));
+    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA, 'oauth login'));
     $this->drupalLogin($rest_user);
   }
 
