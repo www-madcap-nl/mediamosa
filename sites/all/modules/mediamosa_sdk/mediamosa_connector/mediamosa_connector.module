@@ -51,11 +51,11 @@ function mediamosa_connector_menu() {
 
   // Include in the mediamosa menus too.
   if (class_exists('mediamosa_permission')) {
-    $items['admin/config/development/mediamosa/connector']['access arguments'] = mediamosa_permission::ACCESS_CONFIG . '|connector';
-    $items['admin/config/development/mediamosa/connector']['access callback'] = mediamosa_permission::CALLBACK_USER_ACCESS;
+    $items['admin/config/media/mediamosa/connector']['access arguments'] = array(mediamosa_permission::ACCESS_CONFIG . '|connector');
+    $items['admin/config/media/mediamosa/connector']['access callback'] = mediamosa_permission::CALLBACK_USER_ACCESS;
 
-    $items['admin/mediamosa/config/connector'] = $items['admin/config/development/mediamosa/connector'];
-    $items['admin/mediamosa/config/connector/list'] = $items['admin/config/development/mediamosa/connector/list'];
+    $items['admin/mediamosa/config/connector'] = $items['admin/config/media/mediamosa/connector'];
+    $items['admin/mediamosa/config/connector/list'] = $items['admin/config/media/mediamosa/connector/list'];
   }
 
   return $items;
