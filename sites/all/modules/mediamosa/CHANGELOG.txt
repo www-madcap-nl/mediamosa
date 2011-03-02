@@ -24,7 +24,7 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.4 (build 1446)
+MediaMosa 2.4 (build 1472)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
