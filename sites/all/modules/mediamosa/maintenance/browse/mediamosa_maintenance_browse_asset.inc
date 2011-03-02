@@ -421,7 +421,10 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   //$asset = mediamosa_asset::get($asset_id);
 
   // Get the asset.
-  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET');
+  $params = array(
+    'view_hidden_metadata' => 'TRUE',
+  );
+  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
 
   if ($response['header']['request_result_id'] != 601) {
     return '<h1>Asset not found</h1>';
