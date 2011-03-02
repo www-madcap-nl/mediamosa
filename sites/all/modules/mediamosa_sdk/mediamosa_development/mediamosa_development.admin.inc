@@ -620,6 +620,7 @@ function _build_param($name, $var, $required) {
     case mediamosa_sdk::TYPE_ALPHA_NUM:
     case mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE:
     case mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE_TAG:
+    case mediamosa_sdk::TYPE_RESPONSE_TYPE:
 
     case mediamosa_sdk::TYPE_DATETIME:
 

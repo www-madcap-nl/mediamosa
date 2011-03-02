@@ -467,7 +467,7 @@ class mediamosa_job {
         $destination = mediamosa_configuration_storage::still_filename_get($still_id);
 
         // Still size.
-        $size = mediamosa_io::getimagesize($destination);
+        $size = mediamosa_gd::getimagesize($destination);
         if (!$size) {
           self::post_create_job_failed($app_id, $user_id, $mediafile_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
         }

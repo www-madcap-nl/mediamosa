@@ -1,15 +1,10 @@
 ; $Id $
 
-name = "Application authentication"
-description = "The authentication module handles application authentication."
+name = "Application authentication (depricated, keep it off)"
+description = "Keep this module turned off(!)"
 package = "MediaMosa - Modules"
-version = "2.3.0"
+version = "2.4.0"
 core = 7.x
-
-; Dependencies (module names)
-; dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_app_authentication.module
-files[] = mediamosa_app_authentication.test
-files[] = mediamosa_app_authentication.rest.inc

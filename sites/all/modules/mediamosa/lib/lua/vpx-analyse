@@ -2,7 +2,7 @@
 -- -*- lua -*-
 
 --
--- Copyright (c) 2008, 2009 Madcap BV (http://www.madcap.nl)
+-- Copyright (c) 2008, 2009, 2010, 2011 Madcap BV (http://www.madcap.nl)
 -- All rights reserved.
 --
 -- Permission is granted for use, copying, modification, distribution,
@@ -99,8 +99,16 @@ function convert_units(amount, unit)
   end
 end
 
---Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
---Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
+-- Stream #0.1(eng): Video: vc1, yuv420p, 384x288 [PAR 1:1 DAR 4:3], 776 kb/s, 25 fps, 25 tbr, 1k tbn, 25 tbc
+-- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
+-- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tb(r)
+-- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
+-- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
+-- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
+-- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
+
 local ln_video = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
   codec * COMMA *
@@ -114,21 +122,6 @@ local ln_video = space * "Stream #" * float * language * COLON *
     ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
   ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
-
--- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
--- Stream #0.0: Video: h264, yuv420p, 320x240 [PAR 1:1 DAR 4:3], 104857 kb/s, 29.97 tb(r)
--- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
--- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
--- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
--- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
-local ln_video_best = space * "Stream #" * float * language * COLON *
-  "Video" * COLON *
-  codec * COMMA *
-  ((word * COMMA) + lpeg.Cc("unknown")) *
-  (dimension + lpeg.Cc("unknown")) *
-  (aspectratio + lpeg.Cc("unknown")) * COMMA *
-  ((number * "kb/s" * COMMA) + lpeg.Cc("unknown")) *
-  ((float * "tb(" * lpeg.S("rmc") * ")") + (number * "tbr" * COMMA))
 
 -- Stream #0.1(und): Data: rtp  / 0x20707472
 -- hinted detection
@@ -256,13 +249,8 @@ function find_best_streams(source_path, hash)
         log_out("audio: not interested in stream %s @ %s kbps", stream, bitrate)
       end
     elseif streamtype == "Video" then
-      --local stream, codecs, colorspace, size, ar, bitrate, fps = lpeg.match(ln_video_best, line)
       local stream, codec, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
       log_out("video: detected stream: %s", stream)
-      --[[if codecs == nil then
-        add_error("The video input stream uses an unknown codec")
-        codecs = {}
-      end--]]
       if video_max_bitrate_stream == nil then
         log_out("video: initial stream found %s @ %s kbps", stream, bitrate)
         video_max_bitrate = tonumber(bitrate)
@@ -420,13 +408,13 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
             bitrate = br2
           end
           add_property("X-Video-stream", line)
-	  -- print("line " .. line)
+          -- print("line " .. line)
           add_property("Video-codec", codec)
-	  -- print("codecs " .. codecs)
+          -- print("codecs " .. codecs)
           add_property("Video-colorspace", colorspace)
-	  -- print("colorsp: " .. colorspace)
+          -- print("colorsp: " .. colorspace)
           add_property("Video-size", size)
-	  -- print("size " .. size)
+          -- print("size " .. size)
           add_property("Video-aspectratio", ar)
           if fps ~= nil then
             add_property("Video-framespersecond", fps)
@@ -435,7 +423,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
           end
           if bitrate ~= "unknown" then
             add_property("Video-bitrate", bitrate)
-	    -- print("bitrate " .. bitrate)
+            -- print("bitrate " .. bitrate)
             if tonumber(bitrate) > max_video_bitrate then
               max_video_bitrate = tonumber(bitrate)
             end

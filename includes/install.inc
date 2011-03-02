@@ -548,7 +548,7 @@ abstract class DatabaseTasks {
    *
    * @param $database
    *   An array of driver specific configuration options.
-   * 
+   *
    * @return
    *   An array of driver configuration errors, keyed by form element name.
    */

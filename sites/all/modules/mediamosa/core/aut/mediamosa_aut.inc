@@ -1699,7 +1699,7 @@ class mediamosa_aut {
 
         // Convert into SQL.
         $query_sql = mediamosa_db_query::query_select($query);
-mediamosa_debug::log_export($query_sql);
+
         // Now execute the SQL.
         $db_result = mediamosa_db::db_query($query_sql);
 

@@ -74,7 +74,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create and setup the CORE module.
     $args = array_unique(array_merge(array(
       'mediamosa_user',
-      'mediamosa_app_authentication',
+      'mediamosa_app_dbus',
+      'mediamosa_app_oauth',
       'mediamosa_asset',
       'mediamosa_aut',
       'mediamosa_collection',
@@ -591,7 +592,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of still.
    */
-  protected function uploadTestStill($order = 0, $default = FALSE) {
+  protected function uploadTestStill($order = 0, $default = FALSE, $filename = NULL) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -612,7 +613,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(!empty($uploadticket['ticket_id']), 'ticket_id set');
 
     // Get link to upload file.
-    $filename = self::getTestImage_NotBlackJpg();
+    if (!$filename) {
+      $filename = self::getTestImage_NotBlackJpg();
+    }
 
     // URL.
     // Still upload does not use the action from the upload ticket.
@@ -675,13 +678,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
 
     // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $still_filename);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'still_id' => $still_id, 'filename' => $still_filename);
   }
 
   /**
    * Upload of still on a existing mediafile.
    */
-  protected function uploadTestStillAttach($order = 0, $default = FALSE) {
+  protected function uploadTestStillAttach($order = 0, $default = FALSE, $filename = NULL) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -702,7 +705,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(!empty($uploadticket['ticket_id']), 'ticket_id set');
 
     // Get link to upload file.
-    $filename = self::getTestImage_NotBlackJpg();
+    if (!$filename) {
+      $filename = self::getTestImage_NotBlackJpg();
+    }
 
     // URL.
     // Still upload does not use the action from the upload ticket.
@@ -768,7 +773,74 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
 
     // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $still_filename);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'still_id' => $still_id, 'filename' => $still_filename);
+  }
+
+  /**
+   * Basic file upload for OpenAPI.
+   *
+   * @param $album_id string
+   *   Asset id.
+   * @param $user_id string
+   *   User id.
+   * @param $filename string
+   *
+   * @return $mediafile_id
+   *   MediaItem id.
+   */
+  protected function uploadTestFileOpenAPI($album_id = NULL, $user_id = self::SIMPLETEST_USER_ID, $filename = NULL, $mime_type = NULL, $mediaitem_id = NULL, $attributes = array()) {
+    global $base_url;
+
+    if (!$album_id) {
+      // Create an album.
+      $album_id = $this->createAsset();
+    }
+
+    $attributes_query = '';
+    if (!empty($attributes)) {
+      foreach ($attributes as $name => $attribute) {
+        $attributes_query .= '&' . $name . '=' . $attribute;
+      }
+    }
+
+    $url = $base_url . '/openapi/album/' . $album_id . ($mediaitem_id ? '/mediaitem/' . $mediaitem_id : '') . '?user_id=' . $user_id . $attributes_query;
+    $headers = array(
+      'Accept-Type' => 'application/rss+xml',
+    );
+    $options = array(
+      'headers' => $headers,
+      'method' => 'POST',
+    );
+
+    if ($filename) {
+      $headers['Content-Type'] = ($mime_type ? $mime_type : 'video/x-ms-wmv');
+      $options['data'] = file_get_contents($filename);
+    }
+
+    // Dump the request.
+    $this->verbose(print_r($url, TRUE));
+    $this->verbose(print_r($options, TRUE));
+
+    $response = mediamosa_http::drupal_http_request($url, $options);
+
+    // Dump the response.
+    $this->verbose(print_r($response, TRUE));
+
+    try {
+      $xml = new SimpleXMLElement($response->data);
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
+    }
+
+    $feed = mediamosa_lib::simplexml2array($xml);
+
+    // Dump the response.
+    $this->verbose(print_r($feed, TRUE));
+
+    $mediaitem_id = $feed['entry']['content']['mediaItem']['id'];
+
+    return array('mediaitem_id' => $mediaitem_id, 'feed' => $feed,);
   }
 
   /**
@@ -898,6 +970,45 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * OpenAPI search.
+   * Based on the GET call /openapi/search (GET)
+   */
+  protected function searchOpenAPI($query, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_openapi_search::QUERY => $query,
+    );
+
+    // Required.
+    $uri = 'openapi/search';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
+      strtr(
+        "Search asset, got result @result (@result_description)",
+        array(
+          '@result' => (string) $response['xml']->extension->request_result_id,
+          '@result_description' => (string) $response['xml']->extension->request_result_description
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      return FALSE;
+    }
+
+    $assets = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $assets;
+  }
+
+  /**
    * Get an asset.
    * Based on the GET rest call /asset/$asset_id/mediafile (GET)
    */
@@ -978,6 +1089,102 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return data.
     return $mediafile;
+  }
+
+  /**
+   * Get a mediaitem.
+   * Based on the call /openapi/mediaItems (GET)
+   */
+  protected function getMediaItems($item_user_id = NULL, $group_id = NULL, $album_id = NULL, $mediafile_id = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    );
+
+    // Set uri.
+    $uri = 'openapi/mediaItems';
+    if ($item_user_id) {
+      $uri .= '/' . $item_user_id;
+      if ($group_id) {
+        $uri .= '/' . $group_id;
+        if ($album_id) {
+          $uri .= '/' . $album_id;
+          if ($mediafile_id) {
+            $uri .= '/' . $mediafile_id;
+          }
+        }
+      }
+    }
+
+    // Do get call.
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
+      case mediamosa_rest_call::RESPONSE_TYPE_XML:
+        $this->assertTrue(
+          in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+          strtr(
+            "Get mediafiles, got result @result (@result_description)",
+            array(
+              '@result' => (string) $response['xml']->header->request_result_id,
+              '@result_description' => (string) $response['xml']->header->request_result_description
+            )
+          )
+        );
+        break;
+      case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
+        $this->assertTrue(
+          in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
+          strtr(
+            "Get mediafiles, got result @result (@result_description)",
+            array(
+              '@result' => (string) $response['xml']->extension->request_result_id,
+              '@result_description' => (string) $response['xml']->extension->request_result_description
+            )
+          )
+        );
+        break;
+    }
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $expected_result_ids)) {
+      return FALSE;
+    }
+
+    // Get response.
+    $assets = mediamosa_lib::simplexml2array($response['xml']);
+
+    // Return data.
+    return $assets;
+  }
+
+  /**
+   * Get a mediaitem as oEmbed.
+   * Based on the call /services/oembed (GET)
+   */
+  protected function getOEmbed($mediafile_id = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_oembed_get::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_oembed_get::FORMAT => mediamosa_rest_call_oembed_get::FORMAT_XML,
+    );
+
+    // Set uri.
+    $uri = 'services/oembed';
+
+    // Do get call.
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
+
+    // Dump the response.
+    $this->verbose(print_r($response, TRUE));
+
+    // Get response.
+    $oembed = mediamosa_lib::simplexml2array($response['xml']);
+
+    // Return data.
+    return $oembed;
   }
 
   /**
@@ -1600,6 +1807,70 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return the mediafile ID.
     return $mediafile_id;
+  }
+
+  /**
+   * Create a media item.
+   * Based on REST call /openapi/mediaItems (POST)
+   */
+  protected function createMediaItem($item_user_id = '@me', $group_id = '@self', $album_id = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    );
+
+    if (!$album_id) {
+      // Create an album.
+      $album_id = $this->createAsset();
+    }
+
+    // Set the URI.
+    $uri = strtr('openapi/mediaItem/@items_user_id/@group_id/@album_id', array(
+      '@items_user_id' => $item_user_id,
+      '@group_id' => $group_id,
+      '@album_id' => $album_id,
+    ));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Get the new mediafile_id.
+    $this->assertTrue(TRUE, 'Response: ' . print_r($response, TRUE));
+
+    // Check response.
+    switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
+      case mediamosa_rest_call::RESPONSE_TYPE_XML:
+        $this->assertTrue(
+          in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+          strtr(
+            "Created mediafile, got result @result (@result_description)",
+            array(
+              '@result' => (string) $response['xml']->header->request_result_id,
+              '@result_description' => (string) $response['xml']->header->request_result_description
+            )
+          )
+        );
+        break;
+      case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
+        $this->assertTrue(
+          in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
+          strtr(
+            "Created mediafile, got result @result (@result_description)",
+            array(
+              '@result' => (string) $response['xml']->extension->request_result_id,
+              '@result_description' => (string) $response['xml']->extension->request_result_description
+            )
+          )
+        );
+        break;
+    }
+
+    // Get response.
+    $asset = mediamosa_lib::simplexml2array($response['xml']);
+
+    // Return data.
+    return $asset;
   }
 
   /**
@@ -3007,6 +3278,47 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     return $response;
+  }
+
+  /**
+   * Watermark still.
+   * Based on the POST rest call /still/$still_id/watermark (POST)
+   */
+  protected function watermarkStill($still_id, $watermark_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $parameters += array(
+      mediamosa_rest_call_set_still_watermark::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_set_still_watermark::WATERMARK_ID => $watermark_id,
+    );
+
+    // Set the URI.
+    $uri = strtr('still/@still_id/watermark', array('@still_id' => $still_id));
+
+    $this->verbose(t('REST call: @uri, parameters = @parameters', array(
+      '@uri' => $uri,
+      '@parameters' => print_r($parameters, TRUE),
+    )));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Get the new watermarked still_id.
+    $still_id_watermarked = empty($response['xml']->items->item[0]->still_id) ? NULL : (string) $response['xml']->items->item[0]->still_id;
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr("Watermark still with ID: @still_id, got result @result (@result_description)", array('@still_id' => $still_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+    );
+
+    // Get path to still.
+    $still_filename_watermarked = mediamosa_configuration_storage::mediafile_still_filename_get($still_id_watermarked);
+
+    // Add to unlinks.
+    $this->unlinks[] = $still_filename_watermarked;
+
+    // Return response.
+    return $still_id_watermarked;
   }
 
   // ------------------------------------------------------------------ Play Proxy.
