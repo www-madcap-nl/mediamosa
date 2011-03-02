@@ -103,7 +103,8 @@ function mediamosa_maintenance_menu() {
   $items['admin/mediamosa/asset/%/mediafile/%/retranscode'] = array(
     'page callback' => 'mediamosa_maintenance_mediafile_retranscode',
     'page arguments' => array(3, 5),
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_RETRANSCODE_MEDIAMOSA_MEDIAFILES),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
