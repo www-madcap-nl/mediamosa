@@ -1896,11 +1896,6 @@ function mediamosa_update_7090() {
 }
 
 /**
- */
-function mediamosa_update_7091() {
-}
-
-/**
  * Create new 'missing extension' errorcode in database.
  * Change mediamosa_streaming_ticket table.
  * Add new field: time.
