@@ -1896,20 +1896,8 @@ function mediamosa_update_7090() {
 }
 
 /**
- * Two new tables for oAuth.
- * Add new fields to mediamosa_server table to support new upload progress.
  */
 function mediamosa_update_7091() {
-
-  if (!db_table_exists(mediamosa_app_oauth_nonce_db::TABLE_NAME)) {
-    // Create nonce table.
-    mediamosa::drupal_install_schema(mediamosa_app_oauth_nonce_db::TABLE_NAME);
-  }
-
-  if (!db_table_exists(mediamosa_app_oauth_token_db::TABLE_NAME)) {
-    // Create token table.
-    mediamosa::drupal_install_schema(mediamosa_app_oauth_token_db::TABLE_NAME);
-  }
 }
 
 /**
@@ -1976,6 +1964,45 @@ function mediamosa_update_7092() {
     );
 
     db_add_field(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE, $spec);
+  }
+}
+
+/**
+ * Two new tables for oAuth.
+ * Add new fields to mediamosa_server table to support new upload progress.
+ * Update the mediamosa_app table schema with oAuth fields.
+ */
+function mediamosa_update_7093() {
+
+  if (!db_table_exists(mediamosa_app_oauth_nonce_db::TABLE_NAME)) {
+    // Create nonce table.
+    mediamosa::drupal_install_schema(mediamosa_app_oauth_nonce_db::TABLE_NAME);
+  }
+
+  if (!db_table_exists(mediamosa_app_oauth_token_db::TABLE_NAME)) {
+    // Create token table.
+    mediamosa::drupal_install_schema(mediamosa_app_oauth_token_db::TABLE_NAME);
+  }
+
+  if (!db_field_exists('mediamosa_app', 'oauth_consumer_key')) {
+    // oAuth consumer key.
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+  }
+
+  if (!db_field_exists('mediamosa_app', 'oauth_consumer_secret')) {
+    // oAuth consumer secret.
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+  }
+
+  if (!db_index_exists('mediamosa_app', 'idx_oauth_consumer_key')) {
+    // only add the main search query.
+    db_add_index(
+      'mediamosa_app',
+      'idx_oauth_consumer_key',
+      array(
+        mediamosa_app_db::OAUTH_CONSUMER_KEY,
+      )
+    );
   }
 }
 
