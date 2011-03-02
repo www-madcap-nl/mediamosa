@@ -137,9 +137,9 @@ class mediamosa_connector {
    * @param array $options
    *   (optional) An array which can have one or more of following keys:
    *   - user_id (mediamosa)
-   *       The user_id of the Mediamosa call. Default is empty.
+   *       The user_id of the MediaMosa call. Default is empty.
    *   - group_id (mediamosa)
-   *       The group_id of the Mediamosa call. Default is empty.
+   *       The group_id of the MediaMosa call. Default is empty.
    *   - fatal
    *       Boolean value, TRUE makes the call throw an exception if the call
    *       failed. That means, failed to call, failed to access the rest etc.

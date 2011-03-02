@@ -34,6 +34,13 @@
  */
 function mediamosa_maintenance_browse_restcall_form() {
 
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  drupal_set_breadcrumb($breadcrumb);
+
   // Call the REST call hook to get the registered REST calls.
   $rest_calls = module_invoke_all('mediamosa_register_rest_call');
   $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');

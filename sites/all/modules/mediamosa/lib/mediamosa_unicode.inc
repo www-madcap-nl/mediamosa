@@ -28,8 +28,6 @@
  * @file
  * Unicode library is our layer for supporting charsets. MediaMosa only supports UTF8 for now.
  */
-
-
 class mediamosa_unicode {
 
   /**

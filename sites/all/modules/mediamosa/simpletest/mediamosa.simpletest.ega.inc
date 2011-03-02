@@ -133,7 +133,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
+    $rest_user = $this->drupalCreateUser(array(mediamosa_permission::ADMIN_MEDIAMOSA));
     $this->drupalLogin($rest_user);
 
     // Do EGA / APP login (app 1).

@@ -197,12 +197,12 @@ function mediamosa_transcode_menu() {
     'title' => 'Transcode profiles',
     'description' => 'Transcoding profiles are used by the transcoding software. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.',
     'page callback' => '_mediamosa_transcode_profile_list',
-    'access arguments' => array('administer mediamosa configuration'),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TRANSCODE_PROFILES),
   );
 
   $items['admin/mediamosa/config/transcode_profile/list'] = array(
     'title' => 'List',
-    'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
@@ -273,4 +273,28 @@ function mediamosa_transcode_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function mediamosa_transcode_node_access($node, $op, $account) {
+  // A string is given when the node is created.
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // We only support our type.
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // Just for debugging.
+  assert($node->{mediamosa_app_db::APP_ID});
+
+  // Build the role we need.
+  $role_needed = mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $node->{mediamosa_app_db::APP_ID} . '|transcode_profile|' . $op;
+
+  // If we have to role, then we allow the action.
+  return _mediamosa_user_access($role_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
 }

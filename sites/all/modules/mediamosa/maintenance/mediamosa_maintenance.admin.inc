@@ -51,6 +51,13 @@
  *   The output HTML.
  */
 function _mediamosa_maintenance_admin_page($path) {
+
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  drupal_set_breadcrumb($breadcrumb);
+
   $content = _mediamosa_maintenance_admin_menu_block(menu_get_item($path));
   if ($content) {
     $output = theme('admin_block_content', array('content' => $content));
@@ -251,7 +258,7 @@ function theme_l_mediamosa_collection($variables) {
 /**
  * Confirm deletion of mediafile.
  */
-function mediamosa_maintenance_mediafile_delete($form, &$form_state, $asset_id, $mediafile_id) {
+function _mediamosa_maintenance_mediafile_delete($form, &$form_state, $asset_id, $mediafile_id) {
   return confirm_form(
     array(
       'asset_id' => array(
@@ -273,7 +280,7 @@ function mediamosa_maintenance_mediafile_delete($form, &$form_state, $asset_id, 
 /**
  * This function deletes an asset and optionally all mediafiles within it
  */
-function mediamosa_maintenance_mediafile_delete_submit($form, &$form_state) {
+function _mediamosa_maintenance_mediafile_delete_submit($form, &$form_state) {
 
   // Get ids.
   $asset_id = $form_state['values']['asset_id'];
@@ -305,7 +312,7 @@ function mediamosa_maintenance_mediafile_delete_submit($form, &$form_state) {
  * @param $asset_id
  * @param $mediafile_id
  */
-function mediamosa_maintenance_mediafile_analyse($asset_id, $mediafile_id) {
+function _mediamosa_maintenance_mediafile_analyse($asset_id, $mediafile_id) {
 
   // REST uri.
   $uri = strtr('mediafile/@mediafile_id/analyse', array('@mediafile_id' => $mediafile_id));
@@ -360,7 +367,7 @@ function mediamosa_maintenance_mediafile_retranscode($asset_id, $mediafile_id) {
 /**
  * start download proxy call.
  */
-function mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
+function _mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
 
   // REST uri.
   $uri = strtr('asset/@asset_id/play', array('@asset_id' => $asset_id));
@@ -386,7 +393,7 @@ function mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
 /**
  * Confirm deletion of job.
  */
-function mediamosa_maintenance_job_delete($form, &$form_state, $asset_id, $job_id) {
+function _mediamosa_maintenance_job_delete($form, &$form_state, $asset_id, $job_id) {
   return confirm_form(
     array(
       'asset_id' => array(
@@ -408,7 +415,7 @@ function mediamosa_maintenance_job_delete($form, &$form_state, $asset_id, $job_i
 /**
  * This function deletes an asset and optionally all mediafiles within it
  */
-function mediamosa_maintenance_job_delete_submit($form, &$form_state) {
+function _mediamosa_maintenance_job_delete_submit($form, &$form_state) {
 
   // Get ids.
   $asset_id = $form_state['values']['asset_id'];

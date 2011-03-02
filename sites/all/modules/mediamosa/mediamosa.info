@@ -2,13 +2,12 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.4.0.1437"
+version = "2.4.0.1481"
 core = 7.x
 
 configure = admin/mediamosa/config/global
 
 ; Dependencies (module names)
-; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
 dependencies[] = simpletest
 dependencies[] = mediamosa_sdk
 
@@ -16,6 +15,7 @@ dependencies[] = mediamosa_sdk
 
 ; Core class.
 files[] = mediamosa.module
+files[] = mediamosa.permission.class.inc
 files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install

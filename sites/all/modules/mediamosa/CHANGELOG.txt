@@ -24,8 +24,7 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-
-MediaMosa 2.4 (build 1437)
+MediaMosa 2.4 (build 1481)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
@@ -60,7 +59,37 @@ Other changes (not ticket related).
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
 
-MediaMosa 2.3.5 (build 1274)
+MediaMosa 2.3.8 (build in progress)
+----------------------------
+
+Other changes (not ticket related)
+- Work around for still_type = scene, if there isn't video duration.
+- Fixed bug where asset would be queued when sorl was not enabled as module and
+  would try and fail to queue the asset.
+- Added support for nginx/lighttpd webserver uploadprogress. 
+
+MediaMosa 2.3.7 (build 1301)
+----------------------------
+- FFMpeg 2 pass encoding fix  (See ticket #502).
+- Doesn't do 2 pass encoding on audio file (See ticket #501).
+- ACL did not correctly set its protected flags when using parameter 'replace'
+  with value 'FALSE' (See ticket #503).
+- CQL will now correctly search with dates, by allowing the dates to be in the
+  timezone of the client (See ticket #236).
+
+Other changes (not ticket related)
+
+MediaMosa 2.3.6 (build 1285)
+----------------------------
+- Streaming ticket table clean up development (See ticket #103).
+- Added extended role and access rights to drupal for MediaMosa users that
+  require specific rights on MediaMosa backend (See vpcore ticket #129).
+  
+Other changes (not ticket related)
+- Added extended role and access rights to drupal for MediaMosa users that
+  require specific rights on MediaMosa backend.
+
+MediaMosa 2.3.5 (build 1277)
 ----------------------------
 - Fixed bug introduced by perm. stills; master-slaved mediafiles where missing
   the default url to the still in asset call. (See ticket #456).
@@ -75,6 +104,9 @@ Other changes (not ticket related).
 - Added link to transcode profile in asset viewer under asset browser.
 - Added reference_id to asset/update REST call.
 - Changed robots.txt that it will disallow all crawling.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+
   
 MediaMosa 2.3.4 (build 1246)
 ----------------------------

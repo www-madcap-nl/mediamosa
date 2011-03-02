@@ -202,12 +202,20 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
  * Implements hook_form().
  */
 function mediamosa_transcode_profile_form($node, $form_state) {
+  // Get the apps for the drop down listing.
+  $apps = _mediamosa_get_apps();
+
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
     $node->tool = 'ffmpeg';
     $node->is_default_profile = 'FALSE';
     $node->file_extension = '';
+
+    // Only administrators may add global profiles.
+    if (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA)) {
+      unset($apps[0]);
+    }
   }
 
   $form = array();
@@ -218,8 +226,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('Required parameters for a transcoding profile.'),
   );
 
-  // Get the apps for the drop down listing.
-  $apps = _mediamosa_get_apps();
 
   if (isset($node->transcode_profile_id)) {
     $form['required']['transcode_profile_id_markup'] = array(

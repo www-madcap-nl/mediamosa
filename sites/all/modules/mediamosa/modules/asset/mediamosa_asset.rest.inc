@@ -425,45 +425,31 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Override Validate Rest Args.
   // Override for checking CQL string.
-  protected function validate_rest_args(array $a_var_setup) {
+  protected function validate_rest_args(array $var_setup) {
 
     // Validate first.
-    parent::validate_rest_args($a_var_setup);
+    parent::validate_rest_args($var_setup);
 
-    $cql = $this->get_param_value(self::CQL);
-    $app_ids = $this->get_param_value_app();
-    $error_text = '';
+    // CQL string needs validation. We do this here.
 
-    if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
-    }
-  }
-
-  // ------------------------------------------------------------------ Do Call.
-  public function do_call() {
-    $mediamosa = mediamosa::get();
-
+    // Get app ids.
     $app_ids = $this->get_param_value_app();
 
     // Now convert the old search parameters to CQL.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, array(), self::get_search_params());
-
-    // Non CQL parameters.
-    $order_by = $this->get_param_value(self::ORDER_BY);
-    $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
+    $var_setup_search = mediamosa_core_cql::get_var_setup_search_asset($app_ids, array(), self::get_search_params());
 
     $a_cql = array();
-    $a_translate_to = array();
-    foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
-      if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_SEARCH_MATCH) {
+    $translate_to = array();
+    foreach ($var_setup_search[mediamosa_rest_call::VARS] as $param_name => $param) {
+      if ($param[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_SEARCH_MATCH) {
         continue;
       }
 
       // When provided, then convert.
-      if (!self::empty_param($param)) {
-        $a_value = $this->get_param_value($param);
-        $match = $this->get_param_value($param . '_match');
-        $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
+      if (!self::empty_param($param_name)) {
+        $value = $this->get_param_value($param_name);
+        $match = $this->get_param_value($param_name . '_match');
+        $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param_name, $match, $value, $param[mediamosa_rest_call::PARAM_TYPE], $translate_to);
       }
     }
 
@@ -481,6 +467,10 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
     }
 
+    // Non CQL parameters.
+    $order_by = $this->get_param_value(self::ORDER_BY);
+    $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
+
     // Add possible order by to the CQL.
     if ($order_by != '') {
       if (!self::empty_param(self::CQL)) {
@@ -494,9 +484,28 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       // Now normal search params, then take CQL (if any).
       $cql = $this->get_param_value(self::CQL);
     }
+    $app_ids = $this->get_param_value_app();
+    $error_text = '';
+
+    if (!empty($cql) && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
+    }
+
+    // Save the possible changed CQL.
+    $this->set_param_value(self::CQL, $cql);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
 
     // Calculate the total.
     $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
+
+    // Get CQL.
+    $cql = $this->get_param_value(self::CQL);
 
     // Now search.
     $asset_ids = mediamosa_search::asset(array(

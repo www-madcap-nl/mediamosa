@@ -460,20 +460,97 @@ class mediamosa_asset_mediafile_upload {
    *
    * @param string $id
    */
-  static public function get_uploadprogress($id) {
+  static public function get_uploadprogress($id, $server_id) {
 
-    // Lets make sure APC is enabled.
-    if (!function_exists('apc_fetch')) {
-      return array(
-        'message' => 'Uploading (No Progress Information Available)',
-        'percentage' => -1,
-        'status' => 1,
-      );
+    // Get the selected server type.
+    $server_upload = FALSE;
+    if ($server_id) {
+      $server_upload = mediamosa_server::get_upload_by_nid($server_id);
     }
 
-    $a_status = apc_fetch('upload_' . $id);
+    // Found the server?
+    if (empty($server_upload)) {
+      // Get the first random.
+      $server_upload = mediamosa_server::get_random_upload();
+    }
 
-    if (!$a_status['total']) {
+    // APC is default.
+    $type = empty($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE]) ? mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC : $server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE];
+
+    switch ($type) {
+      case mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_PROXY:
+
+        if (empty($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER])) {
+          return array(
+            'status' => 1,
+            'percentage' => -1,
+            'message' => 'Uploading',
+          );
+        }
+
+        // Parse the URL for the query.
+        $server_url = strtr($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER], array('{PROGRESS_ID}' => $id));
+
+        // Do request to server.
+        $progress_js = mediamosa_http::drupal_http_request($server_url);
+
+        // Ok lets turn it into something useful.
+        $data = trim((string) $progress_js->data); // Trim linefeeds etc.
+
+        // Ok we expect 'content-type' => 'text/javascript'.
+        if ($progress_js->headers['content-type'] == 'text/javascript') {
+
+          assert(mediamosa_unicode::substr($data, 0, mediamosa_unicode::strlen('new Object({')) == 'new Object({');
+
+          // Get clean string.
+          $data = mediamosa_unicode::substr($data, strpos($data, '{'), strpos($data, '}') - strpos($data, '{') + 1);
+
+          // Double quotes to single.
+          $data = str_replace("'", '"', $data);
+        }
+
+        // Json decode will work fine now.
+        $data = drupal_json_decode($data);
+
+        switch ($data['state']) {
+          case 'starting':
+            $progress_info['current'] = 0;
+            $progress_info['total'] = 100;
+            break;
+
+          case 'done':
+            $progress_info['current'] = 100;
+            $progress_info['total'] = 100;
+            break;
+
+          case 'uploading':
+            $progress_info['current'] = (int) $data['received'];
+            $progress_info['total'] = (int) $data['size'];
+            break;
+
+          case 'error':
+          default:
+            break;
+        }
+        break;
+
+      default:
+      case mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC:
+        // Lets make sure APC is enabled.
+        if (!function_exists('apc_fetch')) {
+          return array(
+            'message' => 'Uploading (No Progress Information Available)',
+            'percentage' => -1,
+            'status' => 1,
+          );
+        }
+
+        $progress_info = apc_fetch('upload_' . $id);
+        break;
+    }
+
+    // Any info?
+    if (empty($progress_info['total'])) {
       return array(
         'status' => 1,
         'percentage' => -1,
@@ -481,24 +558,26 @@ class mediamosa_asset_mediafile_upload {
       );
     }
 
-    $a_status['status'] = 1;
-    $a_status['percentage'] = round($a_status['current'] / $a_status['total'] * 100, 0);
-    $a_status['message'] = "--:-- left (at --/sec)";
+    $progress_info['status'] = 1;
+    $progress_info['percentage'] = round($progress_info['current'] / $progress_info['total'] * 100, 0);
+    $progress_info['message'] = empty($progress_info['start_time']) ? '' : '--:-- left (at --/sec)';
 
-    $a_status['speed_average'] = 0;
-    $a_status['est_sec'] = 0;
+    $progress_info['speed_average'] = 0;
+    $progress_info['est_sec'] = 0;
 
-    $a_status['elapsed'] = time() - $a_status['start_time'];
+    if (!empty($progress_info['start_time'])) {
+      $progress_info['elapsed'] = time() - $progress_info['start_time'];
 
-    if ($a_status['elapsed'] > 0) {
-      $a_status['speed_average'] = $a_status['current'] / $a_status['elapsed'];
+      if ($progress_info['elapsed'] > 0) {
+        $progress_info['speed_average'] = $progress_info['current'] / $progress_info['elapsed'];
 
-      if ($a_status['speed_average'] > 0) {
-        $a_status['est_sec'] = ($a_status['total'] - $a_status['current']) / $a_status['speed_average'];
-        $a_status['message'] = sprintf("%02d:%02d left (at %s/sec)", $a_status['est_sec'] / 60, $a_status['est_sec'] % 60, format_size($a_status['speed_average']));
+        if ($progress_info['speed_average'] > 0) {
+          $progress_info['est_sec'] = ($progress_info['total'] - $progress_info['current']) / $progress_info['speed_average'];
+          $progress_info['message'] = sprintf('%02d:%02d left (at %s/sec)', $progress_info['est_sec'] / 60, $progress_info['est_sec'] % 60, format_size($progress_info['speed_average']));
+        }
       }
     }
 
-    return $a_status;
+    return $progress_info;
   }
 }

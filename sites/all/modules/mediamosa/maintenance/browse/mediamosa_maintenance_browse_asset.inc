@@ -36,6 +36,13 @@ define('MEDIAMOSA_BROWSE_FILTER_ASSET', 'mediafile_browse_asset');
  */
 function _mediamosa_browse_asset_page($op = 'list') {
 
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  drupal_set_breadcrumb($breadcrumb);
+
   // Get/set session.
   $session = _mediamosa_browse_asset_session();
 
@@ -591,10 +598,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   $item_count = count($result['items']);
 
   // Cache rights.
-  $may_delete = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES);
-  $may_analyse = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES);
-  $may_retranscode = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_RETRANSCODE_MEDIAMOSA_MEDIAFILES);
-  $may_download = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES);
+  $may_delete = $may_analyse = $may_download = _mediamosa_user_access_asset($asset_id);
 
   $allowed_still_fields = array(
     'mediafile_id',

@@ -54,8 +54,11 @@ class mediamosa_server_db {
   const SLOTS = 'slots';
   const TOOLS = 'tools'; // Now TEXT type.
   const TOOLS_LENGTH = 1024;
-  const URI_UPLOAD_PROGRESS = 'uri_upload_progress';
+  const URI_UPLOAD_PROGRESS = 'uri_upload_progress'; // client
   const URI_UPLOAD_PROGRESS_LENGTH = 255;
+  const URI_UPLOAD_PROGRESS_SERVER_TYPE = 'uri_upload_progress_server_type';
+  const URI_UPLOAD_PROGRESS_SERVER = 'uri_upload_progress_server';
+  const URI_UPLOAD_PROGRESS_SERVER_LENGTH = 255;
   const VERSION = 'version';
 
   // Server types
@@ -64,6 +67,9 @@ class mediamosa_server_db {
   const SERVER_TYPE_STREAMING = 'streaming';
   const SERVER_TYPE_JOB_PROCESSOR = 'job_processor';
   const SERVER_TYPE_UPLOAD = 'upload';
+
+  const UPLOAD_PROGRESS_SERVER_TYPE_APC = 'APC';
+  const UPLOAD_PROGRESS_SERVER_TYPE_PROXY = 'PROXY';
 
   /**
    * Returns all fields.

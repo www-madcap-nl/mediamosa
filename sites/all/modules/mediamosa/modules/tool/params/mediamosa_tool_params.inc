@@ -34,6 +34,14 @@
  */
 function _mediamosa_tool_params_list() {
 
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  drupal_set_breadcrumb($breadcrumb);
+
   $header = array(
     array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL),
@@ -58,10 +66,13 @@ function _mediamosa_tool_params_list() {
 
   $rows = array();
   foreach ($result as $row) {
-    $actions = array(
-      l(t('Edit'), 'admin/mediamosa/config/tool_params/' . $row[mediamosa_tool_params_db::NID] . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/config/tool_params/' . $row[mediamosa_tool_params_db::NID] . '/delete', $l_options),
-    );
+    $actions = array();
+    if (node_access('update', $row[mediamosa_tool_params_db::NID])) {
+      $actions[] = l(t('Edit'), 'admin/mediamosa/config/tool_params/' . $row[mediamosa_tool_params_db::NID] . '/edit', $l_options);
+    }
+    if (node_access('delete', $row[mediamosa_tool_params_db::NID])) {
+      $actions[] = l(t('Delete'), 'admin/mediamosa/config/tool_params/' . $row[mediamosa_tool_params_db::NID] . '/delete', $l_options);
+    }
 
     $rows[] = array(
       'nice_parameter' => array('data' => l($row[mediamosa_tool_params_db::NICE_PARAMETER], 'admin/mediamosa/config/tool_params/' . $row[mediamosa_tool_params_db::NID]), 'field' => $row[mediamosa_tool_params_db::NICE_PARAMETER]),
@@ -72,7 +83,7 @@ function _mediamosa_tool_params_list() {
       'max_value' => $row[mediamosa_tool_params_db::MAX_VALUE],
       'default_value' => $row[mediamosa_tool_params_db::DEFAULT_VALUE],
       'required' => $row[mediamosa_tool_params_db::REQUIRED],
-      implode(' | ', $actions),
+      empty($actions) ? '-' : implode(' | ', $actions),
     );
   }
 

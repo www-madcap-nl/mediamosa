@@ -721,18 +721,44 @@ abstract class mediamosa_cql {
   /**
    * Converts a any date into a db mysql date (YYYY-MM-DD HH:MM:SS)
    *
-   * @param string $str
+   * Will convert to timezone set in CQL object.
+   *
+   * @param string $date
+   *  The paramter to convert.
+   * @param string $timezone
+   *  Supply timezone for conversion.
    */
-  final protected function mediamosa_cql_str_date_2_db_date($str) {
-    $str_default = '0000-01-01T00:00:00';
-    $str = $str . mediamosa_unicode::substr($str_default, mediamosa_unicode::strlen($str));
+  protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC') {
+    // Make the date valid for MySQL;
+    $date_default = '0000-01-01T00:00:00';
+    $date = $date . mediamosa_unicode::substr($date_default, mediamosa_unicode::strlen($date));
 
-    $tz_old = date_default_timezone_get();
-    date_default_timezone_set('UTC');
-    // @todo strtotime does not support 1900 or lower dates.
-    $str_result = date('Y-m-d H:i:s', strtotime($str));
-    date_default_timezone_set($tz_old);
-    return $str_result;
+    // Get current timezone.
+    $tz = date_default_timezone_get();
+
+    try {
+      // Parse the date, date_parse is new in 5.2.
+      $date_parsed = date_parse($date);
+
+      // Set to timezone of app.
+      assert(date_default_timezone_set($timezone));
+
+      // Convert to integer
+      $time = mktime($date_parsed['hour'], $date_parsed['minute'], $date_parsed['second'], $date_parsed['month'], $date_parsed['day'], $date_parsed['year']);
+
+      // Back to GMT date again, make it valid.
+      $result = gmdate('Y-m-d H:i:s', $time);
+    }
+    catch (Exception $e) {
+      // Make sure we return to old time zone.
+      date_default_timezone_set($tz);
+      throw $e;
+    }
+
+    // Back to original timezone, so we dont screw with other time functions.
+    date_default_timezone_set($tz);
+
+    return $result;
   }
 
   /**

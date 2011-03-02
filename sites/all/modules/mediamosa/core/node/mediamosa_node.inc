@@ -290,7 +290,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb[] = l(t('Administration'), 'admin');
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-      $breadcrumb[] = l(t('Tool params'), 'admin/mediamosa/config/tool_params');
+      $breadcrumb[] = l(t('Tool parameters'), 'admin/mediamosa/config/tool_params');
       drupal_set_breadcrumb($breadcrumb);
       break;
 

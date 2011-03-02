@@ -37,6 +37,13 @@ module_load_include('inc', 'mediamosa_statistics', 'mediamosa_statistics');
  */
 function mediamosa_statistics_popularstreams_form() {
 
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Statistics'), 'admin/mediamosa/statistics');
+  drupal_set_breadcrumb($breadcrumb);
+
   $build = array();
 
   $build['mediamosa_statistics_filter'] = drupal_get_form('mediamosa_statistics_filter_form', MEDIAMOSA_STATISTICS_FILTER_TYPE_POPULARSTREAMS);
@@ -95,7 +102,7 @@ function mediamosa_statistics_popularstreams_list_form() {
       $row['app_id'],
       mediamosa_lib::l_asset($row['asset_id'], $title),
       check_plain($row['owner_id']),
-      );
+    );
   }
 
   /**

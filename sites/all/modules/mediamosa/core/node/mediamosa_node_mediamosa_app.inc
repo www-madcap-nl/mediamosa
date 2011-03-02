@@ -245,7 +245,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('Name'), check_plain($node->title)),
     array(t('Application ID'), check_plain($node->{mediamosa_app_db::APP_ID})),
     array(t('Quota'), check_plain($node->{mediamosa_app_db::QUOTA})),
-    array(t('Shared Key'), check_plain($node->{mediamosa_app_db::SHARED_KEY})),
+    array(t('Shared Key'), node_access('update', $app[mediamosa_app_db::NID]) ? check_plain($node->{mediamosa_app_db::SHARED_KEY}) : str_repeat('*', drupal_strlen($node->{mediamosa_app_db::SHARED_KEY}))),
     array(t('Default time zone'), check_plain($node->{mediamosa_app_db::TIMEZONE})),
     array(t('Description'), check_plain($node->{mediamosa_app_db::DESCRIPTION})),
     array(t('Status'), $status[$node->{mediamosa_app_db::ACTIVE}]),
@@ -260,8 +260,28 @@ function mediamosa_app_view($node, $view_mode = 'full') {
   $rows[] = array(t('Created'), format_date($node->created, 'short'));
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
 
-  $node->content['app'] = array(
-    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
+  $rows_contact = array(
+    array(t('Technical name'), check_plain($node->technical_name)),
+    array(t('Technical phone'), check_plain($node->technical_phone)),
+    array(t('Technical email'), check_plain($node->technical_email)),
+    array(t('Administrative name'), check_plain($node->administrative_name)),
+    array(t('Administrative phone'), check_plain($node->administrative_phone)),
+    array(t('Administrative email'), check_plain($node->administrative_email)),
+  );
+
+  $node->content = array(
+    'app_title' => array(
+      '#markup' => '<h1>Client application data</h1>',
+    ),
+    'app' => array(
+      '#markup' => theme('table', array('header' => array(t('Item'), t('Value')), 'rows' => $rows))
+    ),
+    'contact_title' => array(
+      '#markup' => '<h1>Client application technical and administrative contact information</h1>',
+    ),
+    'contact' => array(
+      '#markup' => theme('table', array('header' => array(t('Item'), t('Value')), 'rows' => $rows_contact))
+    ),
   );
 
   return $node;
@@ -777,4 +797,29 @@ function mediamosa_app_validate($node) {
       form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('This oAuth consumer key is already exists.'));
     }
   }
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function mediamosa_app_node_access($node, $op, $account) {
+
+  // A string is given when the node is created.
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // We only support Client Apps.
+  if ($node->type != mediamosa_node::MEDIAMOSA_NODE_TYPE_APP) {
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // Just for debugging.
+  assert($node->{mediamosa_app_db::APP_ID});
+
+  // Build the role we need.
+  $role_needed = mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $node->{mediamosa_app_db::APP_ID} . '|' . $op;
+
+  // If we have to role, then we allow the action.
+  return _mediamosa_user_access($role_needed) ? NODE_ACCESS_ALLOW : NODE_ACCESS_IGNORE;
 }
