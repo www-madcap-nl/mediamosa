@@ -230,41 +230,4 @@ class MediaMosaAutSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     // Must domain realm.
     $this->assertTrue($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, 'Is set to TRUE value protected');
   }
-
-  // Test if Protected becomes TRUE when adding user_usergroup to the acl rules.
-  function testAutRightsProtectedFlag() {
-    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
-
-    // Create an asset.
-    $asset_id = $this->createAsset();
-
-    // Create a mediafile.
-    $mediafile_id = $this->createMediafile($asset_id);
-
-    // Set mediafile aut.
-    $parameters = array(
-      'aut_domain' => 'ACADEMIA.group',
-      'aut_realm' => '@ACADEMIA.nl',
-    );
-    $xml = $this->setMediafileAut($mediafile_id, $parameters);
-
-    // Get the mediafile.
-    $mediafile = $this->getMediafile($mediafile_id);
-
-    // Must domain realm.
-    $this->assertTrue($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] == mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM, 'Is set to domain/realm protected');
-
-    // Set mediafile aut. but add the aut_group right.
-    $parameters = array(
-      'aut_group' => 'foofighter',
-      'replace' => 'FALSE',
-    );
-    $xml = $this->setMediafileAut($mediafile_id, $parameters);
-
-    // Get the mediafile.
-    $mediafile = $this->getMediafile($mediafile_id);
-
-    // Must domain realm.
-    $this->assertTrue($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, 'Is set to TRUE value protected');
-  }
 }
