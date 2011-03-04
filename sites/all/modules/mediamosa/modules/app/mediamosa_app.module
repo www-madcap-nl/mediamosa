@@ -48,6 +48,21 @@ function mediamosa_app_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
+  // Get application quota.
+  $rest_calls['app/quota'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the application disk usage quota.',
+    mediamosa_rest_call::DESCRIPTION => 'Get disk usage quota for current application.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'app/quota',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'quota' => 'Disk quota in GB.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <quota>250</quota>
+  </item>
+</items>',
+  );
+
   return $rest_calls;
 }
 
@@ -63,6 +78,14 @@ function mediamosa_app_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_app',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_7,
+  );
+
+  // Return a quota for current app.
+  $rest_calls['app/quota'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_get_quota',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
   );
 
   return $rest_calls;

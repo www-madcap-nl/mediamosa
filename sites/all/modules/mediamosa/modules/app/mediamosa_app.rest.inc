@@ -66,3 +66,41 @@ class mediamosa_rest_call_app_get_default_transcode_profile extends mediamosa_re
     }
   }
 }
+
+
+/**
+ * URI: /app/quota
+ * Method: GET
+ *
+ *
+ */
+class mediamosa_rest_call_app_get_quota extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value(self::APP_ID);
+
+    // Get the 1st app.
+    $app_id = reset($a_app_ids);
+
+    // Get the app.
+    $a_app = mediamosa_app::get_by_appid($app_id);
+
+    // Add application quota to response.
+    if ($a_app) {
+      $o_mediamosa->add_item(array(mediamosa_app_db::QUOTA => $a_app[mediamosa_app_db::QUOTA]));
+    }
+  }
+
+}
