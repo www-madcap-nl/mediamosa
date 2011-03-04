@@ -243,6 +243,11 @@ function mediamosa_server_schema() {
         'type' => 'text',
         'not null' => FALSE,
       ),
+      mediamosa_server_db::MIME_TYPE => array(
+        'description' => 'The optional mime type names this server can serve.',
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
       mediamosa_server_db::OBJECT_CODE => array(
         'description' => 'The optional container names the server can serve.',
         'type' => 'text',

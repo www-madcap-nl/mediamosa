@@ -1888,5 +1888,25 @@ function mediamosa_update_7089() {
   );
 }
 
+/**
+ * Change mediamosa_server table.
+ * Add new field: mime_type.
+ */
+function mediamosa_update_7090() {
+  // Add mime_type field.
+  /*
+  db_add_field(
+    mediamosa_server_db::TABLE_NAME,
+    mediamosa_server_db::MIME_TYPE,
+    array(
+      'description' => t('The optional mime type names this server can serve.'),
+      'type' => 'text',
+      'not null' => FALSE,
+    )
+  );
+   */
+  db_query("ALTER TABLE {mediamosa_server} ADD mime_type TEXT COMMENT 'The optional mime type names this server can serve.' AFTER containers");
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

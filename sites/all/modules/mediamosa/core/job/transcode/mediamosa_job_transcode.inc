@@ -166,4 +166,42 @@ class mediamosa_job_transcode {
       mediamosa_job::create_raw($job_id);
     }
   }
+
+  /**
+   * Create tool transcode
+   *
+   * @param int $job_id
+   * @param string $tool
+   * @param string $file_extension
+   * @param string $command
+   */
+  static public function create_tool_transcode($job_id, $tool, $file_extension, $command) {
+    $profile_id = 0;
+    $completed_transcoding_url = '';
+
+    $file_extension = explode('/', $file_extension);
+    $file_extension = isset($file_extension[1]) ? $file_extension[1] : '';
+    $file_extension = drupal_substr($file_extension, 0, mediamosa_job_transcode_db::FILE_EXTENSION_LENGTH);
+    $tool = explode('_', $tool);
+    $tool = isset($tool[2]) ? $tool[2] : '';
+    $tool = drupal_substr($tool, 0, mediamosa_job_transcode_db::TOOL_LENGTH);
+
+    // Now create the transcode job.
+    $fields = array(
+      mediamosa_job_transcode_db::JOB_ID => $job_id,
+      //mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => $profile_id,
+      mediamosa_job_transcode_db::TOOL => $tool,
+      mediamosa_job_transcode_db::FILE_EXTENSION => $file_extension,
+      mediamosa_job_transcode_db::COMMAND => $command,
+      //mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => $completed_transcoding_url,
+    );
+
+    // Add changed/created values.
+    $fields = mediamosa_db::db_insert_enrich($fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
+      ->fields($fields)
+      ->execute();
+  }
 }

@@ -30,8 +30,12 @@
  */
 
 class mediamosa_server {
-
   // ------------------------------------------------------------------ Consts.
+  /**
+   * Mime type separator.
+   */
+  const MIME_TYPE_SEPARATOR = '|';
+
   /**
    * Log for asset_mediafile_uplaod.
    *
@@ -46,7 +50,7 @@ class mediamosa_server {
   /**
    * Trigger process servers.
    */
-  static public function trigger() {
+  static public function trigger($call = '/internal/cron/jobserver') {
 
     // Get all enabled transcode servers (ON / CLOSE).
     $servers = self::get_enabled_job_processor();
@@ -55,7 +59,7 @@ class mediamosa_server {
     foreach ($servers as $server) {
 
       // Get URL.
-      $url = mediamosa_http::uri2url($server[mediamosa_server_db::SERVER_URI]) . '/internal/cron/jobserver';
+      $url = mediamosa_http::uri2url($server[mediamosa_server_db::SERVER_URI]) . $call;
 
       // Prevent multiple triggers if url is on more than one server.
       if (in_array($url, $a_triggered)) {
@@ -237,9 +241,14 @@ class mediamosa_server {
    *  Container type like mp4;mpg etc.
    * @param string $video_codec
    *  Codec.
+   * @param string $mime_type
+   *  Mime type.
    */
-  static public function get_streaming($container_type, $video_codec) {
+  static public function get_streaming($container_type, $video_codec, $mime_type = NULL) {
     static $servers = array();
+    static $servers_mime = array();
+
+    // Container + codec.
 
     if (isset($servers[$container_type . ':' . $video_codec]) && $servers[$container_type . ':' . $video_codec]) {
       return $servers[$container_type . ':' . $video_codec];
@@ -264,9 +273,11 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    if ($servers[$container_type . ':' . $video_codec]) {
+    if ($servers[$container_type . ':' . $video_codec] && $servers[$container_type . ':' . $video_codec]) {
       return $servers[$container_type . ':' . $video_codec];
     }
+
+    // Container.
 
     if (isset($servers[$container_type]) && $servers[$container_type]) {
       return $servers[$container_type];
@@ -289,7 +300,53 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    return $servers[$container_type];
+    if (isset($servers[$container_type]) && $servers[$container_type]) {
+      return $servers[$container_type];
+    }
+
+    // Mime type.
+
+    if (!$mime_type) {
+      return FALSE;
+    }
+
+    $mime_type_main = explode('/', $mime_type);
+    $mime_type_main = $mime_type_main[0] . '/*';
+
+    if (isset($servers_mime[$mime_type]) && $servers_mime[$mime_type]) {
+      return $servers_mime[$mime_type];
+    }
+
+    if (isset($servers_mime[$mime_type_main]) && $servers_mime[$mime_type_main]) {
+      return $servers_mime[$mime_type_main];
+    }
+
+    $query = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms');
+    $query->fields('ms', array());
+    $result = $query->execute();
+    foreach ($result as $record) {
+      if ($record[mediamosa_server_db::MIME_TYPE]) {
+        if (strpos($record[mediamosa_server_db::MIME_TYPE], self::MIME_TYPE_SEPARATOR) === FALSE) {
+          $servers_mime[$record[mediamosa_server_db::MIME_TYPE]] = $record;
+        }
+        else {
+          $servers_mime_types = explode(self::MIME_TYPE_SEPARATOR, $record[mediamosa_server_db::MIME_TYPE]);
+          foreach ($servers_mime_types as $servers_mime_type) {
+            $servers_mime[$servers_mime_type] = $record;
+          }
+        }
+      }
+    }
+
+    if (isset($servers_mime[$mime_type]) && $servers_mime[$mime_type]) {
+      return $servers_mime[$mime_type];
+    }
+
+    if (isset($servers_mime[$mime_type_main]) && $servers_mime[$mime_type_main]) {
+      return $servers_mime[$mime_type_main];
+    }
+
+    return FALSE;
   }
 
   /**
@@ -364,10 +421,12 @@ class mediamosa_server {
    *  Container type like mp4;mpg etc.
    * @param string $video_codec
    *  Codec.
+   * @param string $mime_type
+   *  Mime type.
    */
-  static public function get_objectcode_streaming($container_type, $video_codec) {
+  static public function get_objectcode_streaming($container_type, $video_codec, $mime_type = NULL) {
 
-    $server = self::get_streaming($container_type, $video_codec);
+    $server = self::get_streaming($container_type, $video_codec, $mime_type);
 
     if ($server) {
       return $server[mediamosa_server_db::OBJECT_CODE];
@@ -383,10 +442,12 @@ class mediamosa_server {
    *  Container type like mp4;mpg etc.
    * @param string $video_codec
    *  Codec.
+   * @param string $mime_type
+   *  Mime type.
    */
-  static public function get_uri_streaming($container_type, $video_codec) {
+  static public function get_uri_streaming($container_type, $video_codec, $mime_type = NULL) {
 
-    $server = self::get_streaming($container_type, $video_codec);
+    $server = self::get_streaming($container_type, $video_codec, $mime_type);
 
     if ($server) {
       return $server[mediamosa_server_db::SERVER_URI];
