@@ -241,7 +241,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         ),
         self::FRAMETIME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still frametime.',
+          self::VAR_DESCRIPTION => 'Still frametime (in seconds) for still_type NONE and for still upload.',
         ),
         self::WIDTH => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -328,7 +328,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
     try {
       if ($still_upload) {
-        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default);
+        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default, $still_parameters, $this->get_param_value(self::FRAMETIME));
 
         // Add still_id to output.
         $mediamosa->add_item(array('still_id' => $still_id));

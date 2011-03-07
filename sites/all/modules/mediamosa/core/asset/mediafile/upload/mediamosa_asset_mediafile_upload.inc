@@ -179,7 +179,7 @@ class mediamosa_asset_mediafile_upload {
    * @param string $completed_url
    * @param string $filename_put
    */
-  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE) {
+  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array(), $frametime = NULL) {
 
     // Set to false.
     $is_app_admin = FALSE;
@@ -260,7 +260,7 @@ class mediamosa_asset_mediafile_upload {
       $order,
       $default,
       array('still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE),
-      NULL,
+      $frametime,
       $mediafile[mediamosa_asset_mediafile_db::ID],
       $tag
     );
