@@ -1860,9 +1860,58 @@ function mediamosa_update_7088() {
 }
 
 /**
- * Add new fields to mediamosa_server table to support new upload progress.
+ * Change mediamosa_asset_metadata_property table.
+ * Add new field: is_hidden.
+ * Add new index: is_hidden.
  */
 function mediamosa_update_7089() {
+  // Add is_hidden field.
+  db_add_field(
+    mediamosa_asset_metadata_property_db::TABLE_NAME,
+    mediamosa_asset_metadata_property_db::IS_HIDDEN,
+    array(
+      'description' => t('True if the property is hidden.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+      'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+    )
+  );
+
+  // Is_hidden.
+  db_add_index(
+    mediamosa_asset_metadata_property_db::TABLE_NAME,
+    'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
+    array(
+      mediamosa_asset_metadata_property_db::IS_HIDDEN,
+    )
+  );
+}
+
+/**
+ * Change mediamosa_server table.
+ * Add new field: mime_type.
+ */
+function mediamosa_update_7090() {
+  // Add mime_type field.
+  /*
+  db_add_field(
+    mediamosa_server_db::TABLE_NAME,
+    mediamosa_server_db::MIME_TYPE,
+    array(
+      'description' => t('The optional mime type names this server can serve.'),
+      'type' => 'text',
+      'not null' => FALSE,
+    )
+  );
+   */
+  db_query("ALTER TABLE {mediamosa_server} ADD mime_type TEXT COMMENT 'The optional mime type names this server can serve.' AFTER containers");
+}
+
+/**
+ * Add new fields to mediamosa_server table to support new upload progress.
+ */
+function mediamosa_update_7091() {
 
   if (!db_field_exists(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER)) {
     $spec = array(
@@ -1893,5 +1942,6 @@ function mediamosa_update_7089() {
     db_add_field(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE, $spec);
   }
 }
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

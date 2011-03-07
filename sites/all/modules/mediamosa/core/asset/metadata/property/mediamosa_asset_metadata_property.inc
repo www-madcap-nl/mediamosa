@@ -85,10 +85,12 @@ class mediamosa_asset_metadata_property {
    *  char, datetime, int
    * @param integer $min_occurences
    * @param integer $max_occurences
+   * @param bool $is_hidden
+   *
    * @return
    *  The new prop_id.
    */
-  static public function property_create($mixed_app_ids, $name, $type, $min_occurences = 0, $max_occurences = 0) {
+  static public function property_create($mixed_app_ids, $name, $type, $min_occurences = 0, $max_occurences = 0, $is_hidden = mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE) {
 
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
@@ -136,6 +138,7 @@ class mediamosa_asset_metadata_property {
       mediamosa_asset_metadata_property_db::APP_ID => $app_id,
       mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $max_occurences,
       mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $min_occurences,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => $is_hidden,
     );
 
     // Add created value.
@@ -230,6 +233,8 @@ class mediamosa_asset_metadata_property {
    * Get definitions from the asset_property_definitions array
    *
    * @param array $a_propgroup_name
+   * @param bool $get_all_aps
+   *
    * @return array
    */
   static public function get_metadata_properties(array $a_propgroup_name = array('dublin_core'), $get_all_apps = FALSE) {
@@ -265,6 +270,7 @@ class mediamosa_asset_metadata_property {
     $query->addField('amp', mediamosa_asset_metadata_property_db::TYPE, 'propdef_type');
     $query->addField('amp', mediamosa_asset_metadata_property_db::ID, 'propdef_id');
     $query->addField('amp', mediamosa_asset_metadata_property_db::NAME, 'propdef_name');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::IS_HIDDEN, 'propdef_is_hidden');
 
     // Now where to search.
     $query->condition(mediamosa_asset_metadata_property_group_db::NAME, $a_propgroup_name, 'IN');
@@ -289,10 +295,10 @@ class mediamosa_asset_metadata_property {
    *
    * @param mixed $mixed_app_id
    * @param array $a_definitions_full
+   *
    * @return array
    */
   static public function get_metadata_properties_full($mixed_app_id = FALSE, array $a_definitions_full = array('dublin_core', 'qualified_dublin_core', 'czp')) {
-
     if ($mixed_app_id) {
       $a_app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
 

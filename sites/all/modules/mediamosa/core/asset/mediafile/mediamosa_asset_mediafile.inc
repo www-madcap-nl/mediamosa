@@ -55,6 +55,24 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Get first transcoded of a mediafile.
+   *
+   * @param string $mediafile_id
+   */
+  static public function get_first_transcoded($mediafile_id, $app_id = NULL, array $fields = array(), $is_still = NULL) {
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->fields('mf', $fields);
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $mediafile_id);
+    if (isset($app_id)) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+    }
+    if (isset($is_still)) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, $is_still);
+    }
+    return $query->range(0, 1)->execute()->fetchAssoc();
+  }
+
+  /**
    * Get the asset_id of the mediafile.
    *
    * @param string $mediafile_id

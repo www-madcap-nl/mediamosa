@@ -244,6 +244,29 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     if ($mediafile_id) {
 
+      // Get the metadata.
+      $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+
+      // Tool.
+
+      // Call the mediamosa_tool_analyse hook.
+      foreach (module_implements('mediamosa_tool_analyse') as $module) {
+        $recognized = module_invoke($module, 'mediamosa_tool_analyse', $mediafile_ext['metadata']['mime_type']);
+        if ($recognized) {
+          $mediafile = mediamosa_asset_mediafile::get_first_transcoded($mediafile_id);
+
+          if ($mediafile) {
+            $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
+
+            // Get the metadata.
+            $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+          }
+
+          // One tool is enough. Break the foreach.
+          break;
+        }
+      }
+
       // Check play restrictions
       if (isset($asset['play_restriction_start']) && isset($asset['play_restriction_end'])) {
         $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions(
@@ -253,15 +276,12 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       }
 
       // Get the mediafile.
-      $mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
+      $mediafile_ext = array_merge(mediamosa_asset_mediafile::must_exists($mediafile_id), $mediafile_ext);
 
       // Make sure asset_id matches.
       if ($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
       }
-
-      // Get the metadata.
-      $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin, TRUE);

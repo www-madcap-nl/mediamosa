@@ -375,6 +375,42 @@ class mediamosa_job_server {
     $execution_string = "";
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
+
+        // Tool transcode.
+
+        // Mime type.
+        $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id_src, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
+        // Call the mediamosa_tool_analyse hook.
+        foreach (module_implements('mediamosa_tool_analyse') as $module) {
+          $call = module_invoke($module, 'mediamosa_tool_analyse', $mime_type);
+          if ($call) {
+            // Clean up earlier status files.
+            unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
+
+            // Replace the $job_id placeholder.
+            $call = str_replace('$job_id', $job_id, $call);
+
+            // Trigger.
+            mediamosa_server::trigger($call);
+
+            $link_asset = self::get_asset_link($job_id);
+            self::log_mediafile($mediafile_id_src, 'Started execute tool REST call. Job @job_type (Job ID: @job_id) returned output from tool: @call<br /><br />@link',
+              array(
+                '@job_type' => $job_type,
+                '@job_id' => $job_id,
+                '@call' => $call,
+                '@link' => $link_asset,
+              )
+            );
+
+            // One tool has been found. Process started. Return now.
+            return;
+          }
+        }
+
+        // Normal (ffmpeg) transcode.
+
         // Make sure the tmp transcode directory exists.
         mediamosa_io::mkdir(mediamosa_configuration_storage::transcode_file_location_get(''));
         $execution_string = self::get_transcode_string($jobserver_job_id, $mediafile_id_src);

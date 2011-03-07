@@ -445,10 +445,17 @@ function mediamosa_server_form($node, &$form_state) {
     $form['mediamosa_server'][mediamosa_server_db::CONTAINERS] = array(
       '#type' => 'textfield',
       '#title' => t('Containers'),
-      '#required' => TRUE,
-      '#description' => t('Set containers for this server in the following format: asf|flv|mpeg|avi|ogg|mov;mp4;m4a;3gp;3g2;mj2|mp3.'),
+      '#description' => t('Set containers for this server in the following format: asf|flv|mpeg|avi|ogg|mov;mp4;m4a;3gp;3g2;mj2|mp3. Containers or mime types must be set.'),
       '#default_value' => mediamosa_node::default_value(mediamosa_server_db::CONTAINERS, $node),
       '#maxlength' => mediamosa_server_db::CONTAINERS_LENGTH,
+    );
+
+    $form['mediamosa_server'][mediamosa_server_db::MIME_TYPE] = array(
+      '#type' => 'textfield',
+      '#title' => t('Mime types'),
+      '#description' => t('Set mime types for this server in the following format: application/pdf|image/*. Containers or mime types must be set.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::MIME_TYPE, $node),
+      '#maxlength' => mediamosa_server_db::MIME_TYPE_LENGTH,
     );
 
     $form['mediamosa_server'][mediamosa_server_db::OBJECT_CODE] = array(
@@ -477,4 +484,20 @@ function mediamosa_server_form($node, &$form_state) {
  * Implements hook_validate().
  */
 function mediamosa_server_validate($node) {
+  // Take type from node if available.
+  if (isset($node->{mediamosa_server_db::SERVER_TYPE})) {
+    $server_type = $node->{mediamosa_server_db::SERVER_TYPE};
+  }
+
+  // Else take it from the uri.
+  if (!isset($server_type)) {
+    $server_type = arg(5);
+  }
+
+  // Containers and mime type.
+  if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_STREAMING))) {
+    if (!$node->{mediamosa_server_db::CONTAINERS} && !$node->{mediamosa_server_db::MIME_TYPE}) {
+      form_set_error(mediamosa_server_db::CONTAINERS, t('Containers or mime types must be set.'));
+    }
+  }
 }

@@ -603,7 +603,11 @@ class mediamosa_job {
     self::post_create_job($app_id, $user_id, $mediafile_id, $asset_id, $job_type, $error_description, $still_parameters, mediamosa_job_db::JOB_STATUS_FAILED);
   }
 
-  // Create a analyse job, after upload has been completed.
+  /**
+   * Create a analyse job, after upload has been completed.
+   *
+   * @param $job_ext_upload
+   */
   static public function create_analyse_job_with_jobext($job_ext_upload) {
 
     assert(isset($job_ext_upload[mediamosa_job_upload_db::FILE_SIZE]));
@@ -772,6 +776,46 @@ class mediamosa_job {
   }
 
   /**
+   * Start transcode job by tool.
+   *
+   * @param $job_ext
+   */
+  static public function start_transcode_job_by_tool($job_ext) {
+    // Get the mediafile ID.
+    $mediafile_id = $job_ext[mediamosa_job_db::MEDIAFILE_ID];
+
+    // Get all the metadata.
+    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
+    // Call the mediamosa_tool_analyse hook.
+    foreach (module_implements('mediamosa_tool_analyse') as $module) {
+      $recognized = module_invoke($module, 'mediamosa_tool_analyse', $mime_type);
+      if ($recognized) {
+
+        // Start a transcode job.
+        $app_id = $job_ext[mediamosa_job_db::APP_ID];
+        $user_id = $job_ext[mediamosa_job_db::OWNER_ID];
+        $group_id = '';
+        $is_app_admin = FALSE;
+        $tool = $module;
+        $command = '';
+        $file_extension = $mime_type;
+
+        // Must have user_quota.
+        mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
+
+        // Create job.
+        $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id);
+
+        mediamosa_job_transcode::create_tool_transcode($job_id, $tool, $file_extension, $command);
+
+        // One tool is enough. Break the foreach.
+        break;
+      }
+    }
+  }
+
+  /**
    * Update the status of the job.
    *
    * @param array $job_ext
@@ -782,17 +826,22 @@ class mediamosa_job {
   static public function update_status(array $job_ext, $status, $progress = '', $error_description = '') {
 
     /**
-     * If JOB is upload and we are setting the status on FINISHED, then start analyse job.
+     * If JOB is upload and we are setting the status on FINISHED, then start analyse and transcode jobs.
      */
     if ($job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD &&
         $progress == '1.000' &&
         $job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED) {
 
       // Create an analyse job.
-      $resp = mediamosa_job::create_analyse_job_with_jobext($job_ext);
+      $resp = self::create_analyse_job_with_jobext($job_ext);
       if (is_array($resp) && isset($resp['status']) && isset($resp['progress'])) {
+        // Job failed.
         $status = $resp['status'];
         $progress = $resp['progress'];
+      }
+      else {
+        // Start transcode job by tools.
+        self::start_transcode_job_by_tool($job_ext);
       }
     }
 
@@ -1111,7 +1160,7 @@ class mediamosa_job {
       // Get complete job.
     $job_ext = mediamosa_job::get_job_ext($job_id);
 
-    if (!$uploaded_file_size  && $job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD) {
+    if (!$uploaded_file_size && $job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD) {
       // If the filesize is 0, then we are done...
       if (!$job_ext[mediamosa_job_upload_db::FILE_SIZE]) {
 
