@@ -59,6 +59,7 @@ Other changes (not ticket related).
   module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
+- Frametime for still upload development.
 
 MediaMosa 2.3.8 (build in progress)
 ----------------------------
