@@ -179,13 +179,6 @@ class mediamosa_job_transcode {
     $profile_id = 0;
     $completed_transcoding_url = '';
 
-    $file_extension = explode('/', $file_extension);
-    $file_extension = isset($file_extension[1]) ? $file_extension[1] : '';
-    $file_extension = drupal_substr($file_extension, 0, mediamosa_job_transcode_db::FILE_EXTENSION_LENGTH);
-    $tool = explode('_', $tool);
-    $tool = isset($tool[2]) ? $tool[2] : '';
-    $tool = drupal_substr($tool, 0, mediamosa_job_transcode_db::TOOL_LENGTH);
-
     // Now create the transcode job.
     $fields = array(
       mediamosa_job_transcode_db::JOB_ID => $job_id,

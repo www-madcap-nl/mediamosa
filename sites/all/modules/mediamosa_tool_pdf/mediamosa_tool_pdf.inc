@@ -54,7 +54,7 @@ class mediamosa_rest_call_job_exec_pdf extends mediamosa_rest_call_job_exec {
     // Create swf from pdf.
     // Copy the result to transcode directory.
     // Remove the temporary directory (and files).
-    $execution_string = strtr('cd @file_location; pdf2swf -b @mediafile_location -o @mediafile_id -T 9 -f; cp @mediafile_id ../@mediafile_id.pdf; cd ..; rm @file_location -r;', array(
+    $execution_string = strtr('cd @file_location; pdf2swf -b @mediafile_location -o @mediafile_id -T 9 -f; cp @mediafile_id ../@mediafile_id.tool; cd ..; rm @file_location -r;', array(
       '@file_location' => $this->file_location,
       '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($this->mediafile),
       '@mediafile_id' => $this->mediafile_id,

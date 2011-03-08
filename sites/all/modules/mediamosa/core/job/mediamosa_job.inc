@@ -787,9 +787,9 @@ class mediamosa_job {
     // Get all the metadata.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-    // Call the mediamosa_tool_analyse hook.
-    foreach (module_implements('mediamosa_tool_analyse') as $module) {
-      $recognized = module_invoke($module, 'mediamosa_tool_analyse', $mime_type);
+    // Call the mediamosa_tool_is_recognized_as_transcode hook.
+    foreach (module_implements('mediamosa_tool_is_recognized_as_transcode') as $module) {
+      $recognized = module_invoke($module, 'mediamosa_tool_is_recognized_as_transcode', $mime_type);
       if ($recognized) {
 
         // Start a transcode job.
@@ -797,9 +797,15 @@ class mediamosa_job {
         $user_id = $job_ext[mediamosa_job_db::OWNER_ID];
         $group_id = '';
         $is_app_admin = FALSE;
+
+        // Eg. $module = mediamosa_tool_pdf => pdf.
         $tool = $module;
+        $tool = explode('_', $tool);
+        $tool = isset($tool[2]) ? $tool[2] : '';
+        $tool = drupal_substr($tool, 0, mediamosa_job_transcode_db::TOOL_LENGTH);
+
         $command = '';
-        $file_extension = $mime_type;
+        $file_extension = 'tool';
 
         // Must have user_quota.
         mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
@@ -808,6 +814,40 @@ class mediamosa_job {
         $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id);
 
         mediamosa_job_transcode::create_tool_transcode($job_id, $tool, $file_extension, $command);
+
+        // One tool is enough. Break the foreach.
+        break;
+      }
+    }
+  }
+
+  /**
+   * Start harvesting metadata by tool.
+   *
+   * @param $job_ext
+   */
+  static public function start_harvesting_metadata_by_tool($job_ext) {
+    // Get the mediafile ID.
+    $mediafile_id = $job_ext[mediamosa_job_db::MEDIAFILE_ID];
+
+    // Get all the metadata.
+    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
+    // Call the mediamosa_tool_is_recognized_as_analyse hook.
+    foreach (module_implements('mediamosa_tool_is_recognized_as_analyse') as $module) {
+      $recognized = module_invoke($module, 'mediamosa_tool_is_recognized_as_analyse', $mime_type);
+      if ($recognized) {
+        // Get the tool id.
+        $module_id = module_invoke($module, 'mediamosa_tool_get_id');
+        // Get the app.
+        $app = mediamosa_app::get_by_appid($job_ext[mediamosa_job_db::APP_ID]);
+        $tool_analyse = unserialize($app[mediamosa_app_db::TOOL_ANALYSE]);
+
+        // Check if the tool is enabled for this app.
+        if ($tool_analyse[$module_id] === $module_id) {
+          // Start the analyse process.
+          $module_id = module_invoke($module, 'mediamosa_tool_analyse', $job_ext);
+        }
 
         // One tool is enough. Break the foreach.
         break;
@@ -840,6 +880,8 @@ class mediamosa_job {
         $progress = $resp['progress'];
       }
       else {
+        // Start harvesting metadata by tools.
+        self::start_harvesting_metadata_by_tool($job_ext);
         // Start transcode job by tools.
         self::start_transcode_job_by_tool($job_ext);
       }

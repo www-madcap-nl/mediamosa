@@ -381,9 +381,9 @@ class mediamosa_job_server {
         // Mime type.
         $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id_src, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-        // Call the mediamosa_tool_analyse hook.
-        foreach (module_implements('mediamosa_tool_analyse') as $module) {
-          $call = module_invoke($module, 'mediamosa_tool_analyse', $mime_type);
+        // Call the mediamosa_tool_transcode hook.
+        foreach (module_implements('mediamosa_tool_transcode') as $module) {
+          $call = module_invoke($module, 'mediamosa_tool_transcode', $mime_type);
           if ($call) {
             // Clean up earlier status files.
             unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));

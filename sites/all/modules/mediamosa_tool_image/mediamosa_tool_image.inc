@@ -26,14 +26,14 @@
 
 /**
  * @file
- * Tiff tool functions.
+ * Image tool functions.
  */
 
 /**
- * URL: job/$job_id/exec/tiff
+ * URL: job/$job_id/exec/image
  * Method: GET
  */
-class mediamosa_rest_call_job_exec_tiff extends mediamosa_rest_call_job_exec {
+class mediamosa_rest_call_job_exec_image extends mediamosa_rest_call_job_exec {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
@@ -47,14 +47,14 @@ class mediamosa_rest_call_job_exec_tiff extends mediamosa_rest_call_job_exec {
     // Do the basic parent's function.
     parent::do_call();
 
-    $job_type = 'mediamosa_tool_tiff';
+    $job_type = 'mediamosa_tool_image';
 
     // Execution string.
     // Go to the subdirectory.
-    // Create jpg from tiff.
+    // Create jpg from image (eg. from tiff).
     // Copy the result to transcode directory.
     // Remove the temporary directory (and files).
-    $execution_string = strtr('cd @file_location; convert @mediafile_location @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.tiff; cd ..; rm @file_location -r;', array(
+    $execution_string = strtr('cd @file_location; convert @mediafile_location @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.tool; cd ..; rm @file_location -r;', array(
       '@file_location' => $this->file_location,
       '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($this->mediafile),
       '@mediafile_id' => $this->mediafile_id,

@@ -101,6 +101,7 @@ class mediamosa_app_db {
   const STILL_MAINTAIN_ASPECT_RATIO = 'still_maintain_aspect_ratio';
   const STILL_MAINTAIN_ASPECT_RATIO_YES = 'YES';
   const STILL_MAINTAIN_ASPECT_RATIO_NO = 'NO';
+  const TOOL_ANALYSE = 'tool_analyse';
 
   // ------------------------------------------------------------------ Functions.
   /**

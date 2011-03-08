@@ -249,9 +249,9 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
       // Tool.
 
-      // Call the mediamosa_tool_analyse hook.
-      foreach (module_implements('mediamosa_tool_analyse') as $module) {
-        $recognized = module_invoke($module, 'mediamosa_tool_analyse', $mediafile_ext['metadata']['mime_type']);
+      // Call the mediamosa_tool_is_recognized_as_transcode hook.
+      foreach (module_implements('mediamosa_tool_is_recognized_as_transcode') as $module) {
+        $recognized = module_invoke($module, 'mediamosa_tool_is_recognized_as_transcode', $mediafile_ext['metadata']['mime_type']);
         if ($recognized) {
           $mediafile = mediamosa_asset_mediafile::get_first_transcoded($mediafile_id);
 

@@ -24,7 +24,19 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+ /**
+  * @file
+  * Image tool installer.
+  */
+
 /**
- * @file
- * Tiff tool admin functions.
+ * Implements hook_install().
  */
+function mediamosa_tool_image_install() {
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_tool_image_uninstall() {
+}

@@ -1943,5 +1943,21 @@ function mediamosa_update_7091() {
   }
 }
 
+/**
+ * Add new fields to mediamosa_app table to determine which tools will put analyse data to asset metadata.
+ */
+function mediamosa_update_7092() {
+  if (!db_field_exists(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TOOL_ANALYSE)) {
+    $spec = array(
+      'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
+      'type' => 'text',
+      'not null' => FALSE,
+      'default' => NULL,
+    );
+
+    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TOOL_ANALYSE, $spec);
+  }
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

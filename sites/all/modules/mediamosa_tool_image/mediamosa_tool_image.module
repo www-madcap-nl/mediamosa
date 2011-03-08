@@ -26,33 +26,38 @@
 
 /**
  * @file
- * PDF tool module.
+ * Image tool module.
  */
 
 // Constants.
 /**
- * Mime type: application/pdf
+ * Mime type: image/tiff
  */
-define('MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF', 'application/pdf');
+define('MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_TIFF', 'image/tiff');
+
+/**
+ * Mime type: image/*
+ */
+define('MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL', 'image');
 
 /**
  * Short id of the module.
  */
-define('MEDIAMOSA_TOOL_PDF_ID', 'pdf');
+define('MEDIAMOSA_TOOL_IMAGE_ID', 'image');
 
 /**
  * Key value separator.
  */
-define('MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR', ':');
+define('MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR', ':');
 
 /**
  * Helper function to recognize mime type as transcode.
  */
-function mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) {
+function mediamosa_tool_image_is_recognized_as_transcode($mime_type) {
   $is_found = FALSE;
 
   switch ($mime_type) {
-    case MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF:
+    case MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_TIFF:
       $is_found = TRUE;
       break;
   }
@@ -63,29 +68,28 @@ function mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) {
 /**
  * Implements hook_mediamosa_tool_is_recognized_as_transcode().
  */
-function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_transcode($mime_type) {
-  $is_found = mediamosa_tool_pdf_is_recognized_as_transcode($mime_type);
+function mediamosa_tool_image_mediamosa_tool_is_recognized_as_transcode($mime_type) {
+  $is_found = mediamosa_tool_image_is_recognized_as_transcode($mime_type);
   return $is_found;
 }
 
 /**
  * Implements hook_mediamosa_tool_transcode().
  */
-function mediamosa_tool_pdf_mediamosa_tool_transcode($mime_type) {
-  $is_found = mediamosa_tool_pdf_is_recognized_as_transcode($mime_type);
-  return ($is_found ? '/internal/job/$job_id/exec/pdf' : FALSE);
+function mediamosa_tool_image_mediamosa_tool_transcode($mime_type) {
+  $is_found = mediamosa_tool_image_is_recognized_as_transcode($mime_type);
+  return ($is_found ? '/internal/job/$job_id/exec/image' : FALSE);
 }
 
 /**
  * Helper function to recognize mime type as analyse.
  */
-function mediamosa_tool_pdf_is_recognized_as_analyse($mime_type) {
+function mediamosa_tool_image_is_recognized_as_analyse($mime_type) {
   $is_found = FALSE;
 
-  switch ($mime_type) {
-    case MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF:
-      $is_found = TRUE;
-      break;
+  $mime_parts = explode('/', $mime_type);
+  if (isset($mime_parts[1]) && $mime_parts[0] == MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL) {
+    $is_found = TRUE;
   }
 
   return $is_found;
@@ -94,8 +98,8 @@ function mediamosa_tool_pdf_is_recognized_as_analyse($mime_type) {
 /**
  * Implements hook_mediamosa_tool_is_recognized_as_analyse().
  */
-function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_analyse($mime_type) {
-  $is_found = mediamosa_tool_pdf_is_recognized_as_analyse($mime_type);
+function mediamosa_tool_image_mediamosa_tool_is_recognized_as_analyse($mime_type) {
+  $is_found = mediamosa_tool_image_is_recognized_as_analyse($mime_type);
   return $is_found;
 }
 
@@ -104,31 +108,35 @@ function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_analyse($mime_type) 
  *
  * @param array $job_ext
  */
-function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
-  $command_type = 'mediamosa_tool_pdf';
+function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
+  $command_type = 'mediamosa_tool_image';
 
   $mapping_array = array(
-    'title'                      => 'title',
-    'subject'                    => '',
-    'keywords'                   => '',
-    'author'                     => '',
-    'creator'                    => 'creator',
-    'producer'                   => '',
-    'creationdate'               => '',
-    'creation date'              => '',
-    'moddate'                    => '',
-    'modificationdate'           => '',
-    'modification date'          => '',
-    'tagged'                     => '',
-    'pages'                      => '',
-    'encrypted'                  => '',
-    'print and copy permissions' => '',
-    'page size'                  => '',
-    'file size'                  => '',
-    'optimized'                  => '',
-    'linearized'                 => '',
-    'pdf version'                => '',
-    'metadata'                   => '',
+    'file name'        => '',
+    'file size'        => '',
+    'mime type'        => '',
+    'image size'       => '',
+    'camera make'      => '',
+    'camera model'     => '',
+    'image timestamp'  => '',
+    'image number'     => '',
+    'exposure time'    => '',
+    'aperture'         => '',
+    'exposure bias'    => '',
+    'flash'            => '',
+    'flash bias'       => '',
+    'focal length'     => '',
+    'subject distance' => '',
+    'iso speed'        => '',
+    'exposure mode'    => '',
+    'metering mode'    => '',
+    'macro mode'       => '',
+    'image quality'    => '',
+    'exif resolution'  => '',
+    'white balance'    => '',
+    'thumbnail'        => '',
+    'copyright'        => 'rights',
+    'exif comment'     => 'description',
   );
 
   $app_id = $job_ext[mediamosa_job_db::APP_ID];
@@ -138,7 +146,7 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
   $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
   // Execute.
-  $execution_string = strtr('pdfinfo @mediafile_location', array(
+  $execution_string = strtr('exiv2 @mediafile_location', array(
     '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
   ));
   $output_array = array();
@@ -160,8 +168,8 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
   $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
   $action = 'update';
   foreach ($output_array as $output_line) {
-    if (strpos($output_line, MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR) !== FALSE) {
-      list($key, $metadata_value) = explode(MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR, $output_line);
+    if (strpos($output_line, MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR) !== FALSE) {
+      list($key, $metadata_value) = explode(MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR, $output_line);
       $key = drupal_strtolower(trim($key));
       $metadata_value = trim($metadata_value);
 
@@ -176,11 +184,11 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
 /**
  * Implements hook_mediamosa_tool_analyse_options().
  */
-function mediamosa_tool_pdf_mediamosa_tool_analyse_options() {
+function mediamosa_tool_image_mediamosa_tool_analyse_options() {
   return array(
-    'name' => t('PDF'),
-    'description' => t('PDF files'),
-    'value' => MEDIAMOSA_TOOL_PDF_ID,
+    'name' => t('Image'),
+    'description' => t('Image files like JPG, PNG, TIFF.'),
+    'value' => MEDIAMOSA_TOOL_IMAGE_ID,
   );
 }
 
@@ -188,21 +196,21 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse_options() {
  * Get module id.
  * Implements hook_mediamosa_tool_get_id().
  */
-function mediamosa_tool_pdf_mediamosa_tool_get_id() {
-  return MEDIAMOSA_TOOL_PDF_ID;
+function mediamosa_tool_image_mediamosa_tool_get_id() {
+  return MEDIAMOSA_TOOL_IMAGE_ID;
 }
 
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
-function mediamosa_tool_pdf_mediamosa_register_rest_call() {
+function mediamosa_tool_image_mediamosa_register_rest_call() {
 
   $rest_calls = array();
 
-  $rest_calls['job/$job_id/exec/pdf'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_exec_pdf',
+  $rest_calls['job/$job_id/exec/image'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_exec_image',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_tool_pdf',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_tool_image',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
     mediamosa_rest_call::NO_USER_ABORT => TRUE,
@@ -214,13 +222,13 @@ function mediamosa_tool_pdf_mediamosa_register_rest_call() {
 /**
  * Implements hook_mediamosa_register_rest_call_doc().
  */
-function mediamosa_tool_pdf_mediamosa_register_rest_call_doc() {
+function mediamosa_tool_image_mediamosa_register_rest_call_doc() {
 
   $rest_calls = array();
 
-  $rest_calls['job/$job_id/exec/pdf'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Start transcoding PDF.',
-    mediamosa_rest_call::DESCRIPTION => 'Start transcoding PDF.',
+  $rest_calls['job/$job_id/exec/image'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Start transcoding image.',
+    mediamosa_rest_call::DESCRIPTION => 'Start transcoding image (eg. tiff).',
     mediamosa_rest_call::EXAMPLE_REQUEST => '',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
