@@ -35,6 +35,7 @@ MediaMosa 2.3.8 (build in progress)
 Other changes (not ticket related)
 - Work around for still_type = scene, if there isn't video duration.
 - Frametime for still upload development.
+- Lua script fix for the new ffmpeg version.
 
 
 MediaMosa 2.3.7 (build 1301)
