@@ -40,6 +40,7 @@ Other changes (not ticket related)
   would try and fail to queue the asset.
 - Added support for nginx/lighttpd webserver uploadprogress.
 - Frametime for still upload development. 
+- Lua script fix for the new ffmpeg version.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
