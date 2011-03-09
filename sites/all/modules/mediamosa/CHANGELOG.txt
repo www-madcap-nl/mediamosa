@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.8 (build 1307)
+MediaMosa 2.3.8 (build 1315)
 ----------------------------
 
 Other changes (not ticket related)
@@ -37,6 +37,9 @@ Other changes (not ticket related)
 - Fixed bug where asset would be queued when sorl was not enabled as module and
   would try and fail to queue the asset.
 - Added support for nginx/lighttpd webserver uploadprogress. 
+- Frametime for still upload development.
+- Lua script fix for the new ffmpeg version.
+
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
