@@ -853,6 +853,8 @@ class mediamosa_job {
    *
    * 1.x: vpx_jobs_get_job_list
    *
+   * @param $app_id
+   *   can be single appication ID or an array of.
    * @param $a_parameters
    */
   static public function get_job_list($app_id, $user_id, $is_app_admin = FALSE, $job_id = 0, $asset_id = '', $mediafile_id = '', $cql = NULL, $limit = mediamosa_settings::LIMIT_DEFAULT_JOBLIST, $offset = 0) {
@@ -861,7 +863,8 @@ class mediamosa_job {
     $query->fields('j');
 
     if (!$is_app_admin) {
-      $query->condition('j.' . mediamosa_job_db::APP_ID, $app_id);
+      // If there are couple of IDs, we use SQL 'IN', otherwise reqular SQL '=' sign.
+      $query->condition('j.' . mediamosa_job_db::APP_ID, $app_id, is_array($app_id) ? 'IN' : '=' );
       $query->condition('j.' . mediamosa_job_db::OWNER_ID, $user_id);
     }
 
@@ -872,7 +875,10 @@ class mediamosa_job {
 
     if ($cql) {
       // CQL.
-      $a_result_cql2sql = mediamosa_core_cql::parse_job($cql, array($app_id));
+      if (!is_array($app_id)) {
+        $app_id = array($app_id);
+      }
+      $a_result_cql2sql = mediamosa_core_cql::parse_job($cql, $app_id);
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != "") {
         $query->where($a_result_cql2sql['str_where']);

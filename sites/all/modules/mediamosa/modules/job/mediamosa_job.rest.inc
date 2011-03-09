@@ -783,9 +783,9 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    $a_app_ids = $this->get_param_value_app();
+    $first_app_id = reset($a_app_ids);
 
     $user_id = $this->get_param_value(self::USER_ID);
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -796,13 +796,16 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     // Must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
-    // Must be owner / app_admin to get data.
-    mediamosa_aut::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+    // We show all data is it is app_admin or first element in application ID array is zero.
+    $is_full_access = $is_app_admin || ($first_app_id == 0);
+
+    // @todo: if app have no access at all we just return empty list now. If exception needed - add it here.
+    // mediamosa_aut::owner_check was here earlier.
 
     $item_count_total = NULL;
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql, $limit, $offset);
+    $result = mediamosa_job::get_job_list($a_app_ids, $user_id, $is_full_access, FALSE, $asset_id, '', $cql, $limit, $offset);
 
     // Get the count.
     $o_mediamosa->item_count_total = $result->found_rows;
