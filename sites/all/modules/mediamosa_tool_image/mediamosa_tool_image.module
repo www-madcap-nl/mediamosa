@@ -111,35 +111,17 @@ function mediamosa_tool_image_mediamosa_tool_is_recognized_as_analyse($mime_type
 function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
   $command_type = 'mediamosa_tool_image';
 
-  $mapping_array = array(
-    'file name'        => '',
-    'file size'        => '',
-    'mime type'        => '',
-    'image size'       => '',
-    'camera make'      => '',
-    'camera model'     => '',
-    'image timestamp'  => '',
-    'image number'     => '',
-    'exposure time'    => '',
-    'aperture'         => '',
-    'exposure bias'    => '',
-    'flash'            => '',
-    'flash bias'       => '',
-    'focal length'     => '',
-    'subject distance' => '',
-    'iso speed'        => '',
-    'exposure mode'    => '',
-    'metering mode'    => '',
-    'macro mode'       => '',
-    'image quality'    => '',
-    'exif resolution'  => '',
-    'white balance'    => '',
-    'thumbnail'        => '',
-    'copyright'        => 'rights',
-    'exif comment'     => 'description',
-  );
+  $mapping_array = array();
+  $type_array = array();
+  foreach (mediamosa_tool_mapping::get(MEDIAMOSA_TOOL_IMAGE_ID) as $record) {
+    $property = mediamosa_asset_metadata_property::property_get_row($record[mediamosa_tool_mapping_db::PROP_ID]);
+
+    $mapping_array[$record[mediamosa_tool_mapping_db::PARAMETER]] = $property[mediamosa_asset_metadata_property_db::NAME];
+    $type_array[$record[mediamosa_tool_mapping_db::PARAMETER]] = $property[mediamosa_asset_metadata_property_db::TYPE];
+  }
 
   $app_id = $job_ext[mediamosa_job_db::APP_ID];
+  $app = mediamosa_app::get_by_appid($app_id);
   $job_id = $job_ext[mediamosa_job_db::ID];
   $mediafile_id = $job_ext[mediamosa_job_db::MEDIAFILE_ID];
   $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
@@ -166,14 +148,22 @@ function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
   $parse_array = array();
   // Get full definitions.
   $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
+  // append, replace, update
   $action = 'update';
   foreach ($output_array as $output_line) {
     if (strpos($output_line, MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR) !== FALSE) {
-      list($key, $metadata_value) = explode(MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR, $output_line);
+      // Eg. CreationDate:   Wed Jul  8 16:14:29 2009
+      // => array('CreationDate', 'Wed Jul  8 16:14:29 2009')
+      list($key, $metadata_value) = explode(MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR, $output_line, 2);
       $key = drupal_strtolower(trim($key));
       $metadata_value = trim($metadata_value);
 
       if ($metadata_value && isset($mapping_array[$key]) && $mapping_array[$key]) {
+        // Datetime conversion.
+        if ($type_array[$key] == mediamosa_asset_metadata_property_db::TYPE_DATETIME) {
+          $metadata_value = mediamosa_datetime::time_string2utc_date($metadata_value, $app[mediamosa_app_db::TIMEZONE]);
+        }
+
         $parse_array[$mapping_array[$key]] = array($metadata_value);
       }
     }
@@ -194,9 +184,9 @@ function mediamosa_tool_image_mediamosa_tool_analyse_options() {
 
 /**
  * Get module id.
- * Implements hook_mediamosa_tool_get_id().
+ * Implements hook_mediamosa_tool_iteration().
  */
-function mediamosa_tool_image_mediamosa_tool_get_id() {
+function mediamosa_tool_image_mediamosa_tool_iteration() {
   return MEDIAMOSA_TOOL_IMAGE_ID;
 }
 

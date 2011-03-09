@@ -33,10 +33,65 @@
  * Implements hook_install().
  */
 function mediamosa_tool_image_install() {
+  $mapping_array = array(
+    array('file name'        , '', 0),
+    array('file size'        , '', 0),
+    array('mime type'        , '', 0),
+    array('image size'       , '', 0),
+    array('camera make'      , '', 0),
+    array('camera model'     , '', 0),
+    array('image timestamp'  , '', 0),
+    array('image number'     , '', 0),
+    array('exposure time'    , '', 0),
+    array('aperture'         , '', 0),
+    array('exposure bias'    , '', 0),
+    array('flash'            , '', 0),
+    array('flash bias'       , '', 0),
+    array('focal length'     , '', 0),
+    array('subject distance' , '', 0),
+    array('iso speed'        , '', 0),
+    array('exposure mode'    , '', 0),
+    array('metering mode'    , '', 0),
+    array('macro mode'       , '', 0),
+    array('image quality'    , '', 0),
+    array('exif resolution'  , '', 0),
+    array('white balance'    , '', 0),
+    array('thumbnail'        , '', 0),
+    array('copyright'        , 'rights', 1),
+    array('exif comment'     , 'description', 1),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($mapping_array as $mapping) {
+    if ($mapping[1] && $mapping[2] && is_numeric($mapping[2]) && $mapping[2] > 0) {
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name($mapping[1], $mapping[2]);
+      if ($prop) {
+        $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+
+        $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING, $mapping[0]);
+
+        $node->{mediamosa_tool_mapping_db::TOOL} = MEDIAMOSA_TOOL_IMAGE_ID;
+        $node->{mediamosa_tool_mapping_db::PARAMETER} = $mapping[0];
+        $node->{mediamosa_tool_mapping_db::PROP_ID} = $prop_id;
+
+        $node = node_save($node);
+      }
+    }
+  }
 }
 
 /**
  * Implements hook_unstall().
  */
 function mediamosa_tool_image_uninstall() {
+  $query = mediamosa_db::db_select(mediamosa_tool_mapping_db::TABLE_NAME, 'tm');
+  $query
+    ->condition('tm.' . mediamosa_tool_mapping_db::TOOL, MEDIAMOSA_TOOL_IMAGE_ID)
+    ->fields('tm', array(mediamosa_tool_mapping_db::NID));
+  $result = $query->execute();
+
+  // Uninstall nodes from tool mapping.
+  foreach ($result as $record) {
+    node_delete($record['nid']);
+  }
 }

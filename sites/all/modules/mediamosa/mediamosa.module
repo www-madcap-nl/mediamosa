@@ -159,6 +159,10 @@ function mediamosa_permission() {
       'title' => t('Access MediaMosa configuration (tool parameters)'),
       'description' => t($text_view_switch, array('@type' => 'tool parameters')),
     ),
+    mediamosa_permission::ACCESS_CONFIG_TOOLMAPPING => array(
+      'title' => t('Access MediaMosa configuration (tool mapping)'),
+      'description' => t($text_view_switch, array('@type' => 'tool mapping')),
+    ),
     mediamosa_permission::ACCESS_CONFIG_TRANSCODE_PROFILES => array(
       'title' => t('Access MediaMosa configuration (transcode profiles)'),
       'description' => t($text_view_switch, array('@type' => 'transcode profiles')),

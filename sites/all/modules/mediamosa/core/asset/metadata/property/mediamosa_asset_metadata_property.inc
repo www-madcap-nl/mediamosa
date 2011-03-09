@@ -309,4 +309,57 @@ class mediamosa_asset_metadata_property {
 
     return mediamosa_asset_metadata_property::get_metadata_properties($a_definitions_full);
   }
+
+  /**
+   * Get all metadata.
+   */
+  static public function get_all_metadata() {
+
+    // Caching.
+    static $all_metadata_properties = array();
+
+    // Check if its in our cache.
+    if (!empty($all_metadata_properties)) {
+      return $all_metadata_properties;
+    }
+
+    // Build the select query object.
+    $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg');
+
+    // Add an join.
+    $query->join(
+      mediamosa_asset_metadata_property_db::TABLE_NAME,
+      'amp',
+      strtr(
+        'ampg.#ampg_propgroup_id = amp.#amp_propgroup_id',
+        array(
+          '#ampg_propgroup_id' => mediamosa_asset_metadata_property_group_db::ID,
+          '#amp_propgroup_id' => mediamosa_asset_metadata_property_db::PROPGROUP_ID,
+        )
+      )
+    );
+
+    // Fields to select.
+    $query->addField('ampg', mediamosa_asset_metadata_property_group_db::ID);
+    $query->addField('ampg', mediamosa_asset_metadata_property_group_db::NAME, 'propgroup_name');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::TYPE, 'propdef_type');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::ID, 'propdef_id');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::NAME, 'propdef_name');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::IS_HIDDEN, 'propdef_is_hidden');
+
+    // Order by.
+    $query->orderBy('propdef_name', 'ASC');
+
+    // Execute.
+    $result = $query->execute();
+
+    // Build output.
+    $all_metadata_properties = array();
+    foreach ($result as $row) {
+      $all_metadata_properties[$row['propdef_name']] = $row;
+    }
+
+    // Return our result.
+    return $all_metadata_properties;
+  }
 }

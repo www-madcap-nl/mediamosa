@@ -24,25 +24,35 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Tool installer.
-  */
-require_once 'params/mediamosa_tool_params.install.inc';
-require_once 'mapping/mediamosa_tool_mapping.install.inc';
-
 /**
- * Implements hook_install().
+ * @file
+ * The tool mapping DB class.
  */
-function _mediamosa_tool_install() {
-  _mediamosa_tool_params_install();
-  _mediamosa_tool_mapping_install();
-}
+class mediamosa_tool_mapping_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_tool_mapping';
 
-/**
- * Implements hook_unstall().
- */
-function _mediamosa_tool_uninstall() {
-  _mediamosa_tool_params_uninstall();
-  _mediamosa_tool_mapping_uninstall();
+  // Database fields;
+  const NID = 'nid';
+  const VID = 'vid';
+  const ID = 'tool_mapping_id';
+  const TOOL = 'tool';
+  const TOOL_LENGTH = 50;
+  const PARAMETER = 'parameter';
+  const PARAMETER_LENGTH = 50;
+  const PROP_ID = 'prop_id';
+  const CREATED = 'created';
+  const CHANGED = 'changed';
+
+  /**
+   * Returns all fields.
+   */
+  static public function get_fields() {
+    require_once 'mediamosa_tool_mapping.install.inc';
+
+    // Get the schema.
+    $a_schema = mediamosa_tool_mapping_schema();
+    return array_keys($a_schema[mediamosa_tool_mapping_db::TABLE_NAME]['fields']);
+  }
 }

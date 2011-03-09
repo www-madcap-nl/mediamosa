@@ -39,12 +39,14 @@ require_once 'mediamosa_node_mediamosa_server.inc';
 require_once 'mediamosa_node_mediamosa_settings.inc';
 require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
 require_once 'mediamosa_node_mediamosa_tool_params.inc';
+require_once 'mediamosa_node_mediamosa_tool_mapping.inc';
 
 class mediamosa_node {
   // ------------------------------------------------------------------ Consts.
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_TOOL_PARAMS = 'mediamosa_tool_params';
+  const MEDIAMOSA_NODE_TYPE_TOOL_MAPPING = 'mediamosa_tool_mapping';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
   const MEDIAMOSA_NODE_TYPE_APP = 'mediamosa_app';
   const MEDIAMOSA_NODE_TYPE_SETTINGS = 'mediamosa_settings';
@@ -141,6 +143,10 @@ class mediamosa_node {
         $fields = mediamosa_tool_params_db::get_fields();
         return $fields;
 
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING:
+        $fields = mediamosa_tool_mapping_db::get_fields();
+        return $fields;
+
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER:
         $fields = mediamosa_server_db::get_fields();
 
@@ -220,6 +226,12 @@ function mediamosa_node_info() {
       'has_body' => FALSE,
       'description' => t('The tool params contains information about the tool (eg. ffmpeg, windows) parameters.'),
     ),
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING => array(
+      'name' => t('MediaMosa tool_mapping'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING,
+      'has_body' => FALSE,
+      'description' => t('The tool mapping contains information about how to map the tool (eg. pdf, tiff) analyse data to asset metadata.'),
+    ),
     mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER => array(
       'name' => t('MediaMosa server'),
       'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
@@ -291,6 +303,17 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Tool parameters'), 'admin/mediamosa/config/tool_params');
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administration'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      $breadcrumb[] = l(t('Tool mapping'), 'admin/mediamosa/config/tool_mapping');
       drupal_set_breadcrumb($breadcrumb);
       break;
 
@@ -389,6 +412,16 @@ function mediamosa_form_mediamosa_tool_params_node_form_alter(&$form, &$form_sta
   mediamosa_node::common_form($form, $form_state);
 
   $form['#redirect'] = 'admin/mediamosa/config/tool_params';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function mediamosa_form_mediamosa_tool_mapping_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+
+  $form['#redirect'] = 'admin/mediamosa/config/tool_mapping';
 }
 
 /**

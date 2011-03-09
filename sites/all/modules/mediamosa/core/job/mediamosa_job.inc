@@ -838,7 +838,7 @@ class mediamosa_job {
       $recognized = module_invoke($module, 'mediamosa_tool_is_recognized_as_analyse', $mime_type);
       if ($recognized) {
         // Get the tool id.
-        $module_id = module_invoke($module, 'mediamosa_tool_get_id');
+        $module_id = module_invoke($module, 'mediamosa_tool_iteration');
         // Get the app.
         $app = mediamosa_app::get_by_appid($job_ext[mediamosa_job_db::APP_ID]);
         $tool_analyse = unserialize($app[mediamosa_app_db::TOOL_ANALYSE]);

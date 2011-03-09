@@ -33,10 +33,61 @@
  * Implements hook_install().
  */
 function mediamosa_tool_pdf_install() {
+  $mapping_array = array(
+    array('title',                      'title', 1),
+    array('subject',                    '', 0),
+    array('keywords',                   '', 0),
+    array('author',                     '', 0),
+    array('creator',                    'creator', 1),
+    array('producer',                   '', 0),
+    array('creationdate',               'created', 2),
+    array('creation date',              '', 0),
+    array('moddate',                    '', 0),
+    array('modificationdate',           '', 0),
+    array('modification date',          '', 0),
+    array('tagged',                     '', 0),
+    array('pages',                      '', 0),
+    array('encrypted',                  '', 0),
+    array('print and copy permissions', '', 0),
+    array('page size',                  '', 0),
+    array('file size',                  '', 0),
+    array('optimized',                  '', 0),
+    array('linearized',                 '', 0),
+    array('pdf version',                '', 0),
+    array('metadata',                   '', 0),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($mapping_array as $mapping) {
+    if ($mapping[1] && $mapping[2] && is_numeric($mapping[2]) && $mapping[2] > 0) {
+      $prop = mediamosa_asset_metadata_property::property_get_row_with_name($mapping[1], $mapping[2]);
+      if ($prop) {
+        $prop_id = $prop[mediamosa_asset_metadata_property_db::ID];
+
+        $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING, $mapping[0]);
+
+        $node->{mediamosa_tool_mapping_db::TOOL} = MEDIAMOSA_TOOL_PDF_ID;
+        $node->{mediamosa_tool_mapping_db::PARAMETER} = $mapping[0];
+        $node->{mediamosa_tool_mapping_db::PROP_ID} = $prop_id;
+
+        $node = node_save($node);
+      }
+    }
+  }
 }
 
 /**
  * Implements hook_unstall().
  */
 function mediamosa_tool_pdf_uninstall() {
+  $query = mediamosa_db::db_select(mediamosa_tool_mapping_db::TABLE_NAME, 'tm');
+  $query
+    ->condition('tm.' . mediamosa_tool_mapping_db::TOOL, MEDIAMOSA_TOOL_PDF_ID)
+    ->fields('tm', array(mediamosa_tool_mapping_db::NID));
+  $result = $query->execute();
+
+  // Uninstall nodes from tool mapping.
+  foreach ($result as $record) {
+    node_delete($record['nid']);
+  }
 }

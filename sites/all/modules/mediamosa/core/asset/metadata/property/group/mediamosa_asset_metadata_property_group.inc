@@ -41,7 +41,7 @@ class mediamosa_asset_metadata_property_group {
    * @param integer $propgroup_id (unique)
    * @return array
    */
-  function property_group_row_get($propgroup_id) {
+  static public function property_group_row_get($propgroup_id) {
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_id = :propgroup_id',
       array(
@@ -58,7 +58,7 @@ class mediamosa_asset_metadata_property_group {
    * @param integer $app_id
    * @return array
    */
-  function property_group_row_get_with_appid($app_id) {
+  static public function property_group_row_get_with_appid($app_id) {
     assert(is_int($app_id));
     return mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #propgroup_id = :propgroup_id',
@@ -78,7 +78,7 @@ class mediamosa_asset_metadata_property_group {
    * @return integer
    *  The new ID of the object.
    */
-  function property_group_create($name) {
+  static public function property_group_create($name) {
     $a_fields = array(
       mediamosa_asset_metadata_property_group_db::NAME => $name,
     );
@@ -100,7 +100,7 @@ class mediamosa_asset_metadata_property_group {
    * @return integer
    *  The new ID of the object.
    */
-  function property_group_create_with_appid($app_id) {
+  static public function property_group_create_with_appid($app_id) {
     assert(is_int($app_id));
     return mediamosa_asset_metadata_property_group::property_group_create(self::APP_PREFIX . $app_id);
   }

@@ -295,6 +295,11 @@ files[] = core/tool/params/mediamosa_tool_params.install.inc
 files[] = core/tool/params/mediamosa_tool_params_db.inc
 files[] = core/tool/params/mediamosa_tool_params.inc
 
+; Tool mapping.
+files[] = core/tool/mapping/mediamosa_tool_mapping.install.inc
+files[] = core/tool/mapping/mediamosa_tool_mapping_db.inc
+files[] = core/tool/mapping/mediamosa_tool_mapping.inc
+
 ; Tool.
 files[] = core/tool/mediamosa_tool.install.inc
 
