@@ -99,6 +99,22 @@ class mediamosa_server {
   }
 
   /**
+   * Get random upload server.
+   */
+  static public function get_upload_by_nid($nid) {
+    return mediamosa_db::db_query(
+      'SELECT * FROM {#mediamosa_server} WHERE #nid = :nid AND #status = :status_on',
+      array(
+        '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+        '#status' => mediamosa_server_db::SERVER_STATUS,
+        ':status_on' => mediamosa_server_db::SERVER_STATUS_ON,
+        '#nid' => mediamosa_server_db::NID,
+        ':nid' => $nid,
+      )
+    )->fetchAssoc();
+  }
+
+  /**
    * Returns status information from all enabled servers.
    *
    * @param array $server_types (optional)

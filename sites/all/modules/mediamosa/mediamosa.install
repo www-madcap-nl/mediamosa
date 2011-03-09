@@ -1859,5 +1859,39 @@ function mediamosa_update_7088() {
   ));
 }
 
+/**
+ * Add new fields to mediamosa_server table to support new upload progress.
+ */
+function mediamosa_update_7089() {
+
+  if (!db_field_exists(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER)) {
+    $spec = array(
+      'description' => 'The optional uri of the upload progress server side.',
+      'type' => 'varchar',
+      'length' => mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_LENGTH,
+      'not null' => TRUE,
+      'default' => '',
+    );
+
+    db_add_field(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER, $spec);
+  }
+
+  if (!db_field_exists(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE)) {
+    $server_upload_progress_type = array(
+      mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC,
+      mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_PROXY,
+    );
+
+    $spec = array(
+      'description' => 'The server type for upload progress server side.',
+      'type' => "enum('" . implode("','", $server_upload_progress_type) . "')",
+      'mysql_type' => "enum('" . implode("','", $server_upload_progress_type) . "')",
+      'not null' => TRUE,
+      'default' => mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC,
+    );
+
+    db_add_field(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE, $spec);
+  }
+}
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

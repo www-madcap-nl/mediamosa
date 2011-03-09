@@ -1641,8 +1641,10 @@ tag=Best',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <action>http://mediamosa2/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD</action>
-    <uploadprogress_url>http://mediamosa2/mediafile/uploadprogress</uploadprogress_url>
+    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD</action>
+    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?X-Progress-ID=12345</uploadprogress_url>
+    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+    <progress_id>1234567</progress_id>
   </item>
 </items>',
   );

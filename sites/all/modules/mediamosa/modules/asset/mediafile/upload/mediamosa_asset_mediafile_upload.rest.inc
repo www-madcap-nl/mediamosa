@@ -94,18 +94,23 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id, $group_id);
 
     // Get serverupload.
-    $a_server_upload = mediamosa_server::get_random_upload();
+    $server_upload = mediamosa_server::get_random_upload();
 
-    if (!$a_server_upload) {
+    if (!$server_upload) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_SERVER_UPLOAD_NOT_FOUND);
     }
+
+    // Generate unique ID.
+    $uuid = rand(1000000, 9999999);
 
     // Set response.
     $mediamosa->add_item(
       array(
-        'action' => str_replace("{TICKET}", $ticket_id, $a_server_upload[mediamosa_server_db::SERVER_URI]),
-        'uploadprogress_url' => $a_server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS],
+        'action' => strtr($server_upload[mediamosa_server_db::SERVER_URI], array('{TICKET}' => $ticket_id, '{PROGRESS_ID}' => $uuid)),
+        'uploadprogress_url' => strtr($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS], array('{PROGRESS_ID}' => $uuid, '{SERVER_ID}' => $server_upload[mediamosa_server_db::NID])),
         'ticket_id' => $ticket_id,
+        'progress_id' => $uuid,
+        'server_id' => $server_upload[mediamosa_server_db::NID],
       )
     );
   }
@@ -325,7 +330,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     if ($this->is_method_put()) {
       $filename_put = $this->get_param_value(self::FILENAME); // With PUT only.
     }
-
+mediamosa_watchdog::log_export($_GET);
     try {
       if ($still_upload) {
         $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default, $still_parameters, $this->get_param_value(self::FRAMETIME));
@@ -402,19 +407,27 @@ class mediamosa_rest_call_asset_mediafile_uploadprogress extends mediamosa_rest_
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const ID = 'id';
+  const SERVER_ID = 'server_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Add ID of the upload.
-    $a_var_setup[self::VARS][self::ID] = array(
+    $var_setup[self::VARS][self::ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
       self::VAR_DESCRIPTION => 'ID of the upload that has been randomly chosen and provided when the upload was send to the server.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
     );
+    // Add ID of the upload.
+    $var_setup[self::VARS][self::SERVER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
+      self::VAR_DESCRIPTION => 'The server ID of the upload server. Only required when you have multiple upload servers and with different settings (upload progress).',
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 0,
+    );
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -422,8 +435,9 @@ class mediamosa_rest_call_asset_mediafile_uploadprogress extends mediamosa_rest_
     $mediamosa = mediamosa::get();
 
     $id = $this->get_param_value(self::ID);
+    $server_id = $this->get_param_value(self::SERVER_ID);
 
     // Add to response.
-    $mediamosa->add_item(json_encode(mediamosa_asset_mediafile_upload::get_uploadprogress($id)));
+    $mediamosa->add_item(json_encode(mediamosa_asset_mediafile_upload::get_uploadprogress($id, $server_id)));
   }
 }

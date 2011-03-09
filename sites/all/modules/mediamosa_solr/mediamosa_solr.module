@@ -33,9 +33,6 @@
 module_load_include('inc', 'mediamosa_solr', 'mediamosa_solr');
 module_load_include('batch.inc', 'mediamosa_solr', 'mediamosa_solr');
 
-define('MEDIAMOSA_SOLR_PERM_CONFIGURATION', 'administer mediamosa solr configuration');
-define('MEDIAMOSA_SOLR_PERM_INDEXER', 'administer mediamosa solr indexer');
-
 /**
  * Implementation of hook_mediamosa_search_engine().
  */
@@ -68,12 +65,14 @@ function mediamosa_solr_menu() {
     'description' => 'Lucene Solr allows you to use really fast metadata searching for MediaMosa, a lot faster than the default search used on your database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_solr_settings'),
-    'access arguments' => array(MEDIAMOSA_SOLR_PERM_CONFIGURATION),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|solr'),
   );
 
   $items['admin/mediamosa/config/solr/config'] = array(
     'title' => 'Configuration',
-    'access arguments' => array(MEDIAMOSA_SOLR_PERM_CONFIGURATION),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|solr'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
@@ -82,7 +81,8 @@ function mediamosa_solr_menu() {
     'description' => 'Rebuild or reindex the Solr database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_solr_queueer_form'),
-    'access arguments' => array(MEDIAMOSA_SOLR_PERM_INDEXER),
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|solr'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -93,15 +93,10 @@ function mediamosa_solr_menu() {
  * Implement hook_permission().
  */
 function mediamosa_solr_permission() {
-
   return array(
-    MEDIAMOSA_SOLR_PERM_CONFIGURATION => array(
+    mediamosa_permission::ACCESS_CONFIG . '|solr' => array(
       'title' => t('MediaMosa solr configuration administer permissions'),
       'description' => t('Manage the configuration of MediaMosa Solr module.')
-    ),
-    MEDIAMOSA_SOLR_PERM_INDEXER => array(
-      'title' => t('MediaMosa solr indexes administer permissions'),
-      'description' => t('Permits to refresh or to rebuild the Solr index.')
     ),
   );
 }
