@@ -36,7 +36,7 @@ function mediamosa_app_mediamosa_register_rest_call_doc() {
   $rest_calls = array();
 
   // Get profile_id setting.
-  $rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['transcode/profile/default'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the preview profile ID.',
     mediamosa_rest_call::DESCRIPTION => 'Get the preview profile ID.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'preview_profile_id',
@@ -47,6 +47,9 @@ function mediamosa_app_mediamosa_register_rest_call_doc() {
   </item>
 </items>',
   );
+
+  // Alias for deprecated call.
+  $rest_calls['preview_profile_id'] = $rest_calls['transcode/profile/default'];
 
   // Get application quota.
   $rest_calls['app/quota'][mediamosa_rest_call::METHOD_GET] = array(
@@ -72,10 +75,18 @@ function mediamosa_app_mediamosa_register_rest_call_doc() {
 function mediamosa_app_mediamosa_register_rest_call() {
   $rest_calls = array();
 
-  // Asset search.
-  $rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+  // Get default transcoding profile.
+  $rest_calls['transcode/profile/default'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_get_default_transcode_profile',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_3_0_0,
+  );
+
+  // Deprecated version of transcode/profile/default, see above.
+  $rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_get_default_transcode_profile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_app',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_7,
   );

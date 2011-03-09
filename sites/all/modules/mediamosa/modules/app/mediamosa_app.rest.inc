@@ -31,7 +31,9 @@
 
 
 /**
- * URI: /preview_profile_id
+ * URI: /preview_profile_id (deprecated)
+ *      /transcode/profile/default
+ *
  * Method: GET
  *
  * 1.x: transcoding_profiles_get_default_transcode_profile.
