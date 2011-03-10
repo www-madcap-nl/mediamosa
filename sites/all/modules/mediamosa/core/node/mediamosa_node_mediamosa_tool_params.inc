@@ -280,7 +280,6 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#required' => FALSE,
     '#description' => t('Description of this parameter.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::DESCRIPTION, $node),
-    '#maxlength' => mediamosa_tool_params_db::DESCRIPTION,
   );
 
   return $form;
