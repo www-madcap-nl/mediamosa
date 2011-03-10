@@ -208,7 +208,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
-    $node->tool = 'ffmpeg';
     $node->is_default_profile = 'FALSE';
     $node->file_extension = '';
 
@@ -288,18 +287,12 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#maxlength' => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
   );
 
-  if (empty($node->tool)) {
-    $node->tool = 'ffmpeg'; // Default.
+  if (isset($node->tool) && $node->tool) {
+    $tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
   }
-
-  $tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
-
-  $form['tool_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('@tool parameters', array('@tool' => drupal_ucfirst($node->tool))),
-    '#collapsed' => FALSE,
-    '#collapsible' => TRUE,
-  );
+  else {
+    $tools = mediamosa_tool_params::search()->fetchAll();
+  }
 
   // Skip these, not changable or internal.
   $tools_to_skip = array(
@@ -310,6 +303,15 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
   // Show all parameters for profile.
   foreach ($tools as $key => $tool) {
+
+    if (!isset($form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]])) {
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]] = array(
+        '#type' => 'fieldset',
+        '#title' => t('@tool parameters', array('@tool' => drupal_ucfirst($tool[mediamosa_tool_params_db::TOOL]))),
+        '#collapsed' => !isset($node->tool),
+        '#collapsible' => TRUE,
+      );
+    }
 
     // get the name of the parameter.
     $name = $tool[mediamosa_tool_params_db::NICE_PARAMETER];
@@ -357,7 +359,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
       $descriptions[] = strtr('Possible values: @options.', array('@options' => implode(', ', $options)));
 
-      $form['tool_options']['options_' . $name] = array(
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
         '#type' => 'select',
         '#title' => t($tool_name),
@@ -371,7 +373,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       // Add allowed value to description.
       $descriptions[] = t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_tool_params_db::MIN_VALUE], '@max_value' => $tool[mediamosa_tool_params_db::MAX_VALUE]));
 
-      $form['tool_options']['options_' . $name] = array(
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
         '#type' => 'textfield',
         '#title' => t($tool_name),
@@ -382,7 +384,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       );
     }
     else {
-      $form['tool_options']['options_' . $name] = array(
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
         '#type' => 'textfield',
         '#title' => t($tool_name),
