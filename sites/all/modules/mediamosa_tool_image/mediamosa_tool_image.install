@@ -33,6 +33,8 @@
  * Implements hook_install().
  */
 function mediamosa_tool_image_install() {
+  // Tool mapping.
+
   $mapping_array = array(
     array('file name'        , '', 0),
     array('file size'        , '', 0),

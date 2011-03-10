@@ -33,6 +33,8 @@
  * Implements hook_install().
  */
 function mediamosa_tool_windows_install() {
+  // Tool params.
+
   $a_default_params = array(
     array('windows', 'internal_file_extension', '', NULL, NULL, array("wmv"), NULL, 'FALSE', NULL),
     array('windows', 'fps', '-v_framerate', 10, 30, NULL, '25', 'FALSE', NULL),

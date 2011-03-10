@@ -33,6 +33,33 @@
  * Implements hook_install().
  */
 function mediamosa_tool_pdf_install() {
+  // Tool params.
+
+  $a_default_params = array(
+    array('pdf', 'Default viewer', '-b', NULL, NULL, array('', ''), '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine')),
+    array('pdf', 'Fonts', '-f', NULL, NULL, array('', ''), '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters).")),
+    array('pdf', 'Flash version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.')),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($a_default_params as $a_default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $a_default_param[1]);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $a_default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $a_default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $a_default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $a_default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $a_default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
+
+    $node = node_save($node);
+  }
+
+  // Tool mapping.
+
   $mapping_array = array(
     array('title',                      'title', 1),
     array('subject',                    '', 0),

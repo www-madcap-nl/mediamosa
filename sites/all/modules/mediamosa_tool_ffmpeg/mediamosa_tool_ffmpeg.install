@@ -33,6 +33,8 @@
  * Implements hook_install().
  */
 function mediamosa_tool_ffmpeg_install() {
+  // Tool params.
+
   $a_default_params = array(
     array('ffmpeg', 'videobitrate', '-b', 128000, 80000000, NULL, '200000', 'FALSE', t('Set the video bitrate in bit/s@default')),
     array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', t('Set frame rate (Hz value, fraction or abbereviation@default')),
