@@ -386,7 +386,7 @@ class mediamosa_job_server {
           $call = module_invoke($module, 'mediamosa_tool_transcode', $mime_type);
           if ($call) {
             // Clean up earlier status files.
-            unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
+            mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
 
             // Replace the $job_id placeholder.
             $call = str_replace('$job_id', $job_id, $call);

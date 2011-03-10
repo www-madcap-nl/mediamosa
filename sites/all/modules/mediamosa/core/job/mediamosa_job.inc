@@ -883,7 +883,7 @@ class mediamosa_job {
         // Start harvesting metadata by tools.
         self::start_harvesting_metadata_by_tool($job_ext);
         // Start transcode job by tools.
-        self::start_transcode_job_by_tool($job_ext);
+        //self::start_transcode_job_by_tool($job_ext);
       }
     }
 

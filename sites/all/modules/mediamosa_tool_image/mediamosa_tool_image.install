@@ -33,6 +33,26 @@
  * Implements hook_install().
  */
 function mediamosa_tool_image_install() {
+  // Transcode profile.
+
+  $default_profiles = array(
+    array('convert image', 'FALSE', 'image', 'tool', ''),
+  );
+
+  foreach ($default_profiles as $default_profile) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
+
+    $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+    $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
+
+    $node = node_save($node);
+  }
+
   // Tool mapping.
 
   $mapping_array = array(

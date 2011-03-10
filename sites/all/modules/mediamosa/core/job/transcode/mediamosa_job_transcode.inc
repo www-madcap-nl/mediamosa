@@ -108,7 +108,8 @@ class mediamosa_job_transcode {
 
     // Check if fileextension is ok.
     try {
-      mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:' . $file_extension);
+      // TODO: Is it necessary?
+      //mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:' . $file_extension);
     }
     catch (mediamosa_exception_error $e) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_COMBINATION, array('@tool' => $tool, '@file_extension' => $file_extension));

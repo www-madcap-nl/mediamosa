@@ -47,6 +47,7 @@ class mediamosa_tool_params_db {
   const MAX_VALUE = 'max_value';
   const ALLOWED_VALUE = 'allowed_value';
   const ALLOWED_VALUE_LENGTH = 1000;
+  const ALLOWED_VALUE_USE = '<use>';
   const DEFAULT_VALUE = 'default_value';
   const DEFAULT_VALUE_LENGTH = 50;
   const REQUIRED = 'required';

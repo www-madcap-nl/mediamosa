@@ -36,9 +36,9 @@ function mediamosa_tool_pdf_install() {
   // Tool params.
 
   $a_default_params = array(
-    array('pdf', 'Default viewer', '-b', NULL, NULL, array('', ''), '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine')),
-    array('pdf', 'Fonts', '-f', NULL, NULL, array('', ''), '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters).")),
-    array('pdf', 'Flash version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.')),
+    array('pdf', 'def_viewer', '-b', NULL, NULL, array('', mediamosa_tool_params_db::ALLOWED_VALUE_USE), '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine')),
+    array('pdf', 'fonts', '-f', NULL, NULL, array('', mediamosa_tool_params_db::ALLOWED_VALUE_USE), '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters).")),
+    array('pdf', 'flash_version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.')),
   );
 
   // Insert default mappings as nodes.
@@ -54,6 +54,26 @@ function mediamosa_tool_pdf_install() {
     $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
     $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
     $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
+
+    $node = node_save($node);
+  }
+
+  // Transcode profile.
+
+  $default_profiles = array(
+    array('pdf to swf', 'FALSE', 'pdf', 'tool', 'def_viewer:<use>;fonts:<use>;flash_version:9'),
+  );
+
+  foreach ($default_profiles as $default_profile) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $default_profile[0]);
+
+    $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+    $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $default_profile[4];
 
     $node = node_save($node);
   }
