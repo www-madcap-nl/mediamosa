@@ -141,6 +141,10 @@ function mediamosa_tool_params_schema() {
         'default' => NULL,
         'description' => 'The date and time when tool parameter was changed last.',
       ),
+      mediamosa_tool_params_db::DESCRIPTION => array(
+        'type' => 'text',
+        'description' => 'Description of the parameter.',
+      ),
     ),
     'primary key' => array(mediamosa_tool_params_db::ID),
     'unique keys' => array(

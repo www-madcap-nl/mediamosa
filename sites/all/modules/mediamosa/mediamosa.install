@@ -1986,5 +1986,73 @@ function mediamosa_update_7093() {
   cache_clear_all();
 }
 
+/**
+ * Add new fields to mediamosa_tool_params table: description.
+ */
+function mediamosa_update_7094() {
+  if (!db_field_exists(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::DESCRIPTION)) {
+    $spec = array(
+      'description' => 'Description of the parameter.',
+      'type' => 'text',
+    );
+
+    db_add_field(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::DESCRIPTION, $spec);
+  }
+}
+
+/**
+ * Fill the description field of mediamosa_tool_params table.
+ */
+function mediamosa_update_7095() {
+  $comments = array(
+    'videocodec' => t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default'),
+    'videobitrate' => t('Set the video bitrate in bit/s@default'),
+    'duration' => t('Duration of the video.'),
+    'size' => t('Set frame size using format WIDTHxHEIGHT@default'),
+    'qmax' => t('Maximum video quantizer scale (VBR)@default'),
+    'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
+    'audiosamplingrate' => t('Set the audio sampling frequency@default'),
+    'audiocodec' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
+    'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
+    'padding' => t('Force padding, if aspect ratio is maintained@default'),
+    'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
+    'audiochannels' => t('The allowed value is between 0 and 2@default'),
+    '2_pass_h264_encoding' => t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding'),
+  );
+
+  foreach ($comments as $nice_parameter => $description) {
+    db_query("UPDATE {mediamosa_tool_params} SET description = :description WHERE nice_parameter = :nice_parameter", array(
+      ':description' => $description,
+      ':nice_parameter' => $nice_parameter,
+    ));
+  }
+}
+
+/**
+ * Fill the latest node revision with the mediamosa_tool_params table description field.
+ */
+function mediamosa_update_7096() {
+  $result = db_select('mediamosa_tool_params', 'tp')
+    ->fields('tp', array('vid', 'description'))
+    ->execute();
+
+  foreach ($result as $record) {
+    $revision_data = db_select('mediamosa_node_revision', 'nr')
+      ->condition('nr.vid', $record->vid)
+      ->fields('nr', array('revision_data'))
+      ->execute()
+      ->fetchField();
+
+    $revision_data = unserialize($revision_data);
+    $revision_data['description'] = $record->description;
+    $revision_data = serialize($revision_data);
+
+    db_query("UPDATE {mediamosa_node_revision} SET revision_data = :revision_data WHERE vid = :vid", array(
+      ':revision_data' => $revision_data,
+      ':vid' => $record->vid,
+    ));
+  }
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

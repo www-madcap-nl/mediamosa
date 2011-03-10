@@ -294,23 +294,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
   $tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
 
-  // Comments below items.
-  $comments = array(
-    'videocodec' => t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default'),
-    'videobitrate' => t('Set the video bitrate in bit/s@default'),
-    'duration' => t('Duration of the video.'),
-    'size' => t('Set frame size using format WIDTHxHEIGHT@default'),
-    'qmax' => t('Maximum video quantizer scale (VBR)@default'),
-    'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
-    'audiosamplingrate' => t('Set the audio sampling frequency@default'),
-    'audiocodec' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
-    'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
-    'padding' => t('Force padding, if aspect ratio is maintained@default'),
-    'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
-    'audiochannels' => t('The allowed value is between 0 and 2@default'),
-    '2_pass_h264_encoding' => t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding'),
-  );
-
   $form['tool_options'] = array(
     '#type' => 'fieldset',
     '#title' => t('@tool parameters', array('@tool' => drupal_ucfirst($node->tool))),
@@ -348,7 +331,11 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     $value = isset($node->commands{$name}) ? $node->commands{$name} : ($is_required ? $tool[mediamosa_tool_params_db::DEFAULT_VALUE] : '');
 
     $descriptions = array();
-    $description = isset($comments[$name]) ? $comments[$name] : '';
+    $description = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'tp')
+      ->condition('tp.' . mediamosa_tool_params_db::NICE_PARAMETER, $name)
+      ->fields('tp', array(mediamosa_tool_params_db::DESCRIPTION))
+      ->execute()
+      ->fetchField();
 
     if (!empty($description) && isset($tool[mediamosa_tool_params_db::DEFAULT_VALUE])) {
       $description = strtr($description, array('@default' => ' (default = @value).'));

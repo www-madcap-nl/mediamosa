@@ -34,23 +34,23 @@
  */
 function mediamosa_tool_ffmpeg_install() {
   $a_default_params = array(
-    array('ffmpeg', 'videobitrate', '-b', 128000, 80000000, NULL, '200000', 'FALSE'),
-    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE'),
-    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080','480x270','480x360'), '320x240', 'FALSE'),
-    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv','wmv','mp4','avi','ogg','webm'), NULL, 'FALSE'),
-    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE'),
-    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame','wma','pcm_s16le','libfaac','libvorbis'), NULL, 'FALSE'),
-    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('40000','64000','128000','192000','256000','512000'), '64000', 'FALSE'),
-    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('22050','44100'), '44100', 'FALSE'),
-    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE'),
-    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE'),
-    array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE'),
-    array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE'),
-    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE'),
-    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('','1','2'), NULL, 'FALSE'),
-    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('flv','wmv','mpeg4','libx264','rawvideo','libtheora','webm'), NULL, 'FALSE'),
-    array('ffmpeg', 'videopreset', '-vpre', NULL, NULL, array('','slow','main','fast','ipod320'), NULL, 'FALSE'),
-    array('ffmpeg', 'padding', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE'),
+    array('ffmpeg', 'videobitrate', '-b', 128000, 80000000, NULL, '200000', 'FALSE', t('Set the video bitrate in bit/s@default')),
+    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE', t('Set frame rate (Hz value, fraction or abbereviation@default')),
+    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080','480x270','480x360'), '320x240', 'FALSE', t('Set frame size using format WIDTHxHEIGHT@default')),
+    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv','wmv','mp4','avi','ogg','webm'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE', t('Maximum video quantizer scale (VBR)@default')),
+    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame','wma','pcm_s16le','libfaac','libvorbis'), NULL, 'FALSE', t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default')),
+    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, array('40000','64000','128000','192000','256000','512000'), '64000', 'FALSE', t('Set the audio bitrate in bit/s@default')),
+    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, array('22050','44100'), '44100', 'FALSE', t('Set the audio sampling frequency@default')),
+    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE', t('The allowed value is between 0 and 2@default')),
+    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE', t('Duration of the video.')),
+    array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE', NULL),
+    array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
+    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force maintain the original video aspect ratio or not@default')),
+    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, array('','1','2'), NULL, 'FALSE', t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding')),
+    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, array('flv','wmv','mpeg4','libx264','rawvideo','libtheora','webm'), NULL, 'FALSE', t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default')),
+    array('ffmpeg', 'videopreset', '-vpre', NULL, NULL, array('','slow','main','fast','ipod320'), NULL, 'FALSE', NULL),
+    array('ffmpeg', 'padding', '', NULL, NULL, array('yes','no'), 'yes', 'FALSE', t('Force padding, if aspect ratio is maintained@default')),
   );
 
   // Insert default mappings as nodes.
@@ -65,6 +65,7 @@ function mediamosa_tool_ffmpeg_install() {
     $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
     $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
     $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
 
     $node = node_save($node);
   }

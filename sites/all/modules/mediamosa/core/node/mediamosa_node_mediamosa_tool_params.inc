@@ -157,6 +157,7 @@ function mediamosa_tool_params_view($node, $view_mode = 'full') {
     array(t('Max value'), check_plain($node->max_value)),
     array(t('Default value'), check_plain($node->default_value)),
     array(t('Required'), t(drupal_ucfirst(drupal_strtolower($node->required)))),
+    array(t('Description'), check_plain($node->description)),
   );
 
   // Add timestamps.
@@ -271,6 +272,15 @@ function mediamosa_tool_params_form($node, $form_state) {
     ),
     '#required' => TRUE,
     '#description' => t('Tool is required as parameter for the tool.'),
+  );
+
+  $form[mediamosa_tool_params_db::DESCRIPTION] = array(
+    '#title' => t('Description'),
+    '#type' => 'textfield',
+    '#required' => FALSE,
+    '#description' => t('Description of this parameter.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::DESCRIPTION, $node),
+    '#maxlength' => mediamosa_tool_params_db::DESCRIPTION,
   );
 
   return $form;

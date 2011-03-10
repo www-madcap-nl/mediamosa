@@ -54,6 +54,7 @@ class mediamosa_tool_params_db {
   const REQUIRED_FALSE = 'FALSE';
   const CREATED = 'created';
   const CHANGED = 'changed';
+  const DESCRIPTION = 'description';
 
   /**
    * Returns all fields.
