@@ -266,13 +266,17 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
   );
 
+  $tools_default = mediamosa_node::default_value(mediamosa_transcode_profile_db::TOOL, $node);
+  $tools = module_invoke_all('mediamosa_tool_iteration');
+  $tools = array_combine($tools, $tools);
+  $tools += array($tools_default => $tools_default);
   $form['required'][mediamosa_transcode_profile_db::TOOL] = array(
     '#title' => t('Encoder used'),
     '#type' => 'select',
-    '#default_value' => mediamosa_node::default_value(mediamosa_transcode_profile_db::TOOL, $node),
-    '#options' => array('ffmpeg' => t('FFMpeg'), 'windows' => t('Windows')),
-    '#description' => t('The encoding tool used to perform the transcoding. Currently there are 2 options available: FFMpeg and Windows (used for WMV).'),
+    '#default_value' => $tools_default,
+    '#options' => $tools,
     '#required' => TRUE,
+    '#description' => t('The encoding tool used to perform the transcoding.'),
   );
 
   $form['required'][mediamosa_transcode_profile_db::FILE_EXTENSION] = array(
