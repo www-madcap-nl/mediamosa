@@ -72,4 +72,82 @@ class mediamosa_tool_mapping {
 
     return $asset_metadata;
   }
+
+  /**
+   * Analyse function for tools.
+   * This function is good for analyse data in the following format:
+   * "Something1   :   some value1"
+   * "Something2   :   some value2"
+   * ":" is the $separator.
+   *
+   * @param array $job_ext
+   *   Job row.
+   * @param sting $command_type
+   *   Typo of the command for watchdog.
+   * @param string $tool_id
+   *   Tool unique ID.
+   * @param string $execution_command
+   *   The command for execution with place holders.
+   *   Eg. 'pdfinfo @mediafile_location'
+   * @param string $separator
+   *   The separator for the command.
+   */
+  static public function tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator) {
+    foreach (mediamosa_tool_mapping::get($tool_id) as $record) {
+      $property = mediamosa_asset_metadata_property::property_get_row($record[mediamosa_tool_mapping_db::PROP_ID]);
+
+      $mapping_array[$record[mediamosa_tool_mapping_db::PARAMETER]] = $property[mediamosa_asset_metadata_property_db::NAME];
+      $type_array[$record[mediamosa_tool_mapping_db::PARAMETER]] = $property[mediamosa_asset_metadata_property_db::TYPE];
+    }
+
+    $app_id = $job_ext[mediamosa_job_db::APP_ID];
+    $app = mediamosa_app::get_by_appid($app_id);
+    $job_id = $job_ext[mediamosa_job_db::ID];
+    $mediafile_id = $job_ext[mediamosa_job_db::MEDIAFILE_ID];
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $asset_id = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+
+    // Execute.
+    $execution_string = strtr($execution_command, array(
+      '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
+    ));
+    $output_array = array();
+    $output_string = mediamosa_io::exec($execution_string, $output_array);
+    $link_asset = mediamosa_job_server::get_asset_link($job_id);
+    mediamosa_watchdog::log_mediafile($mediafile_id, 'Command for @command_type: @command ; returned output: @s_output - @a_output<br /><br />@link',
+      array(
+        '@command_type' => $command_type,
+        '@command' => $execution_string,
+        '@s_output' => $output_string,
+        '@a_output' => print_r($output_array, TRUE),
+        '@link' => $link_asset,
+      )
+    );
+
+    // Parse.
+    $parse_array = array();
+    // Get full definitions.
+    $metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
+    // append, replace, update
+    $action = 'update';
+    foreach ($output_array as $output_line) {
+      if (strpos($output_line, $separator) !== FALSE) {
+        // Eg. CreationDate:   Wed Jul  8 16:14:29 2009
+        // => array('CreationDate', 'Wed Jul  8 16:14:29 2009')
+        list($key, $metadata_value) = explode($separator, $output_line, 2);
+        $key = drupal_strtolower(trim($key));
+        $metadata_value = trim($metadata_value);
+
+        if ($metadata_value && isset($mapping_array[$key]) && $mapping_array[$key]) {
+          // Datetime conversion.
+          if ($type_array[$key] == mediamosa_asset_metadata_property_db::TYPE_DATETIME) {
+            $metadata_value = mediamosa_datetime::time_string2utc_date($metadata_value, $app[mediamosa_app_db::TIMEZONE]);
+          }
+
+          $parse_array[$mapping_array[$key]] = array($metadata_value);
+        }
+      }
+    }
+    mediamosa_asset_metadata::metadata_create($asset_id, $metadata_definitions_full, $parse_array, $action);
+  }
 }
