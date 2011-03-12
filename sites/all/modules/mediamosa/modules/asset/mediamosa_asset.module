@@ -2008,3 +2008,43 @@ user_id=admin',
 
   return $rest_calls;
 }
+
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_asset_mediamosa_configuration_collect() {
+  $form['settings_supplement'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Supplement settings'),
+    '#description' => t('You can set maximum supplement size here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_supplement']['mediamosa_asset_supplement_max_size_kb'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum size of a supplement object, KB'),
+    '#description' => t('Enter a limitaion in kilobytes.'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_asset_supplement_max_size_kb', 64),
+    '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_collect_validate'),
+  );
+
+  return $form;
+}
+
+/**
+ * Simple validator/corrector for an asset supplement size field.
+ */
+function _mediamosa_asset_mediamosa_configuration_collect_validate(&$element, &$form_state) {
+  $value = (int)$element['#value'];
+  if ($value < 1) {
+    $form_state['values'][$element['#name']] = 64;
+    drupal_set_message(t("You had specified invalid value for '%element_title'. It was corrected to default value.", array('%element_title' => $element['#title'])), 'warning');
+  }
+  else {
+    // Just in case: strip things like 64*1024 or 2M to numbers only.
+    $form_state['values'][$element['#name']] = $value;
+  }
+}
