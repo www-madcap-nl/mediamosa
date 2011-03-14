@@ -28,38 +28,3 @@
  * @file
  * Image tool functions.
  */
-
-/**
- * URL: job/$job_id/exec/image
- * Method: GET
- */
-class mediamosa_rest_call_job_exec_image extends mediamosa_rest_call_job_exec {
-
-  // ------------------------------------------------------- Functions (public).
-  public function get_var_setup() {
-    // Get the parent's variables.
-    $var_setup = parent::get_var_setup();
-
-    return $var_setup;
-  }
-
-  public function do_call() {
-    // Do the basic parent's function.
-    parent::do_call();
-
-    $job_type = 'mediamosa_tool_image';
-
-    // Execution string.
-    // Go to the subdirectory.
-    // Create jpg from image (eg. from tiff).
-    // Copy the result to transcode directory.
-    // Remove the temporary directory (and files).
-    $execution_string = strtr('cd @file_location; convert @mediafile_location @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.tool; cd ..; rm @file_location -r;', array(
-      '@file_location' => $this->file_location,
-      '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($this->mediafile),
-      '@mediafile_id' => $this->mediafile_id,
-    ));
-
-    parent::do_call_end($job_type, $execution_string);
-  }
-}

@@ -40,7 +40,14 @@ class mediamosa_job_server {
    * Video duration max value in second.
    */
   const VIDEO_DURATION_MAX = 99999;
-
+  /**
+   * Directory extension for tools
+   */
+  const DIRECTORY_EXTENSION = '_tool';
+  /**
+   * One parameter placeholder.
+   */
+  const ONE_PARAMETER_PLACEHOLDER = '<use>';
   /**
    * Log for job_server.
    *
@@ -375,41 +382,8 @@ class mediamosa_job_server {
     $execution_string = "";
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
-
-        // Tool transcode.
-
-        // Mime type.
-        $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id_src, mediamosa_asset_mediafile_metadata::MIME_TYPE);
-
-        // Call the mediamosa_tool_transcode hook.
-        foreach (module_implements('mediamosa_tool_transcode') as $module) {
-          $call = module_invoke($module, 'mediamosa_tool_transcode', $mime_type);
-          if ($call) {
-            // Clean up earlier status files.
-            mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
-
-            // Replace the $job_id placeholder.
-            $call = str_replace('$job_id', $job_id, $call);
-
-            // Trigger.
-            mediamosa_server::trigger($call);
-
-            $link_asset = self::get_asset_link($job_id);
-            self::log_mediafile($mediafile_id_src, 'Started execute tool REST call. Job @job_type (Job ID: @job_id) returned output from tool: @call<br /><br />@link',
-              array(
-                '@job_type' => $job_type,
-                '@job_id' => $job_id,
-                '@call' => $call,
-                '@link' => $link_asset,
-              )
-            );
-
-            // One tool has been found. Process started. Return now.
-            return;
-          }
-        }
-
-        // Normal (ffmpeg) transcode.
+        // Clean up earlier status files.
+        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($mediafile_id_src . '.status'));
 
         // Make sure the tmp transcode directory exists.
         mediamosa_io::mkdir(mediamosa_configuration_storage::transcode_file_location_get(''));
@@ -796,6 +770,9 @@ class mediamosa_job_server {
       $tool = $a_job_server_transcode[mediamosa_job_server_transcode_db::TOOL];
       $file_extension = $a_job_server_transcode[mediamosa_job_server_transcode_db::FILE_EXTENSION];
       $command = $a_job_server_transcode[mediamosa_job_server_transcode_db::COMMAND];
+
+      // Mime type.
+      $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
     }
     else {
       self::log_mediafile($mediafile_id, 'Transcode job not found, jobserver_id: @jobserver_id', array('@jobserver_id' => $jobserver_job_id));
@@ -803,16 +780,53 @@ class mediamosa_job_server {
     }
 
     // Create parameter sting from the command.
-    $parameter_string = "'";
+    $parameter_string = '';
     $a_pairs = explode(';', $command);
     foreach ($a_pairs as $pair) {
       $parameter_string .= str_replace(':' , ' ', $pair) . ' ';
     }
 
-    $parameter_string .= "'";
-    $parameter_string = trim($parameter_string);
-    if ($parameter_string == "''") {
-      $parameter_string = "";
+    // Replace the one parameter placeholder.
+    $parameter_string = str_replace(self::ONE_PARAMETER_PLACEHOLDER, '', $parameter_string);
+
+    // "'" wrapper.
+    if ($tool == 'ffmpeg' || $tool == 'windows') {
+      $parameter_string = "'" . $parameter_string . "'";
+      $parameter_string = trim($parameter_string);
+      if ($parameter_string == "''") {
+        $parameter_string = "";
+      }
+    }
+
+    // Call the mediamosa_tool_transcode hook.
+    foreach (module_implements('mediamosa_tool_transcode') as $module) {
+      $execution_string = module_invoke($module, 'mediamosa_tool_transcode', $mime_type);
+      if ($execution_string) {
+
+        // Check the tool is the same as the hook tool.
+        $transcode_tool = module_invoke($module, 'mediamosa_tool_iteration');
+        if ($transcode_tool != $tool) {
+          $execution_string = '';
+          break;
+        }
+
+        // Get the file location.
+        $file_location = mediamosa_configuration_storage::transcode_file_location_get($mediafile_id . self::DIRECTORY_EXTENSION);
+
+        // Get the mediafile.
+        $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+        // Replace the placeholder.
+        $execution_string = strtr($execution_string, array(
+          '@file_location' => $file_location,
+          '@mediafile_location' => mediamosa_configuration_storage::mediafile_filename_get($mediafile),
+          '@mediafile_id' => $mediafile_id,
+          '@params' => $parameter_string,
+        ));
+
+        // One tool has been found. Process started. Return now.
+        break;
+      }
     }
 
     // Conbine based on selection.
@@ -824,7 +838,16 @@ class mediamosa_job_server {
         $execution_string = sprintf("%s %s %s %s", mediamosa_settings::windows_transcode_file(), $mediafile_id, $file_extension, $parameter_string);
         break;
       default:
-        return '';
+
+        // Unknown.
+        if (!$execution_string) {
+          return strtr('{ echo "Status: error"; echo "Errors: Error"; } > @status', array(
+            '@status' => mediamosa_configuration_storage::status_file_location_get($mediafile_id),
+          ));
+        }
+
+        // PDF, Image.
+        return $execution_string;
     }
 
     return $execution_string;
