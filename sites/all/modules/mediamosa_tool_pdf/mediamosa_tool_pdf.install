@@ -127,14 +127,5 @@ function mediamosa_tool_pdf_install() {
  * Implements hook_unstall().
  */
 function mediamosa_tool_pdf_uninstall() {
-  $query = mediamosa_db::db_select(mediamosa_tool_mapping_db::TABLE_NAME, 'tm');
-  $query
-    ->condition('tm.' . mediamosa_tool_mapping_db::TOOL, MEDIAMOSA_TOOL_PDF_ID)
-    ->fields('tm', array(mediamosa_tool_mapping_db::NID));
-  $result = $query->execute();
-
-  // Uninstall nodes from tool mapping.
-  foreach ($result as $record) {
-    node_delete($record['nid']);
-  }
+  // Do nothing. We don't delete the existing data.
 }
