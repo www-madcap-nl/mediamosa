@@ -38,7 +38,7 @@ function mediamosa_tool_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa/config/tool_params':
-      return '<p>' . t('Tool_params are used by the transcoding profiles.') . '</p>';
+      return '<p>' . t('Tool params are used by the transcoding profiles.') . '</p>';
   }
 }
 
