@@ -48,7 +48,7 @@ define('MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR', ':');
 /**
  * Helper function to recognize mime type as transcode.
  */
-function mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) {
+function _mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) {
   $is_found = FALSE;
 
   switch ($mime_type) {
@@ -64,7 +64,7 @@ function mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) {
  * Implements hook_mediamosa_tool_is_recognized_as_transcode().
  */
 function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_transcode($mime_type) {
-  $is_found = mediamosa_tool_pdf_is_recognized_as_transcode($mime_type);
+  $is_found = _mediamosa_tool_pdf_is_recognized_as_transcode($mime_type);
   return $is_found;
 }
 
@@ -72,7 +72,7 @@ function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_transcode($mime_type
  * Implements hook_mediamosa_tool_transcode().
  */
 function mediamosa_tool_pdf_mediamosa_tool_transcode($mime_type) {
-  $is_found = mediamosa_tool_pdf_is_recognized_as_transcode($mime_type);
+  $is_found = _mediamosa_tool_pdf_is_recognized_as_transcode($mime_type);
 
   // Execution string.
   // Go to the subdirectory.

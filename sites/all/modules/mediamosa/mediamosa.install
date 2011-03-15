@@ -2054,5 +2054,23 @@ function mediamosa_update_7096() {
   }
 }
 
+/**
+ * Change the FTP user uid default value in table.
+ */
+function mediamosa_update_7097() {
+  db_change_field(
+    mediamosa_ftp_user_db::TABLE_NAME,
+    mediamosa_ftp_user_db::UID,
+    mediamosa_ftp_user_db::UID,
+    array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'description' => 'The linux user ID of the FTP user.',
+        'default' => '200',
+    )
+  );
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

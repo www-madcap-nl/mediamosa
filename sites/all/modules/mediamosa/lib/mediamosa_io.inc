@@ -330,6 +330,15 @@ class mediamosa_io {
   }
 
   /**
+   * Returns available space on filesystem or disk partition.
+   *
+   * @param string $directory
+   */
+  static public function disk_total_space($directory) {
+    return disk_total_space($directory);
+  }
+
+  /**
    * Test if given command is install / found.
    *
    * Also returns its default stdio / strerr output in $exec_output
