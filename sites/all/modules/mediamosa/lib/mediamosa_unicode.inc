@@ -163,6 +163,6 @@ class mediamosa_unicode {
   static public function xmlentities($text) {
     // Seems multibyte save because only values 00-31 (without tab, LF, CR) are
     // used.
-    return str_replace(self::get_invalid_char_str(), '?', $text);
+    return str_replace(self::get_invalid_char_str(), '?', htmlspecialchars($text));
   }
 }

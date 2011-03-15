@@ -412,7 +412,7 @@ function mediamosa_server_form($node, &$form_state) {
       '#type' => 'textfield',
       '#title' => t('URI upload progress'),
       '#required' => TRUE,
-      '#description' => t('Optional URI for client side upload progress information. This URL should match the REST call /mediafile/uploadprogress, e.g. http://upload.mediamosa.local/uploadprogress?id={PROGRESS_ID}'),
+      '#description' => t('Optional URI for client side upload progress information. This URL should match the REST call /mediafile/uploadprogress, e.g. http://upload.mediamosa.local/mediafile/uploadprogress?id={PROGRESS_ID}'),
       '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI_UPLOAD_PROGRESS, $node),
       '#maxlength' => mediamosa_server_db::URI_UPLOAD_PROGRESS_LENGTH,
     );

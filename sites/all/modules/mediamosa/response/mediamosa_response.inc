@@ -431,7 +431,10 @@ class mediamosa_response extends mediamosa {
    * @return string
    */
   public function generate_xml() {
-    $this->response['header']['request_process_time'] = $this->get_processed_time();
+
+    // Use dom.
+    $dom_document = new DOMDocument('1.0', 'UTF-8');
+    $dom_document->formatOutput = TRUE;
 
     $this->response['header']['item_count_total'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
     $this->response['header']['item_offset'] = $this->item_offset;
@@ -447,46 +450,51 @@ class mediamosa_response extends mediamosa {
     // Log the rest call.
     $this->log_event_restcall();
 
-    // Create the SimpleXML element.
-    $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><response></response>');
+    // Respone element.
+    $dom_element_response = $dom_document->createElement('response');
+    $dom_document->appendChild($dom_element_response);
 
-    // Add the header node.
-    $xml_response_header = $xml_response->addChild('header');
+    // Header.
+    $dom_element_header = $dom_document->createElement('header');
+    $dom_element_response->appendChild($dom_element_header);
 
-    // Add Items array.
-    $xml_response_items = $xml_response->addChild('items');
-
-    foreach ($this->response['header'] as $key => $value) {
-      $this->generate_plain_xml_add_child($xml_response_header, $key, $value);
-    }
+    // Items.
+    $dom_element_items = $dom_document->createElement('items');
+    $dom_element_response->appendChild($dom_element_items);
 
     $item_counter = 0;
-
     if (!empty($this->response['errors'])) {
-      $xml_response_errors = $xml_response_header->addChild('errors');
+      $dom_element_errors = $dom_document->createElement('errors');
 
       foreach ($this->response['errors'] as $key => $error) {
-        $xml_response_errors->addChild('error', mediamosa_unicode::xmlentities($error));
+        $dom_element_errors->appendChild(new DOMElement($key, $error));
       }
     }
 
     foreach ($this->response['items'] as $item) {
-      $xml_response_items_item = $xml_response_items->addChild('item');
-      $xml_response_items_item->addAttribute('id', ++$item_counter);
+      $dom_element_item = $dom_document->createElement('item');
+      $dom_element_item->setAttribute('id', ++$item_counter);
+
+      $dom_element_items->appendChild($dom_element_item);
 
       // Process items with a maximum recursion depth (last parameter).
       //
       foreach ($item as $key => $value) {
-        $this->generate_plain_xml_add_child($xml_response_items_item, $key, $value);
+        $this->generate_xml_add_child($dom_document, $dom_element_item, $key, $value);
       }
     }
 
-    $dom_document = new DOMDocument('1.0', 'UTF-8');
-    $dom_document->formatOutput = TRUE;
+    // Add header items at last.
+    $this->response['header']['request_process_time'] = $this->get_processed_time();
+    foreach ($this->response['header'] as $key => $value) {
+      $this->generate_xml_add_child($dom_document, $dom_element_header, $key, $value);
+    }
 
-    $dom_document_node = dom_import_simplexml($xml_response);
-    $dom_document_node = $dom_document->importNode($dom_document_node, TRUE);
-    $dom_document->appendChild($dom_document_node);
+    if (!empty($dom_element_errors)) {
+      // Add to document.
+      $dom_element_header->appendChild($dom_element_errors);
+    }
+
     return $dom_document->saveXML();
   }
 
@@ -499,31 +507,21 @@ class mediamosa_response extends mediamosa {
    * @param integer $max_depth
    * @return NULL or added item.
    */
-  private function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
+  protected function generate_xml_add_child($dom_document, $dom_node, $key, $mixed_value, $max_depth = 99) {
     if (!--$max_depth) {
       return NULL;
     }
 
+    // Check if value is an array.
     if (!is_array($mixed_value)) {
-      $item_child = $item->addChild($key, mediamosa_unicode::xmlentities($mixed_value));
-
-      if ($key[0] == '#') {
-        $attributes = @unserialize(mediamosa_unicode::substr($key, 1));
-        if (is_array($attributes)) {
-          foreach ($attributes as $attr_name => $attr_value) {
-            assert(count($attr_name));
-            $item_child->addAttribute($attr_name, $attr_value);
-          }
-        }
-      }
-
-      return $item_child;
+      return $dom_node->appendChild(new DOMElement($key, mediamosa_unicode::xmlentities($mixed_value)));
     }
 
+    // Is an array.
     $first_key = key($mixed_value);
     if (is_numeric($first_key)) {
       foreach ($mixed_value as $mixed_key => $value) {
-        $item->addChild($key, mediamosa_unicode::xmlentities($value));
+        $this->generate_xml_add_child($dom_document, $dom_node, $key, $value, $max_depth);
       }
 
       return NULL;
@@ -531,14 +529,14 @@ class mediamosa_response extends mediamosa {
 
     if ($first_key[0] == '#') {
       foreach ($mixed_value as $mixed_key => $value) {
-        $item_child = $this->generate_plain_xml_add_child($item, $key, $value, $max_depth);
+        $dom_element = $this->generate_xml_add_child($dom_document, $dom_node, $key, $value, $max_depth);
 
         if ($mixed_key != '#0') {
           $attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
           if (is_array($attributes)) {
             foreach ($attributes as $attr_name => $attr_value) {
               assert(count($attr_name));
-              $item_child->addAttribute($attr_name, $attr_value);
+              $dom_element->setAttribute($attr_name, $attr_value);
             }
           }
         }
@@ -547,12 +545,12 @@ class mediamosa_response extends mediamosa {
       return NULL;
     }
 
-    $item_child = $item->addChild($key);
-    foreach ($mixed_value as $key_child => $value_child) {
-      $this->generate_plain_xml_add_child($item_child, $key_child, $value_child, $max_depth);
+    $dom_element_child = $dom_node->appendChild(new DOMElement($key));
+    foreach ($mixed_value as $mixed_key => $value) {
+      $this->generate_xml_add_child($dom_document, $dom_element_child, $mixed_key, $value, $max_depth);
     }
 
-    return $item_child;
+    return $dom_element_child;
   }
 
   /**
