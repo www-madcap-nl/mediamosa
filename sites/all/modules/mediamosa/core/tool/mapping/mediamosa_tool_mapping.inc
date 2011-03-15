@@ -68,7 +68,18 @@ class mediamosa_tool_mapping {
   static public function get_asset_metadata_display_name($prop_id) {
     $metadata_property = mediamosa_asset_metadata_property::property_get_row($prop_id);
     $metadata_property_group = mediamosa_asset_metadata_property_group::property_group_row_get($metadata_property[mediamosa_asset_metadata_property_db::PROPGROUP_ID]);
-    $asset_metadata = $metadata_property[mediamosa_asset_metadata_property_db::NAME] . ' (' . $metadata_property_group[mediamosa_asset_metadata_property_group_db::NAME] . ')';
+
+    $group = $metadata_property_group[mediamosa_asset_metadata_property_group_db::NAME];
+    switch ($metadata_property_group[mediamosa_asset_metadata_property_group_db::NAME]) {
+      case 'dublin_core':
+        $group = 'dc';
+        break;
+      case 'qualified_dublin_core':
+        $group = 'qdc';
+        break;
+    }
+
+    $asset_metadata = $group . '.' . $metadata_property[mediamosa_asset_metadata_property_db::NAME];
 
     return $asset_metadata;
   }
