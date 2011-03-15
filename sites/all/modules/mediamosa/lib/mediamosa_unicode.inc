@@ -135,6 +135,23 @@ class mediamosa_unicode {
   }
 
   /**
+   * Replacement array for invalid chars.
+   */
+  static public function get_invalid_char_str() {
+    static $invalid_char = array();
+
+    if (empty($invalid_char)) {
+      for ($x = 0; $x < 32; $x++) {
+        if (!in_array($x, array(0x09, 0x0A, 0x0D))) {
+          $invalid_char[] = chr($x);
+        }
+      }
+    }
+
+    return $invalid_char;
+  }
+
+  /**
    * Although XML only requires < > " ' & to be encoded, we have problems with
    * non-asc values generating invalid XML when using SimpleXML class.
    *
@@ -144,22 +161,8 @@ class mediamosa_unicode {
    *  The value to encode.
    */
   static public function xmlentities($text) {
-    // First normal encoding.
-    $text = htmlspecialchars($text);
-
-    // Range from 0x00 to 0x1F and 0x80 to 0xFF need proper encoding.
-    $text_result = '';
-    for ($x = 0; $x < self::strlen($text); $x++) {
-      $char = self::substr($text, $x, 1);
-
-      if (strlen($char) > 1 || ( (ord($char) >= 32 && ord($char) <= 127) || in_array(ord($char), array(0x09, 0x0A, 0x0D)))) {
-        $text_result .= $char;
-      }
-      else {
-        $text_result .= '?';
-      }
-    }
-
-    return $text_result;
+    // Seems multibyte save because only values 00-31 (without tab, LF, CR) are
+    // used.
+    return str_replace(self::get_invalid_char_str(), '?', $text);
   }
 }
