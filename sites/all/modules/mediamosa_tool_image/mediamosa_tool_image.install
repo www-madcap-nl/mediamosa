@@ -36,7 +36,7 @@ function mediamosa_tool_image_install() {
   // Transcode profile.
 
   $default_profiles = array(
-    array('convert image', 'FALSE', 'image', 'tool', ''),
+    array('convert image', 'FALSE', 'image', 'jpg', ''),
   );
 
   foreach ($default_profiles as $default_profile) {

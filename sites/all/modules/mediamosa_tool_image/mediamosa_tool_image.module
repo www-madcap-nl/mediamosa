@@ -85,7 +85,7 @@ function mediamosa_tool_image_mediamosa_tool_transcode($mime_type) {
   // Copy the result to transcode directory.
   // Remove the temporary directory (and files).
   // Create status file.
-  $execution_string = 'mkdir @file_location; cd @file_location; convert @mediafile_location @params @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.tool; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
+  $execution_string = 'mkdir @file_location; cd @file_location; convert @mediafile_location @params @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
 
   return ($is_found ? $execution_string : FALSE);
 }

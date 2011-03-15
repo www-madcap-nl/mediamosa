@@ -61,7 +61,7 @@ function mediamosa_tool_pdf_install() {
   // Transcode profile.
 
   $default_profiles = array(
-    array('pdf to swf', 'FALSE', 'pdf', 'tool', 'def_viewer:<use>;fonts:<use>;flash_version:9'),
+    array('pdf to swf', 'FALSE', 'pdf', 'swf', 'def_viewer:<use>;fonts:<use>;flash_version:9'),
   );
 
   foreach ($default_profiles as $default_profile) {
