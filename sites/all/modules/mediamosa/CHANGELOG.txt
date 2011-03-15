@@ -36,6 +36,9 @@ MediaMosa 2.4 (build 1504)
 - Retranscode improvement (See ticket #467).
 - ACL problem when using replace fix (See ticket #503).
 - The asset detail view page jobs are can now be sorted by ID.
+- Fixed speed problem when returning larger than 64k metadata. Problem was in
+  the way invalid chars are fixed in output.
+- Rewrote the usage of simplexml to domdocument for output.
 
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
