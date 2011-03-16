@@ -145,6 +145,13 @@ function mediamosa_tool_params_schema() {
         'type' => 'text',
         'description' => 'Description of the parameter.',
       ),
+      mediamosa_tool_params_db::SWITCH_PARAMETER => array(
+        'description' => 'It is a switch parameter or not.',
+        'type' => "enum('" . implode("','", array(mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE, mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE, mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE)) . "')",
+        'default' => mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE,
+      ),
     ),
     'primary key' => array(mediamosa_tool_params_db::ID),
     'unique keys' => array(

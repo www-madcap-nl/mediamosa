@@ -2072,5 +2072,22 @@ function mediamosa_update_7097() {
   );
 }
 
+/**
+ * Add new fields to mediamosa_tool_params table: switch.
+ */
+function mediamosa_update_7098() {
+  if (!db_field_exists(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::SWITCH_PARAMETER)) {
+    $spec = array(
+      'description' => 'It is a switch parameter or not.',
+      'type' => "enum('" . implode("','", array(mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE, mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE, mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE)) . "')",
+      'default' => mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE,
+    );
+
+    db_add_field(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::SWITCH_PARAMETER, $spec);
+  }
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

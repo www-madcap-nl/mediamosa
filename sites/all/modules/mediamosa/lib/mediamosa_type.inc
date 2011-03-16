@@ -200,7 +200,7 @@ class mediamosa_type {
         // Eg. "-b", "-ar"
         $mapping_name = "[-a-zA-Z_]+";
 
-        // Eg. "176", "black", "<use>"
+        // Eg. "176", "black", "<switch>"
         $mapping_sub_value = "[a-zA-Z0-9_<>]+";
 
         // Eg. "pad=176:144:0:6:black", "crop=23:34:64:62"

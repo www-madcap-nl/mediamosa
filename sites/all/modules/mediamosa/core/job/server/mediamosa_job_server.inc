@@ -45,10 +45,6 @@ class mediamosa_job_server {
    */
   const DIRECTORY_EXTENSION = '_tool';
   /**
-   * One parameter placeholder.
-   */
-  const ONE_PARAMETER_PLACEHOLDER = '<use>';
-  /**
    * Log for job_server.
    *
    * @param string $message
@@ -787,7 +783,7 @@ class mediamosa_job_server {
     }
 
     // Replace the one parameter placeholder.
-    $parameter_string = str_replace(self::ONE_PARAMETER_PLACEHOLDER, '', $parameter_string);
+    $parameter_string = str_replace(mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH, '', $parameter_string);
 
     // "'" wrapper.
     if ($tool == 'ffmpeg' || $tool == 'windows') {

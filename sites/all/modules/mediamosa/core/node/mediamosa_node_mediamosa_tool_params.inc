@@ -158,6 +158,7 @@ function mediamosa_tool_params_view($node, $view_mode = 'full') {
     array(t('Default value'), check_plain($node->default_value)),
     array(t('Required'), t(drupal_ucfirst(drupal_strtolower($node->required)))),
     array(t('Description'), check_plain($node->description)),
+    array(t('Switch'), t(drupal_ucfirst(drupal_strtolower($node->switch_parameter ? $node->switch_parameter : mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE)))),
   );
 
   // Add timestamps.
@@ -280,6 +281,19 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#required' => FALSE,
     '#description' => t('Description of this parameter.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::DESCRIPTION, $node),
+  );
+
+  $switch_parameter = mediamosa_node::default_value(mediamosa_tool_params_db::SWITCH_PARAMETER, $node);
+  $form[mediamosa_tool_params_db::SWITCH_PARAMETER] = array(
+    '#title' => t('Switch'),
+    '#type' => 'select',
+    '#default_value' => ($switch_parameter ? $switch_parameter : mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE),
+    '#options' => array(
+      mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE => mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE,
+      mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE => mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE,
+    ),
+    '#required' => TRUE,
+    '#description' => t('Tool is switch.'),
   );
 
   return $form;

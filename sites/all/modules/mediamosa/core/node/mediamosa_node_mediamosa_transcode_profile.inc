@@ -59,6 +59,11 @@ function _mediamosa_transcode_profile_do_command($node) {
       $command = drupal_substr($key, drupal_strlen('options_'));
       $value = trim($value);
 
+      // Don't store switch value in case of checkbox wasn't checked.
+      if (!$value && isset($node->{'switch_options_' . $command}) && $node->{'switch_options_' . $command} == mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH) {
+        continue;
+      }
+
       // Gather all set options
       if ($value != '') {
         $commands[] = $command . ':' . $value;
@@ -351,7 +356,22 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     // Get the tool.
     $tool_name = drupal_ucfirst(str_replace('_', ' ', $name));
 
-    if (!empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
+    if ($tool[mediamosa_tool_params_db::SWITCH_PARAMETER] == mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE) {
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
+        '#type' => 'checkbox',
+        '#title' => t($tool_name),
+        '#description' => implode(' ', $descriptions),
+        '#required' => $is_required,
+        '#default_value' => $value,
+        '#weight' => $weight,
+        '#return_value' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+      );
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['switch_options_' . $name] = array(
+        '#type' => 'value',
+        '#value' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+      );
+    }
+    elseif (!empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
       $options = $is_required ? array() : array('' => '');
       foreach ($tool[mediamosa_tool_params_db::ALLOWED_VALUE] as $allowed_value) {
         $options[$allowed_value] = $allowed_value;
