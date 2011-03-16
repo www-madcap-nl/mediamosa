@@ -36,7 +36,7 @@ function mediamosa_tool_image_install() {
   // Transcode profile.
 
   $default_profiles = array(
-    array('convert image', 'FALSE', 'image', 'tool', ''),
+    array('convert image', 'FALSE', 'image', 'jpg', ''),
   );
 
   foreach ($default_profiles as $default_profile) {
@@ -55,9 +55,11 @@ function mediamosa_tool_image_install() {
 
   // Tool mapping.
 
+  // dc = 1, qdc = 2.
+  $dc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('dublin_core');
   $mapping_array = array(
-    array('copyright'        , 'rights', 1),
-    array('exif comment'     , 'description', 1),
+    array('copyright'        , 'rights', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('exif comment'     , 'description', $dc[mediamosa_asset_metadata_property_group_db::ID]),
   );
 
   // Insert default mappings as nodes.

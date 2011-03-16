@@ -45,7 +45,6 @@ function _mediamosa_tool_mapping_list() {
   $header = array(
     array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_mapping_db::PARAMETER),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_tool_mapping_db::TOOL),
-    array('data' => t('Tool mapping id'), 'field' => 'tp.' . mediamosa_tool_mapping_db::ID),
     array('data' => t('Asset metadata')),
     t('Operations')
   );
@@ -73,7 +72,6 @@ function _mediamosa_tool_mapping_list() {
     $rows[] = array(
       'parameter' => array('data' => l($row[mediamosa_tool_mapping_db::PARAMETER], 'admin/mediamosa/config/tool_mapping/' . $row[mediamosa_tool_mapping_db::NID]), 'field' => $row[mediamosa_tool_mapping_db::PARAMETER]),
       'tool' => $row[mediamosa_tool_mapping_db::TOOL],
-      'tool_mapping_id' => $row[mediamosa_tool_mapping_db::ID],
       'asset_metadata' => mediamosa_tool_mapping::get_asset_metadata_display_name($row[mediamosa_tool_mapping_db::PROP_ID]),
       empty($actions) ? '-' : implode(' | ', $actions),
     );

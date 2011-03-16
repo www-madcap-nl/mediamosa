@@ -783,6 +783,18 @@ class mediamosa_job {
   static public function start_harvesting_metadata_by_tool($job_ext) {
     // Get the mediafile ID.
     $mediafile_id = $job_ext[mediamosa_job_db::MEDIAFILE_ID];
+    $asset_id = $job_ext[mediamosa_job_db::ASSET_ID];
+
+    // Harvest the metadata, if it is the first original mediafile.
+    $fields = array(mediamosa_asset_mediafile_db::ID);
+    $options = array(
+      'get_originals_only' => TRUE,
+      'exclude_stills' => TRUE,
+    );
+    $mediafiles = mediamosa_asset_mediafile::get_by_asset_id($asset_id, $fields, $options);
+    if (count($mediafiles) > 1) {
+      return;
+    }
 
     // Get all the metadata.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);

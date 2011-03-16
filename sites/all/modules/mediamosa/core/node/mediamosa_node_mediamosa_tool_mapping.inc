@@ -106,7 +106,6 @@ function mediamosa_tool_mapping_view($node, $view_mode = 'full') {
   $rows = array(
     array(t('Name'), check_plain($node->parameter)),
     array(t('Tool'), check_plain($node->tool)),
-    array(t('Tool mapping id'), check_plain($node->tool_mapping_id)),
     array(t('Asset property'), check_plain(mediamosa_tool_mapping::get_asset_metadata_display_name($node->prop_id))),
   );
 
@@ -134,11 +133,6 @@ function mediamosa_tool_mapping_form($node, $form_state) {
   $form = array();
 
   if (isset($node->tool_mapping_id)) {
-    $form['tool_mapping_id_markup'] = array(
-      '#title' => t('Tool mapping id'),
-      '#type' => 'item',
-      '#markup' => $node->tool_mapping_id,
-    );
     $form['tool_mapping_id'] = array(
       '#type' => 'hidden',
       '#value' => $node->tool_mapping_id,
@@ -169,7 +163,7 @@ function mediamosa_tool_mapping_form($node, $form_state) {
 
   $options = array();
   foreach (mediamosa_asset_metadata_property::get_all_metadata() as $metadata) {
-    $options[$metadata['propdef_id']] = $metadata['propdef_name'] . ' (' . $metadata['propgroup_name'] . ')';
+    $options[$metadata['propdef_id']] = mediamosa_tool_mapping::get_asset_metadata_display_name($metadata['propdef_id']);
   }
   $form[mediamosa_tool_mapping_db::PROP_ID] = array(
     '#title' => t('Asset property'),
@@ -209,7 +203,7 @@ function mediamosa_tool_mapping_validate($node) {
       $node->{mediamosa_tool_mapping_db::PROP_ID} == $record[mediamosa_tool_mapping_db::PROP_ID] &&
       $node->title != $record[mediamosa_tool_mapping_db::PARAMETER]
     ) {
-      form_set_error(mediamosa_tool_mapping_db::PROP_ID, t('This property and tool is exists already: @name.', array('@name' => $record[mediamosa_tool_mapping_db::PARAMETER],)));
+      form_set_error(mediamosa_tool_mapping_db::PROP_ID, t('This property and tool already exists: @name.', array('@name' => $record[mediamosa_tool_mapping_db::PARAMETER],)));
     }
   }
 }

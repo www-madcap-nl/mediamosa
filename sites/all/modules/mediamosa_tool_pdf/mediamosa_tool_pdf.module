@@ -46,6 +46,16 @@ define('MEDIAMOSA_TOOL_PDF_ID', 'pdf');
 define('MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR', ':');
 
 /**
+ * Warning level for pdf2swf.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING', '0');
+
+/**
+ * Warning level for pdfinfo.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING', '0');
+
+/**
  * Helper function to recognize mime type as transcode.
  */
 function _mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) {
@@ -80,7 +90,7 @@ function mediamosa_tool_pdf_mediamosa_tool_transcode($mime_type) {
   // Copy the result to transcode directory.
   // Remove the temporary directory (and files).
   // Create status file.
-  $execution_string = 'mkdir @file_location; cd @file_location; pdf2swf @mediafile_location -o @mediafile_id @params; cp @mediafile_id ../@mediafile_id.tool; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
+  $execution_string = 'mkdir @file_location; cd @file_location; pdf2swf @mediafile_location -o @mediafile_id @params; cp @mediafile_id ../@mediafile_id.swf; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
 
   return ($is_found ? $execution_string : FALSE);
 }
@@ -138,4 +148,79 @@ function mediamosa_tool_pdf_mediamosa_tool_analyse_options() {
  */
 function mediamosa_tool_pdf_mediamosa_tool_iteration() {
   return MEDIAMOSA_TOOL_PDF_ID;
+}
+
+/**
+ * Generate information for the status page.
+ */
+function _mediamosa_tool_pdf_status_generate() {
+  // For several topics we provide a link to webpages with configuration hints.
+  $helper_links = array(
+    'pdf2swf' => l('here', 'http://mediamosa.org/trac/wiki/pdf2swf'),
+    'pdfinfo' => l('here', 'http://mediamosa.org/trac/wiki/pdfinfo'),
+  );
+
+  $results = array();
+
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('pdf2swf -V', $exec_output);
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('part of', $exec_output) : t('pdf2swf not found');
+  $version = $found ? drupal_substr($status_line, drupal_strlen('pdf2swf - part of swftools ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_pdf2swf'] = array(
+    'title' => t('PDF tool: pdf2swf'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING),
+    'description' => $found ? '' : t('Install pdf2swf. You can find more information how to install pdf2swf !here', array('!here' => $helper_links['pdf2swf'])),
+  );
+
+  $exec_output = array();
+  $found = mediamosa_io::command_installed('pdfinfo -v', $exec_output, array(0, 99));
+  $status_line = $found ? _mediamosa_maintenance_status_search_in_array('version', $exec_output) : t('pdfinfo not found');
+  $version = $found ? drupal_substr($status_line, drupal_strlen('pdfinfo version ')) : '';
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
+
+  $results['app_pdfinfo'] = array(
+    'title' => t('PDF tool: pdfinfo'),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING),
+    'description' => $found ? '' : t('Install pdfinfo. You can find more information how to install pdfinfo !here', array('!here' => $helper_links['pdfinfo'])),
+  );
+
+  // Making the report.
+  return array(
+    'configuration' => array(
+      'title' => t('Image tool'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implements hook_mediamosa_status_collect().
+ *
+ * @param reset boolean
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_tool_pdf_mediamosa_status_collect($reset = FALSE) {
+  $mediamosa_status_collect = array();
+  if (!$reset) {
+    $mediamosa_status_collect = variable_get('mediamosa_status_pdf_collect_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_collect)) {
+    $mediamosa_status_collect = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_tool_pdf_status_generate());
+    variable_set('mediamosa_status_pdf_collect_' . mediamosa::get_server_id(), $mediamosa_status_collect);
+  }
+
+  return $mediamosa_status_collect['statuses'];
 }

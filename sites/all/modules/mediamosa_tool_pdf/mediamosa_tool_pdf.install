@@ -61,7 +61,7 @@ function mediamosa_tool_pdf_install() {
   // Transcode profile.
 
   $default_profiles = array(
-    array('pdf to swf', 'FALSE', 'pdf', 'tool', 'def_viewer:<use>;fonts:<use>;flash_version:9'),
+    array('pdf to swf', 'FALSE', 'pdf', 'swf', 'def_viewer:<use>;fonts:<use>;flash_version:9'),
   );
 
   foreach ($default_profiles as $default_profile) {
@@ -80,22 +80,25 @@ function mediamosa_tool_pdf_install() {
 
   // Tool mapping.
 
+  // dc = 1, qdc = 2.
+  $dc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('dublin_core');
+  $qdc = mediamosa_asset_metadata_property_group::property_group_row_get_with_name('qualified_dublin_core');
   $mapping_array = array(
-    array('title',                      'title', 1),
-    array('subject',                    '', 0),
+    array('title',                      'title', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('subject',                    'subject', $dc[mediamosa_asset_metadata_property_group_db::ID]),
     array('keywords',                   '', 0),
     array('author',                     '', 0),
-    array('creator',                    'creator', 1),
-    array('producer',                   '', 0),
-    array('creationdate',               'created', 2),
-    array('creation date',              '', 0),
+    array('creator',                    'creator', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('producer',                   'publisher', $dc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('creationdate',               'created', $qdc[mediamosa_asset_metadata_property_group_db::ID]),
+    array('creation date',              'created', $qdc[mediamosa_asset_metadata_property_group_db::ID]),
     array('moddate',                    '', 0),
     array('modificationdate',           '', 0),
     array('modification date',          '', 0),
     array('tagged',                     '', 0),
     array('pages',                      '', 0),
     array('encrypted',                  '', 0),
-    array('print and copy permissions', '', 0),
+    array('print and copy permissions', 'rights', $dc[mediamosa_asset_metadata_property_group_db::ID]),
     array('page size',                  '', 0),
     array('file size',                  '', 0),
     array('optimized',                  '', 0),
