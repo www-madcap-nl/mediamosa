@@ -523,10 +523,15 @@ if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end 
   local params_pass2 = params_start .. "-pass 2 -passlogfile " .. hash .. params_end .. " -threads 0 "
 
   vpre_start, vpre_end = string.find(params_pass1, "-vpre ")
-  vpre_start, vpre_end = string.find(params_pass1, " ", vpre_end + 1)
-  params_start = string.sub(params_pass1, 1, vpre_end - 1)
-  params_end = string.sub(params_pass1, vpre_end, string.len(params_pass1))
-  params_pass1 = params_start .. "_firstpass" .. params_end
+  if vpre_start ~= nil and vpre_end ~= nil then
+    vpre_start, vpre_end = string.find(params_pass1, " ", vpre_end + 1)
+    params_start = string.sub(params_pass1, 1, vpre_end - 1)
+    params_end = string.sub(params_pass1, vpre_end, string.len(params_pass1))
+    params_pass1 = params_start .. "_firstpass" .. params_end
+  else
+    params_pass1 = params_pass1 .. " -vpre slower_firstpass"
+    params_pass2 = params_pass2 .. " -vpre slower"
+  end
 
   -- Temporary directory for dealing with the temporary files.
   command("cd " .. destination_path .. "; mkdir " .. tmp_dir)
