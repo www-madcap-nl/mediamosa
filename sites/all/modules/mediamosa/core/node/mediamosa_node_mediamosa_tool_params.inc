@@ -249,7 +249,7 @@ function mediamosa_tool_params_form($node, $form_state) {
       mediamosa_tool_params_db::TYPE_PARAMETER_SELECT => mediamosa_tool_params_db::TYPE_PARAMETER_SELECT,
     ),
     '#required' => TRUE,
-    '#description' => t('Show the parameter as an checkbox.'),
+    '#description' => t('Show the parameter as a checkbox.'),
   );
 
   $form[mediamosa_tool_params_db::MIN_VALUE] = array(

@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.8 (build 1350)
+MediaMosa 2.3.8 (build 1352)
 ----------------------------
 - Metadata can be set to hidden, which will prevent the metadata to be returned
   in the asset output or other REST calls (See ticket #504).
