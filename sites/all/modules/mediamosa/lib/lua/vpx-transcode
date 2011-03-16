@@ -54,7 +54,7 @@ local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
 local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
 local channels = ((number * space)^0 * word + float) * space
 local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
-local codec = (lpeg.C(symbol * (space * symbol)^0) + hex) * space
+local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space
 local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
 local is_hinted = lpeg.C(symbol)
 local unit = lpeg.C(lpeg.P("k")^-1) * space
@@ -113,6 +113,7 @@ end
 -- Stream #0.0: Video: camtasia, 800x600 [PAR 0:1 DAR 0:1],  5.00 tb(r)
 -- Stream #0.0(eng): Video: 3ivx Delta 3, 192x144 [PAR 0:1 DAR 0:1],  6.25 tb(r)
 -- Stream #0.3: Video: wmv3, yuv420p, 384x288, 527 kb/s, 25 tbr, 1k tbn, 1k tbc
+-- Stream #0.0(und): Video: h264 (High), yuv420p, 1280x720 [PAR 1:1 DAR 16:9], 744 kb/s, 29.94 fps, 29.92 tbr, 1k tbn, 59.83 tbc
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 
 local ln_video = space * "Stream #" * float * language * COLON *
