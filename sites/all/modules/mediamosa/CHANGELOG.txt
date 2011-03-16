@@ -29,7 +29,7 @@ TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 2.3.8 (build 1340)
+MediaMosa 2.3.8 (build 1350)
 ----------------------------
 - Metadata can be set to hidden, which will prevent the metadata to be returned
   in the asset output or other REST calls (See ticket #504).
@@ -43,6 +43,8 @@ Other changes (not ticket related)
 - Frametime for still upload development. 
 - Lua script fix for the new ffmpeg version.
 - Fixed speed bug in asset call when metadata size was bigger than 64k.
+- Tool parameters in transcode profiles can now be either 'Select' or 
+  'Checkbox'.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
