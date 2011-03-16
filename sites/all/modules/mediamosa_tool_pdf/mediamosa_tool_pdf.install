@@ -36,9 +36,9 @@ function mediamosa_tool_pdf_install() {
   // Tool params.
 
   $a_default_params = array(
-    array('pdf', 'def_viewer', '-b', NULL, NULL, NULL, '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine'), 'TRUE'),
-    array('pdf', 'fonts', '-f', NULL, NULL, NULL, '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters)."), 'TRUE'),
-    array('pdf', 'flash_version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.'), 'FALSE'),
+    array('pdf', 'def_viewer', '-b', NULL, NULL, NULL, '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine'), 'CHECKBOX'),
+    array('pdf', 'fonts', '-f', NULL, NULL, NULL, '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters)."), 'CHECKBOX'),
+    array('pdf', 'flash_version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.'), 'SELECT'),
   );
 
   // Insert default mappings as nodes.
