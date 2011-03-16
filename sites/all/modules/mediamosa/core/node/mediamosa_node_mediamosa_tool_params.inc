@@ -158,7 +158,7 @@ function mediamosa_tool_params_view($node, $view_mode = 'full') {
     array(t('Default value'), check_plain($node->default_value)),
     array(t('Required'), t(drupal_ucfirst(drupal_strtolower($node->required)))),
     array(t('Description'), check_plain($node->description)),
-    array(t('Switch'), t(drupal_ucfirst(drupal_strtolower($node->switch_parameter ? $node->switch_parameter : mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE)))),
+    array(t('Switch'), t(drupal_ucfirst(drupal_strtolower($node->type_parameter ? $node->type_parameter : mediamosa_tool_params_db::TYPE_PARAMETER_SELECT)))),
   );
 
   // Add timestamps.
@@ -218,6 +218,18 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#description' => t('Select one of the available tools.'),
   );
 
+  $form[mediamosa_tool_params_db::REQUIRED] = array(
+    '#title' => t('Required'),
+    '#type' => 'select',
+    '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::REQUIRED, $node),
+    '#options' => array(
+      mediamosa_tool_params_db::REQUIRED_TRUE => mediamosa_tool_params_db::REQUIRED_TRUE,
+      mediamosa_tool_params_db::REQUIRED_FALSE => mediamosa_tool_params_db::REQUIRED_FALSE,
+    ),
+    '#required' => TRUE,
+    '#description' => t('The parameter is required for this tool.'),
+  );
+
   $form[mediamosa_tool_params_db::TOOL_PARAMETER] = array(
     '#title' => t('Tool parameter'),
     '#type' => 'textfield',
@@ -225,6 +237,19 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#description' => t('Enter the parameter like it is used with the tool, i.e. --foo=test, where tool parameter entered here is \'--foo\'.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::TOOL_PARAMETER, $node),
     '#maxlength' => mediamosa_tool_params_db::TOOL_PARAMETER_LENGTH,
+  );
+
+  $type_parameter = mediamosa_node::default_value(mediamosa_tool_params_db::TYPE_PARAMETER, $node);
+  $form[mediamosa_tool_params_db::TYPE_PARAMETER] = array(
+    '#title' => t('Checkbox'),
+    '#type' => 'select',
+    '#default_value' => ($type_parameter ? $type_parameter : mediamosa_tool_params_db::TYPE_PARAMETER_SELECT),
+    '#options' => array(
+      mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX => mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX,
+      mediamosa_tool_params_db::TYPE_PARAMETER_SELECT => mediamosa_tool_params_db::TYPE_PARAMETER_SELECT,
+    ),
+    '#required' => TRUE,
+    '#description' => t('Show the parameter as an checkbox.'),
   );
 
   $form[mediamosa_tool_params_db::MIN_VALUE] = array(
@@ -263,18 +288,6 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#maxlength' => mediamosa_tool_params_db::DEFAULT_VALUE_LENGTH,
   );
 
-  $form[mediamosa_tool_params_db::REQUIRED] = array(
-    '#title' => t('Required'),
-    '#type' => 'select',
-    '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::REQUIRED, $node),
-    '#options' => array(
-      mediamosa_tool_params_db::REQUIRED_TRUE => mediamosa_tool_params_db::REQUIRED_TRUE,
-      mediamosa_tool_params_db::REQUIRED_FALSE => mediamosa_tool_params_db::REQUIRED_FALSE,
-    ),
-    '#required' => TRUE,
-    '#description' => t('Tool is required as parameter for the tool.'),
-  );
-
   $form[mediamosa_tool_params_db::DESCRIPTION] = array(
     '#title' => t('Description'),
     '#type' => 'textfield',
@@ -283,18 +296,6 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::DESCRIPTION, $node),
   );
 
-  $switch_parameter = mediamosa_node::default_value(mediamosa_tool_params_db::SWITCH_PARAMETER, $node);
-  $form[mediamosa_tool_params_db::SWITCH_PARAMETER] = array(
-    '#title' => t('Switch'),
-    '#type' => 'select',
-    '#default_value' => ($switch_parameter ? $switch_parameter : mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE),
-    '#options' => array(
-      mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE => mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE,
-      mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE => mediamosa_tool_params_db::SWITCH_PARAMETER_FALSE,
-    ),
-    '#required' => TRUE,
-    '#description' => t('Tool is switch.'),
-  );
 
   return $form;
 }

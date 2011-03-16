@@ -356,7 +356,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     // Get the tool.
     $tool_name = drupal_ucfirst(str_replace('_', ' ', $name));
 
-    if ($tool[mediamosa_tool_params_db::SWITCH_PARAMETER] == mediamosa_tool_params_db::SWITCH_PARAMETER_TRUE) {
+    if ($tool[mediamosa_tool_params_db::TYPE_PARAMETER] == mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX) {
       $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#type' => 'checkbox',
         '#title' => t($tool_name),

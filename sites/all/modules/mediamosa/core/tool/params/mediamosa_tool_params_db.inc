@@ -56,9 +56,9 @@ class mediamosa_tool_params_db {
   const CREATED = 'created';
   const CHANGED = 'changed';
   const DESCRIPTION = 'description';
-  const SWITCH_PARAMETER = 'switch_parameter';
-  const SWITCH_PARAMETER_TRUE = 'TRUE';
-  const SWITCH_PARAMETER_FALSE = 'FALSE';
+  const TYPE_PARAMETER = 'type_parameter';
+  const TYPE_PARAMETER_CHECKBOX = 'CHECKBOX';
+  const TYPE_PARAMETER_SELECT = 'SELECT';
 
   /**
    * Returns all fields.

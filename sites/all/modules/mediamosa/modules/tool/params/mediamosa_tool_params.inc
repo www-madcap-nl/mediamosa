@@ -51,7 +51,7 @@ function _mediamosa_tool_params_list() {
     array('data' => t('Max value'), 'field' => 'tp.' . mediamosa_tool_params_db::MAX_VALUE),
     array('data' => t('Default value'), 'field' => 'tp.' . mediamosa_tool_params_db::DEFAULT_VALUE),
     array('data' => t('Required'), 'field' => 'tp.' . mediamosa_tool_params_db::REQUIRED),
-    array('data' => t('Switch'), 'field' => 'tp.' . mediamosa_tool_params_db::SWITCH_PARAMETER),
+    array('data' => t('Type'), 'field' => 'tp.' . mediamosa_tool_params_db::TYPE_PARAMETER),
     t('Operations')
   );
 
@@ -84,7 +84,7 @@ function _mediamosa_tool_params_list() {
       'max_value' => $row[mediamosa_tool_params_db::MAX_VALUE],
       'default_value' => $row[mediamosa_tool_params_db::DEFAULT_VALUE],
       'required' => $row[mediamosa_tool_params_db::REQUIRED],
-      'switch' => $row[mediamosa_tool_params_db::SWITCH_PARAMETER],
+      'type' => $row[mediamosa_tool_params_db::TYPE_PARAMETER],
       empty($actions) ? '-' : implode(' | ', $actions),
     );
   }

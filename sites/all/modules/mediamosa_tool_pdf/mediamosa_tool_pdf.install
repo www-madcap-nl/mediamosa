@@ -54,7 +54,7 @@ function mediamosa_tool_pdf_install() {
     $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
     $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
     $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
-    $node->{mediamosa_tool_params_db::SWITCH_PARAMETER} = $a_default_param[9];
+    $node->{mediamosa_tool_params_db::TYPE_PARAMETER} = $a_default_param[9];
 
     $node = node_save($node);
   }

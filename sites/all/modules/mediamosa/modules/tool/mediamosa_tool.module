@@ -42,7 +42,7 @@ function mediamosa_tool_help($path, $arg) {
       return '<p>' . t('Tool params are used by the transcoding profiles.') . '</p>';
 
     case 'admin/mediamosa/config/tool_mapping':
-      return '<p>' . t('Specify how the input data is mapped to metadata during the analyse fase.') . '</p>';
+      return '<p>' . t('Specify how the input data from tools are mapped to asset metadata during the analyse fase.') . '</p>';
   }
 }
 
@@ -182,7 +182,7 @@ function mediamosa_tool_menu() {
 
   $items['admin/mediamosa/config/tool_mapping'] = array(
     'title' => 'Tool mapping',
-    'description' => 'Specify how the input data is mapped to metadata during the analyse fase.',
+    'description' => 'Specify how the input data from tools are mapped to asset metadata during the analyse fase.',
     'page callback' => '_mediamosa_tool_mapping_list',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG_TOOLMAPPING),
