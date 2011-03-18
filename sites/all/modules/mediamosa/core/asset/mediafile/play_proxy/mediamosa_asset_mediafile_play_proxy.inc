@@ -550,6 +550,17 @@ class mediamosa_asset_mediafile_play_proxy {
           'IF_EXTERNAL' => '', '/IF_EXTERNAL' => '',
         );
 
+        // HEIGHT_PLUS_num.
+        $pattern = '/{HEIGHT_PLUS_(\d+)}/';
+        $output = preg_replace_callback(
+          $pattern,
+          create_function(
+            '$matches',
+            'return ' . ($video_size['height'] > 0 ? $video_size['height'] . ' + $matches[1]' : '""') . ';'
+          ),
+          $output
+        );
+
         // START, END DURATION TIMES variables
         if (isset($start)) {
           $variables['START_TIME'] = self::convert_msec($start, $mediafile_ext['metadata']['container_type']);

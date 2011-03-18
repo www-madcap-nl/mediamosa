@@ -27,8 +27,9 @@ TODO: (v2.4)
 MediaMosa 3.0 (build )
 --------------------------
 - Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
-  "group_id" is marked as depricated. (See ticket #238).
-- Play request with "tag" development. (See ticket #216).
+  "group_id" is marked as depricated (See ticket #238).
+- Play request with "tag" development (See ticket #216).
+- Variable for custom control bar height in objectcode (See ticket #326). 
 
 MediaMosa 2.4 (build 1506)
 --------------------------
