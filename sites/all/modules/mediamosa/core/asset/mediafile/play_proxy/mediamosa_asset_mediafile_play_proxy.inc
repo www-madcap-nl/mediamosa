@@ -720,6 +720,23 @@ class mediamosa_asset_mediafile_play_proxy {
   }
 
   /**
+   * Return a matching mediafile based on the asset_id and a tag.
+   *
+   * @param $asset_id
+   * @param $tag
+   */
+  static public function get_mediafile_id_on_tag($asset_id, $tag) {
+    return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+      ->fields('mf', array(mediamosa_asset_mediafile_db::ID))
+      ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE)
+      ->condition(mediamosa_asset_mediafile_db::TAG, $tag)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+  }
+
+  /**
    * Check if the time has been restricted.
    *
    * @param string $time_restriction_start

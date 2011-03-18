@@ -94,8 +94,15 @@ class MediaMosaAssetMediafilePlayProxyProfileTestCaseEga extends MediaMosaTestCa
     $a_parameters = array(
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => mt_rand(1, 9999),
-      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id,
     );
-    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 99, $asset_id . '_incorrect', $a_parameters, array(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_PROFILE_ID));
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 99, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_PROFILE_ID));
+
+    // Ask mediafile download url with tag.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::TAG => mt_rand(1, 9999),
+    );
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.profile.test', 107, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG));
   }
 }

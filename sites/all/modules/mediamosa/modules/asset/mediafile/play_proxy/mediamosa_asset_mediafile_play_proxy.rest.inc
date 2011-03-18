@@ -82,7 +82,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID, is not required when profile_id is used or when response type is still.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,// Is required in some cases.
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,// Check it later.
         ),
         // TODO: Group id is deprecated. Should be removed in 3.5.
         self::GROUP_ID => array(
@@ -232,6 +232,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
     $aut_realm = $this->get_param_value(self::AUT_REALM);
     $still_id = $this->get_param_value(self::STILL_ID);
+    $tag = $this->get_param_value(self::TAG);
 
     // Group id is deprecated.
     if (!$aut_group_id && $group_id) {
@@ -243,6 +244,14 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
       if (!$mediafile_id) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_PROFILE_ID);
+      }
+    }
+
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && !$mediafile_id && $this->isset_given_param(self::TAG)) {
+      $mediafile_id = mediamosa_asset_mediafile_play_proxy::get_mediafile_id_on_tag($asset_id, $tag);
+
+      if (!$mediafile_id) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG);
       }
     }
 
@@ -328,7 +337,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $size = $this->get_param_value(self::SIZE);
       $format = $this->get_param_value(self::FORMAT);
       $range = $this->get_param_value(self::RANGE);
-      $tag = $this->get_param_value(self::TAG);
 
       if (!empty($size)) {
         list($size_width, $size_height) = explode('x', $size, 2);

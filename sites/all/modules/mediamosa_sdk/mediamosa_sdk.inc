@@ -68,6 +68,7 @@ class mediamosa_sdk {
   const ERRORCODE_DIR_UNABLE_TO_CREATE = 618;
   // When functions or mods are not available, like GD functions (image_*).
   const ERRORCODE_MISSING_EXTENSION = 619;
+  const ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG = 620;
 
   const ERRORCODE_ASSET_NOT_FOUND = 700;
   const ERRORCODE_MEDIAFILE_NOT_FOUND = 701;

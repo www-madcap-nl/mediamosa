@@ -2027,4 +2027,18 @@ function mediamosa_update_7093() {
   }
 }
 
+/**
+ * Create new 'No mediafile found for the given asset and tag' errorcode in database.
+ */
+function mediamosa_update_7094() {
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG',
+      mediamosa_error_db::MESSAGE => "No mediafile found for the given asset and tag",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG,
+    ))
+  ->execute();
+}
+
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

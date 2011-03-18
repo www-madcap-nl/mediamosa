@@ -67,6 +67,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_REST_NOT_FOUND' => 'The REST call with uri_id @uri_id was not found',
     'ERRORCODE_DIR_UNABLE_TO_CREATE' => "Unable to create directory '@location', reason: @reason",
     'ERRORCODE_MISSING_EXTENSION' => "Unable to complete request, missing/requires '@extension'",
+    'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG' => "No mediafile found for the given asset and tag",
 
     'ERRORCODE_ASSET_NOT_FOUND' => "The asset with ID '@asset_id' was not found in the database",
     'ERRORCODE_MEDIAFILE_NOT_FOUND' => "The mediafile with ID '@mediafile_id' was not found in the database",
