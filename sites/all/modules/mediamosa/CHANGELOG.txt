@@ -24,6 +24,11 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 3.0 (build )
+--------------------------
+- Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
+  "group_id" is marked as depricated. (See ticket #238).
+
 MediaMosa 2.4 (build 1506)
 --------------------------
 - Watermarking stills (See ticket #82).

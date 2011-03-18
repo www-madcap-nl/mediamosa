@@ -49,6 +49,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
   const RESPONSE = 'response';
   const DOMAIN = 'domain';
   const REALM = 'realm';
+  const AUT_GROUP_ID = 'aut_group_id';
   const AUT_DOMAIN = 'aut_domain';
   const AUT_REALM = 'aut_realm';
   const PROFILE_ID = 'profile_id';
@@ -83,9 +84,10 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The mediafile ID, is not required when profile_id is used or when response type is still.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,// Is required in some cases.
         ),
+        // TODO: Group id is deprecated. Should be removed in 3.5.
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'Group ID of the person who wants to play the video, can be used for authorization.',
+          self::VAR_DESCRIPTION => 'Deprecated. Use aut_group_id instead. Group ID of the person who wants to play the video, can be used for authorization.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
@@ -108,6 +110,12 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI
           ),
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI
+        ),
+        self::AUT_GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+          self::VAR_DESCRIPTION => 'Group ID of the person who wants to play the video, can be used for authorization.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::AUT_DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
@@ -220,9 +228,15 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $original_mediafile_id = $this->get_param_value(self::ORIGINAL_MEDIAFILE_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
+    $aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
     $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
     $aut_realm = $this->get_param_value(self::AUT_REALM);
     $still_id = $this->get_param_value(self::STILL_ID);
+
+    // Group id is deprecated.
+    if (!$aut_group_id && $group_id) {
+      $aut_group_id = $group_id;
+    }
 
     if ($this->isset_given_param(self::PROFILE_ID)) {
       $mediafile_id = mediamosa_asset_mediafile_play_proxy::get_mediafile_id_on_profile($asset_id, $profile_id, $original_mediafile_id);
@@ -276,7 +290,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $mediafile_id,
         $app_id,
         $user_id,
-        $group_id,
+        $aut_group_id,
         $aut_domain,
         $aut_realm,
         $is_app_admin
