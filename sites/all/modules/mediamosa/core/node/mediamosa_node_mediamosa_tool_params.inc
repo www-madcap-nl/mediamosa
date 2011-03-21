@@ -317,7 +317,7 @@ function mediamosa_tool_params_validate($node) {
   // Tool.
   $tools = module_invoke_all('mediamosa_tool_iteration');
   if (!in_array($node->{mediamosa_tool_params_db::TOOL}, $tools)) {
-    form_set_error(mediamosa_tool_params_db::TOOL, t('Not existing tool.'));
+    form_set_error(mediamosa_tool_params_db::TOOL, t('This tool is either not enabled or does not exists.'));
   }
 
   // Min value.
