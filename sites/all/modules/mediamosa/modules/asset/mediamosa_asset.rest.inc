@@ -542,6 +542,13 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       }
     }
     else {
+      // App_id.
+      $app_id = reset($app_ids);
+
+      // Get app version.
+      $app_active_version = $this->app_active_version($app_id);
+
+      $add_has_streamable_mediafiles = TRUE;
       $items = mediamosa_asset::asset_collect(
         $asset_ids['asset_ids'],
         $app_ids,
@@ -553,7 +560,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         $this->get_param_value(self::IS_APP_ADMIN),
         $this->get_param_value(self::SHOW_STILLS),
         $this->get_param_value(self::SHOW_COLLECTIONS),
-        TRUE
+        $add_has_streamable_mediafiles,
+        $app_active_version
       );
 
       foreach ($items as $item) {
@@ -816,7 +824,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Check un/inappropriate flag.
     mediamosa_asset::is_unappropriate($asset_id, $app_ids, $aut_user_id, $is_app_admin);
 
+    // Is app client at 1.6 ?
+    $app_active_version = $this->app_active_version($app_id);
+
     // Collect.
+    $add_has_streamable_mediafiles = FALSE;
     $items = mediamosa_asset::asset_collect(
       array($asset_id),
       $app_ids,
@@ -827,16 +839,15 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
       $aut_realm,
       $is_app_admin,
       $show_stills,
-      $show_collections
+      $show_collections,
+      $add_has_streamable_mediafiles,
+      $app_active_version
     );
 
     // Add mediafiles.
     $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
-    // Is app client at 1.6 ?
-    $app_active_version = $this->app_active_version($app_id);
-
-    // Show in old format?
+    // Show in old format? Yes, if the app client < 1.6.
     $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
 
     // Now enrich the output with mediafiles.
@@ -978,7 +989,14 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         // Check un/inappropriate flag.
         mediamosa_asset::is_unappropriate($asset_id, $app_ids, $aut_user_id, $is_app_admin);
 
+        // Fix app_id.
+        $app_id = in_array($asset['app_id'], $app_ids) ? $asset['app_id'] : reset($app_ids);
+
+        // Get app version.
+        $app_active_version = $this->app_active_version($app_id);
+
         // Collect.
+        $add_has_streamable_mediafiles = FALSE;
         $items = mediamosa_asset::asset_collect(
           array($asset_id),
           $app_ids,
@@ -989,19 +1007,15 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           $aut_realm,
           $is_app_admin,
           $show_stills,
-          $show_collections
+          $show_collections,
+          $add_has_streamable_mediafiles,
+          $app_active_version
         );
-
-        // Fix app_id.
-        $app_id = in_array($asset['app_id'], $app_ids) ? $asset['app_id'] : reset($app_ids);
 
         // Add mediafiles.
         $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
-        // Is app client at 1.6 ?
-        $app_active_version = $this->app_active_version($app_id);
-
-        // Show in old format?
+        // Show in old format? Yes, if the app client < 1.6.
         $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
 
         // Now enrich the output with mediafiles.
