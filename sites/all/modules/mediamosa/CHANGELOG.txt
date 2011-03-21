@@ -45,6 +45,7 @@ Other changes (not ticket related)
 - Fixed speed bug in asset call when metadata size was bigger than 64k.
 - Tool parameters in transcode profiles can now be either 'Select' or 
   'Checkbox'.
+- Fixed integrity check to match case sensitive with types.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
