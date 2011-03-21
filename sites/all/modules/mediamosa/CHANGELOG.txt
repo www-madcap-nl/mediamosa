@@ -32,6 +32,7 @@ MediaMosa 3.0 (build )
 - Variable for custom control bar height in objectcode (See ticket #326).
 - Asset, assets and asset/$asset_id GET REST call show the collection data
   in better format (See ticket #332).
+- Optimize /assets REST call (See ticket #360).
 
 MediaMosa 2.4 (build 1506)
 --------------------------
