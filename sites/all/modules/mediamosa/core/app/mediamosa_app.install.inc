@@ -300,6 +300,12 @@ function mediamosa_app_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
         'default' => mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES,
       ),
+      mediamosa_app_db::TOOL_ANALYSE => array(
+        'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'default' => NULL,
+      ),
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
     'unique keys' => array(

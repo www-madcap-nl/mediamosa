@@ -421,7 +421,10 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   //$asset = mediamosa_asset::get($asset_id);
 
   // Get the asset.
-  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET');
+  $params = array(
+    'view_hidden_metadata' => 'TRUE',
+  );
+  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
 
   if ($response['header']['request_result_id'] != 601) {
     return '<h1>Asset not found</h1>';
@@ -453,16 +456,13 @@ function _mediamosa_browse_asset_page_view($asset_id) {
 function _mediamosa_browse_asset_page_view_properties($asset) {
 
   // Get all metadata properties for this app.
-  $metadatas = mediamosa_asset_metadata_property::get_metadata_properties_full();
+  $metadatas = mediamosa_asset_metadata_property::get_metadata_properties_full($asset[mediamosa_asset_db::APP_ID]);
 
   // Collect the metadata groups.
   $metadata_groups = array();
   foreach ($metadatas as $name => $metadata) {
     $metadata_groups[] = $metadata['propgroup_name'];
   }
-
-  // Add own app group.
-  $metadata_groups[] = 'app_' . $asset[mediamosa_asset_db::APP_ID];
 
   $variables = array(
     'description' => t('Details for this asset are shown below.'),
@@ -487,7 +487,7 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
         continue;
       }
 
-      $variables['metadata'][t($name)] = $value;
+      $variables['metadata'][t($name) . ($metadatas[$name]['propdef_is_hidden'] == mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE ? ' [' . t('hidden metadata') . ']' : '')] = $value;
     }
   }
 

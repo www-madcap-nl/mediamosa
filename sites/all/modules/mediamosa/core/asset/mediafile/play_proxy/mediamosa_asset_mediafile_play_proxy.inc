@@ -103,7 +103,8 @@ class mediamosa_asset_mediafile_play_proxy {
     // Get the URI.
     $container_type = (empty($mediafile_ext['metadata']['container_type']) ? NULL : $mediafile_ext['metadata']['container_type']);
     $video_codec = (empty($mediafile_ext['metadata']['video_codec']) ? NULL : $mediafile_ext['metadata']['video_codec']);
-    $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec);
+    $mime_type = (empty($mediafile_ext['metadata']['mime_type']) ? NULL : $mediafile_ext['metadata']['mime_type']);
+    $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec, $mime_type);
 
     if (!$uri) { // No streaming profile found
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $container_type));
@@ -533,7 +534,7 @@ class mediamosa_asset_mediafile_play_proxy {
         );
 
         // Get the Object code.
-        $output = mediamosa_server::get_objectcode_streaming($mediafile_ext['metadata']['container_type'], $mediafile_ext['metadata']['video_codec']);
+        $output = mediamosa_server::get_objectcode_streaming($mediafile_ext['metadata']['container_type'], $mediafile_ext['metadata']['video_codec'], $mediafile_ext['metadata']['mime_type']);
 
         $variables = array(
           'WIDTH' => !$video_size['width'] ? '' : $video_size['width'],

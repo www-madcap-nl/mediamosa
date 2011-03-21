@@ -131,7 +131,6 @@ function mediamosa_app_load(&$nodes) {
  * Implements hook_update().
  */
 function mediamosa_app_update($node) {
-
   if ($node->revision) {
     mediamosa_app_insert($node);
   }
@@ -144,6 +143,9 @@ function mediamosa_app_update($node) {
 
     // Master/Slave Apps is an array, serialize it.
     $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = isset($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) ? serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) : serialize(array());
+
+    // Tool analyse is an array, serialize it.
+    $node->{mediamosa_app_db::TOOL_ANALYSE} = isset($node->{mediamosa_app_db::TOOL_ANALYSE}) ? serialize($node->{mediamosa_app_db::TOOL_ANALYSE}) : serialize(array());
 
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -165,6 +167,9 @@ function mediamosa_app_insert($node) {
 
   // Master/Slave Apps is an array, serialize it.
   $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = isset($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) ? serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) : serialize(array());
+
+  // Tool analyse is an array, serialize it.
+  $node->{mediamosa_app_db::TOOL_ANALYSE} = isset($node->{mediamosa_app_db::TOOL_ANALYSE}) ? serialize($node->{mediamosa_app_db::TOOL_ANALYSE}) : serialize(array());
 
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -459,7 +464,6 @@ function mediamosa_app_form($node, &$form_state) {
     '#description' => t('oAuth consumer secret. Required, if oAuth consumer key is given.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
   );
-
   /*
   // This is for later development / test.
   // See: hook_menu() of sites/all/modules/mediamosa/modules/app/oauth/mediamosa_app_oauth.module
@@ -469,8 +473,27 @@ function mediamosa_app_form($node, &$form_state) {
       '#title' => l(t('oAuth client test'), 'admin/oauth_test/' . $node->nid),
       '#description' => t('Available oAuth client'),
     );
+
+  $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_analyse_options');
+  $options = array();
+  foreach ($tool_analyse_checkboxes['name'] as $tool_analyse_key => $tool_analyse_checkbox) {
+    $options[$tool_analyse_checkboxes['value'][$tool_analyse_key]] = $tool_analyse_checkbox;
   }
    */
+  $form['tool'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Tool selection'),
+    '#description' => t('')
+  );
+  $form['tool'][mediamosa_app_db::TOOL_ANALYSE] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Choose which tools can make metadata.'),
+    '#default_value' => unserialize(mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, array())),
+    '#options' => $options,
+    '#description' => t('The tools can analyse their mediafiles and they can put the data (eg. author) to the asset metadata. You can allow or disallow this functions here.'),
+  );
 
   $form['still'] = array(
     '#type' => 'fieldset',

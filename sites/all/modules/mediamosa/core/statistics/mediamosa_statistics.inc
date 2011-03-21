@@ -282,8 +282,8 @@ class mediamosa_statistics {
         mediamosa_statistics_job_db::STARTED => $job[mediamosa_job_db::STARTED],
         mediamosa_statistics_job_db::FINISHED => $job[mediamosa_job_db::FINISHED],
         mediamosa_statistics_job_db::TRANSCODE_PROFILE_ID => $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID],
-        mediamosa_statistics_job_db::NID => $profile[mediamosa_transcode_profile_db::NID],
-        mediamosa_statistics_job_db::VID => $profile[mediamosa_transcode_profile_db::VID],
+        mediamosa_statistics_job_db::NID => (isset($profile[mediamosa_transcode_profile_db::NID]) ? $profile[mediamosa_transcode_profile_db::NID] : 0),
+        mediamosa_statistics_job_db::VID => (isset($profile[mediamosa_transcode_profile_db::VID]) ? $profile[mediamosa_transcode_profile_db::VID] : 0),
         mediamosa_statistics_job_db::FILESIZE => NULL,
       ))
       ->execute();

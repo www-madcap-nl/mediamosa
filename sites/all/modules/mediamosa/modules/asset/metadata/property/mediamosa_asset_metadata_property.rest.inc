@@ -119,6 +119,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
           'type' => $property[mediamosa_asset_metadata_property_db::TYPE],
           'created' => mediamosa::utcdate2appdate($property[mediamosa_asset_metadata_property_db::CREATED]),
           'changed' => mediamosa::utcdate2appdate($property[mediamosa_asset_metadata_property_db::CHANGED]),
+          'is_hidden' => $property[mediamosa_asset_metadata_property_db::IS_HIDDEN],
         )
       );
     }
@@ -139,6 +140,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
   // Rest vars;
   const NAME = 'name'; // Property name.
   const TYPE = 'type'; // Property type.
+  const IS_HIDDEN = 'is_hidden'; // Is hidden?
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array(
@@ -154,6 +156,12 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
           self::VAR_ALLOWED_VALUES => array('datetime', 'int', 'char'),
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::DESCRIPTION => "The type of data to be stored, can either be 'datetime' (iso-8601 standard date), 'int' (numbers), char (text).",
+        ),
+        self::IS_HIDDEN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_ALLOWED_VALUES => array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+          self::DESCRIPTION => "True if the property is hidden.",
         ),
       ),
     );
@@ -174,8 +182,11 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     // Type of the new property.
     $type = $this->get_param_value(self::TYPE);
 
+    // Is the new property hidden.
+    $is_hidden = $this->get_param_value(self::IS_HIDDEN);
+
     // Create the property. Any problems will throw exception.
-    $property_id = mediamosa_asset_metadata_property::property_create($a_app_ids, $name, $type);
+    $property_id = mediamosa_asset_metadata_property::property_create($a_app_ids, $name, $type, 0, 0, $is_hidden);
 
     // Get the property.
     $property = mediamosa_asset_metadata_property::property_get_row($property_id);

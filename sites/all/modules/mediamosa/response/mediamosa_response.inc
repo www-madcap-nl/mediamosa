@@ -560,7 +560,6 @@ class mediamosa_response extends mediamosa {
     // Create the SimpleXML element.
     $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><feed xmlns="http://www.w3.org/2005/Atom"></feed>');
 
-
     // Author.
     $xml_element = $xml_response->addChild('author');
     $this->generate_plain_xml_add_child($xml_element, 'name', mediamosa_settings::ATOM_NAME);
@@ -808,7 +807,6 @@ class mediamosa_response extends mediamosa {
       // Add the item to the RSS.
       $items .= format_rss_item($title, $link, $description, $args);
     }
-
 
     $channel_defaults = array(
       'version'     => '2.0',

@@ -13,3 +13,4 @@ dependencies[] = mediamosa
 files[] = mediamosa_tool.module
 files[] = params/mediamosa_tool_params.rest.inc
 files[] = params/mediamosa_tool_params.inc
+files[] = mapping/mediamosa_tool_mapping.inc

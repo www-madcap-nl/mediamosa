@@ -228,14 +228,14 @@ class mediamosa_type {
         // Eg. "-b", "-ar"
         $mapping_name = "[-a-zA-Z_]+";
 
-        // Eg. "176", "black"
-        $mapping_sub_value = "[a-zA-Z0-9_]+";
+        // Eg. "176", "black", "<switch>"
+        $mapping_sub_value = "[a-zA-Z0-9_<>]+";
 
         // Eg. "pad=176:144:0:6:black", "crop=23:34:64:62"
-        $mapping_sub_line = "([a-zA-Z0-9_]+=$mapping_sub_value(:$mapping_sub_value+)*)";
+        $mapping_sub_line = "([a-zA-Z0-9_<>]+=$mapping_sub_value(:$mapping_sub_value+)*)";
 
         // Eg. "200000", "22050", "176x132", "'pad=176:144:0:6:black,crop=0:4:1280:540'"
-        $mapping_value = "([a-zA-Z0-9._]+|(\'$mapping_sub_line+(,$mapping_sub_line)*\')+)";
+        $mapping_value = "([a-zA-Z0-9._<>]+|(\'$mapping_sub_line+(,$mapping_sub_line)*\')+)";
 
         // Eg. "-b:200000;-ar:22050;-s:176x132;-vf:'pad=176:144:0:6:black,crop=0:4:1280:540,scale=1280:656'"
         if (preg_match("/^(($mapping_name:$mapping_value){0,1}|$mapping_name:$mapping_value(;$mapping_name:$mapping_value)*)$/", $mixed_param_value) !== 1) {

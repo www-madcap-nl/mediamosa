@@ -134,9 +134,10 @@ function mediamosa_maintenance_status_component_generate() {
 
   $available_bytes = mediamosa_io::disk_free_space($mount_point);
   $available_mb = floor($available_bytes / (1024 * 1024));
+  $total_bytes = mediamosa_io::disk_total_space($mount_point);
   $results['mount_disk_free'] = array(
     'title' => t('SANNAS current diskspace'),
-    'value' => format_size($available_bytes),
+    'value' => t('@available free of total @total (@used used)', array('@available' => format_size($available_bytes), '@total' => format_size($total_bytes), '@used' => format_size($total_bytes - $available_bytes))),
     'severity' => $available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK),
   );
 
