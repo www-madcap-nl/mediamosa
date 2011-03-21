@@ -70,13 +70,13 @@ function mediamosa_tool_params_schema() {
   $schema[mediamosa_tool_params_db::TABLE_NAME] = array(
   'description' => 'The tool parameter table.',
     'fields' => array(
-      mediamosa_transcode_profile_db::NID => array(
+      mediamosa_tool_params_db::NID => array(
         'description' => 'The Drupal node id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      mediamosa_transcode_profile_db::VID => array(
+      mediamosa_tool_params_db::VID => array(
         'description' => 'The Drupal node revision id.',
         'type' => 'int',
         'unsigned' => TRUE,
