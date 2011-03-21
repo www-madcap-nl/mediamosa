@@ -1019,50 +1019,47 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       ));
 
       if (is_array($asset_ids['asset_ids']) && !empty($asset_ids['asset_ids'])) {
-        foreach ($asset_ids['asset_ids'] as $asset_id) {
 
-          // Load asset data.
-          $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+        // Fix app_id.
+        $app_id = reset($app_ids);
 
-          // Fix app_id.
-          $app_id = in_array($asset['app_id'], $app_ids) ? $asset['app_id'] : reset($app_ids);
+        // Get app version.
+        $app_active_version = $this->app_active_version($app_id);
 
-          // Get app version.
-          $app_active_version = $this->app_active_version($app_id);
+        // Show in old format? Yes, if the app client < 1.6.
+        $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
 
-          // Collect.
-          $add_has_streamable_mediafiles = FALSE;
-          $items = mediamosa_asset::asset_collect(
-            array($asset_id),
-            $app_ids,
-            $aut_user_id,
-            $granted,
-            $aut_group_id,
-            $aut_domain,
-            $aut_realm,
-            $is_app_admin,
-            $show_stills,
-            $show_collections,
-            $add_has_streamable_mediafiles,
-            $app_active_version
-          );
+        // Collect.
+        $add_has_streamable_mediafiles = FALSE;
+        $items = mediamosa_asset::asset_collect(
+          $asset_ids['asset_ids'],
+          $app_ids,
+          $aut_user_id,
+          $granted,
+          $aut_group_id,
+          $aut_domain,
+          $aut_realm,
+          $is_app_admin,
+          $show_stills,
+          $show_collections,
+          $add_has_streamable_mediafiles,
+          $app_active_version
+        );
+
+        // Add to response.
+        foreach ($items as $item) {
+          $asset_id = $item['asset_id'];
 
           // Add mediafiles.
-          $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
-
-          // Show in old format? Yes, if the app client < 1.6.
-          $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+          $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, array());
 
           // Now enrich the output with mediafiles.
-          $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
+          $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
           // Add streamable setting on asset.
-          $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $items[0]['mediafiles'] : $items[0]['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+          $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
-          // Add to response.
-          foreach ($items as $item) {
-            $mediamosa->add_item($item);
-          }
+          $mediamosa->add_item($item);
 
           // Increase viewed.
           mediamosa_asset::asset_viewed($asset_id);
