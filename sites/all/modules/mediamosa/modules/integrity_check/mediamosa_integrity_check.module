@@ -140,7 +140,6 @@ function mediamosa_integrity_check_page() {
     $type = $result->fetchField();
   }
 
-
   // Check whether the mediamosa_integrity_check.inc is running or not.
   $output = array();
   mediamosa_io::exec('ps ax | grep mediamosa_integrity_check | grep -v grep', $output);
@@ -151,7 +150,6 @@ function mediamosa_integrity_check_page() {
     // Define "start check" button.
     $start_check = drupal_get_form('mediamosa_integrity_check_start');
   }
-
   // Print errors from integrity_check database table.
   mediamosa_integrity_check_print_errors();
 
@@ -176,9 +174,8 @@ function mediamosa_integrity_check_page() {
   $content[] = drupal_get_form('mediamosa_integrity_check_type_box');
 
   $content[] = array('#markup' => 'For the following objects, an integrity problem has been detected:');
-
   // Headers and base queries.
-  if ($type == 'missing mediafile') {
+  if ($type == 'MISSING MEDIAFILE') {
     $header = array(
       array('data' => t('Mediafile id'), 'field' => 'object_id'),
       array('data' => t('App id'), 'field' => 'app_id'),
@@ -205,7 +202,7 @@ function mediamosa_integrity_check_page() {
     // Additional info.
     $post_page_info = '';
   }
-  elseif ($type == 'missing mediarecord') {
+  elseif ($type == 'MISSING MEDIARECORD') {
     $header = array(
       array('data' => t('Mediafile id'), 'field' => 'object_id'),
       array('data' => t('size'), 'field' => 'size'),
@@ -238,12 +235,15 @@ function mediamosa_integrity_check_page() {
     ))->fetchField();
     $post_page_info = '<p>Total bytes: ' . $total_size . '</p>';
   }
+  else {
+    return "";
+  }
 
   $rows = array();
 
   $result = $query->execute();
   foreach ($result as $row) {
-    if ($type == 'missing mediafile') {
+    if ($type == 'MISSING MEDIAFILE') {
       // Get the mediafile object.
       $object = mediamosa_db::db_query("SELECT * FROM {#mediafile} WHERE #mediafile_id = :mediafile_id", array(
         '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
@@ -252,21 +252,24 @@ function mediamosa_integrity_check_page() {
       ))->fetchObject();
 
       if ($object) {
-        $asset_id = $object->asset_id;
-        $rows[] = array(
-          'data' => array(
-            'mediafile_id' => $row['object_id'],
-            'app_id' => $row['app_id'],
-            'owner_id' => $row['owner_id'],
-            'asset_id' => mediamosa_lib::l_asset($asset_id),
-            'created' => $row['created'],
-            'details' => $row['details'],
-            'select' => sprintf('<input type="checkbox" name="selected_ids[]" value="%s">', $row['id']),
-          ),
-        );
+        $asset_id = mediamosa_lib::l_asset($object->asset_id);
       }
+      else {
+        $asset_id = '**NOT FOUND**';
+      }
+      $rows[] = array(
+        'data' => array(
+          'mediafile_id' => $row['object_id'],
+          'app_id' => $row['app_id'],
+          'owner_id' => $row['owner_id'],
+          'asset_id' => $asset_id,
+          'created' => $row['created'],
+          'details' => $row['details'],
+          'select' => sprintf('<input type="checkbox" name="selected_ids[]" value="%s">', $row['id']),
+        ),
+      );
     }
-    elseif ($type == 'missing mediarecord') {
+    elseif ($type == 'MISSING MEDIARECORD') {
       $rows[] = array(
         'data' => array(
           'mediafile_id' => $row['object_id'],
