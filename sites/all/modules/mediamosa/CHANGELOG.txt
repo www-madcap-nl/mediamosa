@@ -37,7 +37,7 @@ MediaMosa 3.0 (build )
   If the deleted mediafile is original, then the new original mediafile is
   the new_original (See ticket #393).
 
-MediaMosa 2.4 (build 1506)
+MediaMosa 2.4 (build 1521)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
