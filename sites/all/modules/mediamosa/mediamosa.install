@@ -2040,5 +2040,45 @@ function mediamosa_update_7094() {
   ->execute();
 }
 
+/**
+ * Create new 'The mediafile (@mediafile_id) is not original' errorcode in database.
+ * Create new 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)' errorcode in database.
+ */
+function mediamosa_update_7095() {
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL',
+        'message' => "The mediafile (@mediafile_id) is not original",
+        'code' => 723, //mediamosa_error::ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL,
+      ))
+    ->execute();
+  }
+
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_INVALID_MEDIAFILE_RELATION')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_INVALID_MEDIAFILE_RELATION',
+        'message' => "The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)",
+        'code' => 724, //mediamosa_error::ERRORCODE_INVALID_MEDIAFILE_RELATION,
+      ))
+    ->execute();
+  }
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

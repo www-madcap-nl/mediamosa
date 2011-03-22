@@ -92,6 +92,8 @@ function _mediamosa_error_install() {
     'ERRORCODE_CANT_PLAY_MEDIAFILE' => 'This mediafile (@mediafile_id) can not be played; @reason',
     'ERRORCODE_CANT_TRANSCODE_MEDIAFILE' => 'This mediafile (@mediafile_id) can not be transcoded; @reason',
     'ERRORCODE_APP_DISABLED' => 'This application has been disabled',
+    'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL' => 'The mediafile (@mediafile_id) is not original',
+    'ERRORCODE_INVALID_MEDIAFILE_RELATION' => 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)',
 
     'ERRORCODE_UNKNOWN_JOB' => 'Unknown job specified',
 

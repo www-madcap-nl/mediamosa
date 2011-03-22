@@ -33,6 +33,9 @@ MediaMosa 3.0 (build )
 - Asset, assets and asset/$asset_id GET REST call show the collection data
   in better format (See ticket #332).
 - Optimize /assets REST call (See ticket #360).
+- Mediafile delete REST call with new parameter: new_original (mediafile_id).
+  If the deleted mediafile is original, then the new original mediafile is
+  the new_original (See ticket #393).
 
 MediaMosa 2.4 (build 1506)
 --------------------------
