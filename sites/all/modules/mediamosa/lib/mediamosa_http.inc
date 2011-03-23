@@ -117,6 +117,35 @@ class mediamosa_http {
   }
 
   /**
+   * Glue part of (parsed) url.
+   * @see parse_url()
+   *
+   * @param array $parsed
+   *   An associative array like parse_url() returns.
+   *
+   * @return string $uri
+   */
+  static public function glue_url($parsed) {
+    if (!is_array($parsed)) {
+      return FALSE;
+    }
+
+    $uri = '';
+
+    $uri .= isset($parsed['scheme']) ? $parsed['scheme'] . ':' . ((drupal_strtolower($parsed['scheme']) == 'mailto') ? '' : '//') : '';
+    $uri .= isset($parsed['user']) ? $parsed['user'] . ($parsed['pass'] ?  ':' . $parsed['pass'] : '') . '@' : '';
+    $uri .= isset($parsed['host']) ? $parsed['host'] : '';
+    $uri .= isset($parsed['port']) ? ':' . $parsed['port'] : '';
+    $uri .= $uri ? '/' : '';
+    // Cut the first '/' character.
+    $uri .= isset($parsed['path']) ? (drupal_substr($parsed['path'], 0, 1) == '/' ? drupal_substr($parsed['path'], 1) : $parsed['path']) : '';
+    $uri .= isset($parsed['query']) ? '?' . $parsed['query'] : '';
+    $uri .= isset($parsed['fragment']) ? '#' . $parsed['fragment'] : '';
+
+    return $uri;
+  }
+
+  /**
    * Make sure our URL starts with 'http://' or 'https://'.
    *
    * @param unknown_type $url

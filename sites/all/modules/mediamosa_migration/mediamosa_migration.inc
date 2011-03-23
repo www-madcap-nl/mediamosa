@@ -2052,10 +2052,25 @@ function _mediamosa_migration_create_server_nodes() {
         $status = (!is_numeric($row['status']) ? $row['status'] : ($row['status'] == 1 ? 'ON' : 'OFF'));
       }
 
+      $parsed_uri = $parsed_path = parse_url(isset($row['uri']) ? $row['uri'] : (isset($row['ip_address']) ? $row['ip_address'] : NULL));
+
+      unset($parsed_uri['path']);
+      unset($parsed_uri['query']);
+      unset($parsed_uri['fragment']);
+      $server_uri = mediamosa_http::glue_url($parsed_uri);
+
+      unset($parsed_path['scheme']);
+      unset($parsed_path['host']);
+      unset($parsed_path['user']);
+      unset($parsed_path['pass']);
+      unset($parsed_path['port']);
+      $server_path = '{base_uri}' . mediamosa_http::glue_url($parsed_path);
+
       $node->{mediamosa_server_db::SERVER_TYPE} = $type;
       $node->{mediamosa_server_db::VERSION} = $row['version'];
       $node->{mediamosa_server_db::SERVER_STATUS} = $status;
-      $node->{mediamosa_server_db::SERVER_URI} = (isset($row['uri']) ? $row['uri'] : (isset($row['ip_address']) ? $row['ip_address'] : NULL));
+      $node->{mediamosa_server_db::SERVER_URI} = $server_uri;
+      $node->{mediamosa_server_db::SERVER_PATH} = $server_path;
       $node->{mediamosa_server_db::DESCRIPTION} = (isset($row['description']) ? $row['description'] : NULL);
       $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers']) ? $row['containers'] : NULL);
       $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode']) ? $row['objectcode'] : NULL);

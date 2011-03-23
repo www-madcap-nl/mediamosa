@@ -74,24 +74,28 @@ class mediamosa_asset_mediafile_play_proxy {
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_db::SERVER_URI,
+            '#server_path' => mediamosa_server_db::SERVER_PATH,
+            '#server_uri' => mediamosa_server_db::SERVER_URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
             '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':base_uri' => mediamosa_server_db::SERVER_PATH_BASE_URI,
             ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
           )
         )->fetchField();
 
       case self::RESPONSE_TYPE_DOWNLOAD:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_db::SERVER_URI,
+            '#server_path' => mediamosa_server_db::SERVER_PATH,
+            '#server_uri' => mediamosa_server_db::SERVER_URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
             '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':base_uri' => mediamosa_server_db::SERVER_PATH_BASE_URI,
             ':server_type' => mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
           )
         )->fetchField();

@@ -407,14 +407,16 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     // Streaming server.
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri,  containers, object_code) VALUES
-       (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264', 'test_container:h264', 'Object code for H264 codec')"
-    );
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
+       (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264/', :base_uri, 'test_container:h264', 'Object code for H264 codec')", array(
+      ':base_uri' => '{base_uri}',
+    ));
 
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri,  containers, object_code) VALUES
-       (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general', 'test_container', 'Object code for general MP4 container')"
-    );
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri, server_path,  containers, object_code) VALUES
+       (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general/', :base_uri, 'test_container', 'Object code for general MP4 container')", array(
+      ':base_uri' => '{base_uri}',
+    ));
 
     mediamosa_db::db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
       array(':nid' => 998, ':container' => 'test_container:h264')
@@ -441,7 +443,8 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       $this->a_app[mediamosa_app_db::APP_ID]
     );
 
-    $this->assertTrue($a_response['output'] == 'url://unittest.h264', 'Test container with specific codec that is defined.');
+    $this->assertTrue($a_response['output'] == 'url://unittest.h264/', 'Test container with specific codec that is defined.');
+    $this->verbose('Response: ' . print_r($a_response, TRUE));
 
     // General container
     $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
@@ -459,9 +462,10 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       $this->a_app[mediamosa_app_db::APP_ID]
     );
 
-    $this->assertTrue($a_response['output'] == 'url://unittest.general', 'Test container with specific codec that is defined.');
+    $this->assertTrue($a_response['output'] == 'url://unittest.general/', 'Test container with specific codec that is defined.');
+    $this->verbose('Response: ' . print_r($a_response, TRUE));
 
-   // Codec that is not defined (should get defaukt container)
+    // Codec that is not defined (should get defaukt container)
     $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
     $a_mediafile_ext['mediafile_id'] = $mediafile_id;
     $a_mediafile_ext['metadata']['container_type'] = 'test_container';
@@ -477,6 +481,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       $this->a_app[mediamosa_app_db::APP_ID]
     );
 
-    $this->assertTrue($a_response['output'] == 'url://unittest.general', 'Test container with undefined codec (plays general container).');
+    $this->assertTrue($a_response['output'] == 'url://unittest.general/', 'Test container with undefined codec (plays general container).');
+    $this->verbose('Response: ' . print_r($a_response, TRUE));
   }
 }
