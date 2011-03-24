@@ -2169,5 +2169,27 @@ function mediamosa_update_7099() {
   module_enable($module_list, $enable_dependencies);
 }
 
+/**
+ * Create new "Unable creating derivative from image with style: @style, path: @path" errorcode in database.
+ */
+function mediamosa_update_7100() {
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_CREATING_DERIVATIVE')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_CREATING_DERIVATIVE',
+        'message' => "Unable creating derivative from image with style: @style, path: @path",
+        'code' => 1157, //mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
+      ))
+    ->execute();
+  }
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

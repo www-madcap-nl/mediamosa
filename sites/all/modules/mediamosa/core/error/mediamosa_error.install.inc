@@ -182,6 +182,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_SERVER_UPLOAD_NOT_FOUND' => 'Unable to find active upload server',
     'ERRORCODE_STILL_NOT_IMAGE' => "Still is not an image for asset with ID '@asset_id'",
     'ERRORCODE_STILL_IS_NOT_CREATABLE' => "Still can not be created for mediafile with '@mediafile_id'",
+    'ERRORCODE_CREATING_DERIVATIVE' => "Unable creating derivative from image with style: @style, path: @path",
 
     'ERRORCODE_STARTING_JOB_FAILED' => 'Jobserver is unable to start job',
 
