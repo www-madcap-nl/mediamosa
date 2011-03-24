@@ -538,17 +538,32 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   );
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  // Style.
+  $rest_calls['still/$still_id/style/$style'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id/style/$style'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/$still_prefix/$still_id/style/$style'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
 
   // Allowed on POST as well.
   $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  // Style.
+  $rest_calls['still/$still_id/style/$style'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id/style/$style'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/$still_prefix/$still_id/style/$style'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
 
   // Set the version of the new rest calls to 2.3.
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
   $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
   $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_2_3_0;
+  // Style.
+  $rest_calls['still/$still_id/style/$style'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_3_0_0;
+  $rest_calls['still/ticket/$ticket_id/style/$style'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_3_0_0;
+  $rest_calls['still/$still_prefix/$still_id/style/$style'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_3_0_0;
+  $rest_calls['still/$still_id/style/$style'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_3_0_0;
+  $rest_calls['still/ticket/$ticket_id/style/$style'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_3_0_0;
+  $rest_calls['still/$still_prefix/$still_id/style/$style'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::VERSION] = mediamosa_version::MEDIAMOSA_VERSION_3_0_0;
 
   // Upload progress.
   $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
@@ -567,6 +582,10 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     $rest_calls['simpletest/still/$still_id'] = $rest_calls['still/$still_id'];
     $rest_calls['simpletest/still/ticket/$ticket_id'] = $rest_calls['still/ticket/$ticket_id'];
     $rest_calls['simpletest/still/$still_prefix/$still_id'] = $rest_calls['still/$still_prefix/$still_id'];
+    // Style.
+    $rest_calls['simpletest/still/$still_id/style/$style'] = $rest_calls['still/$still_id'];
+    $rest_calls['simpletest/still/ticket/$ticket_id/style/$style'] = $rest_calls['still/ticket/$ticket_id'];
+    $rest_calls['simpletest/still/$still_prefix/$still_id/style/$style'] = $rest_calls['still/$still_prefix/$still_id'];
   }
 
   return $rest_calls;
@@ -1992,10 +2011,16 @@ user_id=admin',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => 'It returns the still image',
   );
+  // Style.
+  $rest_calls['still/$still_id/style/$style'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id/style/$style'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET];
 
   // Allowed on POST as well.
   $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET];
+  // Style.
+  $rest_calls['still/$still_id/style/$style'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id/style/$style'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET];
 
   // Upload progress.
   $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
