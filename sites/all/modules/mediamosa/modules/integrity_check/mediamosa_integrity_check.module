@@ -162,6 +162,7 @@ function mediamosa_integrity_check_page() {
       ':error' => mediamosa_integrity_check_db::TYPE_ERROR,
     )
   )->fetchField();
+
   if (!$has_rows) {
     $ret = array();
     $ret[] = array('#markup' => '<p>No integrity errors have been found.</p>');
@@ -174,76 +175,78 @@ function mediamosa_integrity_check_page() {
   $content[] = drupal_get_form('mediamosa_integrity_check_type_box');
 
   $content[] = array('#markup' => 'For the following objects, an integrity problem has been detected:');
-  // Headers and base queries.
-  if ($type == 'MISSING MEDIAFILE') {
-    $header = array(
-      array('data' => t('Mediafile id'), 'field' => 'object_id'),
-      array('data' => t('App id'), 'field' => 'app_id'),
-      array('data' => t('Owner id'), 'field' => 'owner_id'),
-      array('data' => t('Asset id')),
-      array('data' => t('Created'), 'field' => 'created'),
-      array('data' => t('Details'), 'field' => 'details'),
-      t('Select')
-    );
-    $query = mediamosa_db::db_select(mediamosa_integrity_check_db::TABLE_NAME, 'i')->extend('PagerDefault')->extend('TableSort');
-    $query
-      ->condition(mediamosa_integrity_check_db::TYPE, $type)
-      ->fields('i', array(
-        mediamosa_integrity_check_db::ID,
-        mediamosa_integrity_check_db::OBJECT_ID,
-        mediamosa_integrity_check_db::APP_ID,
-        mediamosa_integrity_check_db::OWNER_ID,
-        mediamosa_integrity_check_db::CREATED,
-        mediamosa_integrity_check_db::DETAILS,
-      ));
-    $query->orderByHeader($header);
-    $query->limit(mediamosa_settings::maintenance_items_per_page());
 
-    // Additional info.
-    $post_page_info = '';
-  }
-  elseif ($type == 'MISSING MEDIARECORD') {
-    $header = array(
-      array('data' => t('Mediafile id'), 'field' => 'object_id'),
-      array('data' => t('size'), 'field' => 'size'),
-      array('data' => t('mtime'), 'field' => 'mtime'),
-      array('data' => t('ctime'), 'field' => 'ctime'),
-      array('data' => t('details'), 'field' => 'details'),
-      t('Select')
-    );
-    $query = mediamosa_db::db_select(mediamosa_integrity_check_db::TABLE_NAME, 'i')->extend('PagerDefault')->extend('TableSort');
-    $query
-      ->condition(mediamosa_integrity_check_db::TYPE, $type)
-      ->fields('i', array(
-        mediamosa_integrity_check_db::ID,
-        mediamosa_integrity_check_db::OBJECT_ID,
-        mediamosa_integrity_check_db::SIZE,
-        mediamosa_integrity_check_db::MTIME,
-        mediamosa_integrity_check_db::CTIME,
-        mediamosa_integrity_check_db::DETAILS,
-      ));
-    $query->orderByHeader($header);
-    $query->limit(mediamosa_settings::maintenance_items_per_page());
+  switch ($type) {
+    case mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE:
+      $header = array(
+        array('data' => t('Mediafile id'), 'field' => 'object_id'),
+        array('data' => t('App id'), 'field' => 'app_id'),
+        array('data' => t('Owner id'), 'field' => 'owner_id'),
+        array('data' => t('Asset id')),
+        array('data' => t('Created'), 'field' => 'created'),
+        array('data' => t('Details'), 'field' => 'details'),
+        t('Select')
+      );
+      $query = mediamosa_db::db_select(mediamosa_integrity_check_db::TABLE_NAME, 'i')->extend('PagerDefault')->extend('TableSort');
+      $query
+        ->condition(mediamosa_integrity_check_db::TYPE, $type)
+        ->fields('i', array(
+          mediamosa_integrity_check_db::ID,
+          mediamosa_integrity_check_db::OBJECT_ID,
+          mediamosa_integrity_check_db::APP_ID,
+          mediamosa_integrity_check_db::OWNER_ID,
+          mediamosa_integrity_check_db::CREATED,
+          mediamosa_integrity_check_db::DETAILS,
+        ));
+      $query->orderByHeader($header);
+      $query->limit(mediamosa_settings::maintenance_items_per_page());
 
-    // Additional info.
-    // Total size.
-    $total_size = mediamosa_db::db_query("SELECT SUM(#size) FROM {#mediamosa_integrity_check} WHERE #type = :missing_mediarecord", array(
-      '#mediamosa_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
-      '#size' => mediamosa_integrity_check_db::SIZE,
-      '#type' => mediamosa_integrity_check_db::TYPE,
-      ':missing_mediarecord' => mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD,
-    ))->fetchField();
-    $post_page_info = '<p>Total bytes: ' . $total_size . '</p>';
-  }
-  else {
-    return "";
+      // Additional info.
+      $post_page_info = '';
+      break;
+    case mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD:
+      $header = array(
+        array('data' => t('Mediafile id'), 'field' => 'object_id'),
+        array('data' => t('size'), 'field' => 'size'),
+        array('data' => t('mtime'), 'field' => 'mtime'),
+        array('data' => t('ctime'), 'field' => 'ctime'),
+        array('data' => t('details'), 'field' => 'details'),
+        t('Select')
+      );
+      $query = mediamosa_db::db_select(mediamosa_integrity_check_db::TABLE_NAME, 'i')->extend('PagerDefault')->extend('TableSort');
+      $query
+        ->condition(mediamosa_integrity_check_db::TYPE, $type)
+        ->fields('i', array(
+          mediamosa_integrity_check_db::ID,
+          mediamosa_integrity_check_db::OBJECT_ID,
+          mediamosa_integrity_check_db::SIZE,
+          mediamosa_integrity_check_db::MTIME,
+          mediamosa_integrity_check_db::CTIME,
+          mediamosa_integrity_check_db::DETAILS,
+        ));
+      $query->orderByHeader($header);
+      $query->limit(mediamosa_settings::maintenance_items_per_page());
+
+      // Additional info.
+      // Total size.
+      $total_size = mediamosa_db::db_query("SELECT SUM(#size) FROM {#mediamosa_integrity_check} WHERE #type = :missing_mediarecord", array(
+        '#mediamosa_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
+        '#size' => mediamosa_integrity_check_db::SIZE,
+        '#type' => mediamosa_integrity_check_db::TYPE,
+        ':missing_mediarecord' => mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD,
+      ))->fetchField();
+      $post_page_info = '<p>Total bytes: ' . $total_size . '</p>';
+      break;
+
+    default:
+      return '';
   }
 
   $rows = array();
 
   $result = $query->execute();
   foreach ($result as $row) {
-    if ($type == 'MISSING MEDIAFILE') {
+    if ($type == mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE) {
       // Get the mediafile object.
       $object = mediamosa_db::db_query("SELECT * FROM {#mediafile} WHERE #mediafile_id = :mediafile_id", array(
         '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
@@ -269,7 +272,7 @@ function mediamosa_integrity_check_page() {
         ),
       );
     }
-    elseif ($type == 'MISSING MEDIARECORD') {
+    elseif ($type == mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD) {
       $rows[] = array(
         'data' => array(
           'mediafile_id' => $row['object_id'],

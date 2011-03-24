@@ -3027,7 +3027,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do Post call.
     $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
-$this->var_export($response['xml']);
+
     // Test return status.
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
@@ -3134,7 +3134,7 @@ $this->var_export($response['xml']);
 
     $found_ids_2 = $found_ids = array();
     foreach ($found as $key_item => $item) {
-      $found_ids_2[] = $item['asset_id'] . ($granted ? ($item['granted'] ? ' (granted)' : ' (not granted)') : ' [always granted]');
+      $found_ids_2[] = $item['asset_id'] . ($granted ? ($item['granted'] == 'TRUE' ? ' (granted)' : ' (not granted)') : ' [always granted]');
       $found_ids[] = $item['asset_id'];
     }
 

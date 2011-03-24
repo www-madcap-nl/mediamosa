@@ -196,8 +196,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Fix renames.
@@ -243,30 +243,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $asset = mediamosa_asset::must_exists($asset_id);
 
     if ($mediafile_id) {
-
-      // Get the metadata.
-      $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
-
-      // Tool.
-
-      // Call the mediamosa_tool_is_recognized_as_transcode hook.
-      foreach (module_implements('mediamosa_tool_is_recognized_as_transcode') as $module) {
-        $recognized = module_invoke($module, 'mediamosa_tool_is_recognized_as_transcode', $mediafile_ext['metadata']['mime_type']);
-        if ($recognized) {
-          $mediafile = mediamosa_asset_mediafile::get_first_transcoded($mediafile_id);
-
-          if ($mediafile) {
-            $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::ID];
-
-            // Get the metadata.
-            $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
-          }
-
-          // One tool is enough. Break the foreach.
-          break;
-        }
-      }
-
       // Check play restrictions
       if (isset($asset['play_restriction_start']) && isset($asset['play_restriction_end'])) {
         $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions(
@@ -275,16 +251,19 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         );
       }
 
-      // Get the mediafile.
-      $mediafile_ext = array_merge(mediamosa_asset_mediafile::must_exists($mediafile_id), $mediafile_ext);
+      // Get mediafile.
+      $mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
       // Make sure asset_id matches.
       if ($mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
       }
 
+      // Get the metadata.
+      $mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+
       // Test if access on unappropriate flag.
-      mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin, TRUE);
+      mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
 
       // Check if allowed to play.
       mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
@@ -317,7 +296,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $a_stills = array();
     if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
       // Test if access on unappropriate flag.
-      mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin, TRUE);
+      mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
 
       // Set default still.
       if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
@@ -404,7 +383,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
       $query->condition('m.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
       $query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
-      if (isset($still_id)) {
+      if (!empty($still_id)) {
         $query->condition('m.' . mediamosa_asset_mediafile_db::ID, $still_id);
       }
       if (isset($mediafile_id)) {
@@ -417,9 +396,9 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $query->orderBy('m.' . mediamosa_asset_mediafile_db::ASSET_ID, 'ASC');
       $query->orderBy('mm.' . mediamosa_asset_mediafile_metadata_db::VAL_INT, 'ASC');
 
-      if (isset($still_id)) {
+      if (!empty($still_id)) {
         $result = $query->range(0, 1)->execute()->fetchAssoc();
-        if ($this->metadata_values(&$result, $width, $height, $format, $a_orders)) {
+        if ($this->metadata_values($result, $width, $height, $format, $a_orders)) {
           $result['ticket'] = $ticket;
           $a_stills[] = $result;
         }
@@ -428,7 +407,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $result = $query->execute();
 
         foreach ($result as $t_stills) {
-          if ($this->metadata_values(&$t_stills, $width, $height, $format, $a_orders)) {
+          if ($this->metadata_values($t_stills, $width, $height, $format, $a_orders)) {
             $ticket_still = mediamosa_db::uuid($app_id);
 
             // make a play or download symlink.
@@ -475,47 +454,45 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
   }
 
   /**
-   * Array copy.
-   * @param from
-   * @param &to
-   * @param field
-   */
-  private function move_data($from, &$to, $field) {
-    $to[$field] = (empty($from[$field]) ? NULL : $from[$field]);
-  }
-
-  /**
    * Metadata values.
+   *
    * @param &result
    * @return is_skip
    */
   private function metadata_values(&$result, $width, $height, $format, $a_orders) {
     $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($result['still_id']);
     $values_to_still = array();
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::WIDTH);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::HEIGHT);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::FILESIZE);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::MIME_TYPE);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_TIME_CODE);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_ORDER);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_FORMAT);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_TYPE);
-    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
-    $result = array_merge($result, $values_to_still);
-    $is_ok = TRUE;
-    if (isset($width) && $width != $values_to_still[mediamosa_asset_mediafile_metadata::WIDTH]) {
-      $is_ok = FALSE;
-    }
-    if (isset($height) && $height != $values_to_still[mediamosa_asset_mediafile_metadata::HEIGHT]) {
-      $is_ok = FALSE;
-    }
-    if (isset($format) && $format != $values_to_still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
-      $is_ok = FALSE;
-    }
-    if (count($a_orders) && !in_array($values_to_still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $a_orders)) {
-      $is_ok = FALSE;
+
+    $fields = array(
+      mediamosa_asset_mediafile_metadata::WIDTH,
+      mediamosa_asset_mediafile_metadata::HEIGHT,
+      mediamosa_asset_mediafile_metadata::FILESIZE,
+      mediamosa_asset_mediafile_metadata::MIME_TYPE,
+      mediamosa_asset_mediafile_metadata::STILL_TIME_CODE,
+      mediamosa_asset_mediafile_metadata::STILL_ORDER,
+      mediamosa_asset_mediafile_metadata::STILL_FORMAT,
+      mediamosa_asset_mediafile_metadata::STILL_TYPE,
+      mediamosa_asset_mediafile_metadata::STILL_DEFAULT,
+    );
+
+    foreach ($fields as $field) {
+      $values_to_still[$field] = (empty($values[$field]) ? NULL : $values[$field]);
     }
 
-    return $is_ok;
+    $result = array_merge($result, $values_to_still);
+    if (isset($width) && $width != $values_to_still[mediamosa_asset_mediafile_metadata::WIDTH]) {
+      return FALSE;
+    }
+    if (isset($height) && $height != $values_to_still[mediamosa_asset_mediafile_metadata::HEIGHT]) {
+      return FALSE;
+    }
+    if (isset($format) && $format != $values_to_still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
+      return FALSE;
+    }
+    if (count($a_orders) && !in_array($values_to_still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $a_orders)) {
+      return FALSE;
+    }
+
+    return TRUE;
   }
 }

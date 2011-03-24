@@ -30,58 +30,12 @@
  */
 
 // Constants.
-/**
- * Mime type: application/pdf
- */
-define('MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF', 'application/pdf');
 
 /**
- * Short id of the module.
+ * Implements hook_mediamosa_tool_can_analyse().
  */
-define('MEDIAMOSA_TOOL_PDF_ID', 'pdf');
-
-/**
- * Key value separator.
- */
-define('MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR', ':');
-
-/**
- * Warning level for pdf2swf.
- */
-define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING', '0');
-
-/**
- * Warning level for pdfinfo.
- */
-define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING', '0');
-
-/**
- * Implements hook_mediamosa_tool_is_recognized_as_transcode().
- */
-function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_transcode($mime_type) {
-  return in_array($mime_type, array(MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF));
-}
-
-/**
- * Implements hook_mediamosa_tool_transcode().
- */
-function mediamosa_tool_pdf_mediamosa_tool_transcode($mime_type) {
-  // Execution string.
-  // Go to the subdirectory.
-  // Create swf from pdf.
-  // Copy the result to transcode directory.
-  // Remove the temporary directory (and files).
-  // Create status file.
-  $execution_string = 'mkdir @file_location; cd @file_location; pdf2swf @mediafile_location -o @mediafile_id @params; cp @mediafile_id ../@mediafile_id.swf; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
-
-  return (_mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) ? $execution_string : FALSE);
-}
-
-/**
- * Implements hook_mediamosa_tool_is_recognized_as_analyse().
- */
-function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_analyse($mime_type) {
-  return in_array($mime_type, array(MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF));
+function mediamosa_tool_pdf_mediamosa_tool_can_analyse($mime_type) {
+  return mediamosa_tool_pdf::is_supported($mime_type);
 }
 
 /**
@@ -91,30 +45,30 @@ function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_analyse($mime_type) 
  */
 function mediamosa_tool_pdf_mediamosa_tool_analyse($job_ext) {
   $command_type = 'mediamosa_tool_pdf';
-  $tool_id = MEDIAMOSA_TOOL_PDF_ID;
+  $tool_id = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
   $execution_command = 'pdfinfo @mediafile_location';
-  $separator = MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR;
+  $separator = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_KEY_VALUE_SEPARATOR;
   mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
 }
 
 /**
- * Implements hook_mediamosa_tool_analyse_options().
+ * Implements hook_mediamosa_tool_options().
  */
-function mediamosa_tool_pdf_mediamosa_tool_analyse_options() {
+function mediamosa_tool_pdf_mediamosa_tool_options() {
   return array(
     'name' => t('PDF'),
     'description' => t('PDF files'),
-    'value' => MEDIAMOSA_TOOL_PDF_ID,
+    'tool' => mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID,
   );
 }
 
 /**
  * Implements hook_mediamosa_tool_iteration().
  *
- * Get module id.
+ * Get tool id.
  */
 function mediamosa_tool_pdf_mediamosa_tool_iteration() {
-  return MEDIAMOSA_TOOL_PDF_ID;
+  return mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
 }
 
 /**
@@ -141,7 +95,7 @@ function _mediamosa_tool_pdf_status_generate() {
   $results['app_pdf2swf'] = array(
     'title' => t('PDF tool: pdf2swf'),
     'value' => $status_line,
-    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING),
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_pdf::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING),
     'description' => $found ? '' : t('Install pdf2swf. You can find more information how to install pdf2swf !here', array('!here' => $helper_links['pdf2swf'])),
   );
 
@@ -157,7 +111,7 @@ function _mediamosa_tool_pdf_status_generate() {
   $results['app_pdfinfo'] = array(
     'title' => t('PDF tool: pdfinfo'),
     'value' => $status_line,
-    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING),
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_pdf::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING),
     'description' => $found ? '' : t('Install pdfinfo. You can find more information how to install pdfinfo !here', array('!here' => $helper_links['pdfinfo'])),
   );
 

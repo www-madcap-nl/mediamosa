@@ -46,6 +46,12 @@ Other changes (not ticket related)
 - Tool parameters in transcode profiles can now be either 'Select' or 
   'Checkbox'.
 - Fixed integrity check to match case sensitive with types.
+- Fixed PHP 5.3 bug when calling play proxy REST call.
+- Fixed integrity check to match the ENUM upper case names.
+- Updated MediaMosa connector to latest.
+- Fixed Job CQL test bug where dates where not converted to APP timezone.
+- Fixed Solr unit test to be excluded during automatic test runs when Solr 
+  module is not enabled.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------

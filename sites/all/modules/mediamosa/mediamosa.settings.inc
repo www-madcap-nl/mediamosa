@@ -195,6 +195,7 @@ class mediamosa_settings {
 
   // Run at;
   const MEDIAMOSA_RUN = 'mediamosa_run';
+  const MEDIAMOSA_RUN_ENABLED = 'mediamosa_run_enabled'; // Function that returns BOOLEAN if test should be run or listed.
   const MEDIAMOSA_RUN_15_MINUTES  = 'mediamosa_run_15_minutes';
   const MEDIAMOSA_RUN_3_HOURS = 'mediamosa_run_3_hours';
   const MEDIAMOSA_RUN_DAILY = 'mediamosa_run_daily';

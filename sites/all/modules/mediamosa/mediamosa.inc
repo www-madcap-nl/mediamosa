@@ -292,10 +292,17 @@ class mediamosa {
    * @return boolean
    */
   static public function show_drupal_login() {
+
     // Check if interface is enabled, if so, check if we are logged in.
     // If not logged in, allow /user/login/* url to show the login form
     if (mediamosa::is_admin_enabled()) {
-      $path_login = user_is_logged_in() ? '/user/logout' : '/user/login';
+      if (user_is_logged_in()) {
+        // Logged in as Drupal user, allow.
+        return TRUE;
+      }
+
+      // Not logged in as Drupal user.
+      $path_login = url('user/login');
       return (mediamosa_unicode::substr(mediamosa::request_uri(), 0, mediamosa_unicode::strlen($path_login)) == $path_login);
     }
 
