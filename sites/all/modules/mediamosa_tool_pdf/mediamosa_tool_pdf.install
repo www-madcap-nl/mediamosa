@@ -35,26 +35,26 @@
 function mediamosa_tool_pdf_install() {
   // Tool params.
 
-  $a_default_params = array(
+  $default_params = array(
     array('pdf', 'def_viewer', '-b', NULL, NULL, NULL, '', 'FALSE', t('Therefore the swf file will be "browseable", i.e. display some buttons for turning pages. The viewer swf to be used is determine'), 'CHECKBOX'),
     array('pdf', 'fonts', '-f', NULL, NULL, NULL, '', 'FALSE', t("Store full fonts in SWF. (Don't reduce to used characters)."), 'CHECKBOX'),
     array('pdf', 'flash_version', '-T', 8, 9, array(8, 9), 9, 'TRUE', t('Set Flash Version in the SWF header to num.'), 'SELECT'),
   );
 
   // Insert default mappings as nodes.
-  foreach ($a_default_params as $a_default_param) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $a_default_param[1]);
+  foreach ($default_params as $default_param) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $default_param[1]);
 
-    $node->{mediamosa_tool_params_db::TOOL} = $a_default_param[0];
-    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $a_default_param[1];
-    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $a_default_param[2];
-    $node->{mediamosa_tool_params_db::MIN_VALUE} = $a_default_param[3];
-    $node->{mediamosa_tool_params_db::MAX_VALUE} = $a_default_param[4];
-    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
-    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
-    $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
-    $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
-    $node->{mediamosa_tool_params_db::TYPE_PARAMETER} = $a_default_param[9];
+    $node->{mediamosa_tool_params_db::TOOL} = $default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $default_param[7];
+    $node->{mediamosa_tool_params_db::DESCRIPTION} = $default_param[8];
+    $node->{mediamosa_tool_params_db::TYPE_PARAMETER} = $default_param[9];
 
     $node = node_save($node);
   }
@@ -119,7 +119,7 @@ function mediamosa_tool_pdf_install() {
 
         $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING, $mapping[0]);
 
-        $node->{mediamosa_tool_mapping_db::TOOL} = MEDIAMOSA_TOOL_PDF_ID;
+        $node->{mediamosa_tool_mapping_db::TOOL} = mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;
         $node->{mediamosa_tool_mapping_db::PARAMETER} = $mapping[0];
         $node->{mediamosa_tool_mapping_db::PROP_ID} = $prop_id;
 

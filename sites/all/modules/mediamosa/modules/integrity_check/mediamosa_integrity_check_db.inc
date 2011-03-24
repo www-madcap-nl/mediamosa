@@ -38,10 +38,10 @@ class mediamosa_integrity_check_db {
   const ID = 'id';
   const TYPE = 'type';
   const TYPE_ERROR = 'error';
-  const TYPE_MISSING_MEDIAFILE = 'missing mediafile';
-  const TYPE_MISSING_MEDIARECORD = 'missing mediarecord';
-  const TYPE_MISSING_STILLFILE = 'missing stillfile';
-  const TYPE_MISSING_STILLRECORD = 'missing stillrecord';
+  const TYPE_MISSING_MEDIAFILE = 'MISSING MEDIAFILE';
+  const TYPE_MISSING_MEDIARECORD = 'MISSING MEDIARECORD';
+  const TYPE_MISSING_STILLFILE = 'MISSING STILLFILE';
+  const TYPE_MISSING_STILLRECORD = 'MISSING STILLRECORD';
   const OBJECT_ID = 'object_id';
   const OBJECT_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
   const APP_ID = 'app_id';

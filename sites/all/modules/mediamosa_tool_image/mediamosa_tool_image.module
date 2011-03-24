@@ -29,92 +29,11 @@
  * Image tool module.
  */
 
-// Constants.
 /**
- * Mime type: image/tiff
+ * Implements hook_mediamosa_tool_can_analyse().
  */
-define('MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_TIFF', 'image/tiff');
-
-/**
- * Mime type: image/*
- */
-define('MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL', 'image');
-
-/**
- * Short id of the module.
- */
-define('MEDIAMOSA_TOOL_IMAGE_ID', 'image');
-
-/**
- * Key value separator.
- */
-define('MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR', ':');
-
-/**
- * Warning level for ImageMagic.
- */
-define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING', '6');
-
-/**
- * Helper function to recognize mime type as transcode.
- */
-function _mediamosa_tool_image_is_recognized_as_transcode($mime_type) {
-  $is_found = FALSE;
-
-  switch ($mime_type) {
-    case MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_TIFF:
-      $is_found = TRUE;
-      break;
-  }
-
-  return $is_found;
-}
-
-/**
- * Implements hook_mediamosa_tool_is_recognized_as_transcode().
- */
-function mediamosa_tool_image_mediamosa_tool_is_recognized_as_transcode($mime_type) {
-  $is_found = _mediamosa_tool_image_is_recognized_as_transcode($mime_type);
-  return $is_found;
-}
-
-/**
- * Implements hook_mediamosa_tool_transcode().
- */
-function mediamosa_tool_image_mediamosa_tool_transcode($mime_type) {
-  $is_found = _mediamosa_tool_image_is_recognized_as_transcode($mime_type);
-
-  // Execution string.
-  // Go to the subdirectory.
-  // Create jpg from image (eg. from tiff).
-  // Copy the result to transcode directory.
-  // Remove the temporary directory (and files).
-  // Create status file.
-  $execution_string = 'mkdir @file_location; cd @file_location; convert @mediafile_location @params @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
-
-  return ($is_found ? $execution_string : FALSE);
-}
-
-/**
- * Helper function to recognize mime type as analyse.
- */
-function mediamosa_tool_image_is_recognized_as_analyse($mime_type) {
-  $is_found = FALSE;
-
-  $mime_parts = explode('/', $mime_type);
-  if (isset($mime_parts[1]) && $mime_parts[0] == MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL) {
-    $is_found = TRUE;
-  }
-
-  return $is_found;
-}
-
-/**
- * Implements hook_mediamosa_tool_is_recognized_as_analyse().
- */
-function mediamosa_tool_image_mediamosa_tool_is_recognized_as_analyse($mime_type) {
-  $is_found = mediamosa_tool_image_is_recognized_as_analyse($mime_type);
-  return $is_found;
+function mediamosa_tool_image_mediamosa_tool_can_analyse($mime_type) {
+  return mediamosa_tool_image::is_supported($mime_type);
 }
 
 /**
@@ -124,20 +43,20 @@ function mediamosa_tool_image_mediamosa_tool_is_recognized_as_analyse($mime_type
  */
 function mediamosa_tool_image_mediamosa_tool_analyse($job_ext) {
   $command_type = 'mediamosa_tool_image';
-  $tool_id = MEDIAMOSA_TOOL_IMAGE_ID;
+  $tool_id = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
   $execution_command = 'exiv2 @mediafile_location';
-  $separator = MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR;
+  $separator = mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR;
   mediamosa_tool_mapping::tool_analyse($job_ext, $command_type, $tool_id, $execution_command, $separator);
 }
 
 /**
- * Implements hook_mediamosa_tool_analyse_options().
+ * Implements hook_mediamosa_tool_options().
  */
-function mediamosa_tool_image_mediamosa_tool_analyse_options() {
+function mediamosa_tool_image_mediamosa_tool_options() {
   return array(
     'name' => t('Image'),
     'description' => t('Image files like JPG, PNG, TIFF.'),
-    'value' => MEDIAMOSA_TOOL_IMAGE_ID,
+    'tool' => mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID,
   );
 }
 
@@ -146,7 +65,7 @@ function mediamosa_tool_image_mediamosa_tool_analyse_options() {
  * Implements hook_mediamosa_tool_iteration().
  */
 function mediamosa_tool_image_mediamosa_tool_iteration() {
-  return MEDIAMOSA_TOOL_IMAGE_ID;
+  return mediamosa_tool_image::MEDIAMOSA_TOOL_IMAGE_ID;
 }
 
 /**
@@ -173,7 +92,7 @@ function _mediamosa_tool_image_status_generate() {
   $results['app_imagemagic'] = array(
     'title' => t('Image tool: ImageMagic'),
     'value' => $status_line,
-    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING),
+    'severity' => _mediamosa_maintenance_status_okerror($found && is_numeric($version) && $version >= mediamosa_tool_image::MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING),
     'description' => $found ? '' : t('Install ImageMagic. You can find more information how to install ImageMagic !here', array('!here' => $helper_links['imagemagic'])),
   );
 

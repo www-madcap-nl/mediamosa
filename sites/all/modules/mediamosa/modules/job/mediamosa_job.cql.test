@@ -219,7 +219,9 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->cql_do_search_test_jobs($asset_id_1, 'job_type == "^UPLOAD^"', array($job_id_1_1_1, $job_id_1_2_1), $a_search_params);
 
     // Asset 1, finished.
-    $this->cql_do_search_test_jobs($asset_id_1, sprintf('finished >= "%s" AND finished < "%s"', $a_fields_1_1_2[mediamosa_job_db::FINISHED], $a_fields_1_2_2[mediamosa_job_db::FINISHED]), array($job_id_1_1_2, $job_id_1_2_1), $a_search_params);
+    $app_time_1 = mediamosa_datetime::utc_date2app_date($a_fields_1_1_2[mediamosa_job_db::FINISHED], $this->a_app[mediamosa_app_db::TIMEZONE]);
+    $app_time_2 = mediamosa_datetime::utc_date2app_date($a_fields_1_2_2[mediamosa_job_db::FINISHED], $this->a_app[mediamosa_app_db::TIMEZONE]);
+    $this->cql_do_search_test_jobs($asset_id_1, sprintf('finished >= "%s" AND finished < "%s"', $app_time_1, $app_time_2), array($job_id_1_1_2, $job_id_1_2_1), $a_search_params);
 
     // Asset 1, create_still = TRUE.
     $this->cql_do_search_test_jobs($asset_id_1, 'create_still == "TRUE"', array($job_id_1_1_2), $a_search_params);

@@ -303,8 +303,9 @@ class mediamosa {
 
       // Not logged in as Drupal user.
       // We allow login and password recovery.
-      if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login') return TRUE;
-      if (mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password') return TRUE;
+      if (mediamosa_unicode::substr(mediamosa::request_uri(), -10) == 'user/login' || mediamosa_unicode::substr(mediamosa::request_uri(), -13) == 'user/password') {
+        return TRUE;
+      }
     }
 
     return FALSE;
