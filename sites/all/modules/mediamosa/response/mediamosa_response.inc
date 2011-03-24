@@ -100,8 +100,8 @@ class mediamosa_response extends mediamosa {
 
       // Find the rest call.
       $rest_call = $this->mediamosa_rest->match_call();
-
-      // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user/login or /user/logout.
+      
+      // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user pages.
       if (!$rest_call || mediamosa::show_drupal_login()) {
         // Put back previous (drupal) handler.
         if (!empty($previous_handler)) {

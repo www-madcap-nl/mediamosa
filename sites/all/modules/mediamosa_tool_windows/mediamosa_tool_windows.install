@@ -33,36 +33,7 @@
  * Implements hook_install().
  */
 function mediamosa_tool_windows_install() {
-  // Tool params.
-
-  $a_default_params = array(
-    array('windows', 'internal_file_extension', '', NULL, NULL, array("wmv"), NULL, 'FALSE', NULL),
-    array('windows', 'fps', '-v_framerate', 10, 30, NULL, '25', 'FALSE', NULL),
-    array('windows', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE', NULL),
-    array('windows', 'videobitrate', '-v_bitrate', 128, 1024, NULL, NULL, 'FALSE', NULL),
-    array('windows', 'width', '-v_width', 128, 7680, NULL, NULL, 'FALSE', NULL),
-    array('windows', 'height', '-v_height', 96, 4800, NULL, NULL, 'FALSE', NULL),
-    array('windows', 'videocodec', '-v_codec', NULL, NULL, array('flv','wmv','mpeg4','libx264','rawvideo'), NULL, 'FALSE', NULL),
-    array('windows', 'audiocodec', '-a_codec', NULL, NULL, array('mp3','wma','pcm_s16le','libfaac'), NULL, 'FALSE', NULL),
-    array('windows', 'audiosetting', '-a_setting', NULL, NULL, array('40_22_1','40_22_2','40_44_1','40_44_2','64_22_1','64_22_2','64_44_1','64_44_2','128_22_1','128_22_2','128_44_1','128_44_2','192_22_1','192_22_2','192_44_1','192_44_2','256_22_1','256_22_2','256_44_1','256_44_2'), NULL, 'FALSE', NULL),
-  );
-
-  // Insert default mappings as nodes.
-  foreach ($a_default_params as $a_default_param) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $a_default_param[1]);
-
-    $node->{mediamosa_tool_params_db::TOOL} = $a_default_param[0];
-    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $a_default_param[1];
-    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $a_default_param[2];
-    $node->{mediamosa_tool_params_db::MIN_VALUE} = $a_default_param[3];
-    $node->{mediamosa_tool_params_db::MAX_VALUE} = $a_default_param[4];
-    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
-    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
-    $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
-    $node->{mediamosa_tool_params_db::DESCRIPTION} = $a_default_param[8];
-
-    $node = node_save($node);
-  }
+  // Default tool_windows_install hook.
 }
 
 /**

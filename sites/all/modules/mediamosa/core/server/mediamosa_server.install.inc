@@ -114,6 +114,10 @@ s1.write('mediaspace');
       'ogg',
       '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>'
       , 'Apache - OGG', 0, '', '', 'APC', ''),
+    array(6, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      'matroska;webm',
+      '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>'
+      , 'Apache - WebM', 0, '', '', 'APC', ''),
 
     array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/download/{TICKET}', '', '', 'Default download server', 0, '', '', 'APC', ''),
     array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/still/{TICKET}', '', '', 'Default still server', 0, '', '', 'APC', ''),

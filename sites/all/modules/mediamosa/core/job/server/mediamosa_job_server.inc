@@ -516,7 +516,7 @@ class mediamosa_job_server {
           self::log_mediafile($mediafile_id_src, "Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
 
           // Set status to failed.
-          self::set_job_status($job_id, $status, $job_status['Progress'],  isset($job_status["ffmpeg-output"]) ? ($job_status["Errors"] != "" ? $job_status["Errors"] . "-\n" : '') . $job_status["ffmpeg-output"] : $job_status["Errors"]);
+          self::set_job_status($job_id, $status, (empty($job_status['Progress']) ? 0 : $job_status['Progress']),  isset($job_status["ffmpeg-output"]) ? ($job_status["Errors"] != "" ? $job_status["Errors"] . "-\n" : '') . $job_status["ffmpeg-output"] : $job_status["Errors"]);
         }
         else {
           // Set job status.

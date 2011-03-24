@@ -45,6 +45,11 @@ Other changes (not ticket related)
 - Fixed speed bug in asset call when metadata size was bigger than 64k.
 - Tool parameters in transcode profiles can now be either 'Select' or 
   'Checkbox'.
+- Fixed login and password recovery for 'simple apache install'.
+- rebuild the example transcoding profiles; webm, ogg and mobile
+  profiles added.
+- Install profile does not install the windows transcoding tool.
+
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
