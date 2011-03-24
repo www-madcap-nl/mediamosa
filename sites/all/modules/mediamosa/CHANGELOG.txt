@@ -38,6 +38,7 @@ MediaMosa 3.0 (build )
   the new_original (See ticket #393).
 - Server URI is separated to URI and path (See ticket #367).
 - Video without bitrate fix (See ticket #394).
+- Image style development (See ticket #371).
 
 MediaMosa 2.4 (build 1521)
 --------------------------

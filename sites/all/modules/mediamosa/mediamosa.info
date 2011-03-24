@@ -8,6 +8,13 @@ core = 7.x
 configure = admin/mediamosa/config/global
 
 ; Dependencies (module names)
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = color
+dependencies[] = help
+dependencies[] = menu
+dependencies[] = dblog
+dependencies[] = image
 dependencies[] = simpletest
 dependencies[] = mediamosa_sdk
 

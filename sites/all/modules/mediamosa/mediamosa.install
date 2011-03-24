@@ -2158,5 +2158,16 @@ function mediamosa_update_7098() {
   db_query("ALTER TABLE {mediamosa_server} MODIFY server_uri VARCHAR(255) COMMENT 'The URI of the server.' AFTER server_type");
 }
 
+/**
+ * Turn on image module.
+ */
+function mediamosa_update_7099() {
+  $module_list = array(
+    'image',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
