@@ -2027,4 +2027,136 @@ function mediamosa_update_7093() {
   }
 }
 
+/**
+ * Create new 'No mediafile found for the given asset and tag' errorcode in database.
+ */
+function mediamosa_update_7094() {
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG',
+      mediamosa_error_db::MESSAGE => "No mediafile found for the given asset and tag",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG,
+    ))
+  ->execute();
+}
+
+/**
+ * Create new 'The mediafile (@mediafile_id) is not original' errorcode in database.
+ * Create new 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)' errorcode in database.
+ */
+function mediamosa_update_7095() {
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL',
+        'message' => "The mediafile (@mediafile_id) is not original",
+        'code' => 723, //mediamosa_error::ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL,
+      ))
+    ->execute();
+  }
+
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_INVALID_MEDIAFILE_RELATION')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_INVALID_MEDIAFILE_RELATION',
+        'message' => "The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)",
+        'code' => 724, //mediamosa_error::ERRORCODE_INVALID_MEDIAFILE_RELATION,
+      ))
+    ->execute();
+  }
+}
+
+/**
+ * Add server path field to mediamosa_server table.
+ */
+function mediamosa_update_7096() {
+  if (!db_field_exists('mediamosa_server', 'server_path')) {
+    db_query("ALTER TABLE {mediamosa_server} ADD server_path VARCHAR(255) COMMENT 'The path of the server.' AFTER server_uri");
+  }
+}
+
+/**
+ * Split the server_uri to two parts, and fill the server_uri and server_path in mediamosa_server table and mediamosa_node_revision table.
+ */
+function mediamosa_update_7097() {
+  $query = db_select('mediamosa_server', 's');
+  $query->fields('s', array('vid', 'server_uri'));
+  $result = $query->execute();
+  foreach ($result as $record) {
+    $vid = $record->vid;
+
+    $parsed_uri = $parsed_path = parse_url($record->server_uri);
+
+    unset($parsed_uri['path']);
+    unset($parsed_uri['query']);
+    unset($parsed_uri['fragment']);
+    $server_uri = mediamosa_http::glue_url($parsed_uri);
+
+    unset($parsed_path['scheme']);
+    unset($parsed_path['host']);
+    unset($parsed_path['user']);
+    unset($parsed_path['pass']);
+    unset($parsed_path['port']);
+    $server_path = '{base_uri}' . mediamosa_http::glue_url($parsed_path);
+
+    // Update mediamosa_server table.
+    $num_updated = db_update('mediamosa_server')
+      ->fields(array(
+        'server_uri' => $server_uri,
+        'server_path' => $server_path,
+      ))
+      ->condition('vid', $vid)
+      ->execute();
+
+    // Update mediamosa_node_revision table.
+
+    // Get the data.
+    $query_nr = db_select('mediamosa_node_revision', 'nr');
+    $query_nr
+      ->condition('nr.vid', $vid)
+      ->fields('nr', array('revision_data'))
+      ->range(0, 1);
+    $result_nr = $query_nr->execute();
+    $revision_data = $result_nr->fetchCol();
+    $revision_data = unserialize($revision_data[0]);
+
+    // Change the data.
+    unset($revision_data['uri']);
+    $revision_data['server_uri'] = $server_uri;
+    $revision_data['server_path'] = $server_path;
+
+    // Save the data.
+    $num_updated = db_update('mediamosa_node_revision')
+      ->fields(array(
+        'revision_data' => serialize($revision_data),
+      ))
+      ->condition('vid', $vid)
+      ->execute();
+  }
+
+  return t('Your server configurations were changed. Please, check them: !here', array('!here' => l('admin/mediamosa/config/server', 'admin/mediamosa/config/server')));
+}
+
+/**
+ * Change server URI field to mediamosa_server table.
+ */
+function mediamosa_update_7098() {
+  db_query("ALTER TABLE {mediamosa_server} MODIFY server_uri VARCHAR(255) COMMENT 'The URI of the server.' AFTER server_type");
+}
+
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

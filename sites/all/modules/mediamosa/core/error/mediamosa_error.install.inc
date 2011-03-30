@@ -67,6 +67,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_REST_NOT_FOUND' => 'The REST call with uri_id @uri_id was not found',
     'ERRORCODE_DIR_UNABLE_TO_CREATE' => "Unable to create directory '@location', reason: @reason",
     'ERRORCODE_MISSING_EXTENSION' => "Unable to complete request, missing/requires '@extension'",
+    'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG' => "No mediafile found for the given asset and tag",
 
     'ERRORCODE_ASSET_NOT_FOUND' => "The asset with ID '@asset_id' was not found in the database",
     'ERRORCODE_MEDIAFILE_NOT_FOUND' => "The mediafile with ID '@mediafile_id' was not found in the database",
@@ -91,6 +92,8 @@ function _mediamosa_error_install() {
     'ERRORCODE_CANT_PLAY_MEDIAFILE' => 'This mediafile (@mediafile_id) can not be played; @reason',
     'ERRORCODE_CANT_TRANSCODE_MEDIAFILE' => 'This mediafile (@mediafile_id) can not be transcoded; @reason',
     'ERRORCODE_APP_DISABLED' => 'This application has been disabled',
+    'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL' => 'The mediafile (@mediafile_id) is not original',
+    'ERRORCODE_INVALID_MEDIAFILE_RELATION' => 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)',
 
     'ERRORCODE_UNKNOWN_JOB' => 'Unknown job specified',
 

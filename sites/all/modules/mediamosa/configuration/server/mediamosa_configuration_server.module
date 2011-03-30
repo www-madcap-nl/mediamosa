@@ -38,10 +38,10 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
 
   foreach ($servers as $server) {
     if (empty($server[mediamosa_server_db::SERVER_NAME])) {
-      $server[mediamosa_server_db::SERVER_NAME] = $server[mediamosa_server_db::SERVER_URI];
+      $server[mediamosa_server_db::SERVER_NAME] = mediamosa_server::get_server_url($server);
     }
 
-    $options[$server[mediamosa_server_db::SERVER_URI]] = $server[mediamosa_server_db::SERVER_NAME];
+    $options[mediamosa_server::get_server_url($server)] = $server[mediamosa_server_db::SERVER_NAME];
   }
 
   $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);

@@ -109,6 +109,13 @@ class mediamosa_connector {
   }
 
   /**
+   * Return an ID we can use to indentify this connection.
+   */
+  public function get_connection_id() {
+    return empty($this->username) || empty($this->url) ? FALSE : sha1($this->username . '@' . $this->url);
+  }
+
+  /**
    * Reset the session, so login will be retried.
    */
   public function reset_session($username = NULL, $password = NULL, $url = NULL) {

@@ -487,7 +487,8 @@ class mediamosa_asset {
     $is_app_admin = FALSE,
     $show_stills = TRUE,
     $show_collections = FALSE,
-    $add_has_streamable_mediafiles = FALSE
+    $add_has_streamable_mediafiles = FALSE,
+    $app_active_version = FALSE
   ) {
 
     // Something to collect?
@@ -663,7 +664,8 @@ class mediamosa_asset {
       $is_app_admin,
       $show_stills,
       $show_collections,
-      $add_has_streamable_mediafiles
+      $add_has_streamable_mediafiles,
+      $app_active_version
     );
   }
 
@@ -690,7 +692,8 @@ class mediamosa_asset {
     $is_app_admin,
     $show_stills = TRUE,
     $show_collections = FALSE,
-    $add_has_streamable_mediafiles = FALSE) {
+    $add_has_streamable_mediafiles = FALSE,
+    $app_active_version = FALSE) {
 
     $collections = array();
 
@@ -897,8 +900,19 @@ class mediamosa_asset {
 
       // Add collection data.
       if ($show_collections && isset($collections[$asset[mediamosa_asset_db::ID]])) {
+        // Show in old format? Yes, if the app client < 3.0.
+        $older_output_30 = $app_active_version !== FALSE && $app_active_version[mediamosa_version::MAJOR] < 3;
+
+        if (!$older_output_30) {
+          $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections'] = array();
+        }
         foreach ($collections[$asset[mediamosa_asset_db::ID]] as $coll_id => $collection) {
-          $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $collection[mediamosa_collection_db::TITLE];
+          if ($older_output_30) {
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $collection[mediamosa_collection_db::TITLE];
+          }
+          else {
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection']['#' . serialize(array('id' => $coll_id,))][mediamosa_collection_db::TITLE] = $collection[mediamosa_collection_db::TITLE];
+          }
         }
       }
     }

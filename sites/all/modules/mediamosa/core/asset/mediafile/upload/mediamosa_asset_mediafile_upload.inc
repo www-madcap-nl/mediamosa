@@ -180,7 +180,7 @@ class mediamosa_asset_mediafile_upload {
    * @param boolean $default
    * @param array $still_parameters
    */
-  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array()) {
+  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE, $still_parameters = array(), $frametime = NULL) {
 
     // Set to false.
     $is_app_admin = FALSE;
@@ -265,7 +265,7 @@ class mediamosa_asset_mediafile_upload {
       $order,
       $default,
       $still_parameters,
-      NULL,
+      $frametime,
       $mediafile[mediamosa_asset_mediafile_db::ID],
       $tag
     );

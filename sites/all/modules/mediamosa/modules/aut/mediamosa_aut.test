@@ -46,12 +46,12 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
    * Wrapper for play proxy.
    * use pp_call_* (!).
    */
-  private function pp_call($line, $asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  private function pp_call($line, $asset_id, $mediafile_id, $user_id, $aut_group_id = NULL, $domain = NULL, $realm = NULL, array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     $a_parameters[mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID] = $mediafile_id;
     $a_parameters[mediamosa_rest_call_asset_mediafile_play::USER_ID] = $user_id;
 
-    if (isset($group_id)) {
-      $a_parameters[mediamosa_rest_call_asset_mediafile_play::GROUP_ID] = $group_id;
+    if (isset($aut_group_id)) {
+      $a_parameters[mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID] = $aut_group_id;
     }
 
     if (isset($domain)) {

@@ -787,7 +787,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_server_db::VERSION} = 0;
     $node->{mediamosa_server_db::SERVER_STATUS} = mediamosa_server_db::SERVER_STATUS_ON;
     $node->{mediamosa_server_db::SERVER_TYPE} = mediamosa_server_db::SERVER_TYPE_DOWNLOAD;
-    $node->{mediamosa_server_db::SERVER_URI} = 'http://localhost/download/{TICKET}';
+    $node->{mediamosa_server_db::SERVER_URI} = 'http://localhost/';
+    $node->{mediamosa_server_db::SERVER_PATH} = mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}';
     $node->{mediamosa_server_db::CONTAINERS} = NULL;
     $node->{mediamosa_server_db::OBJECT_CODE} = NULL;
     $node->{mediamosa_server_db::SERVER_NAME} = NULL;

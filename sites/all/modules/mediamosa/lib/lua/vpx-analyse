@@ -48,7 +48,7 @@ local aspectratio = lpeg.C(LHOOK * (1 - RHOOK)^0 * RHOOK) +
 local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * RHOOK))^0 * space
 local channels = ((number * space)^0 * word + float) * space
 local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
-local codec = (lpeg.C(symbol * (space * symbol)^0) + hex) * space
+local codec = (lpeg.C(symbol * (space * lpeg.P("(")^-1 * symbol * lpeg.P(")")^-1)^0) + hex) * space
 local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
 local is_hinted = lpeg.C(symbol)
 local unit = lpeg.C(lpeg.P("k")^-1) * space
@@ -401,6 +401,17 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
           add_error("The video input stream uses an unknown codec")
           codec = {}
         else
+
+          -- File without bitrate fix.
+          if fps == nil then
+            -- No fps, then br2 has the fps data.
+            fps = br2
+            br2 = nil
+          elseif fps == br2 then
+            -- Fps recognized as bitrate.
+            br2 = nil
+          end
+
           local bitrate
           if(br1 ~= "unknown") then
             bitrate = br1
@@ -421,7 +432,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
           else
             add_property("Video-framespersecond", br2)
           end
-          if bitrate ~= "unknown" then
+          if bitrate ~= nil and bitrate ~= "unknown" then
             add_property("Video-bitrate", bitrate)
             -- print("bitrate " .. bitrate)
             if tonumber(bitrate) > max_video_bitrate then
