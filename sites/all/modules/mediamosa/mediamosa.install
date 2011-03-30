@@ -2093,7 +2093,7 @@ function mediamosa_update_7100() {
 
     // Is_hidden.
     db_add_index(
-      'mediamosa_asset_metadata_property_db',
+      'mediamosa_asset_metadata_property',
       'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
       array(
         mediamosa_asset_metadata_property_db::IS_HIDDEN
