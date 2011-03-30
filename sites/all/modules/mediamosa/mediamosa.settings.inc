@@ -81,6 +81,8 @@ class mediamosa_settings {
   const PLAY_TICKET_LOCATION = 'links';
   const DOWNLOAD_TICKET_LOCATION = 'download_links';
   const STILL_TICKET_LOCATION = 'still_links';
+  const STILL_DATA_STYLE_LOCATION = 'style';
+  const STILL_LINK_STYLE_LOCATION = 'style';
 
   // Expiration settings, in seconds.
   const TICKET_EXPIRATION_PLAY = 600; // 10 minutes

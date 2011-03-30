@@ -871,7 +871,7 @@ class mediamosa_response extends mediamosa {
       $dom_element_errors = $dom_document->createElement('errors');
 
       foreach ($this->response['errors'] as $key => $error) {
-        $dom_element_errors->appendChild(new DOMElement($key, $error));
+        $dom_element_errors->appendChild(new DOMElement('error', mediamosa_unicode::xmlentities($error)));
       }
     }
 

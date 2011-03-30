@@ -107,6 +107,26 @@ class mediamosa_configuration_storage {
   }
 
   /**
+   * Return the complete still data location folder.
+   *
+   * @return string
+   */
+  static public function still_location_get_full() {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR;
+  }
+
+  /**
+   * Return the complete still style data location folder.
+   *
+   * @param $style
+   *
+   * @return string
+   */
+  static public function still_style_location_get_full($style) {
+    return self::still_location_get_full() . mediamosa_settings::STILL_DATA_STYLE_LOCATION . DIRECTORY_SEPARATOR . $style . DIRECTORY_SEPARATOR;
+  }
+
+  /**
    * Return the tmp transcode folder.
    */
   static public function transcode_tmp_location_get() {
@@ -138,12 +158,23 @@ class mediamosa_configuration_storage {
   }
 
   /**
-   * Return the default path for the ticket stills.
+   * Return the default path for the ticket and permanent stills.
    *
    * @return string
    */
   static public function ticket_still_location_get() {
     return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR;
+  }
+
+  /**
+   * Return the still style location for the ticket and permanent stills.
+   *
+   * @param string $style
+   *
+   * @return string
+   */
+  static public function ticket_still_style_location_get($style) {
+    return self::ticket_still_location_get() . mediamosa_settings::STILL_LINK_STYLE_LOCATION . DIRECTORY_SEPARATOR . $style . DIRECTORY_SEPARATOR;
   }
 
   /**
