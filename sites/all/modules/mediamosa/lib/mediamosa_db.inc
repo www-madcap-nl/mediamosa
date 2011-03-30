@@ -524,14 +524,17 @@ class mediamosa_db {
           assert($e);
 
           assert(0);// so we know.
-          mediamosa::log(
+
+          // We do not using mediamosa::log() here because it might be inaccessible during install.
+          watchdog('Mediamosa',
             "Failed to create foreign key 'fk_#table_name_#column' on table '#table_name', query; '#query', message: #message.",
             array(
               '#table_name' => $module_name,
               '#column' => $column,
               '#query' => $query,
               '#message' => $e->getMessage(),
-            )
+            ),
+            WATCHDOG_ERROR
           );
         }
         // only the first is allowed.
