@@ -2094,9 +2094,9 @@ function mediamosa_update_7100() {
     // Is_hidden.
     db_add_index(
       'mediamosa_asset_metadata_property_db',
-      'idx_' . mediamosa_asset_metadata_property_db::is_hidden,
+      'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
       array(
-        mediamosa_asset_metadata_property_db::is_hidden
+        mediamosa_asset_metadata_property_db::IS_HIDDEN
       )
     );
   }
