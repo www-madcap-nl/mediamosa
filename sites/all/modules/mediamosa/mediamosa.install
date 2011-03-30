@@ -2152,12 +2152,12 @@ function mediamosa_update_7105() {
     db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
   }
   else {
-    db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+    db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_key oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
   }
 
   if (!db_field_exists('mediamosa_app', 'oauth_consumer_secret')) {
     // oAuth consumer secret.
-    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
   }
   else {
     db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_secret oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
