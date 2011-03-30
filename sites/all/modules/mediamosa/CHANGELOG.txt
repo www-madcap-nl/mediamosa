@@ -58,7 +58,9 @@ Other changes (not ticket related)
 - Install profile does not install the windows transcoding tool.
 - Fixed problem in unit test where profiles where missing and was needed.
 - Fixed invalid error in perminanent still link unit test.
-- 
+- Fixed problem on rewrite xml output where errors in header would stop script.
+- Changed the description in the profile by removing all line feeds and unused
+  spaces.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
