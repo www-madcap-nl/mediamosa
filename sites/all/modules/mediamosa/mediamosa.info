@@ -319,6 +319,10 @@ files[] = core/user/group/mediamosa_user_group_db.inc
 files[] = core/user/group/mediamosa_user_group.inc
 files[] = core/user/group/mediamosa_user_group.install.inc
 
+; User-Group Relationship.
+files[] = core/user/group/mediamosa_user_in_group_db.inc
+files[] = core/user/group/mediamosa_user_in_group.install.inc
+
 ; User Favorite.
 files[] = core/user/favorite/mediamosa_user_favorite_db.inc
 files[] = core/user/favorite/mediamosa_user_favorite.inc

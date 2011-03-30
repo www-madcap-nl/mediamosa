@@ -26,25 +26,18 @@
 
  /**
   * @file
-  * User DB Class.
+  * DB classes for user/user_group relationship.
   */
 
-class mediamosa_user_db {
+class mediamosa_user_in_group_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_user'; // 1.x name quota_user.
+  const TABLE_NAME = 'mediamosa_user_in_group'; // 2.4
 
   // Primary KEY
-  const KEY = 'user_key';
+  const ID = 'relation_id';
 
-  // Database fields;
-  const APP_ID = 'app_id';
-  const ID = 'name';
-  const NAME = 'name';
-  const NAME_LENGTH = 255;
-  const GROUP_ID = 'group_id';
-  const GROUP_ID_LENGTH = 255;
-  const QUOTUM = 'quotum';
-  const CREATED = 'created';
-  const CHANGED = 'changed';
+  // Relation
+  const USER_KEY = 'user_key';
+  const GROUP_KEY = 'group_key';
 }

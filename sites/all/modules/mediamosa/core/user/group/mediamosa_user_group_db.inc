@@ -26,13 +26,16 @@
 
  /**
   * @file
-  * DB class for user_group.
+  * DB classes for user_group relationship.
   */
 
 class mediamosa_user_group_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
   const TABLE_NAME = 'mediamosa_user_group'; // 1.x name quota_user.
+
+  // Primary KEY
+  const KEY = 'group_key';
 
   // Database fields;
   const ID = 'group_id';
