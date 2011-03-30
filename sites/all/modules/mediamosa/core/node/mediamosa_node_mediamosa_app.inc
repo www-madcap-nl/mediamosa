@@ -257,8 +257,6 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('REST call version'), check_plain($node->{mediamosa_app_db::ACTIVE_VERSION})),
     array(t('Owner'), check_plain($node->{mediamosa_app_db::OWNER})),
     array(t('Allowed Master/Slave Apps'), empty($allow_masterslave_apps) ? t('No applications allowed.') : implode(', ', $allow_masterslave_apps)),
-    array(t('oAuth consumer key'), empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) ? '' : check_plain($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY})),
-    array(t('oAuth consumer secret'), empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET}) ? '' : check_plain($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})),
   );
 
   // Add timestamps.
@@ -474,10 +472,10 @@ function mediamosa_app_form($node, &$form_state) {
       '#description' => t('Available oAuth client'),
     );
 
-  $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_analyse_options');
+  $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_options');
   $options = array();
   foreach ($tool_analyse_checkboxes['name'] as $tool_analyse_key => $tool_analyse_checkbox) {
-    $options[$tool_analyse_checkboxes['value'][$tool_analyse_key]] = $tool_analyse_checkbox;
+    $options[$tool_analyse_checkboxes['tool'][$tool_analyse_key]] = $tool_analyse_checkbox;
   }
    */
   $form['tool'] = array(
@@ -489,10 +487,10 @@ function mediamosa_app_form($node, &$form_state) {
   );
   $form['tool'][mediamosa_app_db::TOOL_ANALYSE] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Choose which tools can make metadata.'),
+    '#title' => t('Choose the tools that may copy technical metadata to asset metadata.'),
     '#default_value' => unserialize(mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, array())),
     '#options' => $options,
-    '#description' => t('The tools can analyse their mediafiles and they can put the data (eg. author) to the asset metadata. You can allow or disallow this functions here.'),
+    '#description' => t('The tools can analyse their mediafiles and they can copy the data (f.e. author) to the asset metadata. You can allow or disallow these functions here.'),
   );
 
   $form['still'] = array(
@@ -522,7 +520,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#type' => 'select',
     '#title' => t('Padding'),
     '#description' => t('Force padding, if aspect ratio is maintained (default = yes). Possible values: , yes, no.'),
-    '#options' => array('YES' => t('YES'), 'NO' => t('NO')),
+    '#options' => array('YES' => t('Yes'), 'NO' => t('No')),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_PADDING, $node, mediamosa_app_db::STILL_PADDING_YES),
   );
 

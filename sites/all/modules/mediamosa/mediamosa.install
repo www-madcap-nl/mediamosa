@@ -2129,6 +2129,8 @@ function mediamosa_update_7103() {
       'not null' => FALSE,
       'default' => NULL,
     );
+
+    db_add_field('mediamosa_app', mediamosa_app_db::TOOL_ANALYSE, $spec);
   }
 }
 
@@ -2172,8 +2174,6 @@ function mediamosa_update_7105() {
         mediamosa_app_db::OAUTH_CONSUMER_KEY,
       )
     );
-
-    db_add_field('mediamosa_app', mediamosa_app_db::TOOL_ANALYSE, $spec);
   }
 }
 

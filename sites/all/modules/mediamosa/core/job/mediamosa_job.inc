@@ -799,24 +799,22 @@ class mediamosa_job {
     // Get all the metadata.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-    // Call the mediamosa_tool_is_recognized_as_analyse hook.
-    foreach (module_implements('mediamosa_tool_is_recognized_as_analyse') as $module) {
-      $recognized = module_invoke($module, 'mediamosa_tool_is_recognized_as_analyse', $mime_type);
-      if ($recognized) {
+    // Call the mediamosa_tool_can_analyse hook.
+    foreach (module_implements('mediamosa_tool_can_analyse') as $module) {
+      if (module_invoke($module, 'mediamosa_tool_can_analyse', $mime_type)) {
         // Get the tool id.
-        $module_id = module_invoke($module, 'mediamosa_tool_iteration');
+        $tool_options = module_invoke($module, 'mediamosa_tool_options');
+
         // Get the app.
         $app = mediamosa_app::get_by_appid($job_ext[mediamosa_job_db::APP_ID]);
         $tool_analyse = unserialize($app[mediamosa_app_db::TOOL_ANALYSE]);
 
         // Check if the tool is enabled for this app.
-        if (!empty($tool_analyse[$module_id])) {
+        if (!empty($tool_analyse[$tool_options['tool']])) {
           // Start the analyse process.
-          $module_id = module_invoke($module, 'mediamosa_tool_analyse', $job_ext);
+          module_invoke($module, 'mediamosa_tool_analyse', $job_ext);
+          break;
         }
-
-        // One tool is enough. Break the foreach.
-        break;
       }
     }
   }

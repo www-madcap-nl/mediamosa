@@ -275,12 +275,12 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   $tools = array_combine($tools, $tools);
   $tools += array($tools_default => $tools_default);
   $form['required'][mediamosa_transcode_profile_db::TOOL] = array(
-    '#title' => t('Encoder used'),
+    '#title' => t('Transcoding Tool'),
     '#type' => 'select',
     '#default_value' => $tools_default,
     '#options' => $tools,
     '#required' => TRUE,
-    '#description' => t('The encoding tool used to perform the transcoding.'),
+    '#description' => t('The transcoding tool used for this profile.'),
   );
 
   $form['required'][mediamosa_transcode_profile_db::FILE_EXTENSION] = array(
