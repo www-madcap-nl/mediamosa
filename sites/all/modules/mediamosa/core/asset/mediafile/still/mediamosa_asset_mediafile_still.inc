@@ -627,68 +627,84 @@ class mediamosa_asset_mediafile_still {
       return $file;
     }
 
-    if ($style) {
-      // Check $ticket_id.
-      if ($ticket_id) {
-        // Convert $ticket_id to $still_id.
-        $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
-        $query
-          ->condition('t.' . mediamosa_ticket_db::ID, $ticket_id)
-          ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
-          ->fields('t', array(mediamosa_ticket_db::MEDIAFILE_ID,));
-        $result = $query->execute();
-        $ticket = $result->fetchCol();
-        $still_id = $ticket[0];
+    if (!$style) {
+      return $file;
+    }
+
+    // Check $ticket_id.
+    if ($ticket_id) {
+      // Convert $ticket_id to $still_id.
+      $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
+      $query
+        ->condition('t.' . mediamosa_ticket_db::ID, $ticket_id)
+        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
+        ->fields('t', array(mediamosa_ticket_db::MEDIAFILE_ID,));
+      $result = $query->execute();
+      $ticket = $result->fetchCol();
+      $still_id = $ticket[0];
+    }
+
+    // Source of still.
+    $source = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
+
+    $pos = strpos($style, mediamosa_settings::IMAGE_STYLE_SEPARATOR);
+    if ($pos === FALSE) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
+    }
+
+    $mediafile = mediamosa_asset_mediafile::must_exists($still_id);
+    $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+
+    if (drupal_substr($style, 0, drupal_strlen($app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR)) != $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
+    }
+
+    $file = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? $ticket_id : mediamosa_configuration_storage::objectid_to_location($still_id));
+
+    if (file_exists($file)) {
+      return $file;
+    }
+
+    // Target symlink.
+    $target = mediamosa_configuration_storage::still_style_location_get_full($style) . mediamosa_configuration_storage::objectid_to_location($still_id);
+
+    // Create the derivative.
+
+    if (!is_file($target)) {
+      $success = FALSE;
+
+      // Load the style.
+      $style_array = image_style_load($style);
+      if (is_array($style_array) && !empty($style_array)) {
+        // Create the resized image.
+        $success = image_style_create_derivative($style_array, $source, $target);
       }
 
-      $file = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? $ticket_id : mediamosa_configuration_storage::objectid_to_location($still_id));
-
-      if (!file_exists($file)) {
-        // Target symlink.
-        $target = mediamosa_configuration_storage::still_style_location_get_full($style) . mediamosa_configuration_storage::objectid_to_location($still_id);
-
-        // Create the derivative.
-
-        if (!is_file($target)) {
-          $success = FALSE;
-
-          // Load the style.
-          $style_array = image_style_load($style);
-          if (is_array($style_array) && !empty($style_array)) {
-            // Source of still.
-            $source = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
-
-            // Create the resized image.
-            $success = image_style_create_derivative($style_array, $source, $target);
-          }
-
-          if (!$success || !is_file($target)) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
-          }
-        }
-
-        // Create the symlink ticket.
-
-        // Create the permanent link.
-        $path = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? '' : $still_id[0]);
-
-        // Create directory.
-        mediamosa_io::mkdir($path, TRUE);
-
-        // Make sure the location is a directory.
-        if (!is_dir($path)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_FOUND, array('@location' => $path));
-        }
-
-        // Must be able to write there.
-        if (!mediamosa_io::is_writable($path)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $path));
-        }
-
-        if (!mediamosa_io::symlink($target, $file)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK);
-        }
+      if (!$success || !is_file($target)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
       }
+    }
+
+    // Create the symlink ticket.
+
+    // Create the permanent link.
+    $path = mediamosa_configuration_storage::ticket_still_style_location_get($style) . ($ticket_id ? '' : $still_id[0]);
+
+    // Create directory.
+    mediamosa_io::mkdir($path, TRUE);
+
+    // Make sure the location is a directory.
+    if (!is_dir($path)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_FOUND, array('@location' => $path));
+    }
+
+    // Must be able to write there.
+    if (!mediamosa_io::is_writable($path)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $path));
+    }
+
+    if (!mediamosa_io::symlink($target, $file)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK);
     }
 
     return $file;

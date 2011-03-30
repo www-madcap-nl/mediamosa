@@ -257,6 +257,9 @@ class mediamosa_settings {
   const MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT = 'HTTP_ACCEPT';
   const MEDIAMOSA_OPENAPI_HEADER_ACCEPT_TYPE = 'ACCEPT_TYPE';
 
+  // Image style.
+  const IMAGE_STYLE_SEPARATOR = '_';
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.

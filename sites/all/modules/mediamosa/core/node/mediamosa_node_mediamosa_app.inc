@@ -288,6 +288,24 @@ function mediamosa_app_view($node, $view_mode = 'full') {
 }
 
 /**
+ * Form validate for image style.
+ */
+function mediamosa_node_mediamosa_app_image_style_validate($form, &$form_state) {
+  $app_id = arg(5);
+
+  if (!is_numeric($app_id)) {
+    $pos = strpos($app_id, mediamosa_settings::IMAGE_STYLE_SEPARATOR);
+    if ($pos === FALSE) {
+      return;
+    }
+
+    $app_id = drupal_substr($app_id, 0, $pos);
+  }
+
+  $form_state['values']['name'] = $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR . $form_state['values']['name'];
+}
+
+/**
  * Implements hook_form().
  */
 function mediamosa_app_form($node, &$form_state) {
@@ -502,6 +520,37 @@ function mediamosa_app_form($node, &$form_state) {
     '#options' => array('YES' => t('YES'), 'NO' => t('NO')),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_PADDING, $node, mediamosa_app_db::STILL_PADDING_YES),
   );
+
+  $nid = $node->nid;
+  if ($nid) {
+    $query = 'admin/mediamosa/config/app/' . $nid . '/edit';
+    require_once('modules/image/image.admin.inc');
+    $app_id = mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node);
+    $styles = image_styles();
+
+    // Unset styles not created by this app.
+    foreach ($styles as $style_key => $style) {
+      if (drupal_substr($style_key, 0, drupal_strlen($app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR)) != $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR) {
+        unset($styles[$style_key]);
+      }
+    }
+
+    // Change the links.
+    $output_image_style_list = theme('image_style_list', array('styles' => $styles));
+    $output_image_style_list = str_replace('admin/config/media/image-styles/add', 'admin/config/media/image-styles/add/'. $app_id . '?destination=' . $query, $output_image_style_list);
+    foreach ($styles as $style_key => $style) {
+      //$output_image_style_list = str_replace('admin/config/media/image-styles/edit/' . $style_key, 'admin/config/media/image-styles/edit/' . $style_key . '?destination=' . $query, $output_image_style_list);
+      $output_image_style_list = str_replace('admin/config/media/image-styles/delete/' . $style_key, 'admin/config/media/image-styles/delete/' . $style_key . '?destination=' . $query, $output_image_style_list);
+    }
+
+    // Create the form element.
+    $form['still']['image_style_list'] = array(
+      '#markup' => t('Styles - !add_style', array('!add_style' => l(t('Add style'), 'admin/config/media/image-styles/add/'. $app_id, array('query' => array('destination' => $query))),)) . $output_image_style_list,
+      '#attached' => array(
+        'css' => array(drupal_get_path('module', 'image') . '/image.admin.css' => array()),
+      ),
+    );
+  }
 
   $form['transcoding'] = array(
     '#type' => 'fieldset',
