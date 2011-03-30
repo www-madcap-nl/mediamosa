@@ -2106,24 +2106,6 @@ function mediamosa_update_7100() {
  * Update the mediamosa_app table schema with oAuth fields.
  */
 function mediamosa_update_7101() {
-  if (!db_field_exists('mediamosa_app', 'oauth_consumer_key')) {
-    // oAuth consumer key.
-    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
-
-    // only add the main search query.
-    db_add_index(
-      'mediamosa_app',
-      'idx_oauth_consumer_key',
-      array(
-        mediamosa_app_db::OAUTH_CONSUMER_KEY,
-      )
-    );
-  }
-
-  if (!db_field_exists('mediamosa_app', 'oauth_consumer_secret')) {
-    // oAuth consumer secret.
-    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
-  }
 }
 
 /**
@@ -2161,17 +2143,14 @@ function mediamosa_update_7104() {
 }
 
 /**
- * Two new tables for oAuth.
- * Add new fields to mediamosa_server table to support new upload progress.
- * Update the mediamosa_app table schema with oAuth fields.
- * Add new fields to mediamosa_app table to determine which tools will put analyse data to asset metadata.
+ * Add new fields to mediamosa_app table to determine which tools will put
+ * analyse data to asset metadata.
  */
 function mediamosa_update_7105() {
   if (!db_field_exists('mediamosa_app', 'oauth_consumer_key')) {
     // oAuth consumer key.
     db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
   }
-
 
   if (!db_field_exists('mediamosa_app', 'oauth_consumer_secret')) {
     // oAuth consumer secret.

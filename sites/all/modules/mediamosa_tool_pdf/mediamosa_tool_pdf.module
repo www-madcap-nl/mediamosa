@@ -56,13 +56,6 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDF2SWF_WARNING', '0');
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_PDFINFO_WARNING', '0');
 
 /**
- * Implements hook_mediamosa_tool_is_recognized_as_transcode().
- */
-function mediamosa_tool_pdf_mediamosa_tool_is_recognized_as_transcode($mime_type) {
-  return in_array($mime_type, array(MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF));
-}
-
-/**
  * Implements hook_mediamosa_tool_transcode().
  */
 function mediamosa_tool_pdf_mediamosa_tool_transcode($mime_type) {
@@ -74,7 +67,7 @@ function mediamosa_tool_pdf_mediamosa_tool_transcode($mime_type) {
   // Create status file.
   $execution_string = 'mkdir @file_location; cd @file_location; pdf2swf @mediafile_location -o @mediafile_id @params; cp @mediafile_id ../@mediafile_id.swf; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
 
-  return (_mediamosa_tool_pdf_is_recognized_as_transcode($mime_type) ? $execution_string : FALSE);
+  return (in_array($mime_type, array(MEDIAMOSA_TOOL_PDF_MIME_TYPE_PDF)) ? array('execute_string' => $execution_string) : FALSE);
 }
 
 /**

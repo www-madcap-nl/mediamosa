@@ -56,34 +56,9 @@ define('MEDIAMOSA_TOOL_IMAGE_KEY_VALUE_SEPARATOR', ':');
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_IMAGEMAGIC_WARNING', '6');
 
 /**
- * Helper function to recognize mime type as transcode.
- */
-function _mediamosa_tool_image_is_recognized_as_transcode($mime_type) {
-  $is_found = FALSE;
-
-  switch ($mime_type) {
-    case MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_TIFF:
-      $is_found = TRUE;
-      break;
-  }
-
-  return $is_found;
-}
-
-/**
- * Implements hook_mediamosa_tool_is_recognized_as_transcode().
- */
-function mediamosa_tool_image_mediamosa_tool_is_recognized_as_transcode($mime_type) {
-  $is_found = _mediamosa_tool_image_is_recognized_as_transcode($mime_type);
-  return $is_found;
-}
-
-/**
  * Implements hook_mediamosa_tool_transcode().
  */
 function mediamosa_tool_image_mediamosa_tool_transcode($mime_type) {
-  $is_found = _mediamosa_tool_image_is_recognized_as_transcode($mime_type);
-
   // Execution string.
   // Go to the subdirectory.
   // Create jpg from image (eg. from tiff).
@@ -92,29 +67,14 @@ function mediamosa_tool_image_mediamosa_tool_transcode($mime_type) {
   // Create status file.
   $execution_string = 'mkdir @file_location; cd @file_location; convert @mediafile_location @params @mediafile_id.jpg; cp @mediafile_id.jpg ../@mediafile_id.jpg; cd ..; rm @file_location -r; { echo "Errors: none"; echo "Status: done"; echo "Progress: 1.000"; echo "Warnings: none"; } > @mediafile_id.status;';
 
-  return ($is_found ? $execution_string : FALSE);
-}
-
-/**
- * Helper function to recognize mime type as analyse.
- */
-function mediamosa_tool_image_is_recognized_as_analyse($mime_type) {
-  $is_found = FALSE;
-
-  $mime_parts = explode('/', $mime_type);
-  if (isset($mime_parts[1]) && $mime_parts[0] == MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL) {
-    $is_found = TRUE;
-  }
-
-  return $is_found;
+  return (in_array($mime_type, array(MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_TIFF)) ? array('execution_string' => $execution_string) : FALSE);
 }
 
 /**
  * Implements hook_mediamosa_tool_is_recognized_as_analyse().
  */
 function mediamosa_tool_image_mediamosa_tool_is_recognized_as_analyse($mime_type) {
-  $is_found = mediamosa_tool_image_is_recognized_as_analyse($mime_type);
-  return $is_found;
+  return preg_match('#' . MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL . '\/.+#', $mime_type);
 }
 
 /**
