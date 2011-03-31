@@ -40,6 +40,9 @@ MediaMosa 3.0 (build )
 - Video without bitrate fix (See ticket #394).
 - Image style development (See ticket #371).
 
+Other changes (not ticket related).
+- Favicon.ico was added to rubik theme.
+
 MediaMosa 2.4 (build 1521)
 --------------------------
 - Watermarking stills (See ticket #82).
