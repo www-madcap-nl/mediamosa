@@ -24,10 +24,7 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * transcode_profile module.
-  */
-
-class mediamosa_transcode_mapping {
-}
+/**
+ * @file
+ * PDF tool admin functions.
+ */

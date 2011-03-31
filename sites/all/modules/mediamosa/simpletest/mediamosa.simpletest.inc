@@ -455,7 +455,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       );
     }
 
-    $this->verbose('Session ID: ' . $this->session_id);
+    // Removed..
+    //$this->verbose('Session ID: ' . $this->session_id);
 
     // Perform the CURL request.
     $result = $this->curlExec($curl_opts);

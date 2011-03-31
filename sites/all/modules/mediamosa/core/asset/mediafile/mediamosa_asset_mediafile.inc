@@ -70,7 +70,7 @@ class mediamosa_asset_mediafile {
    * Warning; will also get stills, which are also mediafiles, use
    * exclude_stills to exclude.
    *
-   * @param string $mediafile_id
+   * @param array $mediafiles
    */
   static public function get_by_asset_id($asset_id, $fields = array(), $options = array()) {
 

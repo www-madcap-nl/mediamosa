@@ -112,8 +112,12 @@ s1.write('mediaspace');
 
     array(5, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'ogg',
+      '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>',
+      'Apache - OGG', 0, '', '', 'APC', ''),
+    array(6, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
+      'matroska;webm',
       '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>'
-      , 'Apache - OGG', 0, '', '', 'APC', ''),
+      , 'Apache - WebM', 0, '', '', 'APC', ''),
 
     array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}', '', '', 'Default download server', 0, '', '', 'APC', ''),
     array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'still/{TICKET}', '', '', 'Default still server', 0, '', '', 'APC', ''),
@@ -253,6 +257,11 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::CONTAINERS => array(
         'description' => 'The optional container names this server can serve.',
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
+      mediamosa_server_db::MIME_TYPE => array(
+        'description' => 'The optional mime type names this server can serve.',
         'type' => 'text',
         'not null' => FALSE,
       ),

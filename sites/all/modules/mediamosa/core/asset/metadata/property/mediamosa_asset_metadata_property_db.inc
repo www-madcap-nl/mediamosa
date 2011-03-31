@@ -48,4 +48,7 @@ class mediamosa_asset_metadata_property_db {
   const MAX_OCCURENCES = 'max_occurences';
   const CREATED = 'created';
   const CHANGED = 'changed';
+  const IS_HIDDEN = 'is_hidden';
+  const IS_HIDDEN_TRUE = 'TRUE';
+  const IS_HIDDEN_FALSE = 'FALSE';
 }

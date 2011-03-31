@@ -69,7 +69,7 @@ function mediamosa_asset_supplement_schema() {
       mediamosa_asset_supplement_db::SUPPLEMENT => array(
         'type' => 'blob',
         'size' => 'big',
-        'description' => 'Contens of the supplement.',
+        'description' => 'Contents of the supplement.',
       ),
       mediamosa_asset_supplement_db::TAG => array(
         'type' => 'varchar',
@@ -114,20 +114,4 @@ function mediamosa_asset_supplement_schema() {
   );
 
   return $schema;
-}
-
-/**
- * Implementation of hook_update_N().
- */
-function mediamosa_asset_supplement_update_7100() {
-
-  $schema = mediamosa_asset_supplement_schema();
-  $field_definition = $schema[mediamosa_asset_supplement_db::TABLE_NAME]['fields'][mediamosa_asset_supplement_db::SUPPLEMENT];
-
-  db_change_field(
-      mediamosa_asset_supplement_db::TABLE_NAME,
-      mediamosa_asset_supplement_db::SUPPLEMENT,
-      mediamosa_asset_supplement_db::SUPPLEMENT,
-      $field_definition
-    );
 }

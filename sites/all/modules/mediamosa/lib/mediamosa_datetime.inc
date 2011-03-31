@@ -256,6 +256,45 @@ class mediamosa_datetime {
   }
 
   /**
+   * Convert time string to UTC datetime.
+   *
+   * @param string $app_date
+   * @param string $app_timezone
+   */
+  static public function time_string2utc_date($app_date, $app_timezone) {
+
+    // Walk through array, when array.
+    if (is_array($app_date)) {
+      foreach ($app_date as $key => $app_date_2) {
+        $app_date[$key] = self::time_string2utc_date($app_date_2, $app_timezone);
+      }
+
+      return $app_date;
+    }
+
+    // Get current timezone.
+    $tz = date_default_timezone_get();
+
+    try {
+      // Set to timezone of app.
+      assert(date_default_timezone_set($app_timezone));
+
+      $timestamp = strtotime($app_date);
+      $result = gmdate('Y-m-d H:i:s', $timestamp);
+    }
+    catch (Exception $e) {
+      // Make sure we return to old time zone.
+      date_default_timezone_set($tz);
+      throw $e;
+    }
+
+    // Back to original timezone, so we dont screw with other time functions.
+    date_default_timezone_set($tz);
+
+    return $result;
+  }
+
+  /**
    * Convert date from UTC to timezone of APP.
    *
    * @param string $utc_date

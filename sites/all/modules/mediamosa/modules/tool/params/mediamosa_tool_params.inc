@@ -45,12 +45,13 @@ function _mediamosa_tool_params_list() {
   $header = array(
     array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL),
-    array('data' => t('Tool params id'), 'field' => 'tp.' . mediamosa_tool_params_db::ID),
+    array('data' => t('Tool params id'), 'field' => 'tp.' . mediamosa_tool_params_db::ID, 'sort' => 'asc'),
     array('data' => t('Tool parameter'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL_PARAMETER),
     array('data' => t('Min value'), 'field' => 'tp.' . mediamosa_tool_params_db::MIN_VALUE),
     array('data' => t('Max value'), 'field' => 'tp.' . mediamosa_tool_params_db::MAX_VALUE),
     array('data' => t('Default value'), 'field' => 'tp.' . mediamosa_tool_params_db::DEFAULT_VALUE),
     array('data' => t('Required'), 'field' => 'tp.' . mediamosa_tool_params_db::REQUIRED),
+    array('data' => t('Type'), 'field' => 'tp.' . mediamosa_tool_params_db::TYPE_PARAMETER),
     t('Operations')
   );
 
@@ -83,6 +84,7 @@ function _mediamosa_tool_params_list() {
       'max_value' => $row[mediamosa_tool_params_db::MAX_VALUE],
       'default_value' => $row[mediamosa_tool_params_db::DEFAULT_VALUE],
       'required' => $row[mediamosa_tool_params_db::REQUIRED],
+      'type' => $row[mediamosa_tool_params_db::TYPE_PARAMETER],
       empty($actions) ? '-' : implode(' | ', $actions),
     );
   }

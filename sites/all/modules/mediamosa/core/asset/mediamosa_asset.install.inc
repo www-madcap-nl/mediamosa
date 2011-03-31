@@ -253,10 +253,3 @@ function mediamosa_asset_schema() {
 
   return $schema;
 }
-
-/**
- * Implements hook_update_N().
- */
-function mediamosa_asset_update_7100() {
-  mediamosa_asset_supplement_update_7100();
-}

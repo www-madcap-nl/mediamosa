@@ -1287,6 +1287,7 @@ class mediamosa_job_scheduler {
           $result_row[mediamosa_tool_params_db::ALLOWED_VALUE],
           $result_row[mediamosa_tool_params_db::DEFAULT_VALUE],
           $result_row[mediamosa_tool_params_db::REQUIRED],
+          $result_row[mediamosa_tool_params_db::TYPE_PARAMETER],
           $command);
 
         if ($value != '') {
@@ -1339,9 +1340,10 @@ class mediamosa_job_scheduler {
    * @param $allowed_value
    * @param $default_value
    * @param $required
+   * @param $type_parameter
    * @param $command
    */
-  static public function mapping_value($nice_parameter, $tool_parameter, $min_value, $max_value, $allowed_value, $default_value, $required, $command) {
+  static public function mapping_value($nice_parameter, $tool_parameter, $min_value, $max_value, $allowed_value, $default_value, $required, $type_parameter, $command) {
     $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
     $result = "";
 
@@ -1352,7 +1354,16 @@ class mediamosa_job_scheduler {
 
     foreach ($a_parameters as $name => $value) {
       if ($name == $nice_parameter && $tool_parameter != '') {
+
         $result = sprintf('%s:%s', $tool_parameter, $value);
+
+        // Switch parameter.
+        if ($type_parameter == mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX) {
+          if ($value == mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH) {
+            return $result;
+          }
+          return '';
+        }
 
         // Validate values.
         if ($min_value != NULL) {

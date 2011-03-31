@@ -102,33 +102,3 @@ function mediamosa_user_group_schema() {
 
   return $schema;
 }
-
-/**
- * Implements hook_update_N().
- */
-function _mediamosa_user_group_update_7100() {
-
-  $schema = mediamosa_user_group_schema();
-
-  // Just fix incorrect comment.
-  $field_definition = $schema[mediamosa_user_group_db::TABLE_NAME]['fields'][mediamosa_user_group_db::QUOTUM];
-  db_change_field(
-      mediamosa_user_group_db::TABLE_NAME,
-      mediamosa_user_group_db::QUOTUM,
-      mediamosa_user_group_db::QUOTUM,
-      $field_definition
-    );
-
-  // Primary key is downgraded to unique now.
-  db_drop_primary_key(mediamosa_user_group_db::TABLE_NAME);
-  db_add_unique_key(mediamosa_user_group_db::TABLE_NAME, 'uni_id_group_and_app',
-    $schema[mediamosa_user_group_db::TABLE_NAME]['unique keys']['uni_id_group_and_app']);
-
-  // Add brand new 'serial' primary.
-  $field_definition = $schema[mediamosa_user_group_db::TABLE_NAME]['fields'][mediamosa_user_group_db::KEY];
-
-  // Please note last parameter - array with primary key definition.
-  db_add_field(mediamosa_user_group_db::TABLE_NAME, mediamosa_user_group_db::KEY, $field_definition,
-    array('primary key' => array(mediamosa_user_group_db::KEY)));
-
-}

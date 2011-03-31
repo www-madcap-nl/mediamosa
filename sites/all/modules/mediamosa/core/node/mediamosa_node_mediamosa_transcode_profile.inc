@@ -59,6 +59,11 @@ function _mediamosa_transcode_profile_do_command($node) {
       $command = drupal_substr($key, drupal_strlen('options_'));
       $value = trim($value);
 
+      // Don't store switch value in case of checkbox wasn't checked.
+      if (!$value && isset($node->{'switch_options_' . $command}) && $node->{'switch_options_' . $command} == mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH) {
+        continue;
+      }
+
       // Gather all set options
       if ($value != '') {
         $commands[] = $command . ':' . $value;
@@ -208,7 +213,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
-    $node->tool = 'ffmpeg';
     $node->is_default_profile = 'FALSE';
     $node->file_extension = '';
 
@@ -266,13 +270,17 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
   );
 
+  $tools_default = mediamosa_node::default_value(mediamosa_transcode_profile_db::TOOL, $node);
+  $tools = module_invoke_all('mediamosa_tool_iteration');
+  $tools = array_combine($tools, $tools);
+  $tools += array($tools_default => $tools_default);
   $form['required'][mediamosa_transcode_profile_db::TOOL] = array(
-    '#title' => t('Encoder used'),
+    '#title' => t('Transcoding Tool'),
     '#type' => 'select',
-    '#default_value' => mediamosa_node::default_value(mediamosa_transcode_profile_db::TOOL, $node),
-    '#options' => array('ffmpeg' => t('FFMpeg'), 'windows' => t('Windows')),
-    '#description' => t('The encoding tool used to perform the transcoding. Currently there are 2 options available: FFMpeg and Windows (used for WMV).'),
+    '#default_value' => $tools_default,
+    '#options' => $tools,
     '#required' => TRUE,
+    '#description' => t('The transcoding tool used for this profile.'),
   );
 
   $form['required'][mediamosa_transcode_profile_db::FILE_EXTENSION] = array(
@@ -284,35 +292,12 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#maxlength' => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
   );
 
-  if (empty($node->tool)) {
-    $node->tool = 'ffmpeg'; // Default.
+  if (isset($node->tool) && $node->tool) {
+    $tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
   }
-
-  $tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
-
-  // Comments below items.
-  $comments = array(
-    'videocodec' => t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default'),
-    'videobitrate' => t('Set the video bitrate in bit/s@default'),
-    'duration' => t('Duration of the video.'),
-    'size' => t('Set frame size using format WIDTHxHEIGHT@default'),
-    'qmax' => t('Maximum video quantizer scale (VBR)@default'),
-    'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
-    'audiosamplingrate' => t('Set the audio sampling frequency@default'),
-    'audiocodec' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
-    'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
-    'padding' => t('Force padding, if aspect ratio is maintained@default'),
-    'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
-    'audiochannels' => t('The allowed value is between 0 and 2@default'),
-    '2_pass_h264_encoding' => t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding'),
-  );
-
-  $form['tool_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('@tool parameters', array('@tool' => drupal_ucfirst($node->tool))),
-    '#collapsed' => FALSE,
-    '#collapsible' => TRUE,
-  );
+  else {
+    $tools = mediamosa_tool_params::search()->fetchAll();
+  }
 
   // Skip these, not changable or internal.
   $tools_to_skip = array(
@@ -323,6 +308,15 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
   // Show all parameters for profile.
   foreach ($tools as $key => $tool) {
+
+    if (!isset($form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]])) {
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]] = array(
+        '#type' => 'fieldset',
+        '#title' => t('@tool parameters', array('@tool' => drupal_ucfirst($tool[mediamosa_tool_params_db::TOOL]))),
+        '#collapsed' => !isset($node->tool),
+        '#collapsible' => TRUE,
+      );
+    }
 
     // get the name of the parameter.
     $name = $tool[mediamosa_tool_params_db::NICE_PARAMETER];
@@ -344,7 +338,11 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     $value = isset($node->commands{$name}) ? $node->commands{$name} : ($is_required ? $tool[mediamosa_tool_params_db::DEFAULT_VALUE] : '');
 
     $descriptions = array();
-    $description = isset($comments[$name]) ? $comments[$name] : '';
+    $description = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'tp')
+      ->condition('tp.' . mediamosa_tool_params_db::NICE_PARAMETER, $name)
+      ->fields('tp', array(mediamosa_tool_params_db::DESCRIPTION))
+      ->execute()
+      ->fetchField();
 
     if (!empty($description) && isset($tool[mediamosa_tool_params_db::DEFAULT_VALUE])) {
       $description = strtr($description, array('@default' => ' (default = @value).'));
@@ -358,7 +356,22 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     // Get the tool.
     $tool_name = drupal_ucfirst(str_replace('_', ' ', $name));
 
-    if (!empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
+    if ($tool[mediamosa_tool_params_db::TYPE_PARAMETER] == mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX) {
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
+        '#type' => 'checkbox',
+        '#title' => t($tool_name),
+        '#description' => implode(' ', $descriptions),
+        '#required' => $is_required,
+        '#default_value' => $value,
+        '#weight' => $weight,
+        '#return_value' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+      );
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['switch_options_' . $name] = array(
+        '#type' => 'value',
+        '#value' => mediamosa_tool_params_db::ALLOWED_VALUE_FOR_SWITCH,
+      );
+    }
+    elseif (!empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
       $options = $is_required ? array() : array('' => '');
       foreach ($tool[mediamosa_tool_params_db::ALLOWED_VALUE] as $allowed_value) {
         $options[$allowed_value] = $allowed_value;
@@ -366,7 +379,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
       $descriptions[] = strtr('Possible values: @options.', array('@options' => implode(', ', $options)));
 
-      $form['tool_options']['options_' . $name] = array(
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
         '#type' => 'select',
         '#title' => t($tool_name),
@@ -380,7 +393,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       // Add allowed value to description.
       $descriptions[] = t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_tool_params_db::MIN_VALUE], '@max_value' => $tool[mediamosa_tool_params_db::MAX_VALUE]));
 
-      $form['tool_options']['options_' . $name] = array(
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
         '#type' => 'textfield',
         '#title' => t($tool_name),
@@ -391,7 +404,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       );
     }
     else {
-      $form['tool_options']['options_' . $name] = array(
+      $form['tool_options_' . $tool[mediamosa_tool_params_db::TOOL]]['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
         '#type' => 'textfield',
         '#title' => t($tool_name),

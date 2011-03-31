@@ -114,7 +114,7 @@ class mediamosa_response extends mediamosa {
       // Find the rest call.
       $rest_call = $this->mediamosa_rest->match_call();
 
-      // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user/login or /user/logout.
+      // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user pages.
       if (!$rest_call || mediamosa::show_drupal_login()) {
         // Put back previous (drupal) handler.
         if (!empty($previous_handler)) {
@@ -560,7 +560,6 @@ class mediamosa_response extends mediamosa {
     // Create the SimpleXML element.
     $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><feed xmlns="http://www.w3.org/2005/Atom"></feed>');
 
-
     // Author.
     $xml_element = $xml_response->addChild('author');
     $this->generate_plain_xml_add_child($xml_element, 'name', mediamosa_settings::ATOM_NAME);
@@ -809,7 +808,6 @@ class mediamosa_response extends mediamosa {
       $items .= format_rss_item($title, $link, $description, $args);
     }
 
-
     $channel_defaults = array(
       'version'     => '2.0',
       'title'       => t('MediaMosa RSS feed at @place', array('@place' => variable_get('site_name', 'Drupal'),)),
@@ -871,7 +869,7 @@ class mediamosa_response extends mediamosa {
       $dom_element_errors = $dom_document->createElement('errors');
 
       foreach ($this->response['errors'] as $key => $error) {
-        $dom_element_errors->appendChild(new DOMElement($key, $error));
+        $dom_element_errors->appendChild(new DOMElement('error', mediamosa_unicode::xmlentities($error)));
       }
     }
 
