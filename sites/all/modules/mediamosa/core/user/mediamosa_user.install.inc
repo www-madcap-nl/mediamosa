@@ -33,6 +33,7 @@ require_once 'mediamosa_user_db.inc';
 
 require_once 'favorite/mediamosa_user_favorite.install.inc';
 require_once 'group/mediamosa_user_group.install.inc';
+require_once 'group/mediamosa_user_in_group.install.inc';
 
 /**
  * Implements hook_install().
@@ -44,6 +45,9 @@ function _mediamosa_user_install() {
 
   // Installer user group.
   _mediamosa_user_group_install();
+
+  // Installer user/group relation.
+  _mediamosa_user_in_group_install();
 
   // Installer user group.
   _mediamosa_user_favorite_install();
@@ -60,6 +64,9 @@ function _mediamosa_user_uninstall() {
   // Uninstaller user group.
   _mediamosa_user_group_uninstall();
 
+  // Uninstaller user/group relation.
+  _mediamosa_user_in_group_uninstall();
+
   // Remove our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_user_db::TABLE_NAME);
 }
@@ -71,6 +78,12 @@ function mediamosa_user_schema() {
   $schema[mediamosa_user_db::TABLE_NAME] = array(
   'description' => 'The user table.',
     'fields' => array(
+      mediamosa_user_db::KEY => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ),
       mediamosa_user_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -83,17 +96,11 @@ function mediamosa_user_schema() {
         'not null' => TRUE,
         'description' => 'The name of user.',
       ),
-      mediamosa_user_db::GROUP_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_user_db::GROUP_ID_LENGTH,
-        'not null' => TRUE,
-        'description' => 'The name of group.',
-      ),
       mediamosa_user_db::QUOTUM => array(
         'type' => 'int',
         'unsigned' => FALSE,
         'not null' => TRUE,
-        'description' => 'The application ID of the asset.',
+        'description' => 'The disk quota in MB.',
       ),
       mediamosa_user_db::CREATED => array(
         'type' => 'datetime',
@@ -108,7 +115,11 @@ function mediamosa_user_schema() {
         'description' => 'The date and time when user was changed last.',
       ),
     ),
-    'primary key' => array(mediamosa_user_db::NAME, mediamosa_user_db::APP_ID),
+    'primary key' => array(mediamosa_user_db::KEY),
+    'unique keys' => array(
+      'uni_id_name_and_app' => array(mediamosa_user_db::NAME, mediamosa_user_db::APP_ID),
+    ),
+
   );
 
   return $schema;

@@ -26,19 +26,5 @@
 
 /**
  * @file
- * Fixing migration of this module.
+ * Dummy file so update.php will not break.
  */
-
-
-/**
- * Turn off MediaMosa App Authentication and turn on DBUS and oAuth modules.
- */
-function mediamosa_app_authentication_update_7000() {
-
-  module_disable(array('mediamosa_app_authentication'), FALSE);
-
-  module_enable(array('mediamosa_app_dbus'));
-  module_enable(array('mediamosa_app_oauth'));
-
-  return t('The MediaMosa authentication module has been disabled, its been renamed to MediaMosa DBUS authentication and this new module has been enabled. Keep the MediaMosa authentication module turned off, it will be removed in next release.');
-}

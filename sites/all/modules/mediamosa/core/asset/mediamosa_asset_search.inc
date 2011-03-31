@@ -336,8 +336,17 @@ class mediamosa_asset_search {
         // We skip NULL values and empty strings with <> '' (tested).
         // String types are special, we also need to skip empty '' here.
         // We include the NULL and empty '' later again in fase 2.
-        if ($order_type == mediamosa_sdk::TYPE_STRING) {
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . " <> ''";
+        switch ($order_type) {
+          case mediamosa_sdk::TYPE_STRING:
+            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . " <> ''";
+            break;
+
+          default:
+            // Only metadata table might have rows that are skipped by the JOIN.
+            if ($order_table != mediamosa_asset_metadata_db::TABLE_NAME) {
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . " IS NOT NULL";
+            }
+            break;
         }
       }
 

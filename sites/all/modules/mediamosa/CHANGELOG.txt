@@ -24,7 +24,7 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
-MediaMosa 3.0 (build )
+MediaMosa 3.0 (build 1621)
 --------------------------
 - Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
   "group_id" is marked as depricated (See ticket #238).
@@ -38,12 +38,14 @@ MediaMosa 3.0 (build )
   the new_original (See ticket #393).
 - Server URI is separated to URI and path (See ticket #367).
 - Video without bitrate fix (See ticket #394).
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
 - Image style development (See ticket #371).
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.
 
-MediaMosa 2.4 (build 1521)
+MediaMosa 2.4 (build 1596)
 --------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
@@ -84,14 +86,38 @@ Other changes (not ticket related).
 - Frametime for still upload development.
 - Lua script fix for the new ffmpeg version.
 
-MediaMosa 2.3.8 (build in progress)
+MediaMosa 2.3.8 (build 1366)
 ----------------------------
+- Metadata can be set to hidden, which will prevent the metadata to be returned
+  in the asset output or other REST calls (See ticket #504).
+- Added support for play and upload of PDF files (See ticket #505).
 
 Other changes (not ticket related)
 - Work around for still_type = scene, if there isn't video duration.
 - Fixed bug where asset would be queued when sorl was not enabled as module and
   would try and fail to queue the asset.
-- Added support for nginx/lighttpd webserver uploadprogress. 
+- Added support for nginx/lighttpd webserver uploadprogress.
+- Frametime for still upload development. 
+- Lua script fix for the new ffmpeg version.
+- Fixed speed bug in asset call when metadata size was bigger than 64k.
+- Tool parameters in transcode profiles can now be either 'Select' or 
+  'Checkbox'.
+- Fixed integrity check to match case sensitive with types.
+- Fixed PHP 5.3 bug when calling play proxy REST call.
+- Fixed integrity check to match the ENUM upper case names.
+- Updated MediaMosa connector to latest.
+- Fixed Job CQL test bug where dates where not converted to APP timezone.
+- Fixed Solr unit test to be excluded during automatic test runs when Solr 
+  module is not enabled.
+- Fixed login and password recovery for 'simple apache install'.
+- rebuild the example transcoding profiles; webm, ogg and mobile
+  profiles added.
+- Install profile does not install the windows transcoding tool.
+- Fixed problem in unit test where profiles where missing and was needed.
+- Fixed invalid error in perminanent still link unit test.
+- Fixed problem on rewrite xml output where errors in header would stop script.
+- Changed the description in the profile by removing all line feeds and unused
+  spaces.
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------

@@ -475,6 +475,9 @@ class mediamosa_asset {
    *  Include stills.
    * @param $show_collections
    *  Include collection information.
+   * @param $add_has_streamable_mediafile
+   * @param $view_hidden_metadata
+   *   Show hidden metadata.
    */
   static public function asset_collect(
     array $asset_ids,
@@ -488,9 +491,8 @@ class mediamosa_asset {
     $show_stills = TRUE,
     $show_collections = FALSE,
     $add_has_streamable_mediafiles = FALSE,
-    $app_active_version = FALSE
+    $view_hidden_metadata = FALSE
   ) {
-
     // Something to collect?
     if (empty($asset_ids)) {
       return array();
@@ -511,6 +513,7 @@ class mediamosa_asset {
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'apd.prop_name AS asset_property_name';
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'apd.type AS asset_property_type';
     $query[mediamosa_db_query::A_SELECT_EXPR][] = 'apg.propgroup_name AS asset_property_group_name';
+    $query[mediamosa_db_query::A_SELECT_EXPR][] = 'apd.is_hidden AS asset_property_is_hidden';
 
     // Main select on asset table.
     $query[mediamosa_db_query::A_FROM][] = '{mediamosa_asset} AS a';
@@ -665,7 +668,7 @@ class mediamosa_asset {
       $show_stills,
       $show_collections,
       $add_has_streamable_mediafiles,
-      $app_active_version
+      $view_hidden_metadata
     );
   }
 
@@ -679,6 +682,9 @@ class mediamosa_asset {
    * @param boolean $show_stills
    * @param boolean $show_collections
    *  Include collections (was hack on _GET)
+   * @param $add_has_streamable_mediafiles,
+   * @param $view_hidden_metadata
+   *   Show hidden metadata,
    */
   static public function enrich_response_asset(
     array $items,
@@ -693,7 +699,8 @@ class mediamosa_asset {
     $show_stills = TRUE,
     $show_collections = FALSE,
     $add_has_streamable_mediafiles = FALSE,
-    $app_active_version = FALSE) {
+    $view_hidden_metadata = FALSE
+  ) {
 
     $collections = array();
 
@@ -704,6 +711,14 @@ class mediamosa_asset {
 
     // Get the metadata definitions.
     $metadata_definitions_fulls = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
+    // Hidden metadata.
+    if (!$view_hidden_metadata) {
+      foreach ($metadata_definitions_fulls as $metadata_definition_name => $metadata_definitions_full) {
+        if ($metadata_definitions_full['propdef_is_hidden'] == 'TRUE') {
+          unset($metadata_definitions_fulls[$metadata_definition_name]);
+        }
+      }
+    }
 
     // Need to get collections?
     if ($show_collections) {
@@ -880,7 +895,7 @@ class mediamosa_asset {
       }
 
       // Now stuff that can be set more than once (f.e. metadata).
-      if (!empty($asset['asset_property_group_name'])) {
+      if (!empty($asset['asset_property_group_name']) && ($asset['asset_property_is_hidden'] == 'FALSE' || $view_hidden_metadata)) {
         // Choose the value.
         $asset_property_value = NULL;
         switch ($asset['asset_property_type']) {

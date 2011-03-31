@@ -89,6 +89,18 @@ class mediamosa_maintenance_automatedsimpletest {
       }
 
       foreach ($tests as $class => $test) {
+        if (!class_exists($class)) {
+          continue;
+        }
+
+        // Check if there is a function on the class that returns TRUE or FALSE
+        // if its allowed to run or display.
+        if (method_exists($class, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
+          if (!call_user_func_array($class . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED, array())) {
+            continue;
+          }
+        }
+
         // Not set? Then run it daily.
         if (!isset($test[mediamosa_settings::MEDIAMOSA_RUN])) {
           $simpletests[mediamosa_settings::MEDIAMOSA_RUN_DAILY][$class] = $test;

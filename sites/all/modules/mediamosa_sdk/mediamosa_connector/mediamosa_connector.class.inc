@@ -109,7 +109,7 @@ class mediamosa_connector {
   }
 
   /**
-   * Return an ID we can use to indentify this connection.
+   * Return an ID we can use to identify this connection.
    */
   public function get_connection_id() {
     return empty($this->username) || empty($this->url) ? FALSE : sha1($this->username . '@' . $this->url);
@@ -144,9 +144,9 @@ class mediamosa_connector {
    * @param array $options
    *   (optional) An array which can have one or more of following keys:
    *   - user_id (mediamosa)
-   *       The user_id of the MediaMosa call. Default is empty.
+   *       The user_id of the Mediamosa call. Default is empty.
    *   - group_id (mediamosa)
-   *       The group_id of the MediaMosa call. Default is empty.
+   *       The group_id of the Mediamosa call. Default is empty.
    *   - fatal
    *       Boolean value, TRUE makes the call throw an exception if the call
    *       failed. That means, failed to call, failed to access the rest etc.
@@ -216,7 +216,7 @@ class mediamosa_connector {
       $response = $this->do_request($uri, $options);
 
       // If response failed, then try to login.
-      if (!empty($response) && in_array((int) $response->xml->header->request_result_id, array(mediamosa_sdk::ERRORCODE_ACCESS_DENIED, mediamosa_sdk::ERRORCODE_NOT_AUTHORIZED))) {
+      if (!empty($response) && !empty($response->xml) && in_array((int) $response->xml->header->request_result_id, array(mediamosa_sdk::ERRORCODE_ACCESS_DENIED, mediamosa_sdk::ERRORCODE_NOT_AUTHORIZED))) {
 
         // Not authorized? Try to login.
         if (self::do_login()) {
@@ -592,5 +592,29 @@ class mediamosa_connector {
     }
 
     watchdog($type, $message, $variables, $severity, $link);
+  }
+
+  /**
+   * Variable_get wrapper for connection dependent variables.
+   */
+  public function variable_get($name, $default = NULL) {
+    // TODO
+    return variable_get($name, $default);
+  }
+
+  /**
+   * Variable_set wrapper for connection dependent variables.
+   */
+  public function variable_set($name, $value) {
+    // TODO
+    variable_set($name, $value);
+  }
+
+  /**
+   * Variable_del wrapper for connection dependent variables.
+   */
+  public function variable_del($name) {
+    // TODO
+    variable_del($name);
   }
 }
