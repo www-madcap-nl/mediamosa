@@ -22,9 +22,6 @@ Known issues;
 update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
 update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR) where val_datetime is not null and val_char is not null;
 
-Known bugs (no tickets (yet));
-- STILL_URI in object response during play proxy call is broken.
-
 TODO: (v2.4)
 - OAI delete support.
 - Fix bug FTP ' FTP User - common tests' unit-test.
