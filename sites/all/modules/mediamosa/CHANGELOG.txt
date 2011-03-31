@@ -39,6 +39,8 @@ MediaMosa 2.4 (build 1596)
 - Fixed speed problem when returning larger than 64k metadata. Problem was in
   the way invalid chars are fixed in output.
 - Rewrote the usage of simplexml to domdocument for output.
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
 
 Other changes (not ticket related).
 - Better REST call match: match_uri() static function was introduced, and check 
