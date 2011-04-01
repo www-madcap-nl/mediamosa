@@ -282,7 +282,7 @@ class mediamosa {
    * FALSE when disabled by header.
    *
    */
-  static private function in_simpletest_sandbox_enable_app() {
+  static public function in_simpletest_sandbox_enable_app() {
     // The name of the http var.
     $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
 
