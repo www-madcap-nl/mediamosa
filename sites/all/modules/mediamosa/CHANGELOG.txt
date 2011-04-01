@@ -39,6 +39,7 @@ MediaMosa 3.0 (build )
 - Server URI is separated to URI and path (See ticket #367).
 - Video without bitrate fix (See ticket #394).
 - Image style development (See ticket #371).
+- Granted flag not correct with non-original master slaved mediafiles fix. (See ticket #432).
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.
