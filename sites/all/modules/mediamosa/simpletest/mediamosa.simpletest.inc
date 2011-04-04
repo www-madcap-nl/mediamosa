@@ -43,6 +43,9 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT', 'MediaMosa Authorization');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OAUTH', 'MediaMosa oAuth');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OEMBED', 'MediaMosa oEmbed');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_OPENAPI', 'MediaMosa OpenAPI');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY', 'MediaMosa PlayProxy');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST', 'MediaMosa Simpletest Parents');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS', 'MediaMosa Statistics');
@@ -344,6 +347,67 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Perform an HTTP request.
+   *
+   * This is a flexible and powerful HTTP client implementation. Correctly
+   * handles GET, POST, PUT or any other HTTP requests. Handles redirects.
+   *
+   * @param $url
+   *   A string containing a fully qualified URI.
+   * @param array $options
+   *   (optional) An array that can have one or more of the following elements:
+   *   - headers: An array containing request headers to send as name/value pairs.
+   *   - method: A string containing the request method. Defaults to 'GET'.
+   *   - data: A string containing the request body, formatted as
+   *     'param=value&param=value&...'. Defaults to NULL.
+   *   - max_redirects: An integer representing how many times a redirect
+   *     may be followed. Defaults to 3.
+   *   - timeout: A float representing the maximum number of seconds the function
+   *     call may take. The default is 30 seconds. If a timeout occurs, the error
+   *     code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *   - context: A context resource created with stream_context_create().
+   * @param boolean $is_response_xml
+   *   If TRUE, then the data will be parsed as XML.
+   *
+   * @return object
+   *   An object that can have one or more of the following components:
+   *   - request: A string containing the request body that was sent.
+   *   - code: An integer containing the response status code, or the error code
+   *     if an error occurred.
+   *   - protocol: The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
+   *   - status_message: The status message from the response, if a response was
+   *     received.
+   *   - redirect_code: If redirected, an integer containing the initial response
+   *     status code.
+   *   - redirect_url: If redirected, a string containing the redirection location.
+   *   - error: If an error occurred, the error message. Otherwise not set.
+   *   - headers: An array containing the response headers as name/value pairs.
+   *     HTTP header names are case-insensitive (RFC 2616, section 4.2), so for
+   *     easy access the array keys are returned in lower case.
+   *   - data: A string containing the response body that was received.
+   *   - xml: XML parsed data, if $is_response_xml == TRUE.
+   */
+  protected function drupal_http_request($url, array $options = array(), $is_response_xml = FALSE) {
+    $this->var_export($url);
+
+    $response = drupal_http_request($url, $options);
+
+    if ($is_response_xml) {
+      try {
+        $response->xml = new SimpleXMLElement($response->data);
+      }
+      catch (Exception $e) {
+        $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
+        return;
+      }
+    }
+
+    $this->var_export($response);
+
+    return $response;
+  }
+
+  /**
    * Do a REST call inside the sandbox.
    *
    * @param string $uri
@@ -444,11 +508,22 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // Get the result ID.
-    $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
-    $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
+    if (!empty($out['xml']->header)) {
+      $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
+      $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
+    }
+    elseif (!empty($out['xml']->extension)) {
+      $result_id = empty($out['xml']->extension->request_result_id) ? 0 : (int) $out['xml']->extension->request_result_id;
+      $result_description = empty($out['xml']->extension->request_result_description) ? 'no description' : (string) $out['xml']->extension->request_result_description;
+    }
 
     // Look for a request_result_id.
-    $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+    if (isset($result_id) && isset($result_description)) {
+      $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+    }
+    else {
+      $this->assertTrue(TRUE, t('@method request to: "@uri".', array('@method' => $request_method, '@uri' => $uri)));
+    }
 
     $this->assertFalse($http_result[1] == 404, 'REST call was found');
 
@@ -631,6 +706,24 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the path+filename to the test image (jpg).
+   */
+  protected function getTestImage_Jpg() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/cat.jpg';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
+   * Return the path+filename to the test image (png).
+   */
+  protected function getTestImage_Png() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/cat.png';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
    * Return the path+filename to the test image (gif).
    */
   protected function getTestImage_BlobGif() {
@@ -675,6 +768,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
     $node->{mediamosa_app_db::TIMEZONE} = $fields[mediamosa_app_db::TIMEZONE];
+    $node->{mediamosa_app_db::OAUTH_CONSUMER_KEY} = $this->randomName();
+    $node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET} = user_password();
 
     node_save($node);
 

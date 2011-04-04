@@ -119,7 +119,11 @@ function mediamosa_app_load(&$nodes) {
       $apps = unserialize($nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
     }
 
+    // Copy apps.
     $nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = $apps;
+
+    // Make sure timezone is set.
+    $nodes[$key]->{mediamosa_app_db::TIMEZONE} = empty($nodes[$key]->{mediamosa_app_db::TIMEZONE}) ? mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE : $nodes[$key]->{mediamosa_app_db::TIMEZONE};
   }
 }
 
@@ -149,7 +153,6 @@ function mediamosa_app_update($node) {
     // Update webservice.
     _mediamosa_app_update_webservice($node);
   }
-
 }
 
 /**
@@ -440,19 +443,48 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::SHOW_EXTERNAL_ASSETS, $node, mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE),
   );
 
-  $form['tool'] = array(
+  $form['oauth'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => t('Tool'),
-    '#description' => t('Tool related settings'),
+    '#title' => t('oAuth settings'),
+    '#description' => t('')
   );
+  $form['oauth'][mediamosa_app_db::OAUTH_CONSUMER_KEY] = array(
+    '#type' => 'textfield',
+    '#title' => t('oAuth consumer key'),
+    '#description' => t('Unique oAuth consumer key.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_KEY, $node),
+  );
+  $form['oauth'][mediamosa_app_db::OAUTH_CONSUMER_SECRET] = array(
+    '#type' => 'textfield',
+    '#title' => t('oAuth consumer secret'),
+    '#description' => t('oAuth consumer secret. Required, if oAuth consumer key is given.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
+  );
+  /*
+  // This is for later development / test.
+  // See: hook_menu() of sites/all/modules/mediamosa/modules/app/oauth/mediamosa_app_oauth.module
+  if (isset($node->nid)) {
+    $form['oauth']['oauth_client'] = array(
+      '#type' => 'item',
+      '#title' => l(t('oAuth client test'), 'admin/oauth_test/' . $node->nid),
+      '#description' => t('Available oAuth client'),
+    );
 
   $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_options');
   $options = array();
   foreach ($tool_analyse_checkboxes['name'] as $tool_analyse_key => $tool_analyse_checkbox) {
     $options[$tool_analyse_checkboxes['tool'][$tool_analyse_key]] = $tool_analyse_checkbox;
   }
+   */
+  $form['tool'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Tool selection'),
+    '#description' => t('')
+  );
   $form['tool'][mediamosa_app_db::TOOL_ANALYSE] = array(
     '#type' => 'checkboxes',
     '#title' => t('Choose the tools that may copy technical metadata to asset metadata.'),
@@ -769,6 +801,22 @@ function mediamosa_app_validate($node) {
   // Quota.
   if (!is_numeric($node->{mediamosa_app_db::QUOTA})) {
     form_set_error(mediamosa_app_db::QUOTA, t('Please enter a numerical value.'));
+  }
+
+  // oAuth.
+  if (
+    ( empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})) ||
+    ( !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET}))
+  ) {
+    form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('You must fill both oAuth key and secret or non of them.'));
+  }
+  // The consumer key must be unique.
+  if (!empty($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY}) && !empty($node->{mediamosa_app_db::OAUTH_CONSUMER_SECRET})) {
+    $app = mediamosa_app::get_by_oauth_consumer_key($node->{mediamosa_app_db::OAUTH_CONSUMER_KEY});
+
+    if ($app && $app['nid'] != $node->nid) {
+      form_set_error(mediamosa_app_db::OAUTH_CONSUMER_KEY, t('This oAuth consumer key is already exists.'));
+    }
   }
 }
 

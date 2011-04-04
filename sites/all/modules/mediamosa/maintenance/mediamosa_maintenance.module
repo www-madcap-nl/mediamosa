@@ -53,13 +53,15 @@ function mediamosa_maintenance_menu() {
 
   $items['admin/mediamosa/browse'] = array(
     'title' => 'Browse',
-    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
-    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE),
+    'description' => 'Browse through assets, mediafiles or even our REST call documentation.',
+    'type' => MENU_LOCAL_TASK,
     'page callback' => '_mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/browse'),
-    'file' => 'mediamosa_maintenance.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
+    'access arguments' => array(mediamosa_permission::ACCESS_BROWSE),
+    'position' => 'left',
     'weight' => -10,
+    'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/browse/list'] = array(
     'title' => 'List',
@@ -92,6 +94,14 @@ function mediamosa_maintenance_menu() {
   );
   $items['admin/mediamosa/asset/%/mediafile/%/analyse'] = array(
     'page callback' => '_mediamosa_maintenance_mediafile_analyse',
+    'page arguments' => array(3, 5),
+    'access callback' => '_mediamosa_user_access_asset',
+    'access arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/mediafile/%/retranscode'] = array(
+    'page callback' => 'mediamosa_maintenance_mediafile_retranscode',
     'page arguments' => array(3, 5),
     'access callback' => '_mediamosa_user_access_asset',
     'access arguments' => array(3),

@@ -175,7 +175,6 @@ function mediamosa_integrity_check_page() {
   $content[] = drupal_get_form('mediamosa_integrity_check_type_box');
 
   $content[] = array('#markup' => 'For the following objects, an integrity problem has been detected:');
-
   switch ($type) {
     case mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE:
       $header = array(

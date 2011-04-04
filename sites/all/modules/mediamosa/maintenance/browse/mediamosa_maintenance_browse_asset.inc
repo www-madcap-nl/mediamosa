@@ -547,7 +547,8 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
   $rows = array();
   foreach ($result['items'] as $item) {
     $delete = (in_array((string)$item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/' . $asset_id . '/job/' . $item['id'] . '/delete') : '';
-    $rows[] = array(
+    // We will sort jobs by ID.
+    $rows[$item['id']] = array(
       $item['id'],
       $item['job_type'],
       $item['status'],
@@ -558,6 +559,7 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
       $delete,
     );
   }
+  ksort($rows);
   $header = array(
     t('ID'),
     t('Type'),
@@ -623,6 +625,13 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $actions[] = '<b>' . trim($item['filename']) . '</b>';
     $actions[] = $may_delete ? l(t('Delete'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/delete', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No delete right');
     $actions[] = $may_analyse ? l(t('Analyze'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/analyse', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No analyse right');
+    // Retranscode.
+    if ($item[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE && $item[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID]) {
+      $actions[] = $may_retranscode ? l(t('Retranscode'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/retranscode', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No retranscode right');
+    }
+    else {
+      $actions[] = t('Original file');
+    }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);
 

@@ -88,11 +88,16 @@ class mediamosa_collection {
    *
    * @param array $a_coll_ids
    */
-  static public function getAllAssoc(array $a_coll_ids) {
+  static public function getAllAssoc(array $coll_ids) {
+
+    // No coll_ids? Return FALSE.
+    if (empty($coll_ids)) {
+      return FALSE;
+    }
 
     $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
     $query->fields('c');
-    $query->condition('c.' . mediamosa_collection_db::ID, $a_coll_ids, 'IN');
+    $query->condition('c.' . mediamosa_collection_db::ID, $coll_ids, 'IN');
     return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID, PDO::FETCH_ASSOC);
   }
 

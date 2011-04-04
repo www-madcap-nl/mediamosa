@@ -1,0 +1,44 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2011 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Fixing migration of this module.
+ */
+
+
+/**
+ * Turn off MediaMosa App Authentication and turn on DBUS and oAuth modules.
+ */
+function mediamosa_app_authentication_update_7000() {
+
+  module_disable(array('mediamosa_app_authentication'), FALSE);
+
+  module_enable(array('mediamosa_app_dbus'));
+  module_enable(array('mediamosa_app_oauth'));
+
+  return t('The MediaMosa authentication module has been disabled, its been renamed to MediaMosa DBUS authentication and this new module has been enabled. Keep the MediaMosa authentication module turned off, it will be removed in next release.');
+}

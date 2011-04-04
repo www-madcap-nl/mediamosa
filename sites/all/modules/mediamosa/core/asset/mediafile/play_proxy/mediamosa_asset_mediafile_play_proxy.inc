@@ -34,7 +34,7 @@ class mediamosa_asset_mediafile_play_proxy {
   /*
    * Response types
    */
-  const RESPONSE_TYPE_URI = 'plain';// FIXME why do we call uri plain? Either call it uri or plain.
+  const RESPONSE_TYPE_URI = 'plain';
   const RESPONSE_TYPE_STILL = 'still';
   const RESPONSE_TYPE_METAFILE = 'metafile';
   const RESPONSE_TYPE_OBJECT = 'object';

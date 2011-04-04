@@ -65,7 +65,11 @@ function mediamosa_tool_pdf_mediamosa_tool_options() {
 /**
  * Implements hook_mediamosa_tool_iteration().
  *
+<<<<<<< local
+ * Get module id.
+=======
  * Get tool id.
+>>>>>>> other
  */
 function mediamosa_tool_pdf_mediamosa_tool_iteration() {
   return mediamosa_tool_pdf::MEDIAMOSA_TOOL_PDF_ID;

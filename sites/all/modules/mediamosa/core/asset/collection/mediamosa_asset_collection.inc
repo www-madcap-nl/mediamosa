@@ -110,10 +110,10 @@ class mediamosa_asset_collection {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Check if we can delete the links first.
-    $a_asset = mediamosa_asset::get($asset_id);
+    $asset = mediamosa_asset::get($asset_id);
 
     // Get all the links of this asset and his collection(s).
-    $a_coll_ids = mediamosa_db::db_query(
+    $coll_ids = mediamosa_db::db_query(
       'SELECT #coll_id FROM {#mediamosa_asset_collection} WHERE #asset_id = :asset_id',
       array(
         '#coll_id' => mediamosa_asset_collection_db::COLL_ID,
@@ -124,12 +124,12 @@ class mediamosa_asset_collection {
     )->fetchCol();
 
     // Get the collections in one go.
-    $a_collections = mediamosa_collection::getAllAssoc($a_coll_ids);
+    $collections = mediamosa_collection::getAllAssoc($coll_ids);
 
-    foreach ($a_collections as $a_collection) {
+    foreach ($collections as $collection) {
       // Check the user rights to delete the relation.
       try {
-        mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $a_asset, $a_collection, $is_app_admin);
+        mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $asset, $collection, $is_app_admin);
       }
       catch (mediamosa_exception_error_access_denied $e) {
         // There is no access right, so skip it
@@ -137,7 +137,7 @@ class mediamosa_asset_collection {
       }
 
       // Get access, remove relation.
-      mediamosa_asset_collection::delete($asset_id, $a_collection[mediamosa_collection_db::ID]);
+      mediamosa_asset_collection::delete($asset_id, $collection[mediamosa_collection_db::ID]);
     }
 
     // Reindex asset.
@@ -147,14 +147,14 @@ class mediamosa_asset_collection {
   /**
    * Get collections based on given asset_ids.
    *
-   * @param array $a_asset_ids
+   * @param array $asset_ids
    *  The asset ids.
    * @param array $fields (collection fields)
    *  [alias] => field
    */
-  static public function get_by_asset_ids(array $a_asset_ids, array $fields = array()) {
+  static public function get_by_asset_ids(array $asset_ids, array $fields = array()) {
 
-    if (empty($a_asset_ids)) {
+    if (empty($asset_ids)) {
       return array();
     }
 
@@ -175,7 +175,7 @@ class mediamosa_asset_collection {
     else {
       $query->fields();
     }
-    $query->condition(mediamosa_asset_collection_db::ASSET_ID, $a_asset_ids, 'IN');
+    $query->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_ids, 'IN');
     return $query->execute();
   }
 

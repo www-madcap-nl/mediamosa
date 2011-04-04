@@ -654,7 +654,7 @@ function mediamosa_update_7015() {
  */
 function mediamosa_update_7016() {
 
-  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TIMEZONE, array(
+  db_add_field('mediamosa_app', mediamosa_app_db::TIMEZONE, array(
     'description' => t('The application timezone.'),
     'type' => 'varchar',
     'length' => mediamosa_app_db::TIMEZONE_LENGTH,
@@ -1218,7 +1218,7 @@ function mediamosa_update_7059() {
 
   try {
     // Create still default size field.
-    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_DEFAULT_SIZE, array(
+    db_add_field('mediamosa_app', mediamosa_app_db::STILL_DEFAULT_SIZE, array(
       'description' => t('The default size of the still image.'),
       'type' => 'varchar',
       'length' => mediamosa_app_db::STILL_DEFAULT_SIZE_LENGTH,
@@ -1227,7 +1227,7 @@ function mediamosa_update_7059() {
     ));
 
     // Create still padding field.
-    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_PADDING, array(
+    db_add_field('mediamosa_app', mediamosa_app_db::STILL_PADDING, array(
       'description' => t('Force padding, if aspect ratio is maintaned.'),
       'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
       'not null' => TRUE,
@@ -1236,7 +1236,7 @@ function mediamosa_update_7059() {
     ));
 
     // Create still maintain aspect ratio field.
-    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, array(
+    db_add_field('mediamosa_app', mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, array(
       'description' => t('Force maintain the original video aspect ratio or not.'),
       'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
       'not null' => TRUE,
@@ -1520,11 +1520,11 @@ function mediamosa_update_7075() {
       mediamosa_statistics_diskspace_used_db::TYPE,
     ),
 
-    mediamosa_server_db::TABLE_NAME => array(
+    'mediamosa_server' => array(
       mediamosa_server_db::SERVER_TYPE,
     ),
 
-    mediamosa_app_db::TABLE_NAME => array(
+    'mediamosa_app' => array(
       mediamosa_app_db::ALWAYS_INSERT_MD,
     ),
   );
@@ -1818,117 +1818,87 @@ function mediamosa_update_7086() {
 }
 
 /**
+ * Create new errorcode in database.
  * Clearing cache and rebuild registry.
  */
 function mediamosa_update_7087() {
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID',
+      mediamosa_error_db::MESSAGE => 'Open client application ID is missing for OpenAPI',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_OPENAPI_MISSING_OPEN_APP_ID,
+    ))
+  ->execute();
+
   // Rebuild the registry.
   registry_rebuild();
   cache_clear_all();
 }
 
 /**
+ * Create new 'missing extension' errorcode in database.
  * Change mediamosa_streaming_ticket table.
  * Add new field: time.
  * Add new indexes: ticket_id, time.
  */
 function mediamosa_update_7088() {
-  // Add time field.
-  db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
 
-  // Ticket id.
-  db_add_index(
-    'mediamosa_streaming_ticket',
-    'idx_ticket_id',
-    array(
-      mediamosa_streaming_ticket_db::TICKET_ID,
-    )
-  );
-
-  // Time.
-  db_add_index(
-    'mediamosa_streaming_ticket',
-    'idx_timeout',
-    array(
-      mediamosa_streaming_ticket_db::TIMEOUT,
-    )
-  );
-
-  // Add value to time fields.
-  db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
-    ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, mediamosa_statistics::TICKET_TIMEOUT),
-  ));
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME => 'ERRORCODE_MISSING_EXTENSION',
+      mediamosa_error_db::MESSAGE => "Unable to complete request, missing/requires '@extension'",
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_MISSING_EXTENSION,
+    ))
+  ->execute();
 }
-
 /**
- * Change mediamosa_asset_metadata_property table.
- * Add new field: is_hidden.
- * Add new index: is_hidden.
+ * Activate new 2.4 look.
  */
 function mediamosa_update_7089() {
-  // Add is_hidden field.
-  db_add_field(
-    mediamosa_asset_metadata_property_db::TABLE_NAME,
-    mediamosa_asset_metadata_property_db::IS_HIDDEN,
-    array(
-      'description' => t('True if the property is hidden.'),
-      'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
-      'not null' => TRUE,
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
-      'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
-    )
-  );
+  // Clear.
+  cache_clear_all();
 
-  // Is_hidden.
-  db_add_index(
-    mediamosa_asset_metadata_property_db::TABLE_NAME,
-    'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
-    array(
-      mediamosa_asset_metadata_property_db::IS_HIDDEN,
-    )
-  );
+  // Enable default theme, disable bartik, garland.
+  theme_enable(array('rubik'));
+
+  $default_theme = 'rubik';
+  variable_set('theme_default', $default_theme);
+  variable_set('admin_theme', $default_theme);
+  variable_set('node_admin_theme', 1);
+
+  theme_disable(array('bartik', 'garland'));
+
+  // Disable toolbar.
+  module_disable(array('toolbar', 'dashboard'));
+
+  // And again.
+  drupal_flush_all_caches();
 }
 
 /**
- * Change mediamosa_server table.
- * Add new field: mime_type.
  */
 function mediamosa_update_7090() {
-  // Add mime_type field.
-  /*
-  db_add_field(
-    mediamosa_server_db::TABLE_NAME,
-    mediamosa_server_db::MIME_TYPE,
-    array(
-      'description' => t('The optional mime type names this server can serve.'),
-      'type' => 'text',
-      'not null' => FALSE,
-    )
-  );
-   */
-  db_query("ALTER TABLE {mediamosa_server} ADD mime_type TEXT COMMENT 'The optional mime type names this server can serve.' AFTER containers");
 }
-
 /**
  * Add new fields to mediamosa_server table to support new upload progress.
  */
 function mediamosa_update_7091() {
-
-  if (!db_field_exists(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER)) {
+  if (!db_field_exists('mediamosa_server', 'uri_upload_progress_server')) {
     $spec = array(
       'description' => 'The optional uri of the upload progress server side.',
       'type' => 'varchar',
-      'length' => mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_LENGTH,
+      'length' => 255,
       'not null' => TRUE,
       'default' => '',
     );
 
-    db_add_field(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER, $spec);
+    db_add_field('mediamosa_server', 'uri_upload_progress_server', $spec);
   }
 
-  if (!db_field_exists(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE)) {
+  if (!db_field_exists('mediamosa_server', 'uri_upload_progress_server_type')) {
     $server_upload_progress_type = array(
-      mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC,
-      mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_PROXY,
+      'APC',
+      'PROXY',
     );
 
     $spec = array(
@@ -1936,67 +1906,65 @@ function mediamosa_update_7091() {
       'type' => "enum('" . implode("','", $server_upload_progress_type) . "')",
       'mysql_type' => "enum('" . implode("','", $server_upload_progress_type) . "')",
       'not null' => TRUE,
-      'default' => mediamosa_server_db::UPLOAD_PROGRESS_SERVER_TYPE_APC,
+      'default' => 'APC',
     );
 
-    db_add_field(mediamosa_server_db::TABLE_NAME, mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE, $spec);
+    db_add_field('mediamosa_server', 'uri_upload_progress_server_type', $spec);
   }
 }
 
 /**
- * Add new fields to mediamosa_app table to determine which tools will put analyse data to asset metadata.
+ * Create new 'missing extension' errorcode in database.
+ * Change mediamosa_streaming_ticket table.
+ * Add new field: time.
+ * Add new indexes: ticket_id, time.
  */
 function mediamosa_update_7092() {
-  if (!db_field_exists(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TOOL_ANALYSE)) {
-    $spec = array(
-      'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
-      'type' => 'text',
-      'not null' => FALSE,
-      'default' => NULL,
+
+  // Make sure we don't cause problems with 2.3.6 release.
+  if (!db_field_exists('mediamosa_streaming_ticket', 'timeout')) {
+    // Add time field.
+    db_query("ALTER TABLE {mediamosa_streaming_ticket} ADD timeout datetime DEFAULT NULL COMMENT 'The date and time, when the ticket expires.' AFTER mediafile_id");
+
+    // Add value to time fields.
+    db_query("UPDATE {mediamosa_streaming_ticket} SET timeout = :timeout", array(
+      ':timeout' => mediamosa_datetime::utc_current_timestamp_add_hours(FALSE, mediamosa_statistics::TICKET_TIMEOUT),
+    ));
+
+    // Index for Ticket id.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_ticket_id',
+      array(
+        mediamosa_streaming_ticket_db::TICKET_ID,
+      )
     );
 
-    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TOOL_ANALYSE, $spec);
+    // Index for time.
+    db_add_index(
+      'mediamosa_streaming_ticket',
+      'idx_timeout',
+      array(
+        mediamosa_streaming_ticket_db::TIMEOUT,
+      )
+    );
   }
 }
 
-/**
- * Install mediamosa_tool_mapping table.
- * Create the tool mapping node type.
- */
 function mediamosa_update_7093() {
-  // Install mediamosa_tool_mapping table.
-  mediamosa::drupal_install_schema(mediamosa_tool_mapping_db::TABLE_NAME);
-
-  // Create the tool params node type.
-  $tool_mapping_node_type = array(
-    'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING,
-    'name' => st('MediaMosa tool mapping'),
-    'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_MAPPING,
-    'description' => st('The tool mapping contains information about how to map the tool (eg. pdf, tiff) analyse data to asset metadata.'),
-    'custom' => 1,
-    'modified' => 1,
-    'locked' => 0,
-    'has_body' => 0,
-  );
-  $tool_mapping_node_type = node_type_set_defaults($tool_mapping_node_type);
-  node_type_save($tool_mapping_node_type);
-
-  // Rebuild the registry.
-  registry_rebuild();
-  cache_clear_all();
 }
 
 /**
  * Add new fields to mediamosa_tool_params table: description.
  */
 function mediamosa_update_7094() {
-  if (!db_field_exists(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::DESCRIPTION)) {
+  if (!db_field_exists('mediamosa_tool_params', 'description')) {
     $spec = array(
       'description' => 'Description of the parameter.',
       'type' => 'text',
     );
 
-    db_add_field(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::DESCRIPTION, $spec);
+    db_add_field('mediamosa_tool_params', 'description', $spec);
   }
 }
 
@@ -2058,36 +2026,190 @@ function mediamosa_update_7096() {
  * Change the FTP user uid default value in table.
  */
 function mediamosa_update_7097() {
-  db_change_field(
-    mediamosa_ftp_user_db::TABLE_NAME,
-    mediamosa_ftp_user_db::UID,
-    mediamosa_ftp_user_db::UID,
-    array(
-        'type' => 'int',
-        'size' => 'small',
-        'not null' => TRUE,
-        'description' => 'The linux user ID of the FTP user.',
-        'default' => '200',
-    )
-  );
+
+  if (db_field_exists('mediamosa_ftp_user', 'id')) {
+    db_change_field(
+      'mediamosa_ftp_user',
+      'uid',
+      'uid',
+      array(
+          'type' => 'int',
+          'size' => 'small',
+          'not null' => TRUE,
+          'description' => 'The linux user ID of the FTP user.',
+          'default' => '200',
+      )
+    );
+  }
 }
 
 /**
  * Add new fields to mediamosa_tool_params table: switch.
  */
 function mediamosa_update_7098() {
-  if (!db_field_exists(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::TYPE_PARAMETER)) {
+  if (!db_field_exists('mediamosa_tool_params', 'type_parameter')) {
     $spec = array(
-      'description' => 'It is a switch parameter or not.',
+      'description' => 'The type of the parameter.',
       'type' => "enum('" . implode("','", array(mediamosa_tool_params_db::TYPE_PARAMETER_SELECT, mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX)) . "')",
       'not null' => TRUE,
       'mysql_type' => "enum('" . implode("','", array(mediamosa_tool_params_db::TYPE_PARAMETER_SELECT, mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX)) . "')",
       'default' => mediamosa_tool_params_db::TYPE_PARAMETER_SELECT,
     );
 
-    db_add_field(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::TYPE_PARAMETER, $spec);
+    db_add_field('mediamosa_tool_params', mediamosa_tool_params_db::TYPE_PARAMETER, $spec);
   }
 }
 
+/**
+ * Change mediamosa_server table.
+ * Add new field: mime_type.
+ */
+function mediamosa_update_7099() {
+  // Add mime_type field.
+  if (!db_field_exists('mediamosa_server', 'mime_type')) {
+    db_query("ALTER TABLE {mediamosa_server} ADD mime_type TEXT COMMENT 'The optional mime type names this server can serve.' AFTER containers");
+  }
+}
+
+/**
+ * Change mediamosa_asset_metadata_property table.
+ * Add new field: is_hidden.
+ * Add new index: is_hidden.
+ */
+function mediamosa_update_7100() {
+  if (!db_field_exists('mediamosa_asset_metadata_property', mediamosa_asset_metadata_property_db::IS_HIDDEN)) {
+    // Add is_hidden field.
+    db_add_field(
+      mediamosa_asset_metadata_property_db::TABLE_NAME,
+      mediamosa_asset_metadata_property_db::IS_HIDDEN,
+      array(
+        'description' => t('True if the property is hidden.'),
+        'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+        'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+      )
+    );
+
+    // Is_hidden.
+    db_add_index(
+      'mediamosa_asset_metadata_property',
+      'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN,
+      array(
+        mediamosa_asset_metadata_property_db::IS_HIDDEN
+      )
+    );
+  }
+}
+
+/**
+ * Update the mediamosa_app table schema with oAuth fields.
+ */
+function mediamosa_update_7101() {
+}
+
+/**
+ * Install the oAuth no-once .
+ */
+function mediamosa_update_7102() {
+  if (!db_table_exists(mediamosa_app_oauth_nonce_db::TABLE_NAME)) {
+    // Create nonce table.
+    mediamosa::drupal_install_schema(mediamosa_app_oauth_nonce_db::TABLE_NAME);
+  }
+}
+
+/**
+ * Add field to MediaMosa app table.
+ */
+function mediamosa_update_7103() {
+  if (!db_field_exists(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TOOL_ANALYSE)) {
+    $spec = array(
+      'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
+      'type' => 'text',
+      'not null' => FALSE,
+      'default' => NULL,
+    );
+
+    db_add_field('mediamosa_app', mediamosa_app_db::TOOL_ANALYSE, $spec);
+  }
+}
+
+/**
+ * Install the mediamosa_app_oauth_token table.
+ */
+function mediamosa_update_7104() {
+  if (!db_table_exists('mediamosa_app_oauth_token')) {
+    // Create token table.
+    mediamosa::drupal_install_schema('mediamosa_app_oauth_token');
+  }
+}
+
+/**
+ * Add new fields to mediamosa_app table to determine which tools will put
+ * analyse data to asset metadata.
+ */
+function mediamosa_update_7105() {
+  if (!db_field_exists('mediamosa_app', 'oauth_consumer_key')) {
+    // oAuth consumer key.
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+  }
+  else {
+    db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_key oauth_consumer_key VARBINARY(255) DEFAULT '' COMMENT 'The identifier portion of the client credentials (username).' AFTER allow_masterslave_apps");
+  }
+
+  if (!db_field_exists('mediamosa_app', 'oauth_consumer_secret')) {
+    // oAuth consumer secret.
+    db_query("ALTER TABLE {mediamosa_app} ADD oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+  }
+  else {
+    db_query("ALTER TABLE {mediamosa_app} CHANGE COLUMN oauth_consumer_secret oauth_consumer_secret VARBINARY(255) DEFAULT '' COMMENT 'The password portion of the client credentials (password).' AFTER oauth_consumer_key");
+  }
+
+  if (!db_index_exists('mediamosa_app', 'idx_oauth_consumer_key')) {
+    // only add the main search query.
+    db_add_index(
+      'mediamosa_app',
+      'idx_oauth_consumer_key',
+      array(
+        mediamosa_app_db::OAUTH_CONSUMER_KEY,
+      )
+    );
+  }
+}
+
+/**
+ * Install mediamosa_tool_mapping table.
+ * Create the tool mapping node type.
+ */
+function mediamosa_update_7106() {
+
+  if (!db_table_exists('mediamosa_tool_mapping')) {
+    // Install mediamosa_tool_mapping table.
+    mediamosa::drupal_install_schema('mediamosa_tool_mapping');
+
+    // Create the tool params node type.
+    $tool_mapping_node_type = array(
+      'type' => 'mediamosa_tool_mapping',
+      'name' => st('MediaMosa tool mapping'),
+      'base' => 'mediamosa_tool_mapping',
+      'description' => st('The tool mapping contains information about how to map the tool (eg. pdf, tiff) analyse data to asset metadata.'),
+      'custom' => 1,
+      'modified' => 1,
+      'locked' => 0,
+      'has_body' => 0,
+    );
+    $tool_mapping_node_type = node_type_set_defaults($tool_mapping_node_type);
+    node_type_save($tool_mapping_node_type);
+  }
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}
+
+/**
+ * Stop using const values from static classes, type the values directly.
+ */
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
+

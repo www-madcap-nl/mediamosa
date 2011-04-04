@@ -183,7 +183,15 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-    // Set order still from asset.
+  // Watermarking still.
+  $rest_calls['still/$still_id/watermark'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_set_still_watermark',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+  );
+
+  // Set order still from asset.
   $rest_calls['asset/$asset_id/still/order'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_set_still_order',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
@@ -1433,7 +1441,22 @@ name=Example&delete=cascade',
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
-    // Set order still from asset.
+  // Watermarking still.
+  $rest_calls['still/$still_id/watermark'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Watermark still.',
+    mediamosa_rest_call::DESCRIPTION => 'Watermark an existing still and save it as a new one.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'still/Cd2WoNCzHX14mfLwbxbPgowc/watermark',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'still_id' => 'The new still ID.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <still_id>OW35AQyoPNUSi4iINunmS2nr</still_id>
+  </item>
+</items>',
+  );
+
+  // Set order still from asset.
   $rest_calls['asset/$asset_id/still/order'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Set the order for still of a asset.',
     mediamosa_rest_call::DESCRIPTION => 'The order is a number like a weight. The higher the weight, the higher it will return in the result.',
