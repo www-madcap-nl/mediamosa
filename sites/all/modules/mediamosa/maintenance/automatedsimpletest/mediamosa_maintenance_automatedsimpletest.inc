@@ -275,7 +275,11 @@ class mediamosa_maintenance_automatedsimpletest {
 
             // If the test has been disabled by test, we remove it also from
             // the results.
-            remove_test_results($run, $class_name);
+            self::remove_test_results($run, $class_name);
+            $key = array_search($class_name, $queue);
+            if ($key !== FALSE) {
+              unset($queue[$key]);
+            }
             continue;
           }
         }
