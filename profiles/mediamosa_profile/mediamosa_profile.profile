@@ -452,15 +452,21 @@ function mediamosa_profile_configure_server($install_state) {
   // MediaMosa server table.
   db_query("
     UPDATE {mediamosa_server}
-    SET server_uri = REPLACE(server_uri, 'http://localhost', :server)
-    WHERE LOCATE('http://localhost', server_uri) > 0", array(
-    ':server' => 'http://' . $server_name,
+    SET server_uri = REPLACE(server_uri, 'mediamosa.local', :server)
+    WHERE LOCATE('mediamosa.local', server_uri) > 0", array(
+    ':server' => $server_name,
   ));
   db_query("
     UPDATE {mediamosa_server}
-    SET uri_upload_progress = REPLACE(uri_upload_progress, 'http://example.org', :server)
-    WHERE LOCATE('http://example.org', uri_upload_progress) > 0", array(
-    ':server' => 'http://' . $server_name,
+    SET uri_upload_progress = REPLACE(uri_upload_progress, 'mediamosa.local', :server)
+    WHERE LOCATE('mediamosa.local', uri_upload_progress) > 0", array(
+    ':server' => $server_name,
+  ));
+  db_query("
+    UPDATE {mediamosa_server}
+    SET uri_upload_progress_server = REPLACE(uri_upload_progress_server, 'mediamosa.local', :server)
+    WHERE LOCATE('mediamosa.local', uri_upload_progress_server) > 0", array(
+    ':server' => $server_name,
   ));
 
   // MediaMosa node revision table.
@@ -472,6 +478,9 @@ function mediamosa_profile_configure_server($install_state) {
     }
     if (isset($revision_data['uri_upload_progress'])) {
       $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $revision_data['uri_upload_progress']);
+    }
+    if (isset($revision_data['uri_upload_progress_server'])) {
+      $revision_data['uri_upload_progress_server'] = str_replace('mediamosa.local', $server_name, $revision_data['uri_upload_progress_server']);
     }
     db_query("
       UPDATE {mediamosa_node_revision}

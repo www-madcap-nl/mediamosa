@@ -234,7 +234,6 @@ function theme_mediamosa_connector_call($variables) {
 }
 
 /**
->>>>>>> other
  * Implement hook_settings_validate().
  */
 function mediamosa_connector_settings_validate(&$form_state, $form) {

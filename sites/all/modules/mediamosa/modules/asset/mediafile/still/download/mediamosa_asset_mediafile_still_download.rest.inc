@@ -30,9 +30,14 @@
  */
 
 /**
- * URI: /still/$mediafile_id (perm. link)
+ * URI: /still/$still_id (perm. link)
  * URI: /still/ticket/$ticket_id (normal temp. link).
- * URI: /still/[1stletter $mediafile_id]/$mediafile_id (missing perm. link).
+ * URI: /still/[1stletter $still_id]/$still_id (missing perm. link).
+ *
+ * URI: /still/$still_id/style/$style (perm. link)
+ * URI: /still/ticket/$ticket_id/style/$style (normal temp. link).
+ * URI: /still/[1stletter $still_id]/$still_id/style/$style (missing perm. link).
+ *
  * Method: GET / POST
  *
  * replacement for still/index.php.
@@ -42,6 +47,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
   // Rest vars;
   const STILL_ID = 'still_id';
   const TICKET_ID = 'ticket_id';
+  const STYLE = 'style';
 
   // ------------------------------------------------------------------ Get Var Setup.
   /**
@@ -53,11 +59,21 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
    *   TRUE, if match.
    */
   public static function match_uri($uri) {
+    // $delta = 1, if we are not in a simpletest.
     $delta = (mediamosa::get()->in_simpletest_sandbox() ? 2 : 1);
     $uri_parts = explode('/', $uri);
 
     // Match if there isn't second argument, or the first is "ticket", or the length of the first is 1.
-    return (empty($uri_parts[$delta + 1]) || (!empty($uri_parts[$delta]) && $uri_parts[$delta] == 'ticket') || (!empty($uri_parts[$delta]) && drupal_strlen($uri_parts[$delta]) == 1));
+    // This is necessary, because of REST calls, like: still/$still_id/watermark.
+    return
+      // still/$still_id
+      (empty($uri_parts[$delta + 1]) ||
+      // still/$still_id/style/$style
+      (!empty($uri_parts[$delta + 1]) && $uri_parts[$delta + 1] == 'style') ||
+      // still/ticket/$ticket_id and still/ticket/$ticket_id/style/$style
+      (!empty($uri_parts[$delta]) && $uri_parts[$delta] == 'ticket') ||
+      // still/[1stletter $still_id]/$still_id and still/[1stletter $still_id]/$still_id/style/$style
+      (!empty($uri_parts[$delta]) && drupal_strlen($uri_parts[$delta]) == 1));
   }
 
   public function get_var_setup() {
@@ -75,6 +91,11 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The ticket ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
+        self::STYLE => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Image style.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+        ),
       )
     );
 
@@ -89,6 +110,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     // Get the ticket ID.
     $still_id = $this->get_param_value(self::STILL_ID);
     $ticket_id = $this->get_param_value(self::TICKET_ID);
+    $style = $this->get_param_value(self::STYLE);
 
 
     if (!$ticket_id && !$still_id) {
@@ -166,6 +188,9 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
         }
       }
     }
+
+    // Handle still style.
+    $file = mediamosa_asset_mediafile_still::handle_still_style_request($file, $style, $ticket_id, $still_id);
 
     $handle = fopen($file, 'rb');
 

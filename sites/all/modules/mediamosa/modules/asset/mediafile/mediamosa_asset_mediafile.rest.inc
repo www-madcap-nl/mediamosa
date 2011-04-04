@@ -237,6 +237,8 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
   const MEDIAFILE_ID = 'mediafile_id';
   const USER_ID = 'user_id';
   const DELETE = 'delete';
+  const NEW_ORIGINAL = 'new_original';
+  const DELETE_CASCADE = 'cascade';
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
@@ -259,6 +261,10 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Put on cascade to delete its stills as well.',
           self::VAR_ALLOWED_VALUES => array('cascade', '')
         ),
+        self::NEW_ORIGINAL => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The ID of the new original mediafile.',
+        ),
       )
     );
 
@@ -277,20 +283,45 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $delete = $this->get_param_value(self::DELETE);
     $user_id = $this->get_param_value(self::USER_ID);
+    $new_original = $this->get_param_value(self::NEW_ORIGINAL);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Must exists.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
-    // Does the user has access?
+    // Does the user have access?
     mediamosa_aut::owner_check(
       $app_id,
       $user_id,
-      $a_mediafile[mediamosa_asset_mediafile_db::APP_ID],
-      $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
+      $mediafile[mediamosa_asset_mediafile_db::APP_ID],
+      $mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
     );
+
+    // Check the new original.
+    if ($new_original) {
+      // Must exists.
+      $mediafile_new_original = mediamosa_asset_mediafile::must_exists($new_original);
+
+      // Does the user have access?
+      mediamosa_aut::owner_check(
+        $app_id,
+        $user_id,
+        $mediafile_new_original[mediamosa_asset_mediafile_db::APP_ID],
+        $mediafile_new_original[mediamosa_asset_mediafile_db::OWNER_ID]
+      );
+
+      // Check whether the mediafile is original..
+      if ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] != mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL, array('@mediafile_id' => $mediafile_id));
+      }
+
+      // Check whether the mediafile is parent of new original mediafile.
+      if ($mediafile_new_original[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] != $mediafile_id) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_MEDIAFILE_RELATION, array('@mediafile_id' => $mediafile_id, '@new_original' => $new_original));
+      }
+    }
 
     // Check if this mediafile is the only one under a sub-asset.
     $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
@@ -309,7 +340,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     // Moet een subasset zijn en alleen deze mediafile als kind.
     $delete_asset = (!is_null($a_asset['parent_id']) && $count == 1);
 
-    if ($delete == 'cascade') {
+    if ($delete == self::DELETE_CASCADE) {
       // Deletes the stills.
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
       $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID));
@@ -325,6 +356,11 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
 
     if ($delete_asset) {
       mediamosa_asset::delete($a_asset[mediamosa_asset_db::ID]);
+    }
+
+    // Set the new original mediafile.
+    if ($new_original) {
+      mediamosa_asset_mediafile::set_new_original($mediafile_id, $new_original);
     }
 
     $o_mediamosa->set_result_okay();

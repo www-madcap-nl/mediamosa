@@ -23,6 +23,27 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 3.0 (build 1630)
+--------------------------
+- Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
+  "group_id" is marked as depricated (See ticket #238).
+- Play request with "tag" development (See ticket #216).
+- Variable for custom control bar height in objectcode (See ticket #326).
+- Asset, assets and asset/$asset_id GET REST call show the collection data
+  in better format (See ticket #332).
+- Optimize /assets REST call (See ticket #360).
+- Mediafile delete REST call with new parameter: new_original (mediafile_id).
+  If the deleted mediafile is original, then the new original mediafile is
+  the new_original (See ticket #393).
+- Server URI is separated to URI and path (See ticket #367).
+- Video without bitrate fix (See ticket #394).
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
+- Image style development (See ticket #371).
+
+Other changes (not ticket related).
+- Favicon.ico was added to rubik theme.
+
 MediaMosa 2.4 (build 1605)
 --------------------------
 - Watermarking stills (See ticket #82).
@@ -73,10 +94,7 @@ Other changes (not ticket related).
 - Frametime for still upload development.
 - Lua script fix for the new ffmpeg version.
 
-MediaMosa 2.3.8 (build 1366)
-=======
 MediaMosa 2.3.8 (build 1368)
->>>>>>> other
 ----------------------------
 - Metadata can be set to hidden, which will prevent the metadata to be returned
   in the asset output or other REST calls (See ticket #504).

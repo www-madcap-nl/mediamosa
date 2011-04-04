@@ -68,7 +68,8 @@ function mediamosa_asset_supplement_schema() {
       ),
       mediamosa_asset_supplement_db::SUPPLEMENT => array(
         'type' => 'blob',
-        'description' => 'Contens of the supplement.',
+        'size' => 'big',
+        'description' => 'Contents of the supplement.',
       ),
       mediamosa_asset_supplement_db::TAG => array(
         'type' => 'varchar',

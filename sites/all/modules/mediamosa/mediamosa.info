@@ -2,12 +2,19 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.4.0.1605"
+version = "3.0.0.1630"
 core = 7.x
 
 configure = admin/mediamosa/config/global
 
 ; Dependencies (module names)
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = color
+dependencies[] = help
+dependencies[] = menu
+dependencies[] = dblog
+dependencies[] = image
 dependencies[] = simpletest
 dependencies[] = mediamosa_sdk
 
@@ -323,6 +330,10 @@ files[] = core/user/mediamosa_user.install.inc
 files[] = core/user/group/mediamosa_user_group_db.inc
 files[] = core/user/group/mediamosa_user_group.inc
 files[] = core/user/group/mediamosa_user_group.install.inc
+
+; User-Group Relationship.
+files[] = core/user/group/mediamosa_user_in_group_db.inc
+files[] = core/user/group/mediamosa_user_in_group.install.inc
 
 ; User Favorite.
 files[] = core/user/favorite/mediamosa_user_favorite_db.inc

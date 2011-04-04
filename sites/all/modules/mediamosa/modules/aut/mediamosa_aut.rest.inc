@@ -164,6 +164,9 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
       unset($a_row['aut_name']);
       $o_mediamosa->add_item($a_row);
     }
+
+    $o_mediamosa->item_count_total = $result->found_rows;
+
   }
 }
 

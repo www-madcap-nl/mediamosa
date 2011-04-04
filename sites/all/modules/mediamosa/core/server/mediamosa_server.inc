@@ -132,10 +132,9 @@ class mediamosa_server {
     $result = array();
     foreach ($servers as $server) {
 
-      $uri_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($server[mediamosa_server_db::SERVER_URI])), TRUE);
+      $uri = mediamosa_http::expect_url($server[mediamosa_server_db::SERVER_URI]);
 
-      // FIXME: need fix for uri.
-      $response = mediamosa_http::do_internal_call($uri_split['host']/* . $uri_split['uri']*/, 'server/status?include_status=TRUE');
+      $response = mediamosa_http::do_internal_call($uri, 'server/status?include_status=TRUE');
       if ($response->code != '200') {
         self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
       }
@@ -166,10 +165,10 @@ class mediamosa_server {
   static public function cleanup_simpletest_enabled_servers($server_types = array(mediamosa_server_db::SERVER_TYPE_DOWNLOAD, mediamosa_server_db::SERVER_TYPE_STILL, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR, mediamosa_server_db::SERVER_TYPE_UPLOAD)) {
     $servers = mediamosa_server::get_enabled($server_types);
     foreach ($servers as $server) {
-      $uri_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($server[mediamosa_server_db::SERVER_URI])), TRUE);
+      $uri = mediamosa_http::expect_url($server[mediamosa_server_db::SERVER_URI]);
 
       // FIXME: need fix for uri.
-      mediamosa_http::do_head_internal_call($uri_split['host'] . '/internal/simpletest/cleanup');
+      mediamosa_http::do_head_internal_call($uri . 'internal/simpletest/cleanup');
     }
 
     // Also trigger on the main Internal REST Call URL.
@@ -466,7 +465,7 @@ class mediamosa_server {
     $server = self::get_streaming($container_type, $video_codec, $mime_type);
 
     if ($server) {
-      return $server[mediamosa_server_db::SERVER_URI];
+      return self::get_server_url($server);
     }
 
     return FALSE;
@@ -502,7 +501,7 @@ class mediamosa_server {
   static public function get_uri_still() {
     $server = self::get_still();
 
-    return $server[mediamosa_server_db::SERVER_URI];
+    return self::get_server_url($server);
   }
 
   /**
@@ -530,5 +529,15 @@ class mediamosa_server {
     return mediamosa_db::db_select(mediamosa_server_tool_db::TABLE_NAME, 'mst')
       ->fields('mst')
       ->execute();
+  }
+
+  /**
+   * Gives back the old server URL.
+   *
+   * @param array $server
+   *   Mediamosa_server table array.
+   */
+  static public function get_server_url(array $server) {
+    return str_replace(mediamosa_server_db::SERVER_PATH_BASE_URI, $server[mediamosa_server_db::SERVER_URI], $server[mediamosa_server_db::SERVER_PATH]);
   }
 }

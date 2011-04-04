@@ -250,18 +250,28 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
       ));
 
       // Fill response.
+      $aut_user_id = '';
+      $granted = '';
+      $aut_group_ids = array();
+      $aut_domain = '';
+      $aut_realm = '';
+      $show_stills = TRUE;
+      $show_collections = FALSE;
+      $add_has_streamable_mediafiles = FALSE;
+      $app_active_version = FALSE;
       $items = mediamosa_asset::asset_collect(
         $asset_ids['asset_ids'],
         $app_ids,
-        '',
-        '',
-        array(),
-        '',
-        '',
+        $aut_user_id,
+        $granted,
+        $aut_group_ids,
+        $aut_domain,
+        $aut_realm,
         $this->get_param_value(self::IS_APP_ADMIN),
-        TRUE,
-        FALSE,
-        FALSE
+        $show_stills,
+        $show_collections,
+        $add_has_streamable_mediafiles,
+        $app_active_version
       );
 
       foreach ($items as $item) {
@@ -565,18 +575,28 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     ));
 
     // Fill response.
+    $aut_user_id = '';
+    $granted = '';
+    $aut_group_ids = array();
+    $aut_domain = '';
+    $aut_realm = '';
+    $show_stills = TRUE;
+    $show_collections = FALSE;
+    $add_has_streamable_mediafiles = FALSE;
+    $app_active_version = FALSE;
     $items = mediamosa_asset::asset_collect(
       $asset_ids['asset_ids'],
       $app_ids,
-      '',
-      '',
-      array(),
-      '',
-      '',
+      $aut_user_id,
+      $granted,
+      $aut_group_ids,
+      $aut_domain,
+      $aut_realm,
       $this->get_param_value(self::IS_APP_ADMIN),
-      TRUE,
-      FALSE,
-      FALSE
+      $show_stills,
+      $show_collections,
+      $add_has_streamable_mediafiles,
+      $app_active_version
     );
 
     foreach ($items as $item) {

@@ -166,6 +166,7 @@ function _mediamosa_server_list() {
     array('data' => t('Server Type'), 'field' => 'ms.' . mediamosa_server_db::SERVER_TYPE, 'sort' => 'asc'),
     array('data' => t('Title'), 'field' => 'ms.' . mediamosa_server_db::SERVER_NAME),
     array('data' => t('URI'), 'field' => 'ms.' . mediamosa_server_db::SERVER_URI),
+    array('data' => t('Path'), 'field' => 'ms.' . mediamosa_server_db::SERVER_PATH),
     array('data' => t('Status'), 'field' => 'ms.' . mediamosa_server_db::SERVER_STATUS),
     t('Operations'),
   );
@@ -211,6 +212,7 @@ function _mediamosa_server_list() {
         t($server[mediamosa_server_db::SERVER_TYPE]),
        'title' => array('data' => l($server[mediamosa_server_db::SERVER_NAME], 'admin/mediamosa/config/server/' . $server[mediamosa_server_db::NID]), 'field' => mediamosa_server_db::SERVER_NAME),
         t($server[mediamosa_server_db::SERVER_URI]),
+        t($server[mediamosa_server_db::SERVER_PATH]),
         $statuses[$server[mediamosa_server_db::SERVER_STATUS]],
         empty($actions) ? '-' : implode(' | ', $actions),
       ),
@@ -221,31 +223,4 @@ function _mediamosa_server_list() {
   $output .= theme('pager');
 
   return $output;
-}
-
-/**
- * Helper function to fetch the optional parameters per server type.
- */
-function _mediamosa_server_get_server_options($server_type) {
-  $form_elements = array();
-  switch ($server_type) {
-    case mediamosa_server_db::SERVER_TYPE_STILL:
-    case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
-      $form_elements = array(mediamosa_server_db::SERVER_URI);
-      break;
-
-    case mediamosa_server_db::SERVER_TYPE_STREAMING:
-      $form_elements = array(mediamosa_server_db::SERVER_URI, mediamosa_server_db::CONTAINERS, mediamosa_server_db::OBJECT_CODE);
-      break;
-
-    case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-      $form_elements = array(mediamosa_server_db::SERVER_NAME, mediamosa_server_db::SERVER_URI, mediamosa_server_db::SLOTS, mediamosa_server_db::TOOLS);
-      break;
-
-    case mediamosa_server_db::SERVER_TYPE_UPLOAD:
-      $form_elements = array(mediamosa_server_db::SERVER_URI, mediamosa_server_db::URI_UPLOAD_PROGRESS);
-      break;
-  }
-
-  return $form_elements;
 }

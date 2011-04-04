@@ -157,6 +157,8 @@ class mediamosa_node {
           case mediamosa_server_db::SERVER_TYPE_STILL:
             $to_remove = array(
               mediamosa_server_db::URI_UPLOAD_PROGRESS,
+              mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER,
+              mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE,
               mediamosa_server_db::CONTAINERS,
               mediamosa_server_db::OBJECT_CODE,
               mediamosa_server_db::SLOTS,
@@ -166,6 +168,8 @@ class mediamosa_node {
           case mediamosa_server_db::SERVER_TYPE_STREAMING:
             $to_remove = array(
               mediamosa_server_db::URI_UPLOAD_PROGRESS,
+              mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER,
+              mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE,
               mediamosa_server_db::SLOTS,
               mediamosa_server_db::TOOLS,
             );
@@ -173,13 +177,14 @@ class mediamosa_node {
           case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
             $to_remove = array(
               mediamosa_server_db::URI_UPLOAD_PROGRESS,
+              mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER,
+              mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE,
               mediamosa_server_db::CONTAINERS,
               mediamosa_server_db::OBJECT_CODE,
             );
             break;
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
             $to_remove = array(
-              mediamosa_server_db::SERVER_URI,
               mediamosa_server_db::CONTAINERS,
               mediamosa_server_db::OBJECT_CODE,
               mediamosa_server_db::SLOTS,
