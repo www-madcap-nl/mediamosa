@@ -85,7 +85,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
     $still_id = $stills['stills']['still_id'];
 
     foreach ($still_servers as $still_server) {
-      $url = str_replace('{TICKET}', $still_id, $still_server[mediamosa_server_db::SERVER_URI]);
+      $url = str_replace('{TICKET}', $still_id, mediamosa_server::get_server_url($still_server));
 
       // Test the output, do output call.
       $url = str_replace('/still/', '/simpletest/still/', $url);
@@ -130,7 +130,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
       $this->var_export($result->headers);
 
       // /still/x/xxxxxx test.
-      $url = str_replace('{TICKET}', $still_id[0] . '/' . $still_id, $still_server[mediamosa_server_db::SERVER_URI]);
+      $url = str_replace('{TICKET}', $still_id[0] . '/' . $still_id, mediamosa_server::get_server_url($still_server));
 
       // Test the output, do output call.
       $url = str_replace('/still/', '/simpletest/still/', $url);

@@ -401,6 +401,17 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
           add_error("The video input stream uses an unknown codec")
           codec = {}
         else
+
+          -- File without bitrate fix.
+          if fps == nil then
+            -- No fps, then br2 has the fps data.
+            fps = br2
+            br2 = nil
+          elseif fps == br2 then
+            -- Fps recognized as bitrate.
+            br2 = nil
+          end
+
           local bitrate
           if(br1 ~= "unknown") then
             bitrate = br1
@@ -421,7 +432,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
           else
             add_property("Video-framespersecond", br2)
           end
-          if bitrate ~= "unknown" then
+          if bitrate ~= nil and bitrate ~= "unknown" then
             add_property("Video-bitrate", bitrate)
             -- print("bitrate " .. bitrate)
             if tonumber(bitrate) > max_video_bitrate then

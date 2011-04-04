@@ -297,21 +297,21 @@ function mediamosa_update_7002() {
   // Insert default mappings as nodes.
   foreach ($a_default_mappings as $a_default_mapping) {
     $a_fields = array(
-      mediamosa_transcode_mapping_db::TOOL => $a_default_mapping[0],
-      mediamosa_transcode_mapping_db::NICE_PARAMETER => $a_default_mapping[1],
-      mediamosa_transcode_mapping_db::TOOL_PARAMETER => $a_default_mapping[2],
-      mediamosa_transcode_mapping_db::MIN_VALUE => $a_default_mapping[3],
-      mediamosa_transcode_mapping_db::MAX_VALUE => $a_default_mapping[4],
-      mediamosa_transcode_mapping_db::ALLOWED_VALUE => $a_default_mapping[5],
-      mediamosa_transcode_mapping_db::DEFAULT_VALUE => $a_default_mapping[6],
-      mediamosa_transcode_mapping_db::REQUIRED => $a_default_mapping[7],
+      'tool' => $a_default_mapping[0],
+      'nice_parameter' => $a_default_mapping[1],
+      'tool_parameter' => $a_default_mapping[2],
+      'min_value' => $a_default_mapping[3],
+      'max_value' => $a_default_mapping[4],
+      'allowed_value' => $a_default_mapping[5],
+      'default_value' => $a_default_mapping[6],
+      'required' => $a_default_mapping[7],
     );
 
     // Add changed/created.
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
-    db_insert(mediamosa_transcode_mapping_db::TABLE_NAME)
+    db_insert('mediamosa_transcode_mapping')
       ->fields($a_fields)
       ->execute();
   }
@@ -1852,27 +1852,9 @@ function mediamosa_update_7088() {
   ->execute();
 }
 /**
- * Activate new 2.4 look.
+ * Update moved to higher.
  */
 function mediamosa_update_7089() {
-  // Clear.
-  cache_clear_all();
-
-  // Enable default theme, disable bartik, garland.
-  theme_enable(array('rubik'));
-
-  $default_theme = 'rubik';
-  variable_set('theme_default', $default_theme);
-  variable_set('admin_theme', $default_theme);
-  variable_set('node_admin_theme', 1);
-
-  theme_disable(array('bartik', 'garland'));
-
-  // Disable toolbar.
-  module_disable(array('toolbar', 'dashboard'));
-
-  // And again.
-  drupal_flush_all_caches();
 }
 
 /**
@@ -2177,7 +2159,7 @@ function mediamosa_update_7105() {
   }
 }
 
-/**
+/*
  * Install mediamosa_tool_mapping table.
  * Create the tool mapping node type.
  */
@@ -2207,9 +2189,402 @@ function mediamosa_update_7106() {
 }
 
 /**
- * Stop using const values from static classes, type the values directly.
+ * Create new 'No mediafile found for the given asset and tag' errorcode in database.
  */
+function mediamosa_update_7107() {
+  $result = db_select('mediamosa_error', 'e')
+    ->condition('e.name', 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG')
+    ->fields('e', array('name'))
+    ->execute()->fetchCol();
+  if (!$result) {
+    db_insert(mediamosa_error_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_error_db::NAME => 'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG',
+        mediamosa_error_db::MESSAGE => "No mediafile found for the given asset and tag",
+        mediamosa_error_db::CODE => 620, // mediamosa_error::ERRORCODE_NO_MEDIAFILE_FOUND_FOR_TAG.
+      ))
+    ->execute();
+  }
+}
 
+/**
+ * Create new 'The mediafile (@mediafile_id) is not original' errorcode in database.
+ * Create new 'The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)' errorcode in database.
+ */
+function mediamosa_update_7108() {
+  $result = db_select('mediamosa_error', 'e')
+    ->condition('e.name', 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL')
+    ->fields('e', array('name'))
+    ->execute()->fetchCol();
+  if (!$result) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL',
+        'message' => "The mediafile (@mediafile_id) is not original",
+        'code' => 723, //mediamosa_error::ERRORCODE_MEDIAFILE_IS_NOT_ORIGINAL,
+      ))
+    ->execute();
+  }
+
+  $result = db_select('mediamosa_error', 'e')
+    ->condition('e.name', 'ERRORCODE_INVALID_MEDIAFILE_RELATION')
+    ->fields('e', array('name'))
+    ->execute()->fetchCol();
+  if (!$result) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_INVALID_MEDIAFILE_RELATION',
+        'message' => "The mediafile (@mediafile_id) is not the parent of the new original mediafile (@new_original)",
+        'code' => 724, //mediamosa_error::ERRORCODE_INVALID_MEDIAFILE_RELATION,
+      ))
+    ->execute();
+  }
+}
+
+/**
+ * Add server path field to mediamosa_server table.
+ */
+function mediamosa_update_7109() {
+  if (!db_field_exists('mediamosa_server', 'server_path')) {
+    db_query("ALTER TABLE {mediamosa_server} ADD server_path VARCHAR(255) COMMENT 'The path of the server.' AFTER server_uri");
+  }
+}
+
+/**
+ * Split the server_uri to two parts, and fill the server_uri and server_path in mediamosa_server table and mediamosa_node_revision table.
+ */
+function mediamosa_update_7110() {
+  $query = db_select('mediamosa_server', 's');
+  $query->fields('s', array('vid', 'server_uri'));
+  $result = $query->execute();
+  foreach ($result as $record) {
+    $vid = $record->vid;
+
+    $parsed_uri = $parsed_path = parse_url($record->server_uri);
+    if (empty($parsed_uri)) {
+      continue;
+    }
+
+    unset($parsed_uri['path']);
+    unset($parsed_uri['query']);
+    unset($parsed_uri['fragment']);
+    $server_uri = mediamosa_http::glue_url($parsed_uri);
+
+    unset($parsed_path['scheme']);
+    unset($parsed_path['host']);
+    unset($parsed_path['user']);
+    unset($parsed_path['pass']);
+    unset($parsed_path['port']);
+    $server_path = '{base_uri}' . mediamosa_http::glue_url($parsed_path);
+
+    // Update mediamosa_server table.
+    db_update('mediamosa_server')
+      ->fields(array(
+        'server_uri' => $server_uri,
+        'server_path' => $server_path,
+      ))
+      ->condition('vid', $vid)
+      ->execute();
+
+    // Update mediamosa_node_revision table.
+
+    // Get the data.
+    $query_nr = db_select('mediamosa_node_revision', 'nr');
+    $query_nr
+      ->condition('nr.vid', $vid)
+      ->fields('nr', array('revision_data'))
+      ->range(0, 1);
+    $result_nr = $query_nr->execute();
+    $revision_data = $result_nr->fetchCol();
+    $revision_data = unserialize($revision_data[0]);
+
+    // Change the data.
+    unset($revision_data['uri']);
+    $revision_data['server_uri'] = $server_uri;
+    $revision_data['server_path'] = $server_path;
+
+    // Save the data.
+    db_update('mediamosa_node_revision')
+      ->fields(array(
+        'revision_data' => serialize($revision_data),
+      ))
+      ->condition('vid', $vid)
+      ->execute();
+  }
+
+  return t('Your server configurations were changed. Please, check them: !here', array('!here' => l('admin/mediamosa/config/server', 'admin/mediamosa/config/server')));
+}
+
+/**
+ * Change server URI field to mediamosa_server table.
+ */
+function mediamosa_update_7111() {
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN server_uri server_uri VARCHAR(255) COMMENT 'The URI of the server.' AFTER server_type");
+}
+
+/**
+ * Change the size of the supplement.
+ */
+function mediamosa_update_7112() {
+  $spec = array(
+    'type' => 'blob',
+    'size' => 'big',
+    'description' => 'Contents of the supplement.',
+  );
+
+  db_change_field(
+    'mediamosa_asset_supplement',
+    'supplement',
+    'supplement',
+    $spec
+  );
+}
+
+/**
+ * Update the MediaMosa user.
+ */
+function mediamosa_update_7113() {
+
+  if (!db_field_exists('mediamosa_user', 'group_id')) {
+    return 'Update 7113 already run?';
+  }
+
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => FALSE,
+    'not null' => TRUE,
+    'description' => 'The disk quota in MB.',
+  );
+
+  // Just fix incorrect comment first.
+  db_change_field(
+    'mediamosa_user',
+    'quotum',
+    'quotum',
+    $spec
+  );
+
+  // Primary key is downgraded to unique now.
+  db_drop_primary_key('mediamosa_user');
+  db_add_unique_key('mediamosa_user', 'uni_id_name_and_app', array(mediamosa_user_db::NAME, mediamosa_user_db::APP_ID));
+
+  // Add brand new 'serial' primary.
+  $spec = array(
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'description' => 'Primary Key: Unique ID.',
+  );
+
+  // Please note last parameter - array with primary key definition.
+  db_add_field('mediamosa_user', 'user_key', $spec, array('primary key' => array('user_key')));
+
+  $schema = mediamosa_user_group_schema();
+
+  $spec = array(
+    'type' => 'int',
+    'unsigned' => FALSE,
+    'not null' => TRUE,
+    'description' => 'The disk quota in MB.',
+  );
+
+  // Just fix incorrect comment.
+  db_change_field(
+    'mediamosa_user_group',
+    'quotum',
+    'quotum',
+    $spec
+  );
+
+  // Primary key is downgraded to unique now.
+  db_drop_primary_key('mediamosa_user_group');
+  db_add_unique_key('mediamosa_user_group', 'uni_id_group_and_app', array('group_id', 'app_id'));
+
+  $spec = array(
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'description' => 'Primary Key: Unique ID.',
+  );
+
+  // Please note last parameter - array with primary key definition.
+  db_add_field('mediamosa_user_group', 'group_key', $spec, array('primary key' => array('group_key')));
+
+  // ...and user_in_group table.
+  $schema = array(
+  'description' => 'The user/group relation table.',
+    'fields' => array(
+      'relation_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ),
+      'user_key' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'User ID.',
+      ),
+      'group_key' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Group ID.',
+      ),
+    ),
+    'primary key' => array('relation_id'),
+    'unique keys' => array(
+      'uni_relation' => array('user_key', 'group_key'),
+    ),
+    'foreign keys' => array(
+      'user_key' => array('mediamosa_user' => 'user_key'),
+      'group_key' => array('mediamosa_user_group' => 'group_key'),
+    ),
+  );
+
+  // Create our new table.
+  db_create_table('mediamosa_user_in_group', $schema);
+
+  // Manually add foreign key.
+  // Sooner or later Drupal 7 will add foreign key support, so we will just
+  // silently catch exceptions.
+  $fk_template = "ALTER TABLE {#table_name} ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)";
+  $query_fk1 = strtr($fk_template,
+    array(
+      '#table_name' => 'mediamosa_user_in_group',
+      '#column' => 'user_key',
+      '#foreign_table_name' => 'mediamosa_user',
+      '#foreign_column' => 'user_key',
+    )
+  );
+  $query_fk2 = strtr($fk_template,
+    array(
+      '#table_name' => 'mediamosa_user_in_group',
+      '#column' => 'group_key',
+      '#foreign_table_name' => 'mediamosa_user_group',
+      '#foreign_column' => 'group_key',
+    )
+  );
+
+  try {
+    db_query($query_fk1);
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  try {
+    db_query($query_fk2);
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Migration goes here.
+  $query = mediamosa_db::db_select('mediamosa_user', 'u');
+  $query->fields('u');
+  $query->join('mediamosa_user_group', 'g', 'u.group_id = g.group_id AND u.app_id = g.app_id');
+  $query->addField('g', 'group_key');
+  $users_in_group = $query->execute()->fetchAll();
+
+  $counter = 0;
+  foreach ($users_in_group as $item) {
+    mediamosa_db::db_query(
+      strtr("INSERT INTO {mediamosa_user_in_group} (#field_user_key, #field_group_key) VALUES (#user_key, #group_key)",
+        array(
+          '#table_name' => 'mediamosa_user_in_group',
+          '#field_user_key' => 'user_key',
+          '#field_group_key' => 'group_key',
+          '#user_key' => $item['user_key'],
+          '#group_key' => $item['group_key'],
+        )
+      ));
+    $counter++;
+  }
+
+  mediamosa_watchdog::log('Update: #number users belongs to groups. Group information migrated, multiple group membership enabled.',
+    array('#number' => $counter)
+  );
+
+  // Now we can get rid of the own old field.
+  db_drop_field('mediamosa_user', 'group_id');
+}
+
+/**
+ * Turn off MediaMosa App Authentication and turn on DBUS and oAuth modules.
+ */
+function mediamosa_update_7114() {
+
+  module_disable(array('mediamosa_app_authentication'), FALSE);
+
+  module_enable(array('mediamosa_app_dbus'));
+  module_enable(array('mediamosa_app_oauth'));
+
+  return t('The MediaMosa authentication module has been disabled, its been renamed to MediaMosa DBUS authentication and this new module has been enabled. Keep the MediaMosa authentication module turned off, it will be removed in next release.');
+}
+
+/**
+ * Activate new 3.0 look.
+ */
+function mediamosa_update_7115() {
+  // Clear.
+  cache_clear_all();
+
+  // Enable default theme, disable bartik, garland.
+  theme_enable(array('rubik'));
+
+  $default_theme = 'rubik';
+  variable_set('theme_default', $default_theme);
+  variable_set('admin_theme', $default_theme);
+  variable_set('node_admin_theme', 1);
+
+  theme_disable(array('bartik', 'garland'));
+
+  // Disable toolbar.
+  module_disable(array('toolbar', 'dashboard'));
+
+  // And again.
+  drupal_flush_all_caches();
+
+  // Reset the update for status page, else the frontpage will be screwed.
+  variable_del('mediamosa_status_last_time');
+
+  return 'New 3.0 theme is enabled. The status page might be corrupt, this will automaticly fix itself within one minute.';
+}
+
+/**
+ * Turn on image module.
+ */
+function mediamosa_update_7116() {
+  $module_list = array(
+    'image',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
+/**
+ * Create new "Unable creating derivative from image with style: @style, path:
+ * @path" errorcode in database.
+ */
+function mediamosa_update_7117() {
+  $query = db_select('mediamosa_error', 'e');
+  $query
+    ->condition('e.name', 'ERRORCODE_CREATING_DERIVATIVE')
+    ->fields('e', array('name'))
+    ->range(0, 1);
+  $result = $query->execute();
+  $record = $result->fetchCol();
+  if (!$record) {
+    db_insert('mediamosa_error')
+      ->fields(array(
+        'name' => 'ERRORCODE_CREATING_DERIVATIVE',
+        'message' => "Unable creating derivative from image with style: @style, path: @path",
+        'code' => 1157, //mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
+      ))
+    ->execute();
+  }
+}
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
-

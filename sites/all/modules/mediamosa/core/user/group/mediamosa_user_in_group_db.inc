@@ -24,32 +24,20 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The transcode mapping DB class.
- */
-class mediamosa_transcode_mapping_db {
+ /**
+  * @file
+  * DB classes for user/user_group relationship.
+  */
+
+class mediamosa_user_in_group_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_transcode_mapping';
+  const TABLE_NAME = 'mediamosa_user_in_group'; // 2.4
 
-  // Database fields;
-  const ID = 'transcode_mapping_id';
-  const TOOL = 'tool';
-  const TOOL_LENGTH = 50;
-  const NICE_PARAMETER = 'nice_parameter';
-  const NICE_PARAMETER_LENGTH = 50;
-  const TOOL_PARAMETER = 'tool_parameter';
-  const TOOL_PARAMETER_LENGTH = 50;
-  const MIN_VALUE = 'min_value';
-  const MAX_VALUE = 'max_value';
-  const ALLOWED_VALUE = 'allowed_value';
-  const ALLOWED_VALUE_LENGTH = 1000;
-  const DEFAULT_VALUE = 'default_value';
-  const DEFAULT_VALUE_LENGTH = 50;
-  const REQUIRED = 'required';
-  const REQUIRED_TRUE = 'TRUE';
-  const REQUIRED_FALSE = 'FALSE';
-  const CREATED = 'created';
-  const CHANGED = 'changed';
+  // Primary KEY
+  const ID = 'relation_id';
+
+  // Relation
+  const USER_KEY = 'user_key';
+  const GROUP_KEY = 'group_key';
 }

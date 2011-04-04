@@ -23,6 +23,28 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 - Fix bug FTP ' FTP User - common tests' unit-test.
 
+MediaMosa 3.0 (build 1643)
+--------------------------
+- Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
+  "group_id" is marked as depricated (See ticket #238).
+- Play request with "tag" development (See ticket #216).
+- Variable for custom control bar height in objectcode (See ticket #326).
+- Asset, assets and asset/$asset_id GET REST call show the collection data
+  in better format (See ticket #332).
+- Optimize /assets REST call (See ticket #360).
+- Mediafile delete REST call with new parameter: new_original (mediafile_id).
+  If the deleted mediafile is original, then the new original mediafile is
+  the new_original (See ticket #393).
+- Server URI is separated to URI and path (See ticket #367).
+- Video without bitrate fix (See ticket #394).
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
+- Image style development (See ticket #371).
+- Granted flag not correct with non-original master slaved mediafiles fix. (See ticket #432).
+
+Other changes (not ticket related).
+- Favicon.ico was added to rubik theme.
+
 MediaMosa 2.4 (build 1609)
 --------------------------
 - Watermarking stills (See ticket #82).

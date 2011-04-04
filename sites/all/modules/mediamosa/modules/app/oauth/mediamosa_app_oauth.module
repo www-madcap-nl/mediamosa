@@ -97,7 +97,7 @@ function mediamosa_app_oauth_mediamosa_allowed_path() {
 
   if (mediamosa::in_simpletest_sandbox()) {
     // Simpletest mode, special case.
-    return self::in_simpletest_sandbox_enable_app();
+    return mediamosa::in_simpletest_sandbox_enable_app();
   }
 
   // Just for openapi/oauth/authorize.

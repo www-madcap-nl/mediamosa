@@ -34,6 +34,9 @@ class mediamosa_user_db {
   // Table name;
   const TABLE_NAME = 'mediamosa_user'; // 1.x name quota_user.
 
+  // Primary KEY
+  const KEY = 'user_key';
+
   // Database fields;
   const APP_ID = 'app_id';
   const ID = 'name';

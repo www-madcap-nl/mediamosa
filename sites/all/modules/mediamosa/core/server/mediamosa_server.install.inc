@@ -47,7 +47,7 @@ function _mediamosa_server_install() {
   _mediamosa_server_tool_install();
 
   $default_servers = array(
-    array(1, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+    array(1, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'asf',
       "{IF_EXTERNAL}
 <asx version='3.0'>
@@ -69,7 +69,7 @@ function _mediamosa_server_install() {
 </embed>
 </object>"
       , 'ASF Streaming Server', '', '', '', 'APC', ''),
-    array(2, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+    array(2, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'flv',
           "<script type='text/javascript' src='" . url('', array('absolute' => TRUE)) . "mmplayer/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
@@ -82,7 +82,7 @@ s1.addParam('flashvars','file={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start=
 s1.write('mediaspace');
 </script>"
       , 'FLV Streaming Server', '', '', '', 'APC', ''),
-    array(3, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+    array(3, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'mov;mp4;m4a;3gp;3g2;mj2:h264',
           "<script type='text/javascript' src='" . url('', array('absolute' => TRUE)) . "mmplayer/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
@@ -95,7 +95,7 @@ s1.addParam('flashvars','file={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start=
 s1.write('mediaspace');
 </script>"
       , 'MOV/MP4/M4A/3GP/3G2/MJ2I:H264 Streaming Server', '', '', '', 'APC', ''),
-    array(4, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+    array(4, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'mpeg|mov;mp4;m4a;3gp;3g2;mj2',
       "<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>
 {IF_START}
@@ -110,20 +110,20 @@ s1.write('mediaspace');
 </object>"
       , 'MPEG|MOV;MP4;M4A;3GP;3G2;MJ2 Streaming Server', '', '', '', 'APC', ''),
 
-    array(5, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+    array(5, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'ogg',
-      '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>'
-      , 'Apache - OGG', 0, '', '', 'APC', ''),
-    array(6, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>',
+      'Apache - OGG', 0, '', '', 'APC', ''),
+    array(6, 0, 'ON', 'streaming', 'http://mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'ticket/{TICKET}',
       'matroska;webm',
       '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>'
       , 'Apache - WebM', 0, '', '', 'APC', ''),
 
-    array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/download/{TICKET}', '', '', 'Default download server', 0, '', '', 'APC', ''),
-    array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/still/{TICKET}', '', '', 'Default still server', 0, '', '', 'APC', ''),
-    array(13, 0, 'ON', 'job_processor', 'http://job1.mediamosa.local', '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
-    array(14, 0, 'OFF', 'job_processor', 'http://job2.mediamosa.local', '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
-    array(15, 0, 'ON', 'upload', 'http://upload.mediamosa.local/mediafile/upload?upload_ticket={TICKET}', '', '', 'Default upload server', 0, '', 'http://upload.mediamosa.local/mediafile/uploadprogress?id={PROGRESS_ID}', 'APC', 'http://upload.mediamosa.local/progress?X-Progress-ID={PROGRESS_ID}'),
+    array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'download/{TICKET}', '', '', 'Default download server', 0, '', '', 'APC', ''),
+    array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'still/{TICKET}', '', '', 'Default still server', 0, '', '', 'APC', ''),
+    array(13, 0, 'ON', 'job_processor', 'http://job1.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
+    array(14, 0, 'OFF', 'job_processor', 'http://job2.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI, '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', '', 'APC', ''),
+    array(15, 0, 'ON', 'upload', 'http://upload.mediamosa.local/', mediamosa_server_db::SERVER_PATH_BASE_URI . 'mediafile/upload?upload_ticket={TICKET}', '', '', 'Default upload server', 0, '', 'http://upload.mediamosa.local/mediafile/uploadprogress?id={PROGRESS_ID}', 'APC', 'http://upload.mediamosa.local/progress?X-Progress-ID={PROGRESS_ID}'),
   );
 
   // Create our node type.
@@ -142,20 +142,21 @@ s1.write('mediaspace');
   node_type_save($server_node_type);
 
   foreach ($default_servers as $default_server) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[7]);
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[8]);
 
     $node->{mediamosa_server_db::VERSION} = $default_server[1];
     $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[2];
     $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
     $node->{mediamosa_server_db::SERVER_URI} = $default_server[4];
-    $node->{mediamosa_server_db::CONTAINERS} = $default_server[5];
-    $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[6];
-    $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[7];
-    $node->{mediamosa_server_db::SLOTS} = (int)$default_server[8];
-    $node->{mediamosa_server_db::TOOLS} = $default_server[9];
-    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $default_server[10];
-    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE} = $default_server[11];
-    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER} = $default_server[12];
+    $node->{mediamosa_server_db::SERVER_PATH} = $default_server[5];
+    $node->{mediamosa_server_db::CONTAINERS} = $default_server[6];
+    $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[7];
+    $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[8];
+    $node->{mediamosa_server_db::SLOTS} = (int)$default_server[9];
+    $node->{mediamosa_server_db::TOOLS} = $default_server[10];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $default_server[11];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER_TYPE} = $default_server[12];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS_SERVER} = $default_server[13];
 
     $node = node_save($node);
   }
@@ -236,9 +237,15 @@ function mediamosa_server_schema() {
         'not null' => TRUE,
       ),
       mediamosa_server_db::SERVER_URI => array(
-        'description' => 'The optional URI of the server.',
+        'description' => 'The URI of the server.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::SERVER_URI_LENGTH,
+        'not null' => FALSE,
+      ),
+      mediamosa_server_db::SERVER_PATH => array(
+        'description' => 'The path of the server.',
+        'type' => 'varchar',
+        'length' => mediamosa_server_db::SERVER_PATH_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::DESCRIPTION => array(
