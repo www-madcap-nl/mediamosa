@@ -71,7 +71,7 @@ class mediamosa_rest_call_simpletest extends mediamosa_rest_call {
       self::VARS => array(
         mediamosa_settings::MEDIAMOSA_RUN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'Provides the version of the authentication process.',
+          self::VAR_DESCRIPTION => 'Type of simpletest that are returned.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
@@ -111,6 +111,13 @@ class mediamosa_rest_call_simpletest extends mediamosa_rest_call {
           if (empty($test_result['results']) && $skip_empty) {
             // Skip the test, that have failed to run.
             continue;
+          }
+
+          // Test if the simpletest is enabled.
+          if (method_exists($name, mediamosa_settings::MEDIAMOSA_RUN_ENABLED)) {
+            if (!call_user_func_array($name . '::' . mediamosa_settings::MEDIAMOSA_RUN_ENABLED, array())) {
+              continue; // skip in listing.
+            }
           }
 
           // Skip the currently running test.
