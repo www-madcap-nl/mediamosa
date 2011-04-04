@@ -57,6 +57,12 @@ function mediamosa_user_group_schema() {
   $schema[mediamosa_user_group_db::TABLE_NAME] = array(
   'description' => 'The user group table.',
     'fields' => array(
+      mediamosa_user_group_db::KEY => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ),
       mediamosa_user_group_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -73,7 +79,7 @@ function mediamosa_user_group_schema() {
         'type' => 'int',
         'unsigned' => FALSE,
         'not null' => TRUE,
-        'description' => 'The application ID of the asset.',
+        'description' => 'The disk quota in MB.',
       ),
       mediamosa_user_group_db::CREATED => array(
         'type' => 'datetime',
@@ -88,7 +94,10 @@ function mediamosa_user_group_schema() {
         'description' => 'The date and time when user was changed last.',
       ),
     ),
-    'primary key' => array(mediamosa_user_group_db::ID, mediamosa_user_group_db::APP_ID),
+    'primary key' => array(mediamosa_user_group_db::KEY),
+    'unique keys' => array(
+      'uni_id_group_and_app' => array(mediamosa_user_group_db::ID, mediamosa_user_group_db::APP_ID),
+    ),
   );
 
   return $schema;

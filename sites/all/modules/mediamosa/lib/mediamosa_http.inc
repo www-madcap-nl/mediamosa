@@ -125,11 +125,7 @@ class mediamosa_http {
    *
    * @return string $uri
    */
-  static public function glue_url($parsed) {
-    if (!is_array($parsed)) {
-      return FALSE;
-    }
-
+  static public function glue_url(array $parsed) {
     $uri = '';
 
     $uri .= isset($parsed['scheme']) ? $parsed['scheme'] . ':' . ((drupal_strtolower($parsed['scheme']) == 'mailto') ? '' : '//') : '';

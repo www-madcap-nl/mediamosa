@@ -260,14 +260,14 @@ function mediamosa_app_schema() {
       ),
       mediamosa_app_db::OAUTH_CONSUMER_KEY => array(
         'description' => 'The identifier portion of the client credentials (username).',
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_app_db::OAUTH_CONSUMER_KEY_LENGTH,
         'not null' => FALSE,
         'default' => '',
       ),
       mediamosa_app_db::OAUTH_CONSUMER_SECRET => array(
         'description' => 'The password portion of the client credentials (password).',
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_app_db::OAUTH_CONSUMER_SECRET_LENGTH,
         'not null' => FALSE,
         'default' => '',
@@ -299,6 +299,12 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
         'default' => mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES,
+      ),
+      mediamosa_app_db::TOOL_ANALYSE => array(
+        'description' => 'Serialized array to determine which tools will put analyse data to asset metadata.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'default' => NULL,
       ),
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.

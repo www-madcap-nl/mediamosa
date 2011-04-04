@@ -47,6 +47,7 @@ class mediamosa_tool_params_db {
   const MAX_VALUE = 'max_value';
   const ALLOWED_VALUE = 'allowed_value';
   const ALLOWED_VALUE_LENGTH = 1000;
+  const ALLOWED_VALUE_FOR_SWITCH = '<switch>';
   const DEFAULT_VALUE = 'default_value';
   const DEFAULT_VALUE_LENGTH = 50;
   const REQUIRED = 'required';
@@ -54,6 +55,10 @@ class mediamosa_tool_params_db {
   const REQUIRED_FALSE = 'FALSE';
   const CREATED = 'created';
   const CHANGED = 'changed';
+  const DESCRIPTION = 'description';
+  const TYPE_PARAMETER = 'type_parameter';
+  const TYPE_PARAMETER_CHECKBOX = 'CHECKBOX';
+  const TYPE_PARAMETER_SELECT = 'SELECT';
 
   /**
    * Returns all fields.

@@ -313,7 +313,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_assets_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_0,
   );
 
   // Create the asset.
@@ -1683,9 +1683,9 @@ tag=Best',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD</action>
-    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?X-Progress-ID=12345</uploadprogress_url>
-    <ticket_id>Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+    <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
+    <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
+    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
     <progress_id>1234567</progress_id>
   </item>
 </items>',
@@ -2032,4 +2032,44 @@ user_id=admin',
   );
 
   return $rest_calls;
+}
+
+
+/**
+ * Implements hook_mediamosa_configuration_collect().
+ */
+function mediamosa_asset_mediamosa_configuration_collect() {
+  $form['settings_supplement'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Supplement settings'),
+    '#description' => t('You can set maximum supplement size here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_supplement']['mediamosa_asset_supplement_max_size_kb'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum size of a supplement object, KB'),
+    '#description' => t('Enter a limitaion in kilobytes.'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mediamosa_asset_supplement_max_size_kb', 64),
+    '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_collect_validate'),
+  );
+
+  return $form;
+}
+
+/**
+ * Simple validator/corrector for an asset supplement size field.
+ */
+function _mediamosa_asset_mediamosa_configuration_collect_validate(&$element, &$form_state) {
+  $value = (int)$element['#value'];
+  if ($value < 1) {
+    $form_state['values'][$element['#name']] = 64;
+    drupal_set_message(t("You had specified invalid value for '%element_title'. It was corrected to default value.", array('%element_title' => $element['#title'])), 'warning');
+  }
+  else {
+    // Just in case: strip things like 64*1024 or 2M to numbers only.
+    $form_state['values'][$element['#name']] = $value;
+  }
 }

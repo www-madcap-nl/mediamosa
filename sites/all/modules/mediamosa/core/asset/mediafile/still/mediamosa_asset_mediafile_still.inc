@@ -655,7 +655,7 @@ class mediamosa_asset_mediafile_still {
     $mediafile = mediamosa_asset_mediafile::must_exists($still_id);
     $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
 
-    if (drupal_substr($style, 0, drupal_strlen($app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR)) != $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR) {
+    if (mediamosa_unicode::substr($style, 0, mediamosa_unicode::strlen($app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR)) != $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CREATING_DERIVATIVE, array('@style' => $style, '@path' => $source,));
     }
 

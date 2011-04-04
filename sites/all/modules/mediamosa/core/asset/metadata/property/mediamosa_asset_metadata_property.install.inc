@@ -181,10 +181,20 @@ function mediamosa_asset_metadata_property_schema() {
         'default' => NULL,
         'description' => 'The date and time when asset metadata property was changed.',
       ),
+      mediamosa_asset_metadata_property_db::IS_HIDDEN => array(
+        'description' => 'True if the property is hidden.',
+        'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE, mediamosa_asset_metadata_property_db::IS_HIDDEN_TRUE)) . "')",
+        'default' => mediamosa_asset_metadata_property_db::IS_HIDDEN_FALSE,
+      ),
     ),
     'primary key' => array(mediamosa_asset_metadata_property_db::ID),
     'unique keys' => array(
       'uni_' . mediamosa_asset_metadata_property_db::PROPGROUP_ID => array(mediamosa_asset_metadata_property_db::PROPGROUP_ID, mediamosa_asset_metadata_property_db::NAME),
+    ),
+    'indexes' => array(
+      'idx_' . mediamosa_asset_metadata_property_db::IS_HIDDEN => array(mediamosa_asset_metadata_property_db::IS_HIDDEN),
     ),
     'foreign keys' => array(
       mediamosa_asset_metadata_property_db::PROPGROUP_ID => array(mediamosa_asset_metadata_property_group_db::TABLE_NAME => mediamosa_asset_metadata_property_group_db::ID),

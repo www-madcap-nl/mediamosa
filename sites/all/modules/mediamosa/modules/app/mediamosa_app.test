@@ -129,4 +129,16 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
     );
     $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('aut_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
   }
+
+  // Simple check that result of '/transcode/profile/default' is the same as deprecated call 'preview_profile_id'.
+  public function testDefaultProfileId() {
+    $result_old_call = $this->restCallGet('preview_profile_id');
+    $result_call = $this->restCallGet('transcode/profile/default');
+
+    $this->assertTrue(
+            (int)$result_old_call['xml']->items->item[0]->preview_profile_id ==
+            (int)$result_call['xml']->items->item[0]->preview_profile_id,
+            'Comparing result of default transcode profile calls: preview_profile_id and transcode/profile/default.');
+  }
+
 }

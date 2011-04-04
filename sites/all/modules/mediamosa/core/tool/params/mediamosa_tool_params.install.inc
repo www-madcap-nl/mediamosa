@@ -141,6 +141,17 @@ function mediamosa_tool_params_schema() {
         'default' => NULL,
         'description' => 'The date and time when tool parameter was changed last.',
       ),
+      mediamosa_tool_params_db::DESCRIPTION => array(
+        'type' => 'text',
+        'description' => 'Description of the parameter.',
+      ),
+      mediamosa_tool_params_db::TYPE_PARAMETER => array(
+        'description' => 'The type of the parameter.',
+        'type' => "enum('" . implode("','", array(mediamosa_tool_params_db::TYPE_PARAMETER_SELECT, mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_tool_params_db::TYPE_PARAMETER_SELECT, mediamosa_tool_params_db::TYPE_PARAMETER_CHECKBOX)) . "')",
+        'default' => mediamosa_tool_params_db::TYPE_PARAMETER_SELECT,
+      ),
     ),
     'primary key' => array(mediamosa_tool_params_db::ID),
     'unique keys' => array(

@@ -44,6 +44,13 @@ class MediaMosaSolrAutTestCaseEga extends MediaMosaAutTestCaseEga {
   }
 
   /**
+   * Make sure SOLR is on.
+   */
+  public static function mediamosa_run_enabled() {
+    return FALSE;
+  }
+
+  /**
    * Implements setUp().
    *
    * Any changes; see other classes(!)

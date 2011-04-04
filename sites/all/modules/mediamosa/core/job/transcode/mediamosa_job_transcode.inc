@@ -108,7 +108,8 @@ class mediamosa_job_transcode {
 
     // Check if fileextension is ok.
     try {
-      mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:' . $file_extension);
+      // TODO: Is it necessary?
+      //mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:' . $file_extension);
     }
     catch (mediamosa_exception_error $e) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_COMBINATION, array('@tool' => $tool, '@file_extension' => $file_extension));
@@ -165,5 +166,36 @@ class mediamosa_job_transcode {
     if ($tool == mediamosa_job::JOBWINDOWS_TOOL) {
       mediamosa_job::create_raw($job_id);
     }
+  }
+
+  /**
+   * Create tool transcode
+   *
+   * @param int $job_id
+   * @param string $tool
+   * @param string $file_extension
+   * @param string $command
+   */
+  static public function create_tool_transcode($job_id, $tool, $file_extension, $command) {
+    $profile_id = 0;
+    $completed_transcoding_url = '';
+
+    // Now create the transcode job.
+    $fields = array(
+      mediamosa_job_transcode_db::JOB_ID => $job_id,
+      //mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => $profile_id,
+      mediamosa_job_transcode_db::TOOL => $tool,
+      mediamosa_job_transcode_db::FILE_EXTENSION => $file_extension,
+      mediamosa_job_transcode_db::COMMAND => $command,
+      //mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => $completed_transcoding_url,
+    );
+
+    // Add changed/created values.
+    $fields = mediamosa_db::db_insert_enrich($fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
+      ->fields($fields)
+      ->execute();
   }
 }

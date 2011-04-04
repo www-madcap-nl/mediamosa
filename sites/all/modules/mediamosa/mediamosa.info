@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.4.0.1521"
+version = "3.0.0.1643"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -313,6 +313,11 @@ files[] = core/tool/params/mediamosa_tool_params.install.inc
 files[] = core/tool/params/mediamosa_tool_params_db.inc
 files[] = core/tool/params/mediamosa_tool_params.inc
 
+; Tool mapping.
+files[] = core/tool/mapping/mediamosa_tool_mapping.install.inc
+files[] = core/tool/mapping/mediamosa_tool_mapping_db.inc
+files[] = core/tool/mapping/mediamosa_tool_mapping.inc
+
 ; Tool.
 files[] = core/tool/mediamosa_tool.install.inc
 
@@ -325,6 +330,10 @@ files[] = core/user/mediamosa_user.install.inc
 files[] = core/user/group/mediamosa_user_group_db.inc
 files[] = core/user/group/mediamosa_user_group.inc
 files[] = core/user/group/mediamosa_user_group.install.inc
+
+; User-Group Relationship.
+files[] = core/user/group/mediamosa_user_in_group_db.inc
+files[] = core/user/group/mediamosa_user_in_group.install.inc
 
 ; User Favorite.
 files[] = core/user/favorite/mediamosa_user_favorite_db.inc

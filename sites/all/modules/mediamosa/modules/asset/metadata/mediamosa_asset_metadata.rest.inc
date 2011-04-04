@@ -263,6 +263,13 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
     // Return what has been changed/inserted.
     foreach ($a_value_set as $name => $value) {
+      $a_definition = $this->metadata_definitions_full[$name];
+
+      // Datetime values shall be converted to user timezone.
+      if ($a_definition['propdef_type'] == mediamosa_asset_metadata_property_db::TYPE_DATETIME) {
+        $value = mediamosa::utcdate2appdate($value);
+      }
+
       $o_mediamosa->add_item(array($name => $value));
     }
   }
