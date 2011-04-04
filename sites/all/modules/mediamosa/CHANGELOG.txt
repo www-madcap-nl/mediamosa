@@ -30,6 +30,10 @@ MediaMosa 2.3.9 (build 1369)
 ----------------------------
 - Fixed problem with migration script when quota_user created timestamps
   contains NULL values (See ticket #513).
+- Tests that are not allowed to run by unittest class method 
+  mediamosa_run_enabled() will now remove its results from the database, so
+  these can not be viewed and will not show possible failure in listing(s) and
+  simpletest REST calls.
 
 MediaMosa 2.3.8 (build 1368)
 ----------------------------
