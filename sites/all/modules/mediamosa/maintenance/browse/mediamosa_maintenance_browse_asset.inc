@@ -600,7 +600,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   $item_count = count($result['items']);
 
   // Cache rights.
-  $may_delete = $may_analyse = $may_download = _mediamosa_user_access_asset($asset_id);
+  $may_delete = $may_analyse = $may_retranscode = $may_download = _mediamosa_user_access_asset($asset_id);
 
   $allowed_still_fields = array(
     'mediafile_id',
