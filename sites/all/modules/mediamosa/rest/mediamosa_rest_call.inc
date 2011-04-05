@@ -272,7 +272,7 @@ abstract class mediamosa_rest_call {
       // The name of the http var.
       $internal_pass = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS));
       // Match password in HTTP header, must match.
-      if (!isset($_SERVER[$internal_pass]) || $_SERVER[$internal_pass] != mediamosa::get_internal_password()) {
+      if (empty($_SERVER[$internal_pass]) || $_SERVER[$internal_pass] != mediamosa::get_internal_password()) {
         mediamosa_watchdog::log('Unmatching internal password (@pass) for REST URL: @url', array('@url' => $this->{self::URI}, '@pass' => $_SERVER[$internal_pass]), WATCHDOG_WARNING);
         throw new mediamosa_exception_error_authentication_failure();
       }
