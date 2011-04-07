@@ -124,10 +124,21 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
     $limit = $this->get_param_value_limit();
 
     // Fetch the items.
-    $result = mediamosa_user::get_all(TRUE, $app_id, $offset, $limit, $group_id);
+    $result = mediamosa_user::get_all(TRUE, $app_id, $offset, $limit);
 
     // Fill the response.
     foreach ($result as $a_row) {
+      // TODO: maybe we shall optimize this by caching groups.
+      $groups = mediamosa_user::get_group($a_row['user_id'], $app_id, TRUE);
+      if (!empty($group_id)) {
+        // We need only menbers of certain group.
+        if (!array_search($group_id, $groups)) {
+          continue;
+        }
+      }
+      if (!empty($groups)) {
+        $a_row['group_id'] = $groups;
+      }
       $o_mediamosa->add_item($a_row);
     }
 
