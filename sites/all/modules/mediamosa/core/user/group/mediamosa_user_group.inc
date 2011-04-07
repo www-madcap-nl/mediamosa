@@ -152,6 +152,11 @@ class mediamosa_user_group {
    *  The Group ID.
    */
   static public function delete($app_id, $group_id) {
+
+    // Please note that group cannot be deleted while it contains users.
+    // In case such operation become allowed one day we need to mimic code from
+    // mediamosa_user::delete()
+
     mediamosa_db::db_query(
       'DELETE FROM {#mediamosa_user_group} WHERE #app_id = :app_id AND #group_id = :group_id',
       array(
@@ -190,4 +195,23 @@ class mediamosa_user_group {
       ->condition(mediamosa_user_group_db::APP_ID, $app_id)
       ->execute();
   }
+
+  /**
+   * Helper function to get group key by group ID.
+   *
+   * @param $group_id
+   *
+   * @return integer
+   *  key value if group exists.
+   */
+  function key($app_id, $group_id) {
+    $group_key = mediamosa_db::db_select(mediamosa_user_group_db::TABLE_NAME, 'g')
+      ->fields('g', array(mediamosa_user_group_db::KEY))
+      ->condition(mediamosa_user_group_db::ID, $group_id)
+      ->condition(mediamosa_user_group_db::APP_ID, $app_id)
+      ->execute()
+      ->fetchField();
+    return $group_key;
+  }
+
 }

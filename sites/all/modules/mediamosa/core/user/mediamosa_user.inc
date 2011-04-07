@@ -199,18 +199,26 @@ class mediamosa_user {
    *  User ID.
    */
   static public function delete($app_id, $user_id) {
+
+    $user_key = mediamosa_user::key($app_id, $user_id);
+
     mediamosa_db::db_query(
-      'DELETE FROM {#mediamosa_user} WHERE #name = :user_id AND #app_id = :app_id',
+      'DELETE FROM {#mediamosa_user_in_group} WHERE #key = :user_key',
       array(
-        '#mediamosa_user' => mediamosa_user_db::TABLE_NAME,
-        '#name' => mediamosa_user_db::NAME,
-        ':user_id' => $user_id,
-        '#app_id' => mediamosa_user_db::APP_ID,
-        ':app_id' => $app_id
+        '#mediamosa_user_in_group' => mediamosa_user_in_group_db::TABLE_NAME,
+        '#key' => mediamosa_user_in_group_db::USER_KEY,
+        ':user_key' => $user_key
       )
     );
 
-    // TODO223
+    mediamosa_db::db_query(
+      'DELETE FROM {#mediamosa_user} WHERE #key = :user_key',
+      array(
+        '#mediamosa_user' => mediamosa_user_db::TABLE_NAME,
+        '#key' => mediamosa_user_db::KEY,
+        ':user_key' => $user_key
+      )
+    );
   }
 
   /**
