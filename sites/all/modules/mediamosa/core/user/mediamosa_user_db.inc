@@ -42,8 +42,11 @@ class mediamosa_user_db {
   const ID = 'name';
   const NAME = 'name';
   const NAME_LENGTH = 255;
+
+  // Obsoleted, not in use anymore.
   const GROUP_ID = 'group_id';
   const GROUP_ID_LENGTH = 255;
+
   const QUOTUM = 'quotum';
   const CREATED = 'created';
   const CHANGED = 'changed';
