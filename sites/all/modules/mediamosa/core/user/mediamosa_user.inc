@@ -266,12 +266,9 @@ class mediamosa_user {
    *
    * @param integer $app_id
    * @param string $user_id
-   * @param array $group_id
+   * @param string $group_id
    */
   static public function get_quota($app_id, $user_id = '', $group_id = array()) {
-
-    // TODO223: handle several values
-    $group_id = is_array($group_id) ? reset($group_id) : '';
 
     return mediamosa_db::db_query(
       'SELECT app.#quota * 1024 AS app_quota_mb, g.#quotum AS group_quota_mb, u.#quotum AS owner_quota_mb FROM {#mediamosa_app} AS app
@@ -295,7 +292,7 @@ class mediamosa_user {
   }
 
   /**
-   * Get the available diskspace of user/group.
+   * Get the used diskspace of user/group.
    *
    * 1.x:_user_management_get_diskspace
    *
@@ -306,11 +303,6 @@ class mediamosa_user {
    * @return array
    */
   function get_diskspace($subject, $id, $app_id) {
-
-    // TODO223: handle several values
-    if ($subject == 'group') {
-      $id = is_array($id) ? reset($id) : '';
-    }
 
     $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
     $mbytes = mediamosa_db::db_query(
@@ -345,14 +337,12 @@ class mediamosa_user {
    *  Application ID.
    * @param string $user_id
    *  The user ID / Owner ID.
-   * @param array $group_id
-   *  The group IDs.
+   * @param string $group_id
+   *  The group ID.
    *
    * @param bool $return_free
    */
-  static public function check_user_quota($app_id, $user_id = '', $group_id = array(), $return_free = FALSE) {
-    // TODO223: handle several values
-    $group_id = empty($group_id) ? '' : reset($group_id);
+  static public function check_user_quota($app_id, $user_id = '', $group_id = '', $return_free = FALSE) {
 
     // Quota is reported in MB.
     $a_quota = self::get_quota($app_id, $user_id, $group_id);

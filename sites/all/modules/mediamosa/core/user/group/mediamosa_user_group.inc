@@ -54,7 +54,7 @@ class mediamosa_user_group {
    * @param integer $app_id
    *  Application ID.
    * @param string $group_id
-   *  User / Owner ID.
+   *  Group ID.
    */
   static public function get_user_group_quota($app_id, $group_id) {
     $total = mediamosa_db::db_query(
