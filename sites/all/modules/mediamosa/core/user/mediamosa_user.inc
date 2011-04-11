@@ -268,7 +268,7 @@ class mediamosa_user {
    * @param string $user_id
    * @param string $group_id
    */
-  static public function get_quota($app_id, $user_id = '', $group_id = array()) {
+  static public function get_quota($app_id, $user_id = '', $group_id) {
 
     return mediamosa_db::db_query(
       'SELECT app.#quota * 1024 AS app_quota_mb, g.#quotum AS group_quota_mb, u.#quotum AS owner_quota_mb FROM {#mediamosa_app} AS app
@@ -435,14 +435,14 @@ class mediamosa_user {
     $a_user = mediamosa_user::get($user_id, $app_id, array(mediamosa_user_db::CREATED, mediamosa_user_db::CHANGED));
     if (!$a_user) {
       $a_user = array(
-        'group_id' => array(),
+        'group_id' => '',
         'created' => '',
         'changed' => '',
       );
     }
 
     // Get the quota.
-    $a_quota = mediamosa_user::get_quota($app_id, $user_id, $a_user['group_id']);
+    $a_quota = mediamosa_user::get_quota($app_id, $user_id, '');
 
     // owner is unclear: use user for output
     $a_quota['user_quota_mb'] = (int)$a_quota['owner_quota_mb'];

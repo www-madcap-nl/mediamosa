@@ -49,7 +49,7 @@ class mediamosa_user_group {
   }
 
   /**
-   * Collect and calculate groups quota.
+   * Collect and calculate group quota.
    *
    * @param integer $app_id
    *  Application ID.
