@@ -61,8 +61,9 @@ function mediamosa_app_mediamosa_register_rest_call_doc() {
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <quota>250</quota>
-  </item>
+    <app_quota_mb>153600</app_quota_mb>
+    <app_diskspace_used_mb>2094</app_diskspace_used_mb>
+    <quota_available_mb>151506</quota_available_mb>  </item>
 </items>',
   );
 

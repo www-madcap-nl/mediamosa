@@ -312,7 +312,7 @@ class mediamosa_response extends mediamosa {
         'request_result_description' => '',//mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
         'request_uri' => '[' . $this->request_method . '] ' . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
         'item_count' => 0,
-        'version' =>mediamosa_version::MEDIAMOSA_VERSION,
+        'version' => mediamosa_version::MEDIAMOSA_VERSION,
       ),
       'items' => array()
     );
