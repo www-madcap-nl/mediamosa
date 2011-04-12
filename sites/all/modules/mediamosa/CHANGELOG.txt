@@ -22,7 +22,7 @@ TODO: (v2.4)
 - OAI delete support (for solr).
 
 
-MediaMosa 3.0 (build 1656)
+MediaMosa 3.0 (build 1666)
 --------------------------
 - Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
   "group_id" is marked as depricated (See ticket #238).
@@ -73,8 +73,8 @@ Other changes (not ticket related).
 - Changed the description in the profile by removing all line feeds and unused
   spaces.
 
-MediaMosa 2.4 (build 1609)
---------------------------
+MediaMosa 2.4 (unreleased) (build 1609)
+---------------------------------------
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
   "HTTP 501 Not implemented" error was introduced. Code was reorganized.
