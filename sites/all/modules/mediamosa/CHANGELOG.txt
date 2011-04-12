@@ -3,7 +3,6 @@
 START CHANGELOG:
 
 Known issues;
-- MediaMosa 2.3.x seem to work fine with PHP 5.3, although needs more testing.
 - Servers (processor, download, upload etc) that are installed on a subdir are
   not correctly retrieved on the server status page. (See ticket #367).
 - TODO: Tool params should validate the values, when the user save the node:
@@ -11,20 +10,110 @@ Known issues;
   * Tool parameter is unique.
   * Allowed value is a ";" separated string.
   * Default value is exists in the allowed values.
-- Watchdog (admin/reports/dblog) bug: The combination with type and severity
-  with one of the asset id, mediafile id or free text search causes
-  PDOException. It seems a Drupal 7 core bug. We will check it again after
-  the Drupal 7 core update.
-- All require_once are local path. This works fine, but I'm seeing a lot of
-  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
-  study if we need to change our require_once.
 
-update mediamosa_asset_metadata set val_datetime = val_char where val_datetime is not null and val_char is not null; 
-update mediamosa_asset_metadata set val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR) where val_datetime is not null and val_char is not null;
+OpenAPI development:
+- Alternative output formats (JSON, Atom, RSS)
+- OpenAPI interface
+- OpenAPI search
+- OpenSocial GET
+- OpenSocial POST
 
 TODO: (v2.4)
-- OAI delete support.
-- Fix bug FTP ' FTP User - common tests' unit-test.
+- OAI delete support (for solr).
+
+
+MediaMosa 3.0 (build 1656)
+--------------------------
+- Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
+  "group_id" is marked as depricated (See ticket #238).
+- Play request with "tag" development (See ticket #216).
+- Variable for custom control bar height in objectcode (See ticket #326).
+- Asset, assets and asset/$asset_id GET REST call show the collection data
+  in better format (See ticket #332).
+- Optimize /assets REST call (See ticket #360).
+- Mediafile delete REST call with new parameter: new_original (mediafile_id).
+  If the deleted mediafile is original, then the new original mediafile is
+  the new_original (See ticket #393).
+- Server URI is separated to URI and path (See ticket #367).
+- Video without bitrate fix (See ticket #394).
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
+- Image style development (See ticket #371).
+- Granted flag not correct with non-original master slaved mediafiles fix. 
+  (See ticket #432).
+
+Other changes (not ticket related).
+- Favicon.ico was added to rubik theme.
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
+- Added new theme.
+- Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
+  Still download test, Permanent still link.
+- Fixed: asset-collection relation delete all REST call. Returned SQL error when
+  no relations where present.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+- SDK code was syncronized with the SDK repository (6 and 7).
+- Streaming ticket table clean up development (See ticket #103).
+- Simpletest REST call development.
+- Work around for still_type = scene, if there isn't video duration.
+- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+  module.
+- Better text for FRAMETIME parameter.
+- FFMpeg 2 pass encoding fix.
+- Frametime for still upload development.
+- Lua script fix for the new ffmpeg version.
+- Fixed problem in unit test where profiles where missing and was needed.
+- Fixed invalid error in perminanent still link unit test.
+- Fixed problem on rewrite xml output where errors in header would stop script.
+- Changed the description in the profile by removing all line feeds and unused
+  spaces.
+
+MediaMosa 2.4 (build 1609)
+--------------------------
+- Watermarking stills (See ticket #82).
+- oEmbed provider functionality (See ticket #413).
+  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
+- oAuth development (See ticket #10).
+- Owner check for /asset/$asset_id/joblist (See ticket #356).
+- Retranscode improvement (See ticket #467).
+- ACL problem when using replace fix (See ticket #503).
+- The asset detail view page jobs are can now be sorted by ID.
+- Fixed speed problem when returning larger than 64k metadata. Problem was in
+  the way invalid chars are fixed in output.
+- Rewrote the usage of simplexml to domdocument for output.
+
+Other changes (not ticket related).
+- Better REST call match: match_uri() static function was introduced, and check 
+  wildchar numbers.
+- Added to node_load for mediamosa_app, that timezone is always set to default 
+  when missing.
+- Fixed white screen problem on file integrity check when no integrity has 
+  taken place.
+- Added new theme.
+- Simpletest fixes: Watermark test, OpenAPI output test, oEmbed output test,
+  Still download test, Permanent still link.
+- Fixed: asset-collection relation delete all REST call. Returned SQL error when
+  no relations where present.
+- Removed access check on stills, this was causing access denied on stills that
+  where not master-slaved, while original mediafile was.
+- SDK code was syncronized with the SDK repository (6 and 7).
+- Streaming ticket table clean up development (See ticket #103).
+- Simpletest REST call development.
+- Work around for still_type = scene, if there isn't video duration.
+- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+  module.
+- Better text for FRAMETIME parameter.
+- FFMpeg 2 pass encoding fix.
+- Frametime for still upload development.
+- Lua script fix for the new ffmpeg version.
+
 
 MediaMosa 2.3.9 (build 1379)
 ----------------------------
@@ -40,7 +129,8 @@ Other changes (not ticket related)
 - Added extended test for granted flag, to test new situation with 2 or more
   original mediafiles. Also added for Solr.
 
-MediaMosa 2.3.8 (build 1368)
+
+MediaMosa 2.3.8 (build 1361)
 ----------------------------
 - Metadata can be set to hidden, which will prevent the metadata to be returned
   in the asset output or other REST calls (See ticket #504).
@@ -67,11 +157,7 @@ Other changes (not ticket related)
 - rebuild the example transcoding profiles; webm, ogg and mobile
   profiles added.
 - Install profile does not install the windows transcoding tool.
-- Fixed problem in unit test where profiles where missing and was needed.
-- Fixed invalid error in perminanent still link unit test.
-- Fixed problem on rewrite xml output where errors in header would stop script.
-- Changed the description in the profile by removing all line feeds and unused
-  spaces.
+
 
 MediaMosa 2.3.7 (build 1301)
 ----------------------------
@@ -90,8 +176,6 @@ MediaMosa 2.3.6 (build 1285)
 - Added extended role and access rights to drupal for MediaMosa users that
   require specific rights on MediaMosa backend (See vpcore ticket #129).
   
-- ACL problem when using replace fix (See ticket #503).
-
 Other changes (not ticket related)
 - Added extended role and access rights to drupal for MediaMosa users that
   require specific rights on MediaMosa backend.
@@ -575,7 +659,7 @@ Other changes (not ticket related).
   /mediafile/mediafile_id max. length 32 chars.
 - Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
   type instead of varchar(10).
-- PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
+- PHP function getimagesize() is now wrapped with mediamosa_gd::getimagesize().
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
 - Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
   asset_created.

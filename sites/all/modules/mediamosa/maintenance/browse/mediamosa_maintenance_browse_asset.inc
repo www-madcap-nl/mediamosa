@@ -445,6 +445,12 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   // Collections.
   $build['collections'] = _mediamosa_browse_asset_page_view_collections_list($asset);
 
+  // Supplements.
+  $supplements = _mediamosa_browse_asset_page_view_supplements_list($asset);
+  if ($supplements) {
+    $build['supplements'] = $supplements;
+  }
+
   return implode('', $build);
 }
 
@@ -547,7 +553,8 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
   $rows = array();
   foreach ($result['items'] as $item) {
     $delete = (in_array((string)$item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/' . $asset_id . '/job/' . $item['id'] . '/delete') : '';
-    $rows[] = array(
+    // We will sort jobs by ID.
+    $rows[$item['id']] = array(
       $item['id'],
       $item['job_type'],
       $item['status'],
@@ -558,6 +565,7 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
       $delete,
     );
   }
+  ksort($rows);
   $header = array(
     t('ID'),
     t('Type'),
@@ -598,7 +606,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   $item_count = count($result['items']);
 
   // Cache rights.
-  $may_delete = $may_analyse = $may_download = _mediamosa_user_access_asset($asset_id);
+  $may_delete = $may_analyse = $may_retranscode = $may_download = _mediamosa_user_access_asset($asset_id);
 
   $allowed_still_fields = array(
     'mediafile_id',
@@ -623,6 +631,13 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $actions[] = '<b>' . trim($item['filename']) . '</b>';
     $actions[] = $may_delete ? l(t('Delete'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/delete', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No delete right');
     $actions[] = $may_analyse ? l(t('Analyze'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/analyse', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No analyse right');
+    // Retranscode.
+    if ($item[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE && $item[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID]) {
+      $actions[] = $may_retranscode ? l(t('Retranscode'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/retranscode', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No retranscode right');
+    }
+    else {
+      $actions[] = t('Original file');
+    }
     $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);
 
@@ -722,7 +737,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
 }
 
 /**
- * Build the mediafile listing.
+ * Build the collections listing.
  *
  * @param array $asset
  */
@@ -731,7 +746,7 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
   // Get the asset_id.
   $asset_id = $asset[mediamosa_asset_db::ID];
 
-  // Need app_id to get mediafiles.
+  // Need app_id to get collections.
   $app_id = $asset[mediamosa_asset_db::APP_ID];
 
   // Get job list uri.
@@ -777,6 +792,72 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
   }
 
   return '<p><h2>' . t('Collections (@count)', array('@count' => $item_count)) . '</h2>' . implode('', $build) . '</p>';
+}
+
+/**
+ * Build the supplements listing.
+ *
+ * @param array $asset
+ *
+ * @return FALSE if there are no supplement or themed supplement info.
+ *
+ * @see _mediamosa_browse_asset_page_view_collections_list
+ *
+ */
+function _mediamosa_browse_asset_page_view_supplements_list($asset) {
+
+  // Get the asset_id.
+  $asset_id = $asset[mediamosa_asset_db::ID];
+
+  // Get job list uri.
+  $uri = strtr('asset/@asset_id/supplement', array('@asset_id' => $asset_id));
+
+  // Do REST call.
+  $result = mediamosa_response_connector::static_do_restcall($uri, 'GET');
+
+  // Get Items count.
+  $item_count = count($result['items']);
+
+  $build = array();
+  if (!$item_count) {
+    return FALSE;
+  }
+
+  $rows = array();
+
+  $build[] = t('This asset have the following supplements:');
+  $header = array(
+    array('data' => t('ID')),
+    array('data' => t('Created')),
+    array('data' => t('Last modified')),
+    array('data' => t('Approximate size')),
+  );
+
+  // Get destination.
+  $l_options = array('query' => drupal_get_destination());
+
+  foreach ($result['items'] as $item) {
+    $length_encoded = drupal_strlen($item['supplement_base64']);
+
+    // If encoded data is big (more than 16K) we show just approx supplement size.
+
+    // Normally encoded data have 1/3 redundancy.
+    $approx_size = $length_encoded > 16 * 1024 ? round( $length_encoded * 3 / 4 ) : drupal_strlen(base64_decode($item['supplement_base64']));
+
+    $approx_size = format_size($approx_size);
+    $rows[$item['created']] = array(
+      $item['supplement_id'],
+      $item['created'],
+      $item['changed'],
+      $approx_size,
+    );
+  }
+
+  ksort($rows);
+
+  $build[] = theme('table', array('header' => $header, 'rows' => $rows));
+
+  return '<p><h2>' . t('Supplements (@count)', array('@count' => $item_count)) . '</h2>' . implode('', $build) . '</p>';
 }
 
 /**

@@ -53,10 +53,18 @@ abstract class mediamosa_rest_call {
   const URI = 'uri';
   const URI_PARAMS = 'uri_params';
   const URI_REQUEST = 'uri_request'; // Original URI.
+  const URI_WILDCHAR = 'wildchar';
+  const MATCH_URI_FUNCTION = 'match_uri';
 
   const RESPONSE_TYPE = 'response_type';
-  const RESPONSE_TYPE_XML = 'text/xml';
-  const RESPONSE_TYPE_PLAIN = 'text/plain';
+  // Types.
+  const RESPONSE_TYPE_XML = 'xml';
+  const RESPONSE_TYPE_ATOM = 'atom';
+  const RESPONSE_TYPE_RSS = 'rss';
+  const RESPONSE_TYPE_JSON = 'json';
+  const RESPONSE_TYPE_PLAIN = 'plain';
+  const RESPONSE_TYPE_XML_OEMBED = 'xml_oembed';
+  const RESPONSE_TYPE_JSON_OEMBED = 'json_oembed';
 
   // Download files.
   const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';
@@ -111,6 +119,12 @@ abstract class mediamosa_rest_call {
   const RESPONSE_FIELDS = 'response_fields';   // Response fields in output.
 
   const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
+
+  const FOR_INTERFACE = 'for_interface';
+  const FOR_INTERFACE_APP = 'for_interface_app';
+  const FOR_INTERFACE_UPLOAD = 'for_interface_upload';
+  const FOR_INTERFACE_DOWNLOAD = 'for_interface_download';
+  const FOR_INTERFACE_OPENAPI = 'for_interface_openapi';
 
   // Specify to TRUE will make sure the REST can not be canceled by user and
   // will still continue to execute even when connection to client has been
@@ -185,6 +199,23 @@ abstract class mediamosa_rest_call {
   const PARAM_IS_REQUIRED = 'is_required';
   const PARAM_ALLOWED_VALUES = 'allowed_values';
 
+  // Filter options.
+  const FILTEROP_CONTAINS = 'contains';
+  const FILTEROP_EQUALS = 'equals';
+  const FILTEROP_STARTSWITH = 'startsWith';
+  const FILTEROP_PRESENT = 'present';
+
+  // Sort order.
+  const SORTORDER_ASCENDING = 'ascending';
+  const SORTORDER_DESCENDING = 'descending';
+
+  // MediaItem.
+  const USER_OWNER = '@owner';
+  const USER_VIEWER = '@viewer';
+  const USER_ME = '@me';
+  const GROUP_SELF = '@self';
+  const MEDIAITEM_TYPE = 'video';
+
   /**
    * Main constructor.
    *
@@ -241,7 +272,7 @@ abstract class mediamosa_rest_call {
       // The name of the http var.
       $internal_pass = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS));
       // Match password in HTTP header, must match.
-      if (!isset($_SERVER[$internal_pass]) || $_SERVER[$internal_pass] != mediamosa::get_internal_password()) {
+      if (empty($_SERVER[$internal_pass]) || $_SERVER[$internal_pass] != mediamosa::get_internal_password()) {
         mediamosa_watchdog::log('Unmatching internal password (@pass) for REST URL: @url', array('@url' => $this->{self::URI}, '@pass' => $_SERVER[$internal_pass]), WATCHDOG_WARNING);
         throw new mediamosa_exception_error_authentication_failure();
       }
@@ -287,6 +318,8 @@ abstract class mediamosa_rest_call {
 
     // Call the function.
     $this->do_call();
+
+    return $this->{self::RESPONSE_TYPE};
   }
 
   /**
@@ -913,6 +946,12 @@ abstract class mediamosa_rest_call {
       // check() will throw when requirements are not met.
       $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_type::check($name, $param[self::PARAM_TYPE], $this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$name][self::PARAM_RANGE_START], $this->a_rest_args[$name][self::PARAM_RANGE_END], !empty($this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$name][self::PARAM_VALIDATED] = TRUE;
+
+      // If the type == mediamosa_sdk::TYPE_RESPONSE_TYPE and not empty, then
+      // change the response type of the REST call.
+      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_RESPONSE_TYPE && !empty($this->a_rest_args[$name][self::PARAM_VALUE])) {
+        $this->{self::RESPONSE_TYPE} = $this->a_rest_args[$name][self::PARAM_VALUE];
+      }
     }
   }
 

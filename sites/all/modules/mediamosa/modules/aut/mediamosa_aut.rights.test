@@ -192,7 +192,6 @@ class MediaMosaAutSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
 
     // To first Ega.
     $this->toEga_1();
-
   }
 
   // Test if Protected becomes TRUE when adding user_usergroup to the acl rules.

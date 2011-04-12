@@ -93,6 +93,20 @@ class mediamosa_app {
   }
 
   /**
+   * Get the app using the oauth consumer key.
+   *
+   * @param string $oauth_consumer_key
+   * @return array
+   */
+  static public function get_by_oauth_consumer_key($oauth_consumer_key, $fields = array()) {
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', $fields)
+      ->condition(mediamosa_app_db::OAUTH_CONSUMER_KEY, $oauth_consumer_key)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
    * Get all apps.
    *
    * @return array

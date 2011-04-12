@@ -493,7 +493,6 @@ class mediamosa_asset {
     $add_has_streamable_mediafiles = FALSE,
     $view_hidden_metadata = FALSE
   ) {
-
     // Something to collect?
     if (empty($asset_ids)) {
       return array();
@@ -916,8 +915,19 @@ class mediamosa_asset {
 
       // Add collection data.
       if ($show_collections && isset($collections[$asset[mediamosa_asset_db::ID]])) {
+        // Show in old format? Yes, if the app client < 3.0.
+        $older_output_30 = $app_active_version !== FALSE && $app_active_version[mediamosa_version::MAJOR] < 3;
+
+        if (!$older_output_30) {
+          $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections'] = array();
+        }
         foreach ($collections[$asset[mediamosa_asset_db::ID]] as $coll_id => $collection) {
-          $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $collection[mediamosa_collection_db::TITLE];
+          if ($older_output_30) {
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $collection[mediamosa_collection_db::TITLE];
+          }
+          else {
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection']['#' . serialize(array('id' => $coll_id,))][mediamosa_collection_db::TITLE] = $collection[mediamosa_collection_db::TITLE];
+          }
         }
       }
     }

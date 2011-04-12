@@ -670,6 +670,38 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Set new original mediafile.
+   *
+   * @param mediafile_id
+   *   This is the mediafile_id of old original mediafile.
+   * @param new_original
+   *   This is the mediafile_id of new original mediafile.
+   */
+  static public function set_new_original($mediafile_id, $new_original) {
+    // All mediafile_id_source in the asset are changed to new original mediafile id now.
+    $fields = array(
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $new_original,
+    );
+    // Build the query.
+    mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields($fields)
+      ->condition(mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $mediafile_id)
+      ->execute();
+
+    // The mediafile_id_source of new original mediafile is NULL.
+    // And is_original_file = TRUE.
+    $fields = array(
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => NULL,
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
+    );
+    // Build the query.
+    mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields($fields)
+      ->condition(mediamosa_asset_mediafile_db::ID, $new_original)
+      ->execute();
+  }
+
+  /**
    * Create the mediafile.
    *
    * @param string $mediafile_id

@@ -139,6 +139,11 @@ class mediamosa_response_connector extends mediamosa_response {
     // ok reset the header.
     $this->reset();
 
+    // Lets fool the interface that we are an app interface.
+    global $conf;
+    $conf['mediamosa_app'] = TRUE;
+
+
     // Replace the global mediamosa_response with us.
     $current_mediamosa_response = mediamosa::get($this);
     $GET = $_GET;

@@ -196,7 +196,7 @@ class mediamosa_job_server {
     // Retrieve all jobs of this server.
     $result = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
-      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
+      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id())
       ->condition(mediamosa_job_server_db::JOB_STATUS, array(mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED), 'NOT IN')
       ->orderBy(mediamosa_job_server_db::ID, 'ASC')
       ->execute();
@@ -320,7 +320,7 @@ class mediamosa_job_server {
       mediamosa_job_server_db::JOB_TYPE => $job_type,
       mediamosa_job_server_db::JOB_STATUS => mediamosa_job_server_db::JOB_STATUS_WAITING,
       mediamosa_job_server_db::MEDIAFILE_ID_SRC => $mediafile_id_src,
-      mediamosa_job_server_db::INSTALL_ID => mediamosa::variable_get('mediamosa_installation_id', 'default'),
+      mediamosa_job_server_db::INSTALL_ID => mediamosa::get_server_id(),
     );
 
     // Enrich with created time.
@@ -490,7 +490,7 @@ class mediamosa_job_server {
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // No status file found, we just have to wait.
-        if (empty($job_status)) {
+        if (empty($job_status['Status'])) {
           self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
           return;
         }
@@ -508,7 +508,7 @@ class mediamosa_job_server {
           // Set job status.
           self::set_job_status($job_id, $status, $job_status['Progress']);
         }
-        elseif ($job_status['Status'] == 'error' && $job_status['Errors'] != 'none') {
+        elseif ($job_status['Status'] == 'error' && (empty($job_status['Errors']) || $job_status['Errors'] != 'none')) {
           $status = mediamosa_job_server_db::JOB_STATUS_FAILED;
           $link_asset = self::get_asset_link($job_id);
 
@@ -516,42 +516,45 @@ class mediamosa_job_server {
           self::log_mediafile($mediafile_id_src, "Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
 
           // Set status to failed.
-          self::set_job_status($job_id, $status, (empty($job_status['Progress']) ? 0 : $job_status['Progress']),  isset($job_status["ffmpeg-output"]) ? ($job_status["Errors"] != "" ? $job_status["Errors"] . "-\n" : '') . $job_status["ffmpeg-output"] : $job_status["Errors"]);
+          self::set_job_status($job_id, $status, $job_status['Progress'],  isset($job_status["ffmpeg-output"]) ? ($job_status["Errors"] != "" ? $job_status["Errors"] . "-\n" : '') . $job_status["ffmpeg-output"] : $job_status["Errors"]);
         }
         else {
           // Set job status.
           self::set_job_status($job_id, $status, $job_status['Progress']);
         }
-
-
         break;
 
       case mediamosa_job_server_db::JOB_TYPE_STILL:
         // Scene still filename.
         $file_scene = mediamosa_configuration_storage::still_scene_file_location_get($job_id);
 
-        if (!file_exists($file_scene)) {
+        if (!file_exists($file_scene) && empty($job_status)) {
           // No status file found, we just have to wait.
-          if (empty($job_status)) {
-            self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
-            return;
-          }
+          self::log_debug_mediafile($mediafile_id_src, 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+          return;
         }
 
-        if (file_exists($file_scene) || ($job_status["Status"] == "done" && $job_status["Errors"] == "none")) {
+        // Set defaults, to fix some possible notices.
+        $job_status += array(
+          'Status' => '',
+          'Errors' => 'none',
+          'Progress' => '0.000',
+        );
+
+        if (file_exists($file_scene) || ($job_status['Status'] == 'done' && $job_status['Errors'] == 'none')) {
           $status = self::store_new_still($job_id, $mediafile_id_src);
 
           if ($status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
-            self::log_debug_mediafile($mediafile_id_src, "Running @job_type job (storing file busy), Job ID @job_id, with status: @status", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
+            self::log_debug_mediafile($mediafile_id_src, 'Running @job_type job (storing file busy), Job ID @job_id, with status: @status', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
           }
           else {
-            self::log_debug_mediafile($mediafile_id_src, "End @job_type job, Job ID @job_id, with status: @status", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
+            self::log_debug_mediafile($mediafile_id_src, 'End @job_type job, Job ID @job_id, with status: @status', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
           }
         }
-        elseif ($job_status["Status"] == "error" && $job_status["Errors"] != "none") {
+        elseif ($job_status['Status'] == 'error' && $job_status['Errors'] != 'none') {
           $status = mediamosa_job_server_db::JOB_STATUS_FAILED;
           $link_asset = self::get_asset_link($job_id);
-          self::log_debug_mediafile($mediafile_id_src, "End @job_type job, Job ID @job_id, with status: @status<br /><br />@link", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
+          self::log_debug_mediafile($mediafile_id_src, 'End @job_type job, Job ID @job_id, with status: @status<br /><br />@link', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
           self::log_debug_high_mediafile($mediafile_id_src, "Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
         }
 
@@ -559,11 +562,11 @@ class mediamosa_job_server {
         if (!file_exists($file_scene) && $job_status['Errors'] != 'none') {
           // Might be because there is no status file, dont bother to update.
           if (isset($job_status['Errors'])) {
-            self::set_job_status($job_id, $status, $job_status['Progress'], $job_status["Errors"]);
+            self::set_job_status($job_id, $status, $job_status['Progress'], $job_status['Errors']);
           }
         }
         else {
-          self::set_job_status($job_id, $status, isset($job_status['Progress']) ? $job_status['Progress'] : 0);
+          self::set_job_status($job_id, $status, $job_status['Progress']);
         }
 
         break;
@@ -583,7 +586,7 @@ class mediamosa_job_server {
     $query->leftJoin(mediamosa_job_server_analyse_db::TABLE_NAME, 'jsa', 'js.jobserver_job_id = jsa.jobserver_job_id');
     $query->fields('js');
     $query->fields('jsa');
-    $query->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'));
+    $query->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id());
     return $query->execute();
   }
 
@@ -611,7 +614,7 @@ class mediamosa_job_server {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
-      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
+      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id())
       ->execute()
       ->fetchAssoc();
   }
@@ -769,7 +772,10 @@ class mediamosa_job_server {
     $file_extension = $job_server_transcode[mediamosa_job_server_transcode_db::FILE_EXTENSION];
     $parameter_list = $job_server_transcode[mediamosa_job_server_transcode_db::COMMAND];
 
-    // Create parameter sting from the command.
+    // Mime type.
+    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
+    // Create parameter string from the command.
     $parameter_string = '';
     $pairs = explode(';', $parameter_list);
     foreach ($pairs as $pair) {
@@ -827,6 +833,8 @@ class mediamosa_job_server {
       return strtr('{ echo "Status: error"; echo "Errors: Error"; } > @status', array(
         '@status' => mediamosa_configuration_storage::status_file_location_get($mediafile_id),
       ));
+
+      // One tool has been found. Process started. Return now.
     }
 
     return $execution_string;
@@ -1237,17 +1245,22 @@ class mediamosa_job_server {
     }
     fclose($handle);
 
-    // strip the garbage from the file
+    // Return the original?
+    if ($orig) {
+      return implode('', $lines);
+    }
+
+    // Strip the garbage from the file.
     foreach ($lines as $line) {
       if (mediamosa_unicode::strpos($line, ':') === FALSE) {
         continue;
       }
 
       list($name, $value) = explode(':', $line, 2);
-      if ($name == "Progress" && is_null($value)) {
+      if ($name == 'Progress' && empty($value)) {
         $value = '0.000';
       }
-      elseif ($name == "Progress" || $name == "Status" || $name == "Errors") {
+      elseif ($name == 'Progress' || $name == 'Status' || $name == 'Errors') {
         $result[$name] = trim($value);
       }
       elseif ($name == 'ffmpeg-output') {
@@ -1255,7 +1268,17 @@ class mediamosa_job_server {
       }
     }
 
-    return ($orig ? implode('', $lines) : $result);
+    // If there is no result we return empty array.
+    if (!empty($result)) {
+      // Set defaults, to fix some possible notices.
+      $result += array(
+        'Status' => '',
+        'Errors' => 'none',
+        'Progress' => '0.000',
+      );
+    }
+
+    return $result;
   }
 
   /**
@@ -1424,9 +1447,9 @@ class mediamosa_job_server {
   static public function delete_job($job_id, $killjob = FALSE) {
 
     // Get the job.
-    $a_jobserver_job = self::get_with_jobid($job_id);
+    $jobserver_job = self::get_with_jobid($job_id);
 
-    if (empty($a_jobserver_job)) {
+    if (empty($jobserver_job)) {
       return;
     }
 
@@ -1441,7 +1464,7 @@ class mediamosa_job_server {
       // Update.
       mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
         ->fields($fields)
-        ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
+        ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::get_server_id())
         ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
         ->execute();
 
@@ -1450,8 +1473,8 @@ class mediamosa_job_server {
       // Remove files.
     }
 
-    $jobserver_job_id = $a_jobserver_job[mediamosa_job_server_db::ID];
-    $job_type = $a_jobserver_job[mediamosa_job_server_db::JOB_TYPE];
+    $jobserver_job_id = $jobserver_job[mediamosa_job_server_db::ID];
+    $job_type = $jobserver_job[mediamosa_job_server_db::JOB_TYPE];
 
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_ANALYSE:

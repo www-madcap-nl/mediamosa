@@ -260,7 +260,9 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'tagcount',
       'download/$ticket_id/$filename',
       'still/$still_id',
+      'still/$still_id/style/$style',
       'still/ticket/$ticket_id',
+      'still/ticket/$ticket_id/style/$style',
       'mediafile/uploadprogress',
       'acl/get_foreign_apps',
       'acl/app',
@@ -287,6 +289,8 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'statistics/datausagevideo', // checked manually.
       'user/$fav_user_id/favorites', // checked manually.
       'version', // no dates.
+      'openapi/oauth/request_token',// No need to check.
+      'openapi/oauth/access_token',// No need to check.
     );
 
     $uri_fixed_params = array(

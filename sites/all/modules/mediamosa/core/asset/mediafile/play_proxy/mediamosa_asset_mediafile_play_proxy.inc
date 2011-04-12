@@ -34,7 +34,7 @@ class mediamosa_asset_mediafile_play_proxy {
   /*
    * Response types
    */
-  const RESPONSE_TYPE_URI = 'plain';// FIXME why do we call uri plain? Either call it uri or plain.
+  const RESPONSE_TYPE_URI = 'plain';
   const RESPONSE_TYPE_STILL = 'still';
   const RESPONSE_TYPE_METAFILE = 'metafile';
   const RESPONSE_TYPE_OBJECT = 'object';
@@ -74,24 +74,28 @@ class mediamosa_asset_mediafile_play_proxy {
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_db::SERVER_URI,
+            '#server_path' => mediamosa_server_db::SERVER_PATH,
+            '#server_uri' => mediamosa_server_db::SERVER_URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
             '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':base_uri' => mediamosa_server_db::SERVER_PATH_BASE_URI,
             ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
           )
         )->fetchField();
 
       case self::RESPONSE_TYPE_DOWNLOAD:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_db::SERVER_URI,
+            '#server_path' => mediamosa_server_db::SERVER_PATH,
+            '#server_uri' => mediamosa_server_db::SERVER_URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
             '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':base_uri' => mediamosa_server_db::SERVER_PATH_BASE_URI,
             ':server_type' => mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
           )
         )->fetchField();
@@ -551,6 +555,17 @@ class mediamosa_asset_mediafile_play_proxy {
           'IF_EXTERNAL' => '', '/IF_EXTERNAL' => '',
         );
 
+        // HEIGHT_PLUS_num.
+        $pattern = '/{HEIGHT_PLUS_(\d+)}/';
+        $output = preg_replace_callback(
+          $pattern,
+          create_function(
+            '$matches',
+            'return ' . ($video_size['height'] > 0 ? $video_size['height'] . ' + $matches[1]' : '""') . ';'
+          ),
+          $output
+        );
+
         // START, END DURATION TIMES variables
         if (isset($start)) {
           $variables['START_TIME'] = self::convert_msec($start, $mediafile_ext['metadata']['container_type']);
@@ -715,6 +730,23 @@ class mediamosa_asset_mediafile_play_proxy {
       ->condition(mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $profile_id)
       ->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE)
       ->condition(mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $original_mediafile_id)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+  }
+
+  /**
+   * Return a matching mediafile based on the asset_id and a tag.
+   *
+   * @param $asset_id
+   * @param $tag
+   */
+  static public function get_mediafile_id_on_tag($asset_id, $tag) {
+    return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+      ->fields('mf', array(mediamosa_asset_mediafile_db::ID))
+      ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE)
+      ->condition(mediamosa_asset_mediafile_db::TAG, $tag)
       ->range(0, 1)
       ->execute()
       ->fetchField();

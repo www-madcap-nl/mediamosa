@@ -109,16 +109,16 @@ class MediaMosaStillBlackStillTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
     $this->assertTrue(mediamosa_io::file_exists($filename_still, TRUE), t('Found the generated still.'));
 
     // Check the image
-    $im = imagecreatefromjpeg($filename_still);
+    $im = mediamosa_gd::imagecreatefromjpeg($filename_still);
 
     // Check generation.
     $this->assertTrue($im !== FALSE, 'Got image from still.');
 
     if ($im) {
-      $pixel_rgb = imagecolorat($im, 10, 10);
+      $pixel_rgb = mediamosa_gd::imagecolorat($im, 10, 10);
       $this->assertTrue($pixel_rgb > 0, 'Check the validated image pixel x10, y10; RGB 0x'. $pixel_rgb);
 
-      $pixel_rgb = imagecolorat($im, 20, 20);
+      $pixel_rgb = mediamosa_gd::imagecolorat($im, 20, 20);
       $this->assertTrue($pixel_rgb > 0, 'Check the validated image pixel x20, y20; RGB 0x'. $pixel_rgb);
     }
 

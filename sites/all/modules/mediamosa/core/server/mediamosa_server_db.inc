@@ -46,6 +46,9 @@ class mediamosa_server_db {
   const DESCRIPTION_LENGTH = 255;
   const SERVER_URI = 'server_uri'; // was in 2.1.5 called 'uri'.
   const SERVER_URI_LENGTH = 255;
+  const SERVER_PATH = 'server_path';
+  const SERVER_PATH_LENGTH = 255;
+  const SERVER_PATH_BASE_URI = '{base_uri}';
   const CONTAINERS = 'containers'; // Now TEXT type.
   const CONTAINERS_LENGTH = 1024;
   const MIME_TYPE = 'mime_type';

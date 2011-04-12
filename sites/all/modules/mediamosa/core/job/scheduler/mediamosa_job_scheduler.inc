@@ -629,7 +629,7 @@ class mediamosa_job_scheduler {
     // Get Asset.
     $a_asset = mediamosa_asset::get($asset_id);
 
-    self::log_mediafile($a_job['mediafile_id'], 'Start creation DB multiple still, e.g. @filename, job: @job_id', array('@filename' => $filenames[0], '@job_id' => (string)$job_id), $asset_id);
+    self::log_mediafile($a_job['mediafile_id'], 'Start creation DB multiple still, e.g. @filename, job: @job_id, still_parameters: @still_parameters', array('@filename' => $filenames[0], '@job_id' => (string)$job_id, '@still_parameters' => print_r($still_parameters, TRUE)), $asset_id);
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
@@ -940,7 +940,7 @@ class mediamosa_job_scheduler {
       }
     }
     // stuur de job naar de job server
-    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s',
+    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s&watermark_id=%s&watermark_dst_x=%s&watermark_dst_y=%s&watermark_pct=%s&watermark_v_align=%s&watermark_h_align=%s',
       $job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id,
       $job_parameters['frametime'],
       $job_parameters['size'],
@@ -954,7 +954,13 @@ class mediamosa_job_scheduler {
       $job_parameters['still_parameters']['end_frame'],
       $video_duration,
       $fps,
-      $job_parameters['still_parameters']['tag']
+      $job_parameters['still_parameters']['tag'],
+      $job_parameters['still_parameters']['watermark_id'],
+      $job_parameters['still_parameters']['watermark_dst_x'],
+      $job_parameters['still_parameters']['watermark_dst_y'],
+      $job_parameters['still_parameters']['watermark_pct'],
+      $job_parameters['still_parameters']['watermark_v_align'],
+      $job_parameters['still_parameters']['watermark_h_align']
     );
 
     // Log call.

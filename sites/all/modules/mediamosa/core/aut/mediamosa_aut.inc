@@ -1307,7 +1307,8 @@ class mediamosa_aut {
             $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["no_mf"][mediamosa_db_query::WHERE_AND][] = 'mf.asset_id IS NULL';
 
             if (is_null($object_id)) {
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file='TRUE'";
+              // Removed according to ticket #432.
+              //$a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file='TRUE'";
             }
             else {
               $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND][] = "mf.mediafile_id='" . mediamosa_db::escape_string($object_id) . "'";
@@ -1699,7 +1700,7 @@ class mediamosa_aut {
 
         // Convert into SQL.
         $query_sql = mediamosa_db_query::query_select($query);
-mediamosa_debug::log_export($query_sql);
+
         // Now execute the SQL.
         $db_result = mediamosa_db::db_query($query_sql);
 

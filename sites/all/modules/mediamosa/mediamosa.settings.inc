@@ -52,6 +52,26 @@ class mediamosa_settings {
   // URL to collection. (lib function mediamosa_lib::l_collection($coll_id, $text);)
   const URL_COLLECTION = 'admin/mediamosa/browse/collection/@coll_id';
 
+  // Path to icon.
+  const PATH_ICON = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo-16x16.png';
+
+  // Path to logo.
+  const PATH_LOGO = 'sites/all/modules/mediamosa/lib/misc/mediamosa-logo.png';
+
+
+  // Atom fields.
+  const ATOM_NAME = 'MediaMosa';
+  const ATOM_GENERATOR = 'MediaMosa Atom API';
+  const ATOM_GENERATOR_URI = 'http://mediamosa.org/';
+  const ATOM_GENERATOR_VERSION = '1.0';
+  const ATOM_ID = 'MediaMosa:feed:atom:search';
+  const ATOM_SUBTITLE = 'Videos from MediaMosa';
+  const ATOM_TITLE = 'MediaMosa Atom Feed';
+  const ATOM_ENTRY_CATEGORY_MAX = 5;
+  const ATOM_ENTRY_ID = 'MediaMosa:asset:';
+  // RSS.
+  const RSS_GENERATOR = 'MediaMosa RSS API';
+
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';
   const SAN_NAS_STILLS_FOLDER = 'stills';
@@ -61,6 +81,8 @@ class mediamosa_settings {
   const PLAY_TICKET_LOCATION = 'links';
   const DOWNLOAD_TICKET_LOCATION = 'download_links';
   const STILL_TICKET_LOCATION = 'still_links';
+  const STILL_DATA_STYLE_LOCATION = 'style';
+  const STILL_LINK_STYLE_LOCATION = 'style';
 
   // Expiration settings, in seconds.
   const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
@@ -199,6 +221,7 @@ class mediamosa_settings {
   const MEDIAMOSA_RUN_15_MINUTES  = 'mediamosa_run_15_minutes';
   const MEDIAMOSA_RUN_3_HOURS = 'mediamosa_run_3_hours';
   const MEDIAMOSA_RUN_DAILY = 'mediamosa_run_daily';
+  const MEDIAMOSA_RUN_ALL = 'mediamosa_run_all';
   // Run interval in minutes.
   const MEDIAMOSA_RUN_INTERVAL_FAST = 30; // calling it fast, normal, slow interval groups.
   const MEDIAMOSA_RUN_INTERVAL_NORMAL = 180;
@@ -220,6 +243,23 @@ class mediamosa_settings {
   // Client application settings.
   const APP_ID_MIN = 1;
   const APP_ID_MAX = 9999;
+
+  // Openapi.
+
+  // Name of the variable, that contains the app_id of open client for OpenAPI.
+  const MEDIAMOSA_OPENAPI_OPEN_APP_ID = 'mediamosa_openapi_open_app_id';
+  // Name of the variable, that define the default openapi response type.
+  const MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE = 'mediamosa_openapi_default_response_type';
+  // Openapi call uri prefix.
+  const MEDIAMOSA_OPENAPI_CALL_URI_PREFIX = 'openapi';
+
+  // Header.
+  const MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT_TYPE = 'HTTP_ACCEPT_TYPE';
+  const MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT = 'HTTP_ACCEPT';
+  const MEDIAMOSA_OPENAPI_HEADER_ACCEPT_TYPE = 'ACCEPT_TYPE';
+
+  // Image style.
+  const IMAGE_STYLE_SEPARATOR = '_';
 
   // ------------------------------------------------------------------ Functions.
   /**

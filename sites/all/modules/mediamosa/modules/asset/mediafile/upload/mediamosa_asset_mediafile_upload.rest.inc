@@ -106,7 +106,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     // Set response.
     $mediamosa->add_item(
       array(
-        'action' => strtr($server_upload[mediamosa_server_db::SERVER_URI], array('{TICKET}' => $ticket_id, '{PROGRESS_ID}' => $uuid)),
+        'action' => strtr(mediamosa_server::get_server_url($server_upload), array('{TICKET}' => $ticket_id, '{PROGRESS_ID}' => $uuid)),
         'uploadprogress_url' => strtr($server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS], array('{PROGRESS_ID}' => $uuid, '{SERVER_ID}' => $server_upload[mediamosa_server_db::NID])),
         'ticket_id' => $ticket_id,
         'progress_id' => $uuid,
@@ -144,6 +144,15 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   const FRAMETIME = 'frametime';
   const WIDTH = 'width';
   const HEIGHT ='height';
+
+  // Watermark.
+  const WATERMARK_ID = 'watermark_id';
+  const WATERMARK_DST_X = 'watermark_dst_x';
+  const WATERMARK_DST_Y = 'watermark_dst_y';
+  const WATERMARK_PCT = 'watermark_pct';
+  const WATERMARK_V_ALIGN = 'watermark_v_align';
+  const WATERMARK_H_ALIGN = 'watermark_h_align';
+
   const RETRANSCODE = 'retranscode';
   const FILENAME = 'filename';
   const COMPLETED_URL = 'completed_url';
@@ -222,11 +231,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         ),
         self::START_FRAME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start frame. (in seconds, used when still_type is NORMAL or SECOND).',
+          self::VAR_DESCRIPTION => 'Still start frame (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end frame. (in seconds, used when still_type is NORMAL or SECOND).',
+          self::VAR_DESCRIPTION => 'Still end frame (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
@@ -256,6 +265,48 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still height.',
         ),
+        // Watermark.
+        self::WATERMARK_ID => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The watermark ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+        ),
+        self::WATERMARK_DST_X => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'X-coordinate of destination point of watermark.',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_X,
+        ),
+        self::WATERMARK_DST_Y => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Y-coordinate of destination point of watermark.',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_Y,
+        ),
+        self::WATERMARK_PCT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Alpha transparency of watermark (watermark visibility in percentage [0 - 100%]).',
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_PCT,
+          self::VAR_RANGE_START => 0,
+          self::VAR_RANGE_END => 100,
+        ),
+        self::WATERMARK_V_ALIGN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Vertical align of watermark.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_LEFT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_RIGHT,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_V_ALIGN,
+        ),
+        self::WATERMARK_H_ALIGN => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Horizontal align of watermark.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_TOP,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_H_ALIGN,
+        ),
+
         self::RETRANSCODE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "if 'retranscode' is not put, all existing transcodes of the original media file will be lost. If 'retranscode' is 'true', then new transcode jobs will be created, which replace the existing transcodes..",
@@ -287,6 +338,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
     // Ticket id.
     $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
+    $watermark_id = $this->get_param_value(self::WATERMARK_ID);
 
     // Get the ticket.
     $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
@@ -296,6 +348,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     // Get the mediafile using the ticket mediafile_id.
     $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
     $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+
+    // Check watermark id, if exists.
+    if ($watermark_id) {
+      mediamosa_asset_mediafile::must_exists($watermark_id, $app_id);
+    }
 
     // Get params.
     $create_still = $this->get_param_value(self::CREATE_STILL);
@@ -312,6 +369,13 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       'frametime' => $this->get_param_value(self::FRAMETIME),
       'width' => $this->get_param_value(self::WIDTH),
       'height' => $this->get_param_value(self::HEIGHT),
+      // Watermark.
+      self::WATERMARK_ID => $watermark_id,
+      self::WATERMARK_DST_X => $this->get_param_value(self::WATERMARK_DST_X),
+      self::WATERMARK_DST_Y => $this->get_param_value(self::WATERMARK_DST_Y),
+      self::WATERMARK_PCT => $this->get_param_value(self::WATERMARK_PCT),
+      self::WATERMARK_V_ALIGN => $this->get_param_value(self::WATERMARK_V_ALIGN),
+      self::WATERMARK_H_ALIGN => $this->get_param_value(self::WATERMARK_H_ALIGN),
     );
     $completed_url = $this->get_param_value(self::COMPLETED_URL);
     $completed_transcoding_url = $this->get_param_value(self::COMPLETED_TRANSCODING_URL);

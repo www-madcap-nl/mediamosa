@@ -305,13 +305,6 @@ class mediamosa_io {
   }
 
   /**
-   * Wrapper for getimagesize() function.
-   */
-  static public function getimagesize($filename, array &$imageinfo = array()) {
-    return @getimagesize($filename, $imageinfo);
-  }
-
-  /**
    * File get content.
    *
    * @param filename

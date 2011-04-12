@@ -249,7 +249,6 @@ class mediamosa_maintenance_automatedsimpletest {
 
     // Now find the test and add to queue (if not already).
     foreach ($runs as $run => $minutes) {
-
       // Seed?
       if ($minutes < 1) {
         continue; // seeding turned off.
@@ -280,6 +279,7 @@ class mediamosa_maintenance_automatedsimpletest {
             if ($key !== FALSE) {
               unset($queue[$key]);
             }
+
             continue;
           }
         }

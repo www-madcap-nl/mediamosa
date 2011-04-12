@@ -31,6 +31,8 @@
 
 require_once 'mediamosa_app.inc';
 require_once 'mediamosa_app_db.inc';
+require_once 'authentication/mediamosa_app_oauth_nonce.install.inc';
+require_once 'authentication/mediamosa_app_oauth_token.install.inc';
 
 /**
  * Implements hook_install().
@@ -38,6 +40,9 @@ require_once 'mediamosa_app_db.inc';
 function _mediamosa_app_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_app_db::TABLE_NAME);
+
+  _mediamosa_app_nonce_install();
+  _mediamosa_app_token_install();
 }
 
 /**
@@ -46,6 +51,9 @@ function _mediamosa_app_install() {
 function _mediamosa_app_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_app_db::TABLE_NAME);
+
+  _mediamosa_app_nonce_uninstall();
+  _mediamosa_app_token_uninstall();
 }
 
 /**
@@ -250,6 +258,20 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
         'default' => NULL,
       ),
+      mediamosa_app_db::OAUTH_CONSUMER_KEY => array(
+        'description' => 'The identifier portion of the client credentials (username).',
+        'type' => 'varbinary',
+        'length' => mediamosa_app_db::OAUTH_CONSUMER_KEY_LENGTH,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      mediamosa_app_db::OAUTH_CONSUMER_SECRET => array(
+        'description' => 'The password portion of the client credentials (password).',
+        'type' => 'varbinary',
+        'length' => mediamosa_app_db::OAUTH_CONSUMER_SECRET_LENGTH,
+        'not null' => FALSE,
+        'default' => '',
+      ),
       mediamosa_app_db::TIMEZONE => array(
         'description' => 'The application timezone.',
         'type' => 'varchar',
@@ -288,6 +310,9 @@ function mediamosa_app_schema() {
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
     'unique keys' => array(
       'uni_appid' => array(mediamosa_app_db::APP_ID),
+    ),
+    'indexes' => array(
+      'idx_' . mediamosa_app_db::OAUTH_CONSUMER_KEY => array(mediamosa_app_db::OAUTH_CONSUMER_KEY),
     ),
   );
 

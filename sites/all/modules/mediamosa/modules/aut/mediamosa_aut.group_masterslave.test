@@ -42,9 +42,7 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   // ------------------------------------------------------------------ Tests.
-  // Remake of test #16791
   function testAut_GroupsMasterSlave() {
-
     //
     // Set up.
     //
@@ -79,8 +77,6 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
 
     // Group type.
     $group_type = mediamosa_aut::AUT_NAME_TYPE_DOMAIN;
-
-    $file = 'mediamosa_aut.group_masterslave.test';
 
     //
     // Test.
@@ -220,7 +216,7 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $a_parameters = array(
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
-    $this->play_proxy($file, 212, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // This is not playable from a wrong domain.
 
@@ -232,7 +228,7 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'john_doe',
     );
-    $this->play_proxy($file, 224, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
 
     // Is playable in correct domain.
 
@@ -242,7 +238,7 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
       mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'bar.nl',
     );
-    $this->play_proxy($file, 234, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Is playable in incorrect domain.
 
@@ -252,7 +248,85 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'johndoe2',
       mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'foo.nl',
     );
-    $this->play_proxy($file, 244, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Extra test.
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Set mediafile aut.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => array('nu.nl'),
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => array('@ACADEMIA.group', '@teleblik.nl'),
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP_ID => array('mygroup'),
+      );
+    $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID => 'othergroup',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'foo.nl',
+    );
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID => 'mygroup',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'foo.nl',
+    );
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID => 'mygroup',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'nu.nl',
+    );
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+    // Switch Ega.
+    $this->toEga_1();
+
+    // Set mediafile aut.
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP_ID => array('mygroup'),
+      );
+    $this->setMediafileAut($mediafile_id, $a_parameters);
+
+    // Switch Ega.
+    $this->toEga_2();
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID => 'othergroup',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'foo.nl',
+    );
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID => 'mygroup',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'foo.nl',
+    );
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
+
+    // Play proxy request.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_rest_call_asset_mediafile_play::AUT_GROUP_ID => 'mygroup',
+      mediamosa_rest_call_asset_mediafile_play::AUT_DOMAIN => 'nu.nl',
+    );
+    $this->play_proxy(__FILE__, __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     //
     // Clean up group definitions.

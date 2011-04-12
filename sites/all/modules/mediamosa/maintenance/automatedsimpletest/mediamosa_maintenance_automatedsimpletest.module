@@ -531,7 +531,7 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
   $valid = FALSE;
   foreach ($runs as $run) {
     foreach ($all_tests[$run] as $class_name => $info) {
-      if ($name == $class_name) {
+      if ($name == $class_name && empty($info['automatic_run_disabled'])) {
         $valid = TRUE;
         break;
       }

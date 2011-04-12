@@ -551,6 +551,13 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       }
     }
     else {
+      // App_id.
+      $app_id = reset($app_ids);
+
+      // Get app version.
+      $app_active_version = $this->app_active_version($app_id);
+
+      $add_has_streamable_mediafiles = TRUE;
       $items = mediamosa_asset::asset_collect(
         $asset_ids['asset_ids'],
         $app_ids,
@@ -835,7 +842,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Check un/inappropriate flag.
     mediamosa_asset::is_unappropriate($asset_id, $app_ids, $aut_user_id, $is_app_admin);
 
+    // Is app client at 1.6 ?
+    $app_active_version = $this->app_active_version($app_id);
+
     // Collect.
+    $add_has_streamable_mediafiles = FALSE;
     $items = mediamosa_asset::asset_collect(
       array($asset_id),
       $app_ids,
@@ -854,10 +865,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Add mediafiles.
     $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
-    // Is app client at 1.6 ?
-    $app_active_version = $this->app_active_version($app_id);
-
-    // Show in old format?
+    // Show in old format? Yes, if the app client < 1.6.
     $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
 
     // Now enrich the output with mediafiles.
@@ -896,6 +904,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const TAG = 'tag';
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
+
+  // Unlimited.
+  const LIMIT = 99999;
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -971,90 +982,122 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_ids = $this->get_param_value(self::ASSET_ID);
-    if (is_array($asset_ids) && !empty($asset_ids)) {
-      foreach ($asset_ids as $asset_id) {
 
-        // Will fix some notices when we supply array in array.
-        if (is_array($asset_id)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_sdk::TYPE_ASSET_ID));
-        }
+    // Transform asset_ids to cql search.
+    $cql = array();
 
-        if ($this->isset_given_param(self::USER_ID)) {
-          $this->set_param_value(self::AUT_USER_ID, $this->get_param_value(self::USER_ID));
-        }
+    foreach ($asset_ids as $asset_id) {
+      // Will fix some notices when we supply array in array.
+      if (is_array($asset_id)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_sdk::TYPE_ASSET_ID));
+      }
 
-        // View hidden metadata.
-        $view_hidden_metadata = $this->get_param_value(self::VIEW_HIDDEN_METADATA);
+      $cql[] = 'asset_id=="' . $asset_id . '"';
+    }
 
-        $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
-        $a_aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
-        $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
-        $aut_realm = $this->get_param_value(self::AUT_REALM);
-        $tag = $this->get_param_value(self::TAG);
-        $is_oai = $this->get_param_value(self::IS_OAI);
+    // Create the CQL.
+    $cql = implode(' OR ', $cql);
 
-        $show_stills = $this->get_param_value(self::SHOW_STILLS);
-        $show_collections = $this->get_param_value(self::SHOW_COLLECTIONS);
+    // View hidden metadata.
+    $view_hidden_metadata = $this->get_param_value(self::VIEW_HIDDEN_METADATA);
 
-        // Hotfix, we dont provide this, we always return the asset, so always supply the granted flag
-        $granted = TRUE;
+    $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
+    $a_aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
+    $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
+    $aut_realm = $this->get_param_value(self::AUT_REALM);
+    $tag = $this->get_param_value(self::TAG);
+    $is_oai = $this->get_param_value(self::IS_OAI);
 
-        // Asset must exist.
-        $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
+    $aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
+    $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
+    $aut_realm = $this->get_param_value(self::AUT_REALM);
 
-        // ACL check.
-        mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $app_ids);
+    $tag = $this->get_param_value(self::TAG);
+    $is_oai = $this->get_param_value(self::IS_OAI);
 
-        // Check un/inappropriate flag.
-        mediamosa_asset::is_unappropriate($asset_id, $app_ids, $aut_user_id, $is_app_admin);
+    $show_stills = $this->get_param_value(self::SHOW_STILLS);
+    $show_collections = $this->get_param_value(self::SHOW_COLLECTIONS);
 
-        // Collect.
-        $items = mediamosa_asset::asset_collect(
-          array($asset_id),
-          $app_ids,
-          $aut_user_id,
-          $granted,
-          $a_aut_group_id,
-          $aut_domain,
-          $aut_realm,
-          $is_app_admin,
-          $show_stills,
-          $show_collections,
-          FALSE,
-          $view_hidden_metadata
-        );
+    // Hotfix, we dont provide this, we always return the asset, so always
+    // supply the granted flag.
+    $granted = TRUE;
 
-        // Fix app_id.
-        $app_id = in_array($asset['app_id'], $app_ids) ? $asset['app_id'] : reset($app_ids);
+    // Now search.
+    $asset_ids = mediamosa_search::asset(array(
+      'app_ids' => $app_ids,
+      'cql' => $cql,
+      'aut_user_id' => $aut_user_id,
+      'aut_group_ids' => $aut_group_id,
+      'aut_domain' => $aut_domain,
+      'aut_realm' => $aut_realm,
+
+      'batch_id' => 0,
+      'coll_id' => array(),
+
+      'fav_user_id' => NULL,
+
+      'granted' => $granted,
+      'is_public_list' => FALSE,
+      'is_app_admin' => $is_app_admin,
+      'hide_empty_assets' => FALSE,
+      'show_deleted' => FALSE,
+      'calculate_total_count' => FALSE,
+
+      'limit' => self::LIMIT,
+      'offset' => 0,
+    ));
+
+    if (!empty($asset_ids['asset_ids'])) {
+
+      // Fix app_id.
+      $app_id = reset($app_ids);
+
+      // Get app version.
+      $app_active_version = $this->app_active_version($app_id);
+
+      // Show in old format? Yes, if the app client < 1.6.
+      $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+
+      // Collect.
+      $add_has_streamable_mediafiles = FALSE;
+      $items = mediamosa_asset::asset_collect(
+        $asset_ids['asset_ids'],
+        $app_ids,
+        $aut_user_id,
+        $granted,
+        $aut_group_id,
+        $aut_domain,
+        $aut_realm,
+        $is_app_admin,
+        $show_stills,
+        $show_collections,
+        FALSE,
+        $view_hidden_metadata
+      );
+
+      // Add to response.
+      foreach ($items as $item) {
+        $asset_id = $item['asset_id'];
 
         // Add mediafiles.
-        $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
-
-        // Is app client at 1.6 ?
-        $app_active_version = $this->app_active_version($app_id);
-
-        // Show in old format?
-        $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+        $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, array());
 
         // Now enrich the output with mediafiles.
-        $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
+        $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
         // Add streamable setting on asset.
-        $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $items[0]['mediafiles'] : $items[0]['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
-        // Add to response.
-        foreach ($items as $item) {
-          $mediamosa->add_item($item);
-        }
+        // Add to output.
+        $mediamosa->add_item($item);
 
         // Increase viewed.
         mediamosa_asset::asset_viewed($asset_id);
       }
     }
-
   }
 }
-
 
 /**
  * URI: /asset/delete

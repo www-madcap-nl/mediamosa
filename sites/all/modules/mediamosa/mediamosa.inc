@@ -106,7 +106,13 @@ class mediamosa {
     }
 
     if (!isset($mediamosa_response)) {
-      $mediamosa_response = new mediamosa_response();
+      $responses = module_invoke_all('mediamosa_response_get');
+      if (!empty($responses)) {
+        $mediamosa_response = reset($responses);
+      }
+      else {
+        $mediamosa_response = new mediamosa_response();
+      }
     }
 
     return $mediamosa_response;
@@ -256,25 +262,46 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_enabled() {
-    // If we are running an unit test, then we are enabled unless disable_app is specified.
-    if (mediamosa::in_simpletest_sandbox()) {
-      // The name of the http var.
-      $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
-
-      // Based if this is present, we always are APP on simpletest mode.
-      return isset($_SERVER[$disable_app]) ? FALSE : TRUE;
-    }
-
-    return (mediamosa::variable_get('mediamosa_app', FALSE) || self::is_app_upload_enabled() || self::is_app_download_enabled());
+    return (self::is_app_app_enabled() || self::is_app_upload_enabled() || self::is_app_download_enabled() || self::is_app_openapi_enabled());
   }
 
   /**
-   * Is the APP upload REST Interface enabled?
+   * Is the APP REST Interface restricted to OpenAPI?
    *
    * @return bool
    */
-  static public function is_app_download_enabled() {
-    return mediamosa::variable_get('mediamosa_app_download', FALSE);
+  static public function is_app_restricted_openapi() {
+    return self::is_app_openapi_enabled() && !self::is_app_app_enabled() && !self::is_app_upload_enabled() && !self::is_app_download_enabled();
+  }
+
+  /**
+   * Any app interface is always enabled during SimpleTest unless specified by
+   * the X-MediaMosa-Disable-App header item.
+   *
+   * Returns TRUE when app is allowed.
+   * FALSE when disabled by header.
+   *
+   */
+  static public function in_simpletest_sandbox_enable_app() {
+    // The name of the http var.
+    $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
+
+      // Based if this is present, we always are APP on simpletest mode.
+    return empty($_SERVER[$disable_app]);
+  }
+
+  /**
+   * Is the APP app REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_app_enabled() {
+    if (!mediamosa::in_simpletest_sandbox()) {
+      return mediamosa::variable_get('mediamosa_app', FALSE);
+    }
+
+    // Simpletest mode, special case.
+    return self::in_simpletest_sandbox_enable_app();
   }
 
   /**
@@ -282,8 +309,41 @@ class mediamosa {
    *
    * @return bool
    */
+  static public function is_app_download_enabled() {
+    if (!mediamosa::in_simpletest_sandbox()) {
+      return mediamosa::variable_get('mediamosa_app_download', FALSE);
+    }
+
+    // Simpletest mode, special case.
+    return self::in_simpletest_sandbox_enable_app();
+  }
+
+  /**
+   * Is the APP upload REST Interface enabled?
+   *
+   * @return bool
+   */
   static public function is_app_upload_enabled() {
-    return mediamosa::variable_get('mediamosa_app_upload', FALSE);
+    if (!mediamosa::in_simpletest_sandbox()) {
+      return mediamosa::variable_get('mediamosa_app_upload', FALSE);
+    }
+
+    // Simpletest mode, special case.
+    return self::in_simpletest_sandbox_enable_app();
+  }
+
+  /**
+   * Is the APP Open API REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_openapi_enabled() {
+    if (!mediamosa::in_simpletest_sandbox()) {
+      return mediamosa::variable_get('mediamosa_app_openapi', FALSE);
+    }
+
+    // Simpletest mode, special case.
+    return self::in_simpletest_sandbox_enable_app();
   }
 
   /**

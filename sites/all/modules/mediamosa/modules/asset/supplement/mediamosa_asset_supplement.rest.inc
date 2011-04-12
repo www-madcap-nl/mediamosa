@@ -193,7 +193,7 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
         self::SUPPLEMENT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The supplement.',
-          self::VAR_RANGE_END => 64 * 1024, // 64k max length.
+          self::VAR_RANGE_END => variable_get('mediamosa_asset_supplement_max_size_kb', 64) * 1024, // 64k default max length.
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(

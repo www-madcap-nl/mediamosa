@@ -2,13 +2,19 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.3.9.1379"
+version = "3.0.0.1656"
 core = 7.x
 
 configure = admin/mediamosa/config/global
 
 ; Dependencies (module names)
-; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = color
+dependencies[] = help
+dependencies[] = menu
+dependencies[] = dblog
+dependencies[] = image
 dependencies[] = simpletest
 dependencies[] = mediamosa_sdk
 
@@ -89,6 +95,15 @@ files[] = core/app/mediamosa_app.install.inc
 
 ; App Authentication class.
 files[] = core/app/authentication/mediamosa_app_authentication.inc
+
+; oAuth related classes.
+files[] = core/app/authentication/mediamosa_app_oauth.inc
+files[] = core/app/authentication/mediamosa_app_oauth_nonce_db.inc
+files[] = core/app/authentication/mediamosa_app_oauth_nonce.install.inc
+files[] = core/app/authentication/mediamosa_app_oauth_token_db.inc
+files[] = core/app/authentication/mediamosa_app_oauth_token.install.inc
+; oAuth base class. Origin: http://oauth.googlecode.com/svn/code/php/
+files[] = core/app/authentication/3rdparty/OAuth.php
 
 ; Webservice class.
 files[] = core/webservice/mediamosa_webservice_db.inc
@@ -235,6 +250,9 @@ files[] = core/node/revision/mediamosa_node_revision_db.inc
 files[] = core/node/revision/mediamosa_node_revision.inc
 files[] = core/node/revision/mediamosa_node_revision.install.inc
 
+; OpenAPI class.
+files[] = core/openapi/mediamosa_openapi.inc
+
 ; Statistics
 files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.inc
 files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used.install.inc
@@ -313,6 +331,10 @@ files[] = core/user/group/mediamosa_user_group_db.inc
 files[] = core/user/group/mediamosa_user_group.inc
 files[] = core/user/group/mediamosa_user_group.install.inc
 
+; User-Group Relationship.
+files[] = core/user/group/mediamosa_user_in_group_db.inc
+files[] = core/user/group/mediamosa_user_in_group.install.inc
+
 ; User Favorite.
 files[] = core/user/favorite/mediamosa_user_favorite_db.inc
 files[] = core/user/favorite/mediamosa_user_favorite.inc
@@ -331,4 +353,3 @@ files[] = patch/mediamosa_cookie_domain.test
 
 ; Core tests.
 files[] = mediamosa.timezone.test
-
