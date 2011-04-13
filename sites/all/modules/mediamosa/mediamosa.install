@@ -2783,7 +2783,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement_id supplement_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
-  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement supplement blob COMMENT 'Contens of the supplement.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement supplement longblob COMMENT 'Contents of the supplement.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN tag tag varchar(255) DEFAULT NULL COMMENT 'Tag for fast search and lookup.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_prefix oai_prefix varchar(25) DEFAULT NULL COMMENT 'OAI Prefix.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_namespaceuri oai_namespaceuri varchar(255) DEFAULT NULL COMMENT 'OAI namespace URI.'");
@@ -3021,8 +3021,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN name name varchar(255) NOT NULL COMMENT 'The name of user.'");
-  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN group_id group_id varchar(255) NOT NULL COMMENT 'The name of group.'");
-  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The disk quota in MB.'");
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when user was created.'");
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when user was changed last.'");
 
@@ -3033,7 +3032,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN group_id group_id varchar(255) NOT NULL COMMENT 'The name of group.'");
-  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The disk quota in MB.'");
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when user was created.'");
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when user was changed last.'");
 

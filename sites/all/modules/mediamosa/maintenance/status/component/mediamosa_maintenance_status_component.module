@@ -207,6 +207,22 @@ function mediamosa_maintenance_status_component_mediamosa_status_collect($reset 
  */
 function mediamosa_maintenance_status_component_mediamosa_status_collect_realtime() {
 
+  // -------------------------------------------------- Check Drupal status page
+  $results['update_db'] = array(
+    'title' => t('Drupal status page'),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK,
+    'value' => t('Good'),
+  );
+
+  // Include code for system_status.
+  module_load_include('inc', 'system', 'system.admin');
+
+  if (system_status(TRUE) && user_access('administer site configuration')) {
+    $results['update_db']['severity'] = MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR;
+    $results['update_db']['value'] = t('Error on Drupal status page');
+    $results['update_db']['description'] = t('One or more problems were detected with your Drupal installation. Check the <a href="@status">status report</a> for more information.', array('@status' => url('admin/reports/status')));
+  }
+
   // --------------------------------------------------------------- CRON check.
   $cron_last = variable_get('cron_last');
   if (!is_numeric($cron_last)) {

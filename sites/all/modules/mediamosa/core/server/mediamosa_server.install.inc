@@ -237,7 +237,7 @@ function mediamosa_server_schema() {
         'not null' => TRUE,
       ),
       mediamosa_server_db::SERVER_URI => array(
-        'description' => 'The URI of the server.',
+        'description' => 'The optional URI of the server.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::SERVER_URI_LENGTH,
         'not null' => FALSE,

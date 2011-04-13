@@ -72,6 +72,7 @@ Other changes (not ticket related).
 - Fixed problem on rewrite xml output where errors in header would stop script.
 - Changed the description in the profile by removing all line feeds and unused
   spaces.
+- Errors on the Drupal status page will now give error on MediaMosa status page.
 
 MediaMosa 2.4 (unreleased) (build 1609)
 ---------------------------------------
