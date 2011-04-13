@@ -489,13 +489,13 @@ function mediamosa_app_form($node, &$form_state) {
       '#title' => l(t('oAuth client test'), 'admin/oauth_test/' . $node->nid),
       '#description' => t('Available oAuth client'),
     );
+   */
 
   $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_options');
   $options = array();
   foreach ($tool_analyse_checkboxes['name'] as $tool_analyse_key => $tool_analyse_checkbox) {
     $options[$tool_analyse_checkboxes['tool'][$tool_analyse_key]] = $tool_analyse_checkbox;
   }
-   */
   $form['tool'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -503,10 +503,11 @@ function mediamosa_app_form($node, &$form_state) {
     '#title' => t('Tool selection'),
     '#description' => t('')
   );
+  $default_value = mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, '');
   $form['tool'][mediamosa_app_db::TOOL_ANALYSE] = array(
     '#type' => 'checkboxes',
     '#title' => t('Choose the tools that may copy technical metadata to asset metadata.'),
-    '#default_value' => unserialize(mediamosa_node::default_value(mediamosa_app_db::TOOL_ANALYSE, $node, array())),
+    '#default_value' => ($default_value ? unserialize($default_value) : array()),
     '#options' => $options,
     '#description' => t('The tools can analyse their mediafiles and they can copy the data (f.e. author) to the asset metadata. You can allow or disallow these functions here.'),
   );

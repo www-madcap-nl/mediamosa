@@ -309,7 +309,7 @@ class mediamosa_asset_mediafile {
             }
           }
 
-          if ((mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected && mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected)) {
+          if (mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected && mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
             $ticket = $row[mediamosa_asset_mediafile_db::ID];
           }
           else {

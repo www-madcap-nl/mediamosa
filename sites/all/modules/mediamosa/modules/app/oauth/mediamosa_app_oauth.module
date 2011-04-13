@@ -101,7 +101,7 @@ function mediamosa_app_oauth_mediamosa_allowed_path() {
   }
 
   // Just for openapi/oauth/authorize.
-  return ($conf['mediamosa_app_openapi'] && arg(0) == 'openapi' && arg(1) == 'oauth' && arg(2) == 'authorize');
+  return (isset($conf['mediamosa_app_openapi']) && $conf['mediamosa_app_openapi'] && arg(0) == 'openapi' && arg(1) == 'oauth' && arg(2) == 'authorize');
 }
 
 /**
