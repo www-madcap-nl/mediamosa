@@ -127,9 +127,9 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
     $result = mediamosa_user::get_all(TRUE, $app_id, $offset, $limit);
 
     // Fill the response.
-    foreach ($result as $a_row) {
+    foreach ($result as $row) {
       // TODO: maybe we shall optimize this by caching groups.
-      $groups = mediamosa_user::get_group($a_row['user_id'], $app_id, TRUE);
+      $groups = mediamosa_user::get_groups($app_id, $row['user_id'], TRUE);
       if (!empty($group_id)) {
         // We need only menbers of certain group.
         if (!array_search($group_id, $groups)) {
@@ -137,9 +137,9 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
         }
       }
       if (!empty($groups)) {
-        $a_row['group_id'] = $groups;
+        $row['group_id'] = $groups;
       }
-      $o_mediamosa->add_item($a_row);
+      $o_mediamosa->add_item($row);
     }
 
     // Set total count.

@@ -39,24 +39,22 @@ class mediamosa_user {
    *  The user to retrieve.
    * @param integer $app_id
    *  The application ID.
-   * @param array $a_fields
-   *  Fields to get.
    * @param boolean $with_groups
    *  Shall we populate ['group_id'] with groups array?
    *
    * @return
    *  array with info about particular user if found, FALSE otherwise.
    */
-  static public function get($user_id, $app_id, array $a_fields = NULL, $with_groups = TRUE) {
+  static public function get($user_id, $app_id, $with_groups = TRUE) {
     $user_info = mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
-      ->fields('u', $a_fields)
+      ->fields('u')
       ->condition(mediamosa_user_db::NAME, $user_id)
       ->condition(mediamosa_user_db::APP_ID, $app_id)
       ->execute()
       ->fetchAssoc();
 
     if (!empty($user_info) && $with_groups) {
-      $user_info['group_id'] = mediamosa_user::get_group($user_id, $app_id);
+      $user_info['group_id'] = mediamosa_user::get_groups($app_id, $user_id);
     }
 
     return $user_info;
@@ -65,10 +63,10 @@ class mediamosa_user {
   /**
    * Get the user's group(s).
    *
-   * @param string $user_id
-   *  The user name.
    * @param integer $app_id
    *  The application ID.
+   * @param string $user_id
+   *  The user name.
    * @param bool $serialize_keys
    *  If TRUE, keys in array will be prepared for
    *  processing with mediamosa_response::generate_plain_xml_add_child().
@@ -76,7 +74,7 @@ class mediamosa_user {
    * @return
    *  array with group IDs.
    */
-  static public function get_group($user_id, $app_id, $serialize_keys = FALSE) {
+  static public function get_groups($app_id, $user_id, $serialize_keys = FALSE) {
 
   /* We're building SQL like
    SELECT g.group_key, g.group_id FROM mediamosa_user AS u
@@ -112,7 +110,7 @@ class mediamosa_user {
    * @param integer $user_key
    *  User key.
    * @param string $group_id
-   *  Group ID.
+   *  A particular Group ID to include user to.
    */
   static public function add_group_by_key($app_id, $user_key, $group_id) {
     $query = mediamosa_db::db_select(mediamosa_user_group_db::TABLE_NAME, 'g');
@@ -154,25 +152,18 @@ class mediamosa_user {
    */
   static public function update($app_id, $user_id, $quotum, $group_ids) {
 
-    $a_fields = array();
-
     if (isset($quotum)) {
-      $a_fields[mediamosa_user_db::QUOTUM] = $quotum;
+      $user_key = mediamosa_user::key($app_id, $user_id);
+
+      // Add changed value.
+      $fields[mediamosa_user_db::QUOTUM] = $quotum;
+      $fields = mediamosa_db::db_update_enrich($fields);
+
+      mediamosa_db::db_update(mediamosa_user_db::TABLE_NAME)
+        ->fields($fields)
+        ->condition(mediamosa_user_db::KEY, $user_key)
+        ->execute();
     }
-
-    if (!count($a_fields) && empty($group_ids)) {
-      return;
-    }
-
-    $user_key = mediamosa_user::key($app_id, $user_id);
-
-    // Add changed value.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
-
-    mediamosa_db::db_update(mediamosa_user_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->condition(mediamosa_user_db::KEY, $user_key)
-      ->execute();
 
     if (!empty($group_ids)) {
       // If we need to update groups...
@@ -236,18 +227,18 @@ class mediamosa_user {
   static public function create($app_id, $user_id, $quotum, $group_ids) {
 
     // Values to insert.
-    $a_fields = array(
+    $fields = array(
       mediamosa_user_db::APP_ID => $app_id,
       mediamosa_user_db::NAME => $user_id,
       mediamosa_user_db::QUOTUM => $quotum,
     );
 
     // Enrich with created/changed.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert.
     $user_key = mediamosa_db::db_insert(mediamosa_user_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
     if (!empty($group_ids)) {
@@ -268,7 +259,7 @@ class mediamosa_user {
    * @param string $user_id
    * @param string $group_id
    */
-  static public function get_quota($app_id, $user_id = '', $group_id) {
+  static public function get_quota($app_id, $user_id = '', $group_id = '') {
 
     return mediamosa_db::db_query(
       'SELECT app.#quota * 1024 AS app_quota_mb, g.#quotum AS group_quota_mb, u.#quotum AS owner_quota_mb FROM {#mediamosa_app} AS app
@@ -432,7 +423,7 @@ class mediamosa_user {
     }
 
     // Get the user.
-    $a_user = mediamosa_user::get($user_id, $app_id, array(mediamosa_user_db::CREATED, mediamosa_user_db::CHANGED));
+    $a_user = mediamosa_user::get($user_id, $app_id);
     if (!$a_user) {
       $a_user = array(
         'group_id' => '',
@@ -440,6 +431,8 @@ class mediamosa_user {
         'changed' => '',
       );
     }
+
+    $primary_group_id = mediamosa_user::get_primary_group($app_id, $user_id);
 
     // Get the quota.
     $a_quota = mediamosa_user::get_quota($app_id, $user_id, '');
@@ -450,12 +443,12 @@ class mediamosa_user {
     unset($a_quota['owner_quota_mb']);
 
     // Get free diskspace.
-    $diskspace_free = mediamosa_user::check_user_quota($app_id, $user_id, $a_user['group_id'], TRUE);
+    $diskspace_free = mediamosa_user::check_user_quota($app_id, $user_id, $primary_group_id, TRUE);
 
     // Collection diskspace used on group/user/app.
     $a_diskspace_used = array(
       'user' => mediamosa_user::get_diskspace('owner', $user_id, $app_id),
-      'group' => mediamosa_user::get_diskspace('group', $a_user['group_id'], $app_id),
+      'group' => mediamosa_user::get_diskspace('group', $primary_group_id, $app_id),
       'app' => mediamosa_user::get_diskspace('app', $app_id, $app_id)
     );
 
@@ -539,7 +532,7 @@ class mediamosa_user {
    * @return integer
    *  key value if user exists.
    */
-  function key($app_id, $user_id) {
+  static public function key($app_id, $user_id) {
     $user_key = mediamosa_db::db_select(mediamosa_user_db::TABLE_NAME, 'u')
       ->fields('u', array(mediamosa_user_db::KEY))
       ->condition(mediamosa_user_db::NAME, $user_id)
@@ -547,6 +540,48 @@ class mediamosa_user {
       ->execute()
       ->fetchField();
     return $user_key;
+  }
+
+  /**
+   * Retrieve ID of user's primary group. If user is not a member of any group
+   * empty string returned.
+   *
+   * If primary group depends on soze of data to store - just add another
+   * parameter here.
+   *
+   * @param $app_id
+   * @param $user_id
+   *
+   * @return string with group ID. Empty string if user is not a member of any.
+   */
+  static public function get_primary_group($app_id, $user_id) {
+    $group_ids = mediamosa_user::get_groups($app_id, $user_id);
+
+    if (empty($group_ids)) {
+      return '';
+    }
+
+    // Make the query to detect most available space from given group.
+    // '0' as a quota means special case - no limit.
+    $query = mediamosa_db::db_select(mediamosa_user_group_db::TABLE_NAME, 'g');
+    $query->fields('g', array(mediamosa_user_group_db::ID));
+
+    // Zero means 'no limit'
+    $query->addExpression(mediamosa_user_group_db::QUOTUM . ' = 0', 'is_unlimited');
+
+    $query->condition(mediamosa_user_group_db::APP_ID, $app_id);
+    $query->condition(mediamosa_user_group_db::ID, $group_ids, 'IN');
+
+    // Zero means 'no limit' so those groups are going first.
+    $query->orderBy('is_unlimited', 'DESC');
+
+    $query->orderBy(mediamosa_user_group_db::QUOTUM, 'DESC');
+    $query->range(0, 1);
+
+    $result = $query->execute();
+    $group_with_highest_quotum = $result->fetchField();
+
+    return $group_with_highest_quotum;
   }
 
 }
