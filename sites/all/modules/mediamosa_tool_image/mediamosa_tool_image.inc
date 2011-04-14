@@ -60,7 +60,7 @@ class mediamosa_tool_image {
    * @param string $mime_type
    */
   static public function is_supported($mime_type) {
-    return preg_match('#' . MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL . '\/.+#', $mime_type);
+    return preg_match('#' . self::MEDIAMOSA_TOOL_IMAGE_MIME_TYPE_ALL . '\/.+#', $mime_type);
   }
 
   /**
