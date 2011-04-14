@@ -309,48 +309,48 @@
 
       mf_org:[TRUE|FALSE] (TRUE: has 1 or more original mf)
 
-      mf_org_aut_obj_aut_[name|group][]: 
+      mf_org_acl_obj_acl_[name|group][]: 
 
-      mf_org_aut_obj_[owner|group][]:
+      mf_org_acl_obj_[owner|group][]:
 
-      mf_aut_master_slave[]: 
+      mf_acl_master_slave[]: 
       is_protected; TRUE: TRUE or DOMAIN_REALM. FALSE: FALSE or USER_USERGROUP
-      aut_type_aut_id; is only set when is_protected is != FALSE.
-      app_id _ slave_app_id _ master_is_protected _ [aut_type _ aut_id]
+      acl_type_acl_id; is only set when is_protected is != FALSE.
+      app_id _ slave_app_id _ master_is_protected _ [acl_type _ acl_id]
       
       -->
     <field name="mf" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
     <field name="mf_org" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
     <field name="mf_org_is_protected" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_org_aut_obj_aut_name" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_org_aut_obj_aut_group" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_org_acl_obj_acl_name" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_org_acl_obj_acl_group" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
     
     <!--
       string_id[_ci] type on these are very important.
       -->
     <field name="mf_org_owner" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
     <field name="mf_org_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_aut_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_acl_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
 
     <!--
       AUT CQL context set.
       The AUT CQL context set supports allows EGAs to search on their aut settings.
       
-      mf_aut_user: mediamosa_aut_name.USER
-      mf_aut_user_group: mediamosa_aut_name.USER_GROUP
-      mf_aut_domain: mediamosa_aut_name.DOMAIN
-      mf_aut_realm: mediamosa_aut_name.REALM
-      mf_aut_realm_prefix: mediamosa_aut_name.REALM_PREFIX
+      mf_acl_user: mediamosa_acl_name.USER
+      mf_acl_user_group: mediamosa_acl_name.USER_GROUP
+      mf_acl_domain: mediamosa_acl_name.DOMAIN
+      mf_acl_realm: mediamosa_acl_name.REALM
+      mf_acl_realm_prefix: mediamosa_acl_name.REALM_PREFIX
       -->
     <field name="mf_app_id_master" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
     <field name="mf_app_id_slave" type="int" indexed="true" stored="false" required="false" multiValued="true" /> 
     <field name="asset_is_master_slaved" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
     <field name="mf_is_protected" type="boolean" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_aut_user" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_aut_user_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_aut_domain" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_aut_realm" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
-    <field name="mf_aut_realm_prefix" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_acl_user" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_acl_user_group" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_acl_domain" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_acl_realm" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
+    <field name="mf_acl_realm_prefix" type="string_id_ci" indexed="true" stored="false" required="false" multiValued="true" /> 
 
     <!--
       Because mediamosa supports custom metadata, we must use dynamic fields for

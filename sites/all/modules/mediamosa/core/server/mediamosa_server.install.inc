@@ -29,7 +29,8 @@
  * Installer for mediamosa_server_download module.
  */
 
-require_once 'mediamosa_server_db.inc';
+require_once 'mediamosa_server_db.class.inc';
+
 require_once 'job/mediamosa_server_job.install.inc';
 require_once 'streaming/mediamosa_server_streaming.install.inc';
 require_once 'tool/mediamosa_server_tool.install.inc';

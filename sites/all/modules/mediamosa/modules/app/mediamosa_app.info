@@ -10,6 +10,5 @@ core = 7.x
 ; dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_app.module
-files[] = mediamosa_app.rest.inc
+files[] = mediamosa_app.rest.class.inc
 files[] = mediamosa_app.test

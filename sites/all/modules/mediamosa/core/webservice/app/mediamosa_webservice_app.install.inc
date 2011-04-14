@@ -29,8 +29,8 @@
   * Webservice app installer.
   */
 
-require_once 'mediamosa_webservice_app.inc';
-require_once 'mediamosa_webservice_app_db.inc';
+require_once 'mediamosa_webservice_app.class.inc';
+require_once 'mediamosa_webservice_app_db.class.inc';
 
 /**
  * Implements hook_install().

@@ -29,8 +29,9 @@
   * The installation file of the asset module.
   */
 
-require_once 'mediamosa_asset.inc';
-require_once 'mediamosa_asset_db.inc';
+require_once 'mediamosa_asset.class.inc';
+require_once 'mediamosa_asset_db.class.inc';
+
 require_once 'collection/mediamosa_asset_collection.install.inc';
 require_once 'delete/mediamosa_asset_delete.install.inc';
 require_once 'mediafile/mediamosa_asset_mediafile.install.inc';

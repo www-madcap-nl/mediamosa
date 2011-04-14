@@ -29,9 +29,9 @@
   * The installation file of the asset metadata module.
   */
 
-require_once 'mediamosa_asset_metadata.inc';
-require_once 'mediamosa_asset_metadata_db.inc';
-require_once 'property/mediamosa_asset_metadata_property_db.inc';
+require_once 'mediamosa_asset_metadata.class.inc';
+require_once 'mediamosa_asset_metadata_db.class.inc';
+require_once 'property/mediamosa_asset_metadata_property_db.class.inc';
 require_once 'property/mediamosa_asset_metadata_property.install.inc';
 
 /**

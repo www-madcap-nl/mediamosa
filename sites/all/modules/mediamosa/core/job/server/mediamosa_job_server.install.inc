@@ -28,9 +28,10 @@
  * @file
  * Install for mediamosa_job_server table.
  */
-require_once 'mediamosa_job_server_db.inc';
+require_once 'mediamosa_job_server_db.class.inc';
+
 require_once 'analyse/mediamosa_job_server_analyse.install.inc';
-require_once 'still/mediamosa_job_server_still.install.inc';
+require_once 'thumbnail/mediamosa_job_server_thumbnail.install.inc';
 require_once 'transcode/mediamosa_job_server_transcode.install.inc';
 
 /**

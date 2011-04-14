@@ -10,5 +10,4 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_ftp_batch.module
-files[] = mediamosa_ftp_batch.rest.inc
+files[] = mediamosa_ftp_batch.rest.class.inc

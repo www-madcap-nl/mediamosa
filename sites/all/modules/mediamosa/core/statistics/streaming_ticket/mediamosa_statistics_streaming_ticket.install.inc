@@ -29,7 +29,7 @@
  * Install for statistics used diskspace.
  */
 
-require_once 'mediamosa_statistics_streaming_ticket_db.inc';
+require_once 'mediamosa_statistics_streaming_ticket_db.class.inc';
 
 /**
  * Implements hook_install().

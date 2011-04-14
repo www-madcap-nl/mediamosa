@@ -30,12 +30,12 @@
  */
 
 // Default settings.
-require_once 'mediamosa.settings.inc';
+require_once 'mediamosa.settings.class.inc';
 require_once 'mediamosa.permission.class.inc';
 
 // Node types hook include.
-require_once 'core/node/mediamosa_node.inc';
-require_once 'core/node/mediamosa_node_mediamosa_app.inc';
+require_once 'core/node/mediamosa_node.class.inc';
+require_once 'core/node/mediamosa_node_mediamosa_app.class.inc';
 require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 
@@ -280,7 +280,7 @@ function _mediamosa_user_access_asset($asset_id) {
  */
 function mediamosa_init() {
   // Possible PHP 5.3 autoloader bug.
-  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa') . '/lib/mediamosa_debug.inc';
+  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa') . '/lib/mediamosa_debug.class.inc';
 
   // Create and get the core object.
   $mediamosa = mediamosa::get();
@@ -295,7 +295,7 @@ function mediamosa_init() {
 }
 
 /**
- * The MediaMosa REST menu callback. (not implemented)
+ * The MediaMosa REST menu callback (not implemented).
  */
 function _mediamosa() {
   // Create and get the core object.
@@ -458,9 +458,9 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
   <item id="1">
     <access>5</access>
     <behave_as_external></behave_as_external>
-    <class_name>mediamosa_rest_call_aut_group_get</class_name>
+    <class_name>mediamosa_rest_call_acl_group_get</class_name>
     <method>GET</method>
-    <module_name>mediamosa_aut</module_name>
+    <module_name>mediamosa_acl</module_name>
     <response_type>text/xml</response_type>
     <status>active</status>
     <uri>autorisation_group/$groupname</uri>

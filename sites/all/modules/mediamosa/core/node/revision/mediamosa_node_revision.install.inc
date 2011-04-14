@@ -31,7 +31,7 @@
   * revisions is stored as an serialized array.
   */
 
-require_once 'mediamosa_node_revision_db.inc';
+require_once 'mediamosa_node_revision_db.class.inc';
 
 /**
  * Implements hook_install().

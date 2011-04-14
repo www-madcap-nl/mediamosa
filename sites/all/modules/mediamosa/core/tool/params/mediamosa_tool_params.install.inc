@@ -29,7 +29,7 @@
   * Tool params installer.
   */
 
-require_once 'mediamosa_tool_params_db.inc';
+require_once 'mediamosa_tool_params_db.class.inc';
 
 /**
  * Implements hook_install().

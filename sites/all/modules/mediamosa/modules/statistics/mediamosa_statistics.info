@@ -11,9 +11,8 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_maintenance
 
 ; Used files.
-files[] = mediamosa_statistics.module
 files[] = mediamosa_statistics.inc
-files[] = mediamosa_statistics.rest.inc
+files[] = mediamosa_statistics.rest.class.inc
 files[] = mediamosa_statistics.test
 files[] = mediamosa_statistics_collection_latest.inc
 files[] = mediamosa_statistics_collection_popular.inc

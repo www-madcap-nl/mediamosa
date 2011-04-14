@@ -610,7 +610,7 @@ function _build_param($name, $var, $required) {
     case mediamosa_sdk::TYPE_APP_ID:
     case mediamosa_sdk::TYPE_INT:
     case mediamosa_sdk::TYPE_UINT:
-    case mediamosa_sdk::TYPE_AUT_GROUP_TYPE:
+    case mediamosa_sdk::TYPE_ACL_GROUP_TYPE:
     case mediamosa_sdk::TYPE_TICKET_ID:
 
     case mediamosa_sdk::TYPE_URI:

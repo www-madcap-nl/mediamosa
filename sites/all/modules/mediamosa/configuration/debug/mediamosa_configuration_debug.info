@@ -9,6 +9,3 @@ core = 7.x
 ; Dependencies (module names)
 dependencies[] = mediamosa
 dependencies[] = mediamosa_configuration
-
-; Used files.
-files[] = mediamosa_configuration_debug.module

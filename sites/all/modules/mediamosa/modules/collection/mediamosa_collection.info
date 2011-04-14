@@ -10,7 +10,6 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_collection.module
-files[] = mediamosa_collection.rest.inc
+files[] = mediamosa_collection.rest.class.inc
 files[] = mediamosa_collection.test
 files[] = mediamosa_collection.numofvideos.test

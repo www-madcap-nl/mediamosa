@@ -63,7 +63,7 @@ function mediamosa_app_oauth_menu() {
 
   /*
   // This is for later development.
-  // See: mediamosa_app_form() of sites/all/modules/mediamosa/core/node/mediamosa_node_mediamosa_app.inc
+  // See: mediamosa_app_form() of sites/all/modules/mediamosa/core/node/mediamosa_node_mediamosa_app.class.inc
   $items['admin/oauth_test'] = array(
     'title' => 'oAuth test',
     'page callback' => '_mediamosa_oauth_test',

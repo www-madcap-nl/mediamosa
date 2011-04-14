@@ -32,7 +32,7 @@
   * file hierargy for future logic.
   */
 
-require_once 'mediamosa_user_in_group_db.inc';
+require_once 'mediamosa_user_in_group_db.class.inc';
 
 /**
  * Implements hook_install().

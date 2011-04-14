@@ -18,13 +18,18 @@ OpenAPI development:
 - OpenSocial GET
 - OpenSocial POST
 
-TODO: (v2.4)
+TODO: (v3.0)
 - OAI delete support (for solr).
+
+- Hotfix for .asx and .smil files;
+<IfModule mod_alias.c>
+  AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
+</IfModule>
 
 
 MediaMosa 3.0 (build 1666)
 --------------------------
-- Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
+- Parameter name "acl_group_id" added in /asset/{asset_id}/play, and
   "group_id" is marked as depricated (See ticket #238).
 - Play request with "tag" development (See ticket #216).
 - Variable for custom control bar height in objectcode (See ticket #326).
@@ -61,7 +66,7 @@ Other changes (not ticket related).
 - Streaming ticket table clean up development (See ticket #103).
 - Simpletest REST call development.
 - Work around for still_type = scene, if there isn't video duration.
-- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+- Add install hook for mediamosa_app_dbus to migrate to new DBUS 
   module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
@@ -73,6 +78,9 @@ Other changes (not ticket related).
 - Changed the description in the profile by removing all line feeds and unused
   spaces.
 - Errors on the Drupal status page will now give error on MediaMosa status page.
+- All files that contain class(es) are now renamed to include '.class.inc'.
+- Filenames or directories with 'still' usage, are renamed to 'thumbnail'.
+- AUT modules and files are now renamed to ACL.
 
 MediaMosa 2.4 (unreleased) (build 1609)
 ---------------------------------------
@@ -108,7 +116,7 @@ Other changes (not ticket related).
 - Streaming ticket table clean up development (See ticket #103).
 - Simpletest REST call development.
 - Work around for still_type = scene, if there isn't video duration.
-- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+- Add install hook for mediamosa_app_dbus to migrate to new DBUS 
   module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
@@ -436,7 +444,7 @@ Other changes (not ticket related).
   size vs actualy file size.
 - Still tickets are no longer removed once the image was served. Still tickets
   will be removed after # of minutes depending on the setting 
-  TICKET_EXPIRATION_STILL in mediamosa.settings.inc.
+  TICKET_EXPIRATION_STILL in mediamosa.settings.class.inc.
 - Added try/catch around crons.
 - Added 'X-MediaMosa-Version' to http header output to indicate call was 
   processed by MediaMosa.
@@ -796,7 +804,7 @@ Other changes (not ticket related)
   migrating database with IDs. Fixed by adding varbinary type to schema creation
   code of mediamosa. All IDs that are varchar and have the 32 character length
   are now varbinary type.
-- Fixed problem migrating aut_object table when it contained double rows.
+- Fixed problem migrating acl_object table when it contained double rows.
 - Fixed notice in admin when view asset with no mediafiles.
 - Job status REST call now returns correct started time for jobs as server time
   and not +0400.
@@ -922,7 +930,7 @@ MediaMosa 2.1.0
 - /collection/{id}/asset doesn't exist (See MediaMosa ticket #245).
 - Version does not exists. (See MediaMosa ticket #246).
 - /asset/{id}/collection/count is broken (See MediaMosa ticket #249).
-- 'aut_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
+- 'acl_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
 - /autorisation_group?limit=10 broken (See MediaMosa ticket #253).
 - Assets of other apps visible (See MediaMosa ticket #254).
 - /asset owner_id does not work (See 

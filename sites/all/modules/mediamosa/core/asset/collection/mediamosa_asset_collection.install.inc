@@ -29,8 +29,8 @@
   * The installation file of the asset module.
   */
 
-require_once 'mediamosa_asset_collection.inc';
-require_once 'mediamosa_asset_collection_db.inc';
+require_once 'mediamosa_asset_collection.class.inc';
+require_once 'mediamosa_asset_collection_db.class.inc';
 
 /**
  * Implements hook_install().

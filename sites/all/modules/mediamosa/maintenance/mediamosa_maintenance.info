@@ -11,5 +11,4 @@ dependencies[] = mediamosa
 ; Used files.
 
 ; Core class.
-files[] = mediamosa_maintenance.module
 files[] = mediamosa_maintenance.admin.inc

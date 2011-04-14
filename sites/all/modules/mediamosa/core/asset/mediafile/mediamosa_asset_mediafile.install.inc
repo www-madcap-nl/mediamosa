@@ -29,8 +29,8 @@
  * The install file for asset media
  */
 
-require_once 'mediamosa_asset_mediafile.inc';
-require_once 'mediamosa_asset_mediafile_db.inc';
+require_once 'mediamosa_asset_mediafile.class.inc';
+require_once 'mediamosa_asset_mediafile_db.class.inc';
 require_once 'metadata/mediamosa_asset_mediafile_metadata.install.inc';
 
 /**

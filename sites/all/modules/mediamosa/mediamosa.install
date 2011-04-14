@@ -31,17 +31,19 @@
 
 
 // Node types.
-require_once 'core/node/mediamosa_node.inc';
+require_once 'core/node/mediamosa_node.class.inc';
 
 // Include the class we need. During install nothing can be autoloaded (yet).
-require_once 'mediamosa.inc';
-require_once 'mediamosa.settings.inc';
-require_once 'lib/mediamosa_db.inc';
-require_once 'lib/mediamosa_datetime.inc';
-require_once 'lib/mediamosa_unicode.inc';
+require_once 'mediamosa.class.inc';
+require_once 'mediamosa.settings.class.inc';
+require_once 'lib/mediamosa_db.class.inc';
+require_once 'lib/mediamosa_datetime.class.inc';
+require_once 'lib/mediamosa_unicode.class.inc';
+
+// Our children install files.
 require_once 'core/error/mediamosa_error.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
-require_once 'core/aut/mediamosa_aut.install.inc';
+require_once 'core/acl/mediamosa_acl.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
 require_once 'core/watchdog/mediamosa_watchdog.install.inc';
@@ -84,8 +86,8 @@ function mediamosa_install() {
   // Install the asset db.
   _mediamosa_asset_install();
 
-  // Install the aut dbs.
-  _mediamosa_aut_install();
+  // Install the acl dbs.
+  _mediamosa_acl_install();
 
   // Install the user dbs.
   _mediamosa_user_install();
@@ -155,8 +157,8 @@ function mediamosa_uninstall() {
   // Uninstall the user dbs.
   _mediamosa_user_uninstall();
 
-  // Install the aut dbs.
-  _mediamosa_aut_uninstall();
+  // Install the acl dbs.
+  _mediamosa_acl_uninstall();
 
   // Remove the app db.
   _mediamosa_asset_uninstall();
@@ -2545,7 +2547,7 @@ function mediamosa_update_7113() {
 
   // Migration goes here.
   $query = mediamosa_db::db_select('mediamosa_user', 'u');
-  $query->fields('u');
+  $query->fields('u', array('user_key'));
   $query->join('mediamosa_user_group', 'g', 'u.group_id = g.group_id AND u.app_id = g.app_id');
   $query->addField('g', 'group_key');
   $users_in_group = $query->execute()->fetchAll();
@@ -2578,7 +2580,7 @@ function mediamosa_update_7113() {
  */
 function mediamosa_update_7114() {
 
-  module_disable(array('mediamosa_app_authentication'), FALSE);
+  module_disable(array('mediamosa_app_dbus'), FALSE);
 
   module_enable(array('mediamosa_app_dbus'));
   module_enable(array('mediamosa_app_oauth'));
@@ -3048,4 +3050,37 @@ function mediamosa_update_7118() {
   db_query("ALTER TABLE {mediamosa_webservice_app} CHANGE COLUMN status status enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'The webservice application switch.'");
 }
 
+/**
+ * Remove AUT registration in Drupal. Module is no longer used.
+ */
+function mediamosa_update_7119() {
+  // Remove from system.
+  db_query("DELETE FROM {system} WHERE name = 'mediamosa_aut'");
+
+  // From registry.
+  db_query("DELETE FROM {registry} WHERE name LIKE 'mediamosa\_aut%'");
+
+  // Rename the tables.
+  if (db_table_exists('mediamosa_aut_app_master_slave')) {
+    db_rename_table('mediamosa_aut_app_master_slave', 'mediamosa_acl_app_master_slave');
+  }
+  if (db_table_exists('mediamosa_aut_group')) {
+    db_rename_table('mediamosa_aut_group', 'mediamosa_acl_group');
+  }
+  if (db_table_exists('mediamosa_aut_name')) {
+    db_rename_table('mediamosa_aut_name', 'mediamosa_acl_name');
+  }
+  if (db_table_exists('mediamosa_aut_object')) {
+    db_rename_table('mediamosa_aut_object', 'mediamosa_acl_object');
+  }
+
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_ALREADY_EXISTS' WHERE name = 'ERRORCODE_AUT_GROUP_ALREADY_EXISTS'");
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_GROUP_NOT_FOUND'");
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_NAME_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_NAME_NOT_FOUND'");
+
+  // Enable the new ACL module.
+  module_enable(array('mediamosa_acl'));
+
+  return 'The AUT module has been removed in 3.0 and is now called ACL. Old module has been removed successfully.';
+}
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

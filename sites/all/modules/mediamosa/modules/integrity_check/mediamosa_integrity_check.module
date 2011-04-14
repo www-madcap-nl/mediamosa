@@ -140,7 +140,7 @@ function mediamosa_integrity_check_page() {
     $type = $result->fetchField();
   }
 
-  // Check whether the mediamosa_integrity_check.inc is running or not.
+  // Check whether the mediamosa_integrity_check is running or not.
   $output = array();
   mediamosa_io::exec('ps ax | grep mediamosa_integrity_check | grep -v grep', $output);
   if (!empty($output) > 0) {
@@ -391,7 +391,7 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
             ':mediafile_id' => $object_id,
           ));
           $asset_id = $res->fetchField();
-          mediamosa_asset_mediafile_still::delete($asset_id, '', $object_id);
+          mediamosa_asset_mediafile_thumbnail::delete($asset_id, '', $object_id);
           break;
         case mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD:
           mediamosa_io::unlink(mediamosa_configuration_storage::mediafile_id_filename_get($object_id));

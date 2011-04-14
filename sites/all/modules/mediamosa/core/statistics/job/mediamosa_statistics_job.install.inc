@@ -29,7 +29,7 @@
  * Install for statistics used diskspace.
  */
 
-require_once 'mediamosa_statistics_job_db.inc';
+require_once 'mediamosa_statistics_job_db.class.inc';
 
 /**
  * Implements hook_install().

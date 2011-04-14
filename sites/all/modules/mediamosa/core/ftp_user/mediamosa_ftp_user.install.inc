@@ -29,7 +29,7 @@
   * FTP user installer.
   */
 
-require_once 'mediamosa_ftp_user_db.inc';
+require_once 'mediamosa_ftp_user_db.class.inc';
 
 /**
  * Implements hook_ininstall().

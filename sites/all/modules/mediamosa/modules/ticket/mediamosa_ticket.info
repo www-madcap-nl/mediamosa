@@ -8,6 +8,3 @@ core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
-
-; Used files.
-files[] = mediamosa_ticket.module

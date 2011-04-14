@@ -10,11 +10,10 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_openapi.module
-files[] = mediamosa_openapi.rest.inc
+files[] = mediamosa_openapi.rest.class.inc
 files[] = mediamosa_openapi.output.test
 files[] = mediamosa_openapi.test
 files[] = mediamosa_openapi.upload.test
 
 ; Response object.
-files[] = response/mediamosa_openapi_response.inc
+files[] = response/mediamosa_openapi_response.class.inc

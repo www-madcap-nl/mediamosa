@@ -11,6 +11,5 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_maintenance
 
 ; Used files.
-files[] = mediamosa_batch_jobs.module
 files[] = mediamosa_batch_jobs.callbacks.inc
 files[] = mediamosa_batch_jobs.helpers.inc

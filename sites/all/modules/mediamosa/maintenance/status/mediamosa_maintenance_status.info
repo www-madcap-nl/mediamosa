@@ -11,7 +11,4 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_maintenance
 
 ; Used files.
-files[] = mediamosa_maintenance_status.module
-files[] = mediamosa_maintenance_status.install
-files[] = mediamosa_maintenance_status.rest.inc
-files[] = mediamosa_maintenance_status.theme.inc
+files[] = mediamosa_maintenance_status.rest.class.inc

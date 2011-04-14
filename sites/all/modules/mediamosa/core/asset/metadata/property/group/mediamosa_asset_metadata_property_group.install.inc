@@ -29,8 +29,8 @@
   * The installation file of the asset metadata group module.
   */
 
-require_once 'mediamosa_asset_metadata_property_group.inc';
-require_once 'mediamosa_asset_metadata_property_group_db.inc';
+require_once 'mediamosa_asset_metadata_property_group.class.inc';
+require_once 'mediamosa_asset_metadata_property_group_db.class.inc';
 
 /**
  * Implements hook_install().

@@ -468,7 +468,7 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#default_value' => mediamosa_solr::settingInstantlyMasterSlave(),
   );
 
-  $form['mediamosa_solr']['queue']['mediamosa_solr_aut_instantly'] = array(
+  $form['mediamosa_solr']['queue']['mediamosa_solr_acl_instantly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Process access (ACL/AUT) changes of assets instantly'),
     '#default_value' => mediamosa_solr::settingInstantlyAUT(),

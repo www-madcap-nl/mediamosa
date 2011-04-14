@@ -26,10 +26,10 @@
 
 /**
  * @file
- * Solr version of MediaMosaAutEgaTestCaseEga
+ * Solr version of MediaMosaAclEgaTestCaseEga
  */
 
-class MediaMosaSolrAutEgaTestCaseEga extends MediaMosaAutEgaTestCaseEga {
+class MediaMosaSolrAclEgaTestCaseEga extends MediaMosaAclEgaTestCaseEga {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.

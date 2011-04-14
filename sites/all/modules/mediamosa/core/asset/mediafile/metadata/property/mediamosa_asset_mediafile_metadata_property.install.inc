@@ -29,8 +29,8 @@
  * The install file for asset media
  */
 
-require_once 'mediamosa_asset_mediafile_metadata_property.inc';
-require_once 'mediamosa_asset_mediafile_metadata_property_db.inc';
+require_once 'mediamosa_asset_mediafile_metadata_property.class.inc';
+require_once 'mediamosa_asset_mediafile_metadata_property_db.class.inc';
 
 /**
  * Implements hook_install().

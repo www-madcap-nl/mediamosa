@@ -10,6 +10,5 @@ core = 7.x
 ; dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_app_oauth.module
-files[] = mediamosa_app_oauth.test
-files[] = mediamosa_app_oauth.rest.inc
+files[] = mediamosa_app_oauth.class.test
+files[] = mediamosa_app_oauth.rest.class.inc

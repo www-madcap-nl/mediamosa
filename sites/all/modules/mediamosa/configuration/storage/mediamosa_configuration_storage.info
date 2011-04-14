@@ -11,6 +11,5 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_configuration
 
 ; Used files.
-files[] = mediamosa_configuration_storage.module
-files[] = mediamosa_configuration_storage.rest.inc
+files[] = mediamosa_configuration_storage.rest.class.inc
 files[] = mediamosa_configuration_storage.test

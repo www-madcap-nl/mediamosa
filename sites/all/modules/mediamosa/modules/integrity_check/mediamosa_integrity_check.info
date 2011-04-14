@@ -10,5 +10,4 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_integrity_check.module
-files[] = mediamosa_integrity_check_db.inc
+files[] = mediamosa_integrity_check_db.class.inc

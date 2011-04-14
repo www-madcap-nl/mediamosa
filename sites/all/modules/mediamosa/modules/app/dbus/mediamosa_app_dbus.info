@@ -10,6 +10,5 @@ core = 7.x
 ; dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_app_dbus.module
-files[] = mediamosa_app_dbus.test
-files[] = mediamosa_app_dbus.rest.inc
+files[] = mediamosa_app_dbus.class.test
+files[] = mediamosa_app_dbus.rest.class.inc

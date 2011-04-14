@@ -29,7 +29,7 @@
   * Tool mapping installer.
   */
 
-require_once 'mediamosa_tool_mapping_db.inc';
+require_once 'mediamosa_tool_mapping_db.class.inc';
 
 /**
  * Implements hook_install().

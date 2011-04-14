@@ -29,7 +29,7 @@
  * Installer.
  */
 
-include 'mediamosa_maintenance_automatedsimpletest_db.inc';
+include 'mediamosa_maintenance_automatedsimpletest_db.class.inc';
 
 /**
  * Implements hook_install().

@@ -144,7 +144,7 @@ function mediamosa_browse_asset_filter_form() {
   $form['cqlfilter']['cql'] = array(
     '#type' => 'textfield',
     //'#title' => t('CQL:'),
-    '#description' => t('Enter a CQL search command here. Usage can be found in the Webservice document. Examples: "aut_app==5" or "is_protected == FALSE"'),
+    '#description' => t('Enter a CQL search command here. Usage can be found in the Webservice document. Examples: "acl_app==5" or "is_protected == FALSE"'),
     '#default_value' => isset($session['cql']) ? $session['cql'] : '',
   );
 
