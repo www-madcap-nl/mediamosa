@@ -188,7 +188,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
@@ -202,7 +202,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
@@ -218,7 +218,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
@@ -231,7 +231,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
@@ -244,7 +244,7 @@ function mediamosa_openapi_mediamosa_register_rest_call() {
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_openapi',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_ATOM,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::FOR_INTERFACE => array(mediamosa_rest_call::FOR_INTERFACE_OPENAPI),
@@ -295,17 +295,17 @@ function mediamosa_openapi_mediamosa_configuration_collect() {
   // Default response type.
 
   $options = array(
-    mediamosa_rest_call::RESPONSE_TYPE_XML  => 'XML',
-    mediamosa_rest_call::RESPONSE_TYPE_ATOM  => 'Atom',
-    mediamosa_rest_call::RESPONSE_TYPE_RSS  => 'RSS',
-    mediamosa_rest_call::RESPONSE_TYPE_JSON  => 'JSON',
+    mediamosa_response::RESPONSE_TYPE_XML  => 'XML',
+    mediamosa_response::RESPONSE_TYPE_ATOM  => 'Atom',
+    mediamosa_response::RESPONSE_TYPE_RSS  => 'RSS',
+    mediamosa_response::RESPONSE_TYPE_JSON  => 'JSON',
   );
 
   $form['settings_openapi'][mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE] = array(
     '#type' => 'select',
     '#title' => t('Default response type'),
     '#description' => t("Use this, if the request header doesn't have Accept-Type."),
-    '#default_value' => variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE, mediamosa_rest_call::RESPONSE_TYPE_ATOM),
+    '#default_value' => variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE, mediamosa_response::RESPONSE_TYPE_ATOM),
     '#options' => $options,
   );
 
@@ -338,10 +338,10 @@ function mediamosa_openapi_mediamosa_configuration_validate($form, $form_state) 
   $response_type = $form_state['values'][mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE];
 
   $options = array(
-    mediamosa_rest_call::RESPONSE_TYPE_XML  => 'XML',
-    mediamosa_rest_call::RESPONSE_TYPE_ATOM  => 'Atom',
-    mediamosa_rest_call::RESPONSE_TYPE_RSS  => 'RSS',
-    mediamosa_rest_call::RESPONSE_TYPE_JSON  => 'JSON',
+    mediamosa_response::RESPONSE_TYPE_XML  => 'XML',
+    mediamosa_response::RESPONSE_TYPE_ATOM  => 'Atom',
+    mediamosa_response::RESPONSE_TYPE_RSS  => 'RSS',
+    mediamosa_response::RESPONSE_TYPE_JSON  => 'JSON',
   );
 
   if (!in_array($response_type, $options)) {
@@ -357,6 +357,4 @@ function mediamosa_openapi_mediamosa_response_get() {
     $mediamosa_response = new mediamosa_openapi_response();
     return $mediamosa_response;
   }
-
-  return NULL;
 }

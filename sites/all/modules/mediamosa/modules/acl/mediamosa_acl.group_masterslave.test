@@ -26,7 +26,7 @@
 
 /**
   * @file
-  * Unittests for aut/ACL/groups/master/slave.
+  * Unittests for ACL/groups/master/slave.
   */
 class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
 
@@ -35,14 +35,14 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT - Groups, Master-Slave',
-      'description' => 'Testing the AUT module, groups with master slave, previously known as ACL.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'name' => 'ACL - Groups, Master-Slave',
+      'description' => 'Testing the ACL module, groups with master slave, previously known as ACL.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
-  function testAut_GroupsMasterSlave() {
+  function testAcl_GroupsMasterSlave() {
     //
     // Set up.
     //
@@ -95,7 +95,7 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array('foo.nl', 'bar.nl'),
     );
-    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Make an another test video with file.
 
@@ -104,39 +104,39 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id = $asset_media['asset_id'];
     $mediafile_id = $asset_media['mediafile_id'];
 
-    // Make an aut group for Ega 1.
+    // Make an acl group for Ega 1.
 
-    // Create aut group.
-    $this->createAutGroup($groupname, $group_type);
+    // Create acl group.
+    $this->createAclGroup($groupname, $group_type);
 
-    // Create aut hostname.
+    // Create acl hostname.
     $a_hostnames = array('foo.nl', 'goo.nl', 'hoo.nl', 'foobar.nl');
-    $this->createAutHostname($groupname, $a_hostnames);
+    $this->createAclHostname($groupname, $a_hostnames);
 
-    // Make an aut group for Ega 2.
+    // Make an acl group for Ega 2.
 
     // Switch Ega.
     $this->toEga_2();
 
-    // Create aut group.
-    $this->createAutGroup($groupname, $group_type);
+    // Create acl group.
+    $this->createAclGroup($groupname, $group_type);
 
-    // Create aut hostname.
+    // Create acl hostname.
     $a_hostnames = array('bar.nl', 'car.nl', 'dar.nl', 'foobar.nl');
-    $this->createAutHostname($groupname, $a_hostnames);
+    $this->createAclHostname($groupname, $a_hostnames);
 
     // Make a master / slave for asset + domain.
 
     // Switch Ega.
     $this->toEga_1();
 
-    // Set mediafile aut.
+    // Set mediafile acl.
     $a_parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array($groupname, 'nu.nl'),
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => array('@ACADEMIA.group', '@teleblik.nl'),
     );
-    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Get_asset tests with granted.
 
@@ -255,14 +255,14 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     // Switch Ega.
     $this->toEga_1();
 
-    // Set mediafile aut.
+    // Set mediafile acl.
     $a_parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array('nu.nl'),
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => array('@ACADEMIA.group', '@teleblik.nl'),
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP_ID => array('mygroup'),
       );
-    $this->setMediafileAut($mediafile_id, $a_parameters);
+    $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Switch Ega.
     $this->toEga_2();
@@ -294,12 +294,12 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     // Switch Ega.
     $this->toEga_1();
 
-    // Set mediafile aut.
+    // Set mediafile acl.
     $a_parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP_ID => array('mygroup'),
       );
-    $this->setMediafileAut($mediafile_id, $a_parameters);
+    $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Switch Ega.
     $this->toEga_2();
@@ -335,30 +335,30 @@ class MediaMosaAclGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     // Switch Ega.
     $this->toEga_2();
 
-    // Delete aut hostnames.
+    // Delete acl hostnames.
     $a_hostnames = array('bar.nl', 'car.nl', 'dar.nl');
-    $this->deleteAutHostname($groupname, $a_hostnames);
+    $this->deleteAclHostname($groupname, $a_hostnames);
 
     // Switch Ega.
     $this->toEga_1();
 
-    // Delete aut hostnames.
+    // Delete acl hostnames.
     $a_hostnames = array('foo.nl', 'goo.nl', 'hoo.nl');
-    $this->deleteAutHostname($groupname, $a_hostnames);
+    $this->deleteAclHostname($groupname, $a_hostnames);
 
     // Switch Ega.
     $this->toEga_2();
 
-    // Delete aut group without delete = cascade.
-    $this->deleteAutGroup($groupname, array(), array(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY));
+    // Delete acl group without delete = cascade.
+    $this->deleteAclGroup($groupname, array(), array(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY));
 
-    // Delete aut group with delete = cascade.
-    $this->deleteAutGroup($groupname, array(mediamosa_rest_call_acl_group_delete::DELETE => 'cascade'));
+    // Delete acl group with delete = cascade.
+    $this->deleteAclGroup($groupname, array(mediamosa_rest_call_acl_group_delete::DELETE => 'cascade'));
 
     // Switch Ega.
     $this->toEga_1();
 
-    // Delete aut group with delete = cascade.
-    $this->deleteAutGroup($groupname, array(mediamosa_rest_call_acl_group_delete::DELETE => 'cascade'));
+    // Delete acl group with delete = cascade.
+    $this->deleteAclGroup($groupname, array(mediamosa_rest_call_acl_group_delete::DELETE => 'cascade'));
   }
 }

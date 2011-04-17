@@ -50,7 +50,7 @@ function mediamosa_configuration_menu() {
 
   // Configuration.
   $items['admin/mediamosa/config/global'] = array(
-    'title' => 'Configure',
+    'title' => 'Configure MediaMosa global settings',
     'description' => 'The configuration of global MediaMosa settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('_mediamosa_configuration_form'),

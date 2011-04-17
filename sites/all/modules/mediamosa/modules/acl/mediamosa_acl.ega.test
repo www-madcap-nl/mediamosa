@@ -35,16 +35,16 @@ class MediaMosaAclEgaTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT - asset and mediafile information from other EGA',
-      'description' => 'Testing AUT asset and mediafile request from other EGA related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'name' => 'ACL - asset and mediafile information from other EGA',
+      'description' => 'Testing ACL asset and mediafile request from other application related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
 
-  // Testing AUT asset and mediafile information from other EGA, see: ticket 854.
-  function testAutEga() {
+  // Testing ACL asset and mediafile information from other EGA, see: ticket 854.
+  function testAclEga() {
 
     //
     // Set up Egas.
@@ -126,11 +126,11 @@ class MediaMosaAclEgaTestCaseEga extends MediaMosaTestCaseEga {
     // To first Ega.
     $this->toEga_1();
 
-    // Set mediafile aut.
+    // Set mediafile acl.
     $a_parameters = array(
       'acl_app' => $app_id_2,
     );
-    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Get the asset.
     $a_asset = $this->getAsset($asset_id);

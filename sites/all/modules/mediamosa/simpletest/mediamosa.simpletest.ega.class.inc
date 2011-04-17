@@ -1103,7 +1103,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_ATOM,
     );
 
     // Set uri.
@@ -1126,7 +1126,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Check response.
     switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
-      case mediamosa_rest_call::RESPONSE_TYPE_XML:
+      case mediamosa_response::RESPONSE_TYPE_XML:
         $this->assertTrue(
           in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
           strtr(
@@ -1138,7 +1138,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
           )
         );
         break;
-      case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
+      case mediamosa_response::RESPONSE_TYPE_ATOM:
         $this->assertTrue(
           in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
           strtr(
@@ -1490,7 +1490,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an autorisation group.
    * Based on the rest call /autorisation_group/$groupname (GET)
    */
-  protected function getAutGroup($groupname, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAclGroup($groupname, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set uri.
     $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
@@ -1522,7 +1522,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an autorisation hostname.
    * Based on the rest call /autorisation_group/$groupname/hostname (GET)
    */
-  protected function getAutHostname($groupname, $limit, $offset, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAclHostname($groupname, $limit, $offset, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_group_get_hostnames::LIMIT => $limit,
@@ -1555,7 +1555,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Get the AUT/ACL settings on mediafile.
    */
-  protected function getMediafileAut($mediafile_id, array $parameters = array(), $description = 'Get ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getMediafileAcl($mediafile_id, array $parameters = array(), $description = 'Get ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_mediafile_get_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -1821,7 +1821,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters.
     $parameters += array(
       mediamosa_rest_call_openapi_mediaitems_post::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_ATOM,
     );
 
     if (!$album_id) {
@@ -1844,7 +1844,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Check response.
     switch ($parameters[mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE]) {
-      case mediamosa_rest_call::RESPONSE_TYPE_XML:
+      case mediamosa_response::RESPONSE_TYPE_XML:
         $this->assertTrue(
           in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
           strtr(
@@ -1856,7 +1856,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
           )
         );
         break;
-      case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
+      case mediamosa_response::RESPONSE_TYPE_ATOM:
         $this->assertTrue(
           in_array((string) $response['xml']->extension->request_result_id, $expected_result_ids),
           strtr(
@@ -2084,7 +2084,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a aut group.
    * Based on REST call autorisation_group/create (POST)
    */
-  protected function createAutGroup($groupname, $group_type, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAclGroup($groupname, $group_type, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_group_create::GROUPNAME => $groupname,
@@ -2116,7 +2116,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a aut hostname.
    * Based on REST call autorisation_group/$groupname/hostname/create (POST)
    */
-  protected function createAutHostname($groupname, array $a_hostnames, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAclHostname($groupname, array $a_hostnames, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $a_hostnames,
@@ -2178,7 +2178,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete an aut group.
    * Based on REST call autorisation_group/$groupname/delete (POST)
    */
-  protected function deleteAutGroup($groupname, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAclGroup($groupname, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Set the URI.
     $uri = strtr('autorisation_group/@groupname/delete', array('@groupname' => $groupname));
 
@@ -2203,7 +2203,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete an aut hostname.
    * Based on REST call autorisation_group/$groupname/hostname/delete (POST)
    */
-  protected function deleteAutHostname($groupname, array $a_hostnames, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAclHostname($groupname, array $a_hostnames, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_group_create_hostnames::HOSTNAME => $a_hostnames,
@@ -2563,7 +2563,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * acl_realm[]  realm(s) that gain access to the mediafile
    *
    */
-  protected function setMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setMediafileAcl($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_mediafile_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -2651,11 +2651,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Same as setMediafileAut, except will add to rights and not replace.
+   * Same as setMediafileAcl, except will add to rights and not replace.
    */
-  protected function addMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function addMediafileAcl($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     $parameters[mediamosa_rest_call_acl_mediafile_set_rights::REPLACE] = 'false';
-    $this->setMediafileAut($mediafile_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
+    $this->setMediafileAcl($mediafile_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -2672,7 +2672,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * acl_realm[]  realm(s) that gain access to the mediafile
    *
    */
-  protected function setAssetAut($asset_id, array $parameters = array(), $description = 'Setting ACL on asset', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setAssetAcl($asset_id, array $parameters = array(), $description = 'Setting ACL on asset', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_asset_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -2760,11 +2760,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Same as setAssetAut, except will add to rights and not replace.
+   * Same as setAssetAcl, except will add to rights and not replace.
    */
-  protected function addAssetAut($asset_id, array $parameters = array(), $description = 'Adding ACL on asset', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function addAssetAcl($asset_id, array $parameters = array(), $description = 'Adding ACL on asset', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     $parameters[mediamosa_rest_call_acl_asset_set_rights::REPLACE] = 'false';
-    $this->setAssetAut($asset_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
+    $this->setAssetAcl($asset_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -2776,7 +2776,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * replace      Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.
    * acl_app[]    application(s) that gain access to the collection
    */
-  protected function setCollectionAut($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setCollectionAcl($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_collection_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -2859,11 +2859,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Same as setMediafileAut, except will add to rights and not replace.
+   * Same as setMediafileAcl, except will add to rights and not replace.
    */
-  protected function addCollectionAut($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function addCollectionAcl($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     $parameters[mediamosa_rest_call_acl_collection_set_rights::REPLACE] = 'false';
-    $this->setCollectionAut($collection_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
+    $this->setCollectionAcl($collection_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -3172,7 +3172,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Delete ACL rights on mediafile.
    */
-  protected function deleteMediafileAut($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteMediafileAcl($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -3214,7 +3214,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Delete ACL rights on asset.
    */
-  protected function deleteAssetAut($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAssetAcl($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -3256,7 +3256,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete ACL rights on mediafile.
    * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)
    */
-  protected function deleteCollectionAut($coll_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteCollectionAcl($coll_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_acl_collection_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,

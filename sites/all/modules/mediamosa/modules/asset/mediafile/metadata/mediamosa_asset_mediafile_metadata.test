@@ -312,7 +312,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
         self::SIMPLETEST_USER_ID,
       ),
     );
-    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Go to app 2
     $this->toEga_2();

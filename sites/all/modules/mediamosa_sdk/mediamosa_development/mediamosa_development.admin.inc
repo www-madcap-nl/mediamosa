@@ -231,10 +231,10 @@ function _mediamosa_development_get_var_setup($uri, $method) {
 
   // In core?
   if (module_exists('mediamosa')) {
-    $uri_definition = mediamosa_rest::get_uri_definition($uri, $method);
+    $rest_call = mediamosa_rest::get_uri_definition($uri, $method);
 
-    if (!empty($uri_definition)) {
-      return array_merge(mediamosa_rest::get_var_setup($uri_definition), array(mediamosa_rest_call_dummy::TITLE => $uri_definition[mediamosa_rest_call_dummy::TITLE], mediamosa_rest_call_dummy::DESCRIPTION => $uri_definition[mediamosa_rest_call_dummy::DESCRIPTION]));
+    if (!empty($rest_call)) {
+      return array_merge(mediamosa_rest::get_var_setup($rest_call), array(mediamosa_rest_call_dummy::TITLE => $rest_call[mediamosa_rest_call_dummy::TITLE], mediamosa_rest_call_dummy::DESCRIPTION => $rest_call[mediamosa_rest_call_dummy::DESCRIPTION]));
     }
   }
 

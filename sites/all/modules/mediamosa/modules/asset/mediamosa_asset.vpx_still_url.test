@@ -98,8 +98,8 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
     );
 
     // Now master slave from app1 to app2.
-    $this->setMediafileAut($mediafile_id_1, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2));
-    $this->setMediafileAut($mediafile_id_2, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2));
+    $this->setMediafileAcl($mediafile_id_1, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2));
+    $this->setMediafileAcl($mediafile_id_2, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2));
 
     $this->toEga_2();
 

@@ -31,7 +31,7 @@
 abstract class mediamosa_rest_call {
   // ------------------------------------------------------------------ Members.
   // Original REST call arguments.
-  public $a_rest_args = array();
+  protected $rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
@@ -45,10 +45,7 @@ abstract class mediamosa_rest_call {
     'isprivate' => '',
   );
 
-  // Setup default app.
-  private $calling_app = array(mediamosa_app_db::APP_ID => 0, mediamosa_app_db::TIMEZONE => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL);
-
-  // ------------------------------------------------------------------ Constants.
+  // ---------------------------------------------------------------- Constants.
   const ID = 'uri_id';
   const URI = 'uri';
   const URI_PARAMS = 'uri_params';
@@ -56,23 +53,8 @@ abstract class mediamosa_rest_call {
   const URI_WILDCHAR = 'wildchar';
   const MATCH_URI_FUNCTION = 'match_uri';
 
-  const RESPONSE_TYPE = 'response_type';
-  // Types.
-  const RESPONSE_TYPE_XML = 'xml';
-  const RESPONSE_TYPE_ATOM = 'atom';
-  const RESPONSE_TYPE_RSS = 'rss';
-  const RESPONSE_TYPE_JSON = 'json';
-  const RESPONSE_TYPE_PLAIN = 'plain';
-  const RESPONSE_TYPE_XML_OEMBED = 'xml_oembed';
-  const RESPONSE_TYPE_JSON_OEMBED = 'json_oembed';
-
-  // Download files.
-  const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';
-
-  // Download stills.
-  const RESPONSE_TYPE_STILL = 'image/jpeg';
-
-  //const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa'; // future.
+  // Response type, see mediamosa_response for list.
+  const RESPONSE_TYPE = 'content_type';
 
   const METHOD = 'method';
   const METHOD_GET = 'GET';
@@ -277,6 +259,7 @@ abstract class mediamosa_rest_call {
         throw new mediamosa_exception_error_authentication_failure();
       }
     }
+
     // Check if we are external and allowed.
     if ($this->is_external() && !($this->{self::ACCESS} & self::ACCESS_EXTERNAL)) {
       throw new mediamosa_exception_error_authentication_failure();
@@ -286,9 +269,11 @@ abstract class mediamosa_rest_call {
     $this->do_app_authorized();
 
     // If we are internal and no app_id is set, we have access to all.
-    // Just to be sure the first app_id is 0, so single app_id code will return empty.
+    // Just to be sure the first app_id is 0, so single app_id code will return
+    // empty.
     if ($this->is_internal() && !isset($_GET['app_id'])) {
       $_GET['app_id'] = array(0) + array(mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID));
+      mediamosa::set_environment_app_ids($_GET['app_id']);
     }
 
     // Get the var setup.
@@ -297,8 +282,8 @@ abstract class mediamosa_rest_call {
     // Assert when failed.
     assert($var_setup);
 
-    // @todo: make this an setting per app or else we are not 1.x compatible. Default should be FALSE.
-    $this->check_for_unspecified = FALSE;// turned off for now
+    // Was a good idea at the time, lets turn it off now.
+    $this->check_for_unspecified = FALSE;
 
     // Check rest args.
     $var_setup = $this->process_rest_args($var_setup);
@@ -306,12 +291,6 @@ abstract class mediamosa_rest_call {
 
     // Validate reg args.
     $this->validate_rest_args($var_setup);
-
-    // Setup the calling application.
-    $this->setup_calling_app($var_setup);
-
-    // Set the rest call timezone.
-    mediamosa::set_restcall_timezone($this->calling_app[mediamosa_app_db::TIMEZONE]);
 
     // Convert input datetime to UTC based on the app timezone.
     $this->appdate2utc_rest_args($var_setup);
@@ -351,6 +330,7 @@ abstract class mediamosa_rest_call {
    */
   protected function get_var_setup_default(array $var_setup, $app_id_required = TRUE) {
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
+      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
       self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
       self::VAR_IS_REQUIRED => ($app_id_required ? ($this->is_internal() ? self::VAR_IS_REQUIRED_NO : self::VAR_IS_REQUIRED_YES) : self::VAR_IS_REQUIRED_NO),
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -451,15 +431,17 @@ abstract class mediamosa_rest_call {
    * @param integer $app_id
    */
   protected function app_active_version($app_id) {
-    $app = mediamosa_app::get_by_appid($app_id);
+    $app_versions = &drupal_static(__FUNCTION__, array());
 
-    // Is at latest version?
-    if ($app[mediamosa_app_db::ACTIVE_VERSION] == mediamosa_version::LATEST || empty($app[mediamosa_app_db::ACTIVE_VERSION])) {
-      return FALSE;
+    if (!isset($app_versions[$app_id])) {
+      $app = mediamosa_app::get_by_appid($app_id);
+
+      // Is at latest version?
+      $app_versions[$app_id] = ($app[mediamosa_app_db::ACTIVE_VERSION] == mediamosa_version::LATEST || empty($app[mediamosa_app_db::ACTIVE_VERSION])) ? FALSE : mediamosa_version::get_version($app[mediamosa_app_db::ACTIVE_VERSION]);
     }
 
     // Return in array.
-    return mediamosa_version::get_version($app[mediamosa_app_db::ACTIVE_VERSION]);
+    return $app_versions[$app_id];
   }
 
   /**
@@ -525,20 +507,20 @@ abstract class mediamosa_rest_call {
    * @return mixed
    */
   public function get_param_value($param, $translate_bool = FALSE, array $a_translate_bool = array(FALSE => 'FALSE', TRUE => 'TRUE')) {
-    if (!isset($this->a_rest_args[$param])) {
+    if (!isset($this->rest_args[$param])) {
       throw new mediamosa_exception_program_error('Calling get_param with non-existing param (@param), should not happen; define it in allowed vars for your rest call class "@restcall"', array('@param' => $param, '@restcall' => $this->{self::CLASS_NAME}));
     }
 
-    if (!$this->a_rest_args[$param][self::PARAM_VALIDATED]) {
+    if (!$this->rest_args[$param][self::PARAM_VALIDATED]) {
       // Save the original value.
-      $this->a_rest_args[$param][self::PARAM_VALUE_ORG] = (empty($this->a_rest_args[$param][self::PARAM_VALUE]) ? NULL : $this->a_rest_args[$param][self::PARAM_VALUE]);
+      $this->rest_args[$param][self::PARAM_VALUE_ORG] = (empty($this->rest_args[$param][self::PARAM_VALUE]) ? NULL : $this->rest_args[$param][self::PARAM_VALUE]);
 
-      $a_param = $this->a_rest_args[$param];
-      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, isset($a_param[self::PARAM_RANGE_START]) ? $a_param[self::PARAM_RANGE_START] : NULL, isset($a_param[self::PARAM_RANGE_END]) ? $a_param[self::PARAM_RANGE_END] : NULL, isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
-      $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
+      $a_param = $this->rest_args[$param];
+      $this->rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, isset($a_param[self::PARAM_RANGE_START]) ? $a_param[self::PARAM_RANGE_START] : NULL, isset($a_param[self::PARAM_RANGE_END]) ? $a_param[self::PARAM_RANGE_END] : NULL, isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
+      $this->rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
 
-    return ($translate_bool && is_bool($this->a_rest_args[$param][self::PARAM_VALUE])) ? $a_translate_bool[$this->a_rest_args[$param][self::PARAM_VALUE]] : $this->a_rest_args[$param][self::PARAM_VALUE];
+    return ($translate_bool && is_bool($this->rest_args[$param][self::PARAM_VALUE])) ? $a_translate_bool[$this->rest_args[$param][self::PARAM_VALUE]] : $this->rest_args[$param][self::PARAM_VALUE];
   }
 
   /**
@@ -549,11 +531,11 @@ abstract class mediamosa_rest_call {
    * @return mixed
    */
   public function get_param_value_org($param) {
-    if (!isset($this->a_rest_args[$param])) {
+    if (!isset($this->rest_args[$param])) {
       throw new mediamosa_exception_program_error('Calling get_param with non-existing param (@param), should not happen; define it in allowed vars for your rest call class "@restcall"', array('@param' => $param, '@restcall' => $this->{self::CLASS_NAME}));
     }
 
-    return $this->a_rest_args[$param][self::PARAM_VALUE_ORG];
+    return $this->rest_args[$param][self::PARAM_VALUE_ORG];
   }
 
   /**
@@ -564,19 +546,19 @@ abstract class mediamosa_rest_call {
    * @param mixed $value
    */
   public function set_param_value($param, $value) {
-    if (isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
+    if (isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
       throw new mediamosa_exception_program_error('Do not set param @param, its read only.', array('@param' => $param));
     }
 
     // Set value.
-    $this->a_rest_args[$param][self::PARAM_VALUE] = $value;
+    $this->rest_args[$param][self::PARAM_VALUE] = $value;
 
     // Expected to ok, we cant validate anyway.
-    $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
+    $this->rest_args[$param][self::PARAM_VALIDATED] = TRUE;
 
     // Ok not set by default or URI/POST/GET.
-    $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE;
-    $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
+    $this->rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE;
+    $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
   }
 
   /**
@@ -595,7 +577,7 @@ abstract class mediamosa_rest_call {
    * @return boolean
    */
   public function isset_param($param) {
-    return isset($this->a_rest_args[$param]) && isset($this->a_rest_args[$param][self::PARAM_VALUE]);
+    return isset($this->rest_args[$param]) && isset($this->rest_args[$param][self::PARAM_VALUE]);
   }
 
   /**
@@ -607,7 +589,7 @@ abstract class mediamosa_rest_call {
    * @return boolean
    */
   public function isset_given_param($param) {
-    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN];
+    return isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_ISSET_GIVEN];
   }
 
   /**
@@ -617,7 +599,7 @@ abstract class mediamosa_rest_call {
    * @return boolean
    */
   public function isset_default_param($param) {
-    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT];
+    return isset($this->rest_args[$param]) && $this->rest_args[$param][self::PARAM_ISSET_DEFAULT];
   }
 
   /**
@@ -631,23 +613,24 @@ abstract class mediamosa_rest_call {
       return TRUE; // Not set, is empty.
     }
 
-    if (is_string($this->a_rest_args[$param][self::PARAM_VALUE])) {
-      return trim($this->a_rest_args[$param][self::PARAM_VALUE]) == '';
+    if (is_string($this->rest_args[$param][self::PARAM_VALUE])) {
+      return trim($this->rest_args[$param][self::PARAM_VALUE]) == '';
     }
 
-    if (is_int($this->a_rest_args[$param][self::PARAM_VALUE])) {
-      return $this->a_rest_args[$param][self::PARAM_VALUE] == 0;
+    if (is_int($this->rest_args[$param][self::PARAM_VALUE])) {
+      return $this->rest_args[$param][self::PARAM_VALUE] == 0;
     }
 
     // Default empty behavour.
-    return empty($this->a_rest_args[$param][self::PARAM_VALUE]);
+    return empty($this->rest_args[$param][self::PARAM_VALUE]);
   }
 
   /**
    * Returns the app_ids param value (always array).
    */
   public function get_param_value_app() {
-    return $this->get_param_value(self::APP_ID);
+    // Get the environment setting.
+    return mediamosa::get_environment_setting(mediamosa::ENV_APP_IDS);
   }
 
   /**
@@ -730,13 +713,6 @@ abstract class mediamosa_rest_call {
   public function is_method_put() {
     return $this->get_method() == self::METHOD_PUT;
   }
-
-  /**
-   * Returns the timezone of the REST call.
-   */
-  public function get_timezone() {
-    return $this->calling_app[mediamosa_app_db::TIMEZONE];
-  }
   // ---------------------------------------------------- Functions (protected).
   /**
    * Process the supplied parameters.
@@ -746,13 +722,13 @@ abstract class mediamosa_rest_call {
   protected function process_rest_args(array $var_setup) {
 
     // Clear it.
-    $this->a_rest_args = array();
+    $this->rest_args = array();
     foreach ($this->{self::URI_PARAMS} as $key_uri => $value_uri) {
       if (!isset($var_setup[self::VARS][$key_uri]) && $this->check_for_unspecified) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_uri));
       }
 
-      $this->a_rest_args[$key_uri][self::PARAM_VALUE] = $value_uri;
+      $this->rest_args[$key_uri][self::PARAM_VALUE] = $value_uri;
     }
 
     /**
@@ -761,7 +737,7 @@ abstract class mediamosa_rest_call {
      * simpletest) inside a page.
      */
     if (isset($GLOBALS['mediamosa_params'])) {
-      // Fill the $a_rest_args array with rest input.
+      // Fill the $rest_args array with rest input.
       foreach ($GLOBALS['mediamosa_params'] as $key_params => $value_params) {
         if ($key_params == 'q') {
           continue; // Ignore the q variable.
@@ -772,19 +748,19 @@ abstract class mediamosa_rest_call {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_params));
         }
 
-        if (isset($this->a_rest_args[$key_params])) {
-          if ($this->a_rest_args[$key_params][self::PARAM_VALUE] != $value_params) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_params, '@value1' => $this->a_rest_args[$key_params][self::PARAM_VALUE], '@value2' => print_r($value_params, TRUE)));
+        if (isset($this->rest_args[$key_params])) {
+          if ($this->rest_args[$key_params][self::PARAM_VALUE] != $value_params) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_params, '@value1' => $this->rest_args[$key_params][self::PARAM_VALUE], '@value2' => print_r($value_params, TRUE)));
           }
 
           continue;
         }
 
-        $this->a_rest_args[$key_params][self::PARAM_VALUE] = $value_params;
+        $this->rest_args[$key_params][self::PARAM_VALUE] = $value_params;
       }
     }
     else {
-      // Fill the $a_rest_args array with rest input.
+      // Fill the $rest_args array with rest input.
       foreach ($_GET as $key_get => $value_get) {
         if ($key_get == 'q') {
           continue; // Ignore the q variable.
@@ -795,15 +771,15 @@ abstract class mediamosa_rest_call {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
         }
 
-        if (isset($this->a_rest_args[$key_get])) {
-          if ($this->a_rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => print_r($value_get, TRUE)));
+        if (isset($this->rest_args[$key_get])) {
+          if ($this->rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->rest_args[$key_get][self::PARAM_VALUE], '@value2' => print_r($value_get, TRUE)));
           }
 
           continue;
         }
 
-        $this->a_rest_args[$key_get][self::PARAM_VALUE] = $value_get;
+        $this->rest_args[$key_get][self::PARAM_VALUE] = $value_get;
       }
 
       // Now do the same to _POST.
@@ -812,15 +788,15 @@ abstract class mediamosa_rest_call {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
         }
 
-        if (isset($this->a_rest_args[$key_post])) {
-          if ($this->a_rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => print_r($value_post, TRUE)));
+        if (isset($this->rest_args[$key_post])) {
+          if ($this->rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->rest_args[$key_post][self::PARAM_VALUE], '@value2' => print_r($value_post, TRUE)));
           }
 
           continue;
         }
 
-        $this->a_rest_args[$key_post][self::PARAM_VALUE] = $value_post;
+        $this->rest_args[$key_post][self::PARAM_VALUE] = $value_post;
       }
     }
 
@@ -828,25 +804,25 @@ abstract class mediamosa_rest_call {
     foreach ($var_setup[self::VARS] as $param => &$a_var) {
 
       // Set by default off.
-      $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
-      $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
+      $this->rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
+      $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
 
       // Make sure its set, even when empty.
-      if (!isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = NULL; // Default NULL.
+      if (!isset($this->rest_args[$param][self::PARAM_VALUE])) {
+        $this->rest_args[$param][self::PARAM_VALUE] = NULL; // Default NULL.
 
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
-          $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
-          $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = TRUE; // Set by default.
+          $this->rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
+          $this->rest_args[$param][self::PARAM_ISSET_DEFAULT] = TRUE; // Set by default.
         }
       }
       else {
-        $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // Was found in GET/POST/URI.
+        $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // Was found in GET/POST/URI.
       }
 
       // Set not validated so we can validate when we need it.
-      $this->a_rest_args[$param][self::PARAM_VALIDATED] = FALSE;
+      $this->rest_args[$param][self::PARAM_VALIDATED] = FALSE;
 
       // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
       // If REST has tried set then we throw exception.
@@ -855,24 +831,24 @@ abstract class mediamosa_rest_call {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $a_var[self::PARAM_TYPE]));
         }
 
-        $this->a_rest_args[$param][self::PARAM_VALUE] = isset($a_var[self::VAR_DEFAULT_VALUE]) ? $a_var[self::VAR_DEFAULT_VALUE] : NULL;
+        $this->rest_args[$param][self::PARAM_VALUE] = isset($a_var[self::VAR_DEFAULT_VALUE]) ? $a_var[self::VAR_DEFAULT_VALUE] : NULL;
       }
 
       // array check.
-      if (isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
+      if (isset($this->rest_args[$param][self::PARAM_VALUE])) {
         if (!isset($a_var[self::VAR_IS_ARRAY]) || $a_var[self::VAR_IS_ARRAY] == self::VAR_IS_ARRAY_NO) {
-          if (is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
-            $this->a_rest_args[$param][self::PARAM_VALUE] = reset($this->a_rest_args[$param][self::PARAM_VALUE]);
+          if (is_array($this->rest_args[$param][self::PARAM_VALUE])) {
+            $this->rest_args[$param][self::PARAM_VALUE] = reset($this->rest_args[$param][self::PARAM_VALUE]);
           }
         }
-        elseif (!is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
-          $this->a_rest_args[$param][self::PARAM_VALUE] = $this->a_rest_args[$param][self::PARAM_VALUE] == '' ? array() : array($this->a_rest_args[$param][self::PARAM_VALUE]);
+        elseif (!is_array($this->rest_args[$param][self::PARAM_VALUE])) {
+          $this->rest_args[$param][self::PARAM_VALUE] = $this->rest_args[$param][self::PARAM_VALUE] == '' ? array() : array($this->rest_args[$param][self::PARAM_VALUE]);
         }
       }
 
       // Check if we need to trim it.
       if (isset($a_var[self::VAR_TRIM_VALUE]) && $a_var[self::VAR_TRIM_VALUE] == self::VAR_TRIM_VALUE_YES) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = trim($this->a_rest_args[$param][self::PARAM_VALUE]);
+        $this->rest_args[$param][self::PARAM_VALUE] = trim($this->rest_args[$param][self::PARAM_VALUE]);
       }
 
       // Set default value for is_required.
@@ -887,26 +863,26 @@ abstract class mediamosa_rest_call {
 
       // If override is set, override the GET/POST/URI input.
       if (isset($a_var[self::VAR_OVERRIDE_VALUE])) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_OVERRIDE_VALUE];
-        $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // lets simulate input from GET/POST/URI.
+        $this->rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_OVERRIDE_VALUE];
+        $this->rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // lets simulate input from GET/POST/URI.
       }
 
       // Copy Read only status.
-      $this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] = $a_var[self::VAR_IS_READ_ONLY];
+      $this->rest_args[$param][self::PARAM_IS_READ_ONLY] = $a_var[self::VAR_IS_READ_ONLY];
 
       // Is required.
-      $this->a_rest_args[$param][self::PARAM_IS_REQUIRED] = $a_var[self::VAR_IS_REQUIRED];
+      $this->rest_args[$param][self::PARAM_IS_REQUIRED] = $a_var[self::VAR_IS_REQUIRED];
 
       // if param is specified with range and the param is provided during rest
       // call or had defaulft value, then check range.
-      $this->a_rest_args[$param][self::PARAM_RANGE_START] = isset($a_var[self::VAR_RANGE_START]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_START] : NULL;
-      $this->a_rest_args[$param][self::PARAM_RANGE_END] = isset($a_var[self::VAR_RANGE_END]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_END] : NULL;
+      $this->rest_args[$param][self::PARAM_RANGE_START] = isset($a_var[self::VAR_RANGE_START]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_START] : NULL;
+      $this->rest_args[$param][self::PARAM_RANGE_END] = isset($a_var[self::VAR_RANGE_END]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_END] : NULL;
 
       // Type.
-      $this->a_rest_args[$param][self::PARAM_TYPE] = $a_var[self::VAR_TYPE];
+      $this->rest_args[$param][self::PARAM_TYPE] = $a_var[self::VAR_TYPE];
 
       // Allowed values;
-      $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES] = isset($a_var[self::VAR_ALLOWED_VALUES]) ? $a_var[self::VAR_ALLOWED_VALUES] : array();
+      $this->rest_args[$param][self::PARAM_ALLOWED_VALUES] = isset($a_var[self::VAR_ALLOWED_VALUES]) ? $a_var[self::VAR_ALLOWED_VALUES] : array();
     }
 
     return $var_setup;
@@ -918,67 +894,40 @@ abstract class mediamosa_rest_call {
    * @param array $var_setup
    */
   protected function validate_rest_args(array $var_setup) {
-    foreach ($this->a_rest_args as $name => $param) {
+    foreach ($this->rest_args as $name => $param) {
       if (empty($param[self::PARAM_TYPE])) {
-        unset($this->a_rest_args[$name]); // set but not in var_set_up, unset.
+        unset($this->rest_args[$name]); // set but not in var_set_up, unset.
         continue;
       }
 
       // Save the original value.
-      $this->a_rest_args[$name][self::PARAM_VALUE_ORG] = (empty($this->a_rest_args[$name][self::PARAM_VALUE]) ? NULL : $this->a_rest_args[$name][self::PARAM_VALUE]);
+      $this->rest_args[$name][self::PARAM_VALUE_ORG] = (empty($this->rest_args[$name][self::PARAM_VALUE]) ? NULL : $this->rest_args[$name][self::PARAM_VALUE]);
 
       // If allowed values is set and default value is set and the given value
       // is not allowed and the value is empty, then value will get the default
       // value.
-      if (!empty($this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]) &&
-          empty($this->a_rest_args[$name][self::PARAM_VALUE]) &&
+      if (!empty($this->rest_args[$name][self::PARAM_ALLOWED_VALUES]) &&
+          empty($this->rest_args[$name][self::PARAM_VALUE]) &&
           isset($var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE]) &&
-          !in_array($this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES])
+          !in_array($this->rest_args[$name][self::PARAM_VALUE], $this->rest_args[$name][self::PARAM_ALLOWED_VALUES])
         ) {
 
         // No value was given, but there is a default, then set the default.
-        $this->a_rest_args[$name][self::PARAM_VALUE] = $var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE];
+        $this->rest_args[$name][self::PARAM_VALUE] = $var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE];
 
         // The default value must be allowed.
-        assert(in_array($this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]));
+        assert(in_array($this->rest_args[$name][self::PARAM_VALUE], $this->rest_args[$name][self::PARAM_ALLOWED_VALUES]));
       }
 
       // check() will throw when requirements are not met.
-      $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_type::check($name, $param[self::PARAM_TYPE], $this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$name][self::PARAM_RANGE_START], $this->a_rest_args[$name][self::PARAM_RANGE_END], !empty($this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES] : NULL);
-      $this->a_rest_args[$name][self::PARAM_VALIDATED] = TRUE;
+      $this->rest_args[$name][self::PARAM_VALUE] = mediamosa_type::check($name, $param[self::PARAM_TYPE], $this->rest_args[$name][self::PARAM_VALUE], $this->rest_args[$name][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->rest_args[$name][self::PARAM_RANGE_START], $this->rest_args[$name][self::PARAM_RANGE_END], !empty($this->rest_args[$name][self::PARAM_ALLOWED_VALUES]) ? $this->rest_args[$name][self::PARAM_ALLOWED_VALUES] : NULL);
+      $this->rest_args[$name][self::PARAM_VALIDATED] = TRUE;
 
-      // If the type == mediamosa_sdk::TYPE_RESPONSE_TYPE and not empty, then
+      // If the type == mediamosa_sdk::RESPONSE_TYPE and not empty, then
       // change the response type of the REST call.
-      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_RESPONSE_TYPE && !empty($this->a_rest_args[$name][self::PARAM_VALUE])) {
-        $this->{self::RESPONSE_TYPE} = $this->a_rest_args[$name][self::PARAM_VALUE];
+      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_RESPONSE_TYPE && !empty($this->rest_args[$name][self::PARAM_VALUE])) {
+        $this->{self::RESPONSE_TYPE} = $this->rest_args[$name][self::PARAM_VALUE];
       }
-    }
-  }
-
-  /**
-   * Setup the application that is calling this REST call. This can be NULL
-   * because an REST call can be called without application (like externals).
-   *
-   * In case of no application we revert to Anonymous application (application
-   * that has no app_id and default settings.
-   *
-   * @param array $var_setup
-   */
-  protected function setup_calling_app(array $var_setup) {
-    $app_ids = $this->isset_param(self::APP_ID) ? $this->get_param_value_app() : 0;
-    $app_id = is_array($app_ids) ? reset($app_ids) : $app_ids;
-
-    // No app means internal APP, defaults to UTC.
-    $this->calling_app = array(mediamosa_app_db::APP_ID => 0, mediamosa_app_db::TIMEZONE => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL);
-
-    // Get the app.
-    if (!empty($app_id)) {
-      $app = mediamosa_app::get_by_appid($app_id);
-      if (empty($app)) {
-        throw new mediamosa_exception(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $app_id));
-      }
-
-      $this->calling_app = array(mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID], mediamosa_app_db::TIMEZONE => $app[mediamosa_app_db::TIMEZONE]);
     }
   }
 
@@ -989,10 +938,13 @@ abstract class mediamosa_rest_call {
    */
   protected function appdate2utc_rest_args(array $var_setup) {
 
+    // Get the timezone.
+    $timezone = mediamosa::get_environment_timezone();
+
     // Now loop through input and convert to UTC. Specify TYPE_DATETIME_UTC when you need to skip conversion.
-    foreach ($this->a_rest_args as $name => $param) {
-      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_DATETIME && $this->isset_param($name) && !empty($this->a_rest_args[$name][self::PARAM_VALUE]) && $this->a_rest_args[$name][self::PARAM_VALUE] != '0000-00-00 00:00:00') {
-        $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app[mediamosa_app_db::TIMEZONE]);
+    foreach ($this->rest_args as $name => $param) {
+      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_DATETIME && $this->isset_param($name) && !empty($this->rest_args[$name][self::PARAM_VALUE]) && $this->rest_args[$name][self::PARAM_VALUE] != '0000-00-00 00:00:00') {
+        $this->rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $timezone);
       }
     }
   }

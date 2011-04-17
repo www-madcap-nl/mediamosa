@@ -26,13 +26,13 @@
 
  /**
   * @file
-  * aut name class.
+  * acl name class.
   */
 
 class mediamosa_acl_name {
   // ------------------------------------------------------------------ Static Function.
   /**
-   * Get the aut name entry
+   * Get the acl name entry
    *
    * @param integer $app_id
    * @param string $acl_type
@@ -57,7 +57,7 @@ class mediamosa_acl_name {
   }
 
   /**
-   * Remove aut name row(s).
+   * Remove acl name row(s).
    *
    * @param integer $app_id
    * @param string $acl_type

@@ -30,6 +30,10 @@
   */
 
 class mediamosa_asset_supplement {
+
+  // The maximum size of the supplement in Kb.
+  const DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE = 256;
+
   /**
    * Get the asset supplement.
    *

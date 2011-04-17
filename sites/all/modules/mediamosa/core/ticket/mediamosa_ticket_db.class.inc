@@ -40,7 +40,7 @@ class mediamosa_ticket_db {
   const TICKET_TYPE = 'ticket_type';
   const TICKET_TYPE_PLAY = 'PLAY';
   const TICKET_TYPE_DOWNLOAD = 'DOWNLOAD';
-  const TICKET_TYPE_STILL = 'STILL';
+  const TICKET_TYPE_THUMBNAIL = 'THUMBNAIL';
   const TICKET_TYPE_UPLOAD = 'UPLOAD';
   const ISSUED = 'issued';
   const APP_ID = 'app_id';

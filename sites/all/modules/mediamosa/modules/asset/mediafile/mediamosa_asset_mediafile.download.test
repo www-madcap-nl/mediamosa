@@ -81,7 +81,7 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
     // Ask mediafile download url.
     $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
     $a_xml = $this->play_proxy('mediamosa_asset_mediafile.download.test', 82, $asset_id, $a_parameters);
@@ -116,7 +116,7 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
 
     // Ask mediafile download url.
     $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
     $a_xml = $this->play_proxy('mediamosa_asset_mediafile.download.test', 121, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED));

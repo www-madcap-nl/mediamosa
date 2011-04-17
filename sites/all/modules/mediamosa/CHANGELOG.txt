@@ -46,6 +46,19 @@ MediaMosa 3.0 (build 1666)
 - Image style development (See ticket #371).
 - Granted flag not correct with non-original master slaved mediafiles fix. 
   (See ticket #432).
+- Watermarking stills (See ticket #82).
+- oEmbed provider functionality (See ticket #413).
+  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
+- oAuth development (See ticket #10).
+- Owner check for /asset/$asset_id/joblist (See ticket #356).
+- Retranscode improvement (See ticket #467).
+- ACL problem when using replace fix (See ticket #503).
+- The asset detail view page jobs are can now be sorted by ID.
+- Fixed speed problem when returning larger than 64k metadata. Problem was in
+  the way invalid chars are fixed in output.
+- Rewrote the usage of simplexml to domdocument for output.
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.
@@ -81,24 +94,9 @@ Other changes (not ticket related).
 - All files that contain class(es) are now renamed to include '.class.inc'.
 - Filenames or directories with 'still' usage, are renamed to 'thumbnail'.
 - AUT modules and files are now renamed to ACL.
-
-MediaMosa 2.4 (unreleased) (build 1609)
----------------------------------------
-- Watermarking stills (See ticket #82).
-- oEmbed provider functionality (See ticket #413).
-  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
-- Added support for OpenApi. OpenApi has its own core module and needs to be
-  turned on to be used. (See ticket #428).
-- oAuth development (See ticket #10).
-- Owner check for /asset/$asset_id/joblist (See ticket #356).
-- Retranscode improvement (See ticket #467).
-- ACL problem when using replace fix (See ticket #503).
-- The asset detail view page jobs are can now be sorted by ID.
-- Fixed speed problem when returning larger than 64k metadata. Problem was in
-  the way invalid chars are fixed in output.
-- Rewrote the usage of simplexml to domdocument for output.
-
-Other changes (not ticket related).
+- Some settings in configure have been merged into the section 'Miscellaneous'.
+- To view and edit the Internal password you now need to have the role 
+  'Administer MediaMosa'.
 - Better REST call match: match_uri() static function was introduced, and check 
   wildchar numbers.
 - Added to node_load for mediamosa_app, that timezone is always set to default 
@@ -116,13 +114,11 @@ Other changes (not ticket related).
 - Streaming ticket table clean up development (See ticket #103).
 - Simpletest REST call development.
 - Work around for still_type = scene, if there isn't video duration.
-- Add install hook for mediamosa_app_dbus to migrate to new DBUS 
-  module.
+- Add install hook for mediamosa_app_dbus to migrate to new DBUS module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
 - Frametime for still upload development.
 - Lua script fix for the new ffmpeg version.
-
 
 MediaMosa 2.3.9 (build 1379)
 ----------------------------

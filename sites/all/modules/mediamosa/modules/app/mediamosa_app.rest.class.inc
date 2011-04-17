@@ -45,26 +45,25 @@ class mediamosa_rest_call_app_get_default_transcode_profile extends mediamosa_re
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Get the app.
-    $a_app = mediamosa_app::get_by_appid($app_id);
+    $app = mediamosa_app::get_by_appid($app_id);
 
     // Add to response.
-    if ($a_app) {
-      $o_mediamosa->add_item(array(mediamosa_app_db::PREVIEW_PROFILE_ID => $a_app[mediamosa_app_db::PREVIEW_PROFILE_ID]));
+    if ($app) {
+      $mediamosa->add_item(array(mediamosa_app_db::PREVIEW_PROFILE_ID => $app[mediamosa_app_db::PREVIEW_PROFILE_ID]));
     }
   }
 }
@@ -89,9 +88,8 @@ class mediamosa_rest_call_app_get_quota extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value(self::APP_ID);
-
-    // Get the 1st app.
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
     // Get the app.
@@ -110,5 +108,4 @@ class mediamosa_rest_call_app_get_quota extends mediamosa_rest_call {
       ));
     }
   }
-
 }

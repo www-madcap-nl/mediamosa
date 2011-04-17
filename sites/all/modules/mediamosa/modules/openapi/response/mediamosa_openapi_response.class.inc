@@ -27,10 +27,11 @@
 
 /**
  * @file
- * The mediamosa_response class is used to output the response in XML or Plain format.
+ * The mediamosa_response class is used to output the response in XML or Plain
+ * format.
  */
 class mediamosa_openapi_response extends mediamosa_response {
-  // ------------------------------------------------------------------ Public Functions
+  // --------------------------------------------------------- Public Functions.
   /**
    * Dispatch the REST request execution.
    *
@@ -40,27 +41,27 @@ class mediamosa_openapi_response extends mediamosa_response {
    * @return
    *  Returns optional override on the response type (XML/JSON etc).
    */
-  protected function process_call(array $rest_call) {
+  protected function process_call() {
 
-    $response_type = parent::process_call($rest_call);
+    $this->response_type = parent::process_call($this->rest_call);
 
-    if (empty($response_type)) {
+    if (empty($this->response_type)) {
       // Default output.
-      $response_type = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE, mediamosa_rest_call::RESPONSE_TYPE_ATOM);
+      $this->response_type = variable_get(mediamosa_settings::MEDIAMOSA_OPENAPI_DEFAULT_RESPONSE_TYPE, mediamosa_response::RESPONSE_TYPE_ATOM);
 
       // Change the response type depending the HTTP header.
       if (!empty($_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT_TYPE])) {
-        $response_type = $_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT_TYPE];
+        $this->response_type = $_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT_TYPE];
       }
       elseif (!empty($_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT])) {
-        $response_type = $_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT];
+        $this->response_type = $_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_HTTP_ACCEPT];
       }
       elseif (!empty($_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_ACCEPT_TYPE])) {
-        $response_type = $_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_ACCEPT_TYPE];
+        $this->response_type = $_SERVER[mediamosa_settings::MEDIAMOSA_OPENAPI_HEADER_ACCEPT_TYPE];
       }
     }
 
-    return $response_type;
+    return $this->response_type;
   }
 
   /**

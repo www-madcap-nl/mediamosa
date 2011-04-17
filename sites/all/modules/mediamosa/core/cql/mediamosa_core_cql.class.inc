@@ -342,7 +342,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    *  Supply timezone for conversion.
    */
   protected function mediamosa_cql_str_date_2_db_date($date, $timezone = 'UTC') {
-    return parent::mediamosa_cql_str_date_2_db_date($date, mediamosa::get_restcall_timezone());
+    return parent::mediamosa_cql_str_date_2_db_date($date, mediamosa::get_environment_timezone());
   }
 
   /**

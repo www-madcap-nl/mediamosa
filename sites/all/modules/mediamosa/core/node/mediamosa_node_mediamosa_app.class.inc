@@ -52,36 +52,6 @@ class mediamosa_node_mediamosa_app {
 
     return $output;
   }
-
-  /**
-   * Return all available versions used in REST calls.
-   *
-   * @return array
-   *  All version numbers
-   */
-  static public function app_get_all_versions() {
-
-    // Find all REST calls of enabled modules.
-    $rest_calls = module_invoke_all('mediamosa_register_rest_call');
-
-    // The REST calls versions.
-    $versions = array();
-
-    // Collect all versions in the restcalls.
-    foreach ($rest_calls as $rest_call) {
-      foreach ($rest_call as $method => $rest_call_info) {
-        $versions[$rest_call_info[mediamosa_rest_call::VERSION]] = $rest_call_info[mediamosa_rest_call::VERSION];
-      }
-    }
-
-    // Must be first.
-    $versions[mediamosa_version::LATEST] = t('Latest');
-
-    // Sort on version.
-    krsort($versions);
-
-    return $versions;
-  }
 }
 
 /**
@@ -420,6 +390,14 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE, $node, mediamosa_app_db::ACTIVE_TRUE),
   );
 
+  $form['client_application'][mediamosa_app_db::ACTIVE_VERSION] = array(
+    '#type' => 'select',
+    '#title' => t('Select MediaMosa version'),
+    '#description' => t('Select the version this client application can use. If your client application can only support version 2.3 and lower, then select 2.3. This setting will override the global setting.'),
+    '#options' => mediamosa_rest::get_all_versions(),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
+  );
+
   $form['masterslave'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -480,22 +458,13 @@ function mediamosa_app_form($node, &$form_state) {
     '#description' => t('oAuth consumer secret. Required, if oAuth consumer key is given.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OAUTH_CONSUMER_SECRET, $node),
   );
-  /*
-  // This is for later development / test.
-  // See: hook_menu() of sites/all/modules/mediamosa/modules/app/oauth/mediamosa_app_oauth.module
-  if (isset($node->nid)) {
-    $form['oauth']['oauth_client'] = array(
-      '#type' => 'item',
-      '#title' => l(t('oAuth client test'), 'admin/oauth_test/' . $node->nid),
-      '#description' => t('Available oAuth client'),
-    );
 
   $tool_analyse_checkboxes = module_invoke_all('mediamosa_tool_options');
   $options = array();
   foreach ($tool_analyse_checkboxes['name'] as $tool_analyse_key => $tool_analyse_checkbox) {
     $options[$tool_analyse_checkboxes['tool'][$tool_analyse_key]] = $tool_analyse_checkbox;
   }
-   */
+
   $form['tool'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -629,14 +598,6 @@ function mediamosa_app_form($node, &$form_state) {
     '#description' => t('Transcoding profile used for previewing.'),
     '#options' => mediamosa_node_mediamosa_app::app_get_transcode_profiles(),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PREVIEW_PROFILE_ID, $node),
-  );
-
-  $form['client_application'][mediamosa_app_db::ACTIVE_VERSION] = array(
-    '#type' => 'select',
-    '#title' => t('Select active version'),
-    '#description' => t('Version of the rest calls to execute.'),
-    '#options' => mediamosa_node_mediamosa_app::app_get_all_versions(),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
 
   $form['urls'] = array(

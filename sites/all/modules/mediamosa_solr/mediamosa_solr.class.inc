@@ -73,10 +73,10 @@ class mediamosa_solr {
     $solr_query = array();
 
     // Get the slaves based on the app ids for mediafiles.
-    $slave_mediafiles = mediamosa_acl_app_master_slave::slave_get($parameters['app_ids'], mediamosa_aut::aut_TYPE_MEDIAFILE);
+    $slave_mediafiles = mediamosa_acl_app_master_slave::slave_get($parameters['app_ids'], mediamosa_acl::ACL_TYPE_MEDIAFILE);
 
     // Get the slaves based on the app ids for assets.
-    $slave_assets = array(); // Off, not stable, mediamosa_acl_app_master_slave::slave_get($a_app_ids, mediamosa_aut::aut_TYPE_ASSET);
+    $slave_assets = array(); // Off, not stable, mediamosa_acl_app_master_slave::slave_get($a_app_ids, mediamosa_acl::ACL_TYPE_ASSET);
 
     // Merge the slave app ids with my app ids.
     $app_ids_all = array_unique(array_merge($parameters['app_ids'], array_keys($slave_mediafiles), array_keys($slave_assets)));
@@ -193,7 +193,7 @@ class mediamosa_solr {
     }
 
     // AUT layer.
-    self::build_access_where($solr_query, mediamosa_aut::aut_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['acl_user_id'], $parameters['acl_group_ids'], $parameters['acl_domain'], $parameters['acl_realm'], $slave_mediafiles, FALSE, $parameters['granted']);
+    self::build_access_where($solr_query, mediamosa_acl::ACL_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['acl_user_id'], $parameters['acl_group_ids'], $parameters['acl_domain'], $parameters['acl_realm'], $slave_mediafiles, FALSE, $parameters['granted']);
 
     // Build query.
     $query = self::where($solr_query);
@@ -216,9 +216,9 @@ class mediamosa_solr {
    */
   static public function build_access_where(&$solr_query, $acl_type, $object_id, array $master_app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $granted = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
 
-    // Only supports mediamosa_aut::aut_TYPE_MEDIAFILE.
-    if ($acl_type != mediamosa_aut::aut_TYPE_MEDIAFILE) {
-      return mediamosa_aut::build_access_where($solr_query, $acl_type, $object_id, $master_app_ids, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves, $is_app_admin, $granted, $do_master_slave_null, $app_id_table_prefix);
+    // Only supports mediamosa_acl::ACL_TYPE_MEDIAFILE.
+    if ($acl_type != mediamosa_acl::ACL_TYPE_MEDIAFILE) {
+      return mediamosa_acl::build_access_where($solr_query, $acl_type, $object_id, $master_app_ids, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $slaves, $is_app_admin, $granted, $do_master_slave_null, $app_id_table_prefix);
     }
 
     if (empty($slaves)) {
@@ -363,7 +363,7 @@ class mediamosa_solr {
     }
 
     // AUT layer.
-    self::build_access_where($solr_query, mediamosa_aut::aut_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['acl_user_id'], $parameters['acl_group_ids'], $parameters['acl_domain'], $parameters['acl_realm'], array(), $parameters['is_app_admin']);
+    self::build_access_where($solr_query, mediamosa_acl::ACL_TYPE_MEDIAFILE, NULL, $parameters['app_ids'], $parameters['acl_user_id'], $parameters['acl_group_ids'], $parameters['acl_domain'], $parameters['acl_realm'], array(), $parameters['is_app_admin']);
 
     // Build query.
     $query = self::where($solr_query);

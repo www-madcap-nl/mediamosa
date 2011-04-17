@@ -93,7 +93,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $this->copy($test_video, $target);
 
     // Create ticket.
-    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD, $app_id, 'dummy');
+    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD, $app_id, 'dummy');
 
     // For cleanup.
     $ticket_symlink = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id . DIRECTORY_SEPARATOR . $filename;

@@ -44,8 +44,12 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
     $options[mediamosa_server::get_server_url($server)] = $server[mediamosa_server_db::SERVER_NAME];
   }
 
-  $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);
-  if (isset($mediamosa_jobscheduler_uri) && !isset($options[$mediamosa_jobscheduler_uri]) && !empty($mediamosa_jobscheduler_uri)) {
+  $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', '');
+  if (empty($mediamosa_jobscheduler_uri)) {
+    $mediamosa_jobscheduler_uri = ''; // Make sure its not FALSE, but ''.
+    $options[$mediamosa_jobscheduler_uri] = t('No server selected, select one!');
+  }
+  elseif (!isset($options[$mediamosa_jobscheduler_uri])) {
     $options[$mediamosa_jobscheduler_uri] = t('Current server (not enabled)');
   }
 
@@ -57,13 +61,14 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
   );
 
   if (count($options)) {
+    //ksort($options);
     $form['settings_server']['mediamosa_jobscheduler_uri'] = array(
       '#type' => 'select',
       '#title' => t('Jobscheduler server'),
       '#description' => t('Select from one of the (enabled) job process servers the server that handles the main job scheduler CRON.'),
       '#required' => TRUE,
       '#options' => $options,
-      '#default_value' => variable_get('mediamosa_jobscheduler_uri', ''),
+      '#default_value' => $mediamosa_jobscheduler_uri,
     );
   }
   else {

@@ -106,11 +106,11 @@ class mediamosa_acl_object {
   }
 
   /**
-   * Get the aut information for given asset.
+   * Get the acl information for given asset.
    */
   function get_for_asset($asset_id) {
 
-    // Collection of aut rules on asset/mediafiles.
+    // Collection of acl rules on asset/mediafiles.
     $asset_acl_info = array(
       'acl_object' => array(
         'asset' => array(), // future.

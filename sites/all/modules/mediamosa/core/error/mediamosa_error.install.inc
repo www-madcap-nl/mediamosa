@@ -31,11 +31,13 @@
 
 require_once 'mediamosa_error_db.class.inc';
 
-// Prevent loading and notices during install.
-if (class_exists('mediamosa_sdk')) {
-  require_once 'mediamosa_error.class.inc';
+// In case of update mode, we need to skip this file (else will give fatal
+// error when upgrading from 2.x to 3.x.
+if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update') {
+  return;
 }
 
+require_once 'mediamosa_error.class.inc';
 /**
  * Implements hook_install().
  */

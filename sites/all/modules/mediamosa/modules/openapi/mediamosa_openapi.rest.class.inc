@@ -281,18 +281,12 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
         // Add mediafiles.
         $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($item['asset_id'], NULL, FALSE, ($item['app_id'] == $app_id ? array() : $app_ids));
 
-        // Is app client at 1.6 ?
-        $app_active_version = $this->app_active_version($app_id);
-
-        // Show in old format?
-        $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
-
         // Now enrich the output with mediafiles.
         $show_stills = TRUE;
-        $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, FALSE, $show_stills, $old_output);
+        $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, FALSE, $show_stills);
 
         // Add streamable setting on asset.
-        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
         if (!empty($item['mediafiles']['mediafile']) && is_array($item['mediafiles']['mediafile'])) {
           $mediafile = reset($item['mediafiles']['mediafile']);
@@ -378,10 +372,10 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_rest_call::RESPONSE_TYPE_XML,
-            mediamosa_rest_call::RESPONSE_TYPE_ATOM,
-            mediamosa_rest_call::RESPONSE_TYPE_RSS,
-            mediamosa_rest_call::RESPONSE_TYPE_JSON,
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
           ),
           self::VAR_DESCRIPTION => mediamosa::t('Optional parameter to specify the response output format.'),
         ),
@@ -606,18 +600,12 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
       // Add mediafiles.
       $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($item['asset_id'], NULL, FALSE, ($item['app_id'] == $app_id ? array() : $app_ids));
 
-      // Is app client at 1.6 ?
-      $app_active_version = $this->app_active_version($app_id);
-
-      // Show in old format?
-      $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
-
       // Now enrich the output with mediafiles.
       $show_stills = TRUE;
-      $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, FALSE, $show_stills, $old_output);
+      $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, FALSE, $show_stills);
 
       // Add streamable setting on asset.
-      $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+      $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
       if (!empty($item['mediafiles']['mediafile']) && is_array($item['mediafiles']['mediafile'])) {
         $mediafile = reset($item['mediafiles']['mediafile']);
@@ -715,10 +703,10 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_rest_call::RESPONSE_TYPE_XML,
-            mediamosa_rest_call::RESPONSE_TYPE_ATOM,
-            mediamosa_rest_call::RESPONSE_TYPE_RSS,
-            mediamosa_rest_call::RESPONSE_TYPE_JSON,
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
           ),
           self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
         ),
@@ -1068,10 +1056,10 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_RESPONSE_TYPE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_rest_call::RESPONSE_TYPE_XML,
-            mediamosa_rest_call::RESPONSE_TYPE_ATOM,
-            mediamosa_rest_call::RESPONSE_TYPE_RSS,
-            mediamosa_rest_call::RESPONSE_TYPE_JSON,
+            mediamosa_response::RESPONSE_TYPE_XML,
+            mediamosa_response::RESPONSE_TYPE_ATOM,
+            mediamosa_response::RESPONSE_TYPE_RSS,
+            mediamosa_response::RESPONSE_TYPE_JSON,
           ),
           self::VAR_DESCRIPTION => mediamosa::t('The response type paramter.'),
         ),
@@ -1309,7 +1297,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
 
     // The file was sent as POST data.
     $video = 'video/';
-    $post_upload = (isset($_SERVER['CONTENT_TYPE']) && drupal_substr($_SERVER['CONTENT_TYPE'], 0, drupal_strlen($video)) == $video);
+    $post_upload = (isset($_SERVER['RESPONSE_TYPE']) && drupal_substr($_SERVER['RESPONSE_TYPE'], 0, drupal_strlen($video)) == $video);
     if ($post_upload || count($_FILES)) {
 
       // file_size depends on method used.
@@ -1360,7 +1348,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
 
       if ($post_upload) {
         // POST: file in the data.
-        $mime_type = $_SERVER['CONTENT_TYPE'];
+        $mime_type = $_SERVER['RESPONSE_TYPE'];
 
         $written_bytes = mediamosa_asset_mediafile_upload::handle_upload_post($filename);
         $response['written_bytes'] = $written_bytes;

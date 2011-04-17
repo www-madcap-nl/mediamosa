@@ -76,11 +76,12 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Webservice enabled?
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
@@ -191,11 +192,12 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Webservice enabled?
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
@@ -462,11 +464,12 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Webservice enabled?
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
@@ -512,20 +515,21 @@ class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_as
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Set the asset_id value.
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
 
     // Now get the mediafile.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     // Set the asset_id.
-    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::ASSET_ID, $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::ASSET_ID, $mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
 
     // Now fix response on still generation.
-    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL);
+    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL);
 
     // Now do play call.
     parent::do_call();
@@ -542,20 +546,20 @@ class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_
   // ------------------------------------------------------------------ Consts.
   // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
-    $a_var_setup = parent::get_var_setup();
+    $var_setup = parent::get_var_setup();
 
     // Not required now.
-    $a_var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+    $var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
 
-    $a_var_setup[self::VARS][self::RESPONSE] = array(
+    $var_setup[self::VARS][self::RESPONSE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       self::VAR_DESCRIPTION => 'The still response type.',
       self::VAR_ALLOWED_VALUES => array(
-        mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+        mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL,
       ),
-      self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL
+      self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL
     );
 
-    return $a_var_setup;
+    return $var_setup;
   }
 }

@@ -339,7 +339,7 @@ class mediamosa_job_server {
    */
   static public function waiting_job_start($job_server_job) {
 
-    // 2.x:
+    // FIXME:
     // Check if jobs module is enable has been removed.
     // Old code checked it without using the app_id. Which is unknown.
     // Think its better not to check here but to prevent new jobs from being inserted
@@ -774,6 +774,9 @@ class mediamosa_job_server {
 
     // Mime type.
     $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
+    // Get the mediafile.
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Create parameter string from the command.
     $parameter_string = '';

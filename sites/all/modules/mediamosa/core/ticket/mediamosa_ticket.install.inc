@@ -64,9 +64,9 @@ function mediamosa_ticket_schema() {
       ),
       mediamosa_ticket_db::TICKET_TYPE => array(
         'description' => 'The ticket type.',
-        'type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_STILL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_STILL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
         'default' => mediamosa_ticket_db::TICKET_TYPE_PLAY,
       ),
       mediamosa_ticket_db::ISSUED => array(

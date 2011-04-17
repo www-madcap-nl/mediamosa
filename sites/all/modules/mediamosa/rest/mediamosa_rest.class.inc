@@ -39,6 +39,36 @@ class mediamosa_rest {
 
   // ------------------------------------------------------------------ Static Functions.
   /**
+   * Return all available versions used in REST calls.
+   *
+   * @return array
+   *  All version numbers
+   */
+  static public function get_all_versions() {
+
+    // Find all REST calls of enabled modules.
+    $rest_calls = module_invoke_all('mediamosa_register_rest_call');
+
+    // The REST calls versions.
+    $versions = array();
+
+    // Collect all versions in the restcalls.
+    foreach ($rest_calls as $rest_call) {
+      foreach ($rest_call as $method => $rest_call_info) {
+        $versions[$rest_call_info[mediamosa_rest_call::VERSION]] = t('version @version', array('@version' => $rest_call_info[mediamosa_rest_call::VERSION]));
+      }
+    }
+
+    // Must be first.
+    $versions[mediamosa_version::LATEST] = t('Latest');
+
+    // Sort on version.
+    krsort($versions);
+
+    return $versions;
+  }
+
+  /**
    * Match the current URL to REST call, and return the REST call object.
    *
    * @param string $uri
@@ -182,7 +212,7 @@ class mediamosa_rest {
     $rest_call += array(
       mediamosa_rest_call::METHOD => mediamosa_rest_call::METHOD_GET,
       mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-      mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_XML,
+      mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_XML,
       mediamosa_rest_call::BEHAVE_AS_EXTERNAL => FALSE,
       mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT,
       mediamosa_rest_call::NO_USER_ABORT => in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_DELETE)) || $_SERVER['REQUEST_METHOD'] == mediamosa_rest_call::METHOD_HEAD,

@@ -320,7 +320,7 @@ class mediamosa_asset_mediafile {
             mediamosa_ticket::create_play_proxy(
               $ticket,
               NULL,
-              mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+              mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL,
               $app_id,
               $row[mediamosa_asset_mediafile_db::OWNER_ID],
               $row[mediamosa_asset_mediafile_db::ID]

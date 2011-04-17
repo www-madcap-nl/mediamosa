@@ -35,16 +35,16 @@ class MediaMosaAclMediafileVisibleTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT - Master/Slave: mediafiles are visible',
+      'name' => 'ACL - Master/Slave: mediafiles are visible',
       'description' => 'Testing AUT master/Slave: mediafiles are visible functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
 
   // Testing AUT Master/Slave: mediafiles are visible, see: ticket 232 (MediaMosa track).
-  function testAutMasterSlaveMediafileVisible() {
+  function testAclMasterSlaveMediafileVisible() {
 
     //
     // Set up Egas.
@@ -105,17 +105,17 @@ class MediaMosaAclMediafileVisibleTestCaseEga extends MediaMosaTestCaseEga {
     }
 
     //
-    // Set mediafile aut.
+    // Set mediafile acl.
     //
 
     // To first Ega.
     $this->toEga_1();
 
-    // Set mediafile aut.
+    // Set mediafile acl.
     $a_parameters = array(
       'acl_app' => $app_id_2,
     );
-    $a_xml = $this->setMediafileAut($mediafile_id[1][1][2], $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id[1][1][2], $a_parameters);
 
     // To second Ega.
     $this->toEga_2();
@@ -143,17 +143,17 @@ class MediaMosaAclMediafileVisibleTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     //
-    // Set mediafile aut. on an another mediafile
+    // Set mediafile acl. on an another mediafile
     //
 
     // To first Ega.
     $this->toEga_1();
 
-    // Set mediafile aut.
+    // Set mediafile acl.
     $a_parameters = array(
       'acl_app' => $app_id_2,
     );
-    $a_xml = $this->setMediafileAut($mediafile_id[1][1][1], $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id[1][1][1], $a_parameters);
 
     // To second Ega.
     $this->toEga_2();

@@ -27,7 +27,8 @@
 
 /**
  * @file
- * The mediamosa_response class is used to output the response in XML or Plain format.
+ * The mediamosa_response class is used to output the response in XML or Plain
+ * format.
  */
 class mediamosa_response extends mediamosa {
 
@@ -35,6 +36,21 @@ class mediamosa_response extends mediamosa {
   // Was ERRORMESSAGE_ERROR.
   const ERROR = 'error';
   const SUCCESS = 'success';
+
+  // Types.
+  const RESPONSE_TYPE_XML = 'xml';
+  const RESPONSE_TYPE_ATOM = 'atom';
+  const RESPONSE_TYPE_RSS = 'rss';
+  const RESPONSE_TYPE_JSON = 'json';
+  const RESPONSE_TYPE_PLAIN = 'plain';
+  const RESPONSE_TYPE_XML_OEMBED = 'xml_oembed';
+  const RESPONSE_TYPE_JSON_OEMBED = 'json_oembed';
+
+  // Download files.
+  const RESPONSE_TYPE_DOWNLOAD = 'download';
+
+  // Download stills.
+  const RESPONSE_TYPE_THUMBNAIL = 'thumbnail';
 
   // ------------------------------------------------------------------ Members
   // The stored response.
@@ -49,22 +65,25 @@ class mediamosa_response extends mediamosa {
   protected $request_method;
 
   // Start in miliseconds when call was made.
-  protected $f_start_time = 0;
+  protected $start_time = 0;
 
   // Content_type to use for output.
-  protected $content_type;
+  protected $response_type = mediamosa_response::RESPONSE_TYPE_XML;
+
+  // The matched REST call object.
+  protected $rest_call = NULL;
 
   // Public counters.
   public $item_count = 0;
   public $item_count_total = 0;
   public $item_offset = 0;
 
-  // ------------------------------------------------------------------ Contructor
+  // --------------------------------------------------------------- Contructor.
   public function __construct() {
     parent::__construct();
 
     // Save the time we start the rest response
-    $this->f_start_time = microtime(TRUE);
+    $this->start_time = microtime(TRUE);
 
     // Save the request URI.
     $this->request_uri = rawurldecode(mediamosa_unicode::substr(mediamosa::request_uri(), mediamosa_unicode::strlen(base_path())));
@@ -77,20 +96,18 @@ class mediamosa_response extends mediamosa {
     $this->reset();
   }
 
-  // ------------------------------------------------------------------ Public Functions
+  // --------------------------------------------------------- Public Functions.
   /**
    * Dispatch the REST request execution.
-   *
-   * @param array $rest_call
-   *  Array containing the data needed to run the REST call.
    *
    * @return
    *  Returns optional override on the response type (XML/JSON etc).
    */
-  protected function process_call(array $rest_call) {
+  protected function process_call() {
     // Now execute the call.
-    return $this->mediamosa_rest->process_call($rest_call);
+    return $this->mediamosa_rest->process_call($this->rest_call);
   }
+
   /**
    * Process possible rest call.
    */
@@ -102,7 +119,7 @@ class mediamosa_response extends mediamosa {
     }
 
     // In case of exceptions, the output will be XML.
-    $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
+    $this->response_type = mediamosa_response::RESPONSE_TYPE_XML;
 
     try {
       // Set the response handler.
@@ -112,10 +129,10 @@ class mediamosa_response extends mediamosa {
       $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
-      $rest_call = $this->mediamosa_rest->match_call();
+      $this->rest_call = $this->mediamosa_rest->match_call();
 
       // Rest call found and check if the REST and Admin interface are enabled and if we conflict with admin /user pages.
-      if (!$rest_call || mediamosa::show_drupal_login()) {
+      if (!$this->rest_call || mediamosa::show_drupal_login()) {
         // Put back previous (drupal) handler.
         if (!empty($previous_handler)) {
           set_error_handler($previous_handler, E_ALL);
@@ -131,7 +148,7 @@ class mediamosa_response extends mediamosa {
       // Allow execution to continue even if the request gets canceled.
       // This might happen if the client is waiting for response and cancels.
       // Is enabled by default for POST rest calls.
-      if ($rest_call[mediamosa_rest_call::NO_USER_ABORT]) {
+      if ($this->rest_call[mediamosa_rest_call::NO_USER_ABORT]) {
         @ignore_user_abort(TRUE);
       }
 
@@ -144,15 +161,15 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-        $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+      if (empty($this->rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+        $this->rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_response::RESPONSE_TYPE_XML;
       }
 
       // Process the call.
-      $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = $this->process_call($rest_call);
+      $this->rest_call[mediamosa_rest_call::RESPONSE_TYPE] = $this->process_call($this->rest_call);
 
       // Check the response parameter.
-      $response_type = empty($rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_rest_call::RESPONSE_TYPE_XML : $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
+      $this->response_type = empty($this->rest_call[mediamosa_rest_call::RESPONSE_TYPE]) ? mediamosa_response::RESPONSE_TYPE_XML : $this->rest_call[mediamosa_rest_call::RESPONSE_TYPE];
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.
@@ -215,70 +232,75 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
+    // Log the rest call.
+    $this->log_event_restcall();
+
     // Stop and output our content.
     // Might run any added exit functions (drupal).
-    exit($this->generate_output($response_type));
+    exit($this->generate_output());
   }
 
   /**
    * Generate output.
    */
-  public function generate_output($response_type) {
+  protected function generate_output() {
     // Make sure its set.
     $output = '';
 
     try {
-      switch ($response_type) {
-        case mediamosa_rest_call::RESPONSE_TYPE_PLAIN:
-          header('Content-Type: text/plain; charset=utf-8');
-          $output = $this->generate_plain_text();
-          break;
-
-        case mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD:
-        case mediamosa_rest_call::RESPONSE_TYPE_STILL:
-
-          if ($this->response['header']['request_result'] == self::ERROR) {
-            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-            $output = $this->response['header']['request_result_description'];
-          }
-          else {
-            $output = '';
-          }
-          break;
-
-        case mediamosa_rest_call::RESPONSE_TYPE_JSON:
-          header('Content-Type: application/json; charset=utf-8');
-          $output = $this->generate_json();
-          break;
-
-        case mediamosa_rest_call::RESPONSE_TYPE_ATOM:
-          header('Content-Type: application/atom+xml; charset=utf-8');
-          $output = $this->generate_atom();
-          break;
-
-        case mediamosa_rest_call::RESPONSE_TYPE_RSS:
-          header('Content-Type: application/rss+xml; charset=utf-8');
-          $output = $this->generate_rss();
-          break;
-
-        case mediamosa_rest_call::RESPONSE_TYPE_XML:
-        default:
+      switch ($this->response_type) {
+        case mediamosa_response::RESPONSE_TYPE_XML:
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml();
           break;
 
-        // Oembed.
+        case mediamosa_response::RESPONSE_TYPE_PLAIN:
+          header('Content-Type: text/plain; charset=utf-8');
+          $output = $this->generate_plain_text();
+          break;
 
-        case mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED:
+        case mediamosa_response::RESPONSE_TYPE_DOWNLOAD:
+        case mediamosa_response::RESPONSE_TYPE_THUMBNAIL:
+          // Output already handled by REST call.
+          $output = '';
+
+          // Any error during REST call we'll handle here.
+          if ($this->response['header']['request_result'] == self::ERROR) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            $output = $this->response['header']['request_result_description'];
+          }
+          break;
+
+        case mediamosa_response::RESPONSE_TYPE_JSON:
+          header('Content-Type: application/json; charset=utf-8');
+          $output = $this->generate_json();
+          break;
+
+        case mediamosa_response::RESPONSE_TYPE_ATOM:
+          header('Content-Type: application/atom+xml; charset=utf-8');
+          $output = $this->generate_atom();
+          break;
+
+        case mediamosa_response::RESPONSE_TYPE_RSS:
+          header('Content-Type: application/rss+xml; charset=utf-8');
+          $output = $this->generate_rss();
+          break;
+
+        // Oembed.
+        case mediamosa_response::RESPONSE_TYPE_JSON_OEMBED:
           header('Content-Type: application/json; charset=utf-8');
           $output = $this->generate_json_oembed();
           break;
 
-        case mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED:
-        default:
+        case mediamosa_response::RESPONSE_TYPE_XML_OEMBED:
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml_oembed();
           break;
+
+        default:
+          // Not implemented
+          header($_SERVER['SERVER_PROTOCOL'] . ' 501 Not Implemented');
+          exit(strtr("Unknown response type @response_type used!", array('@response_type' => $this->response_type)));
       }
     }
     catch (Exception $e) {
@@ -392,7 +414,7 @@ class mediamosa_response extends mediamosa {
    * @return integer
    */
   public function get_processed_time() {
-    return round(microtime(TRUE) - $this->f_start_time, 4);
+    return round(microtime(TRUE) - $this->start_time, 4);
   }
 
   /**
@@ -426,11 +448,7 @@ class mediamosa_response extends mediamosa {
    * Log the REST call.
    *
    */
-  function log_event_restcall() {
-    if (mediamosa_debug::is_debug()) {
-      $this->response['header']['request_query_count'] = mediamosa_db::query_count();
-    }
-
+  public function log_event_restcall() {
     if ($this->is_log_rest()) {
       mediamosa_statistics::log_event_restcall(
         '[' . $this->request_method . '] ' . $this->request_uri,
@@ -440,12 +458,13 @@ class mediamosa_response extends mediamosa {
     }
   }
 
+  // ------------------------------------------------------ Protected functions.
   /**
    * Generate output as plain text.
    *
    * @return string
    */
-  public function generate_plain_text() {
+  protected function generate_plain_text() {
     $output = '';
 
     for ($x = 1; $x <= $this->item_count; $x++) {
@@ -846,13 +865,14 @@ class mediamosa_response extends mediamosa {
       self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
     }
 
+    if (mediamosa_debug::is_debug()) {
+      $this->response['header']['request_query_count'] = mediamosa_db::query_count();
+    }
+
     // Sort the header.
     ksort($this->response['header']);
 
-    // Log the rest call.
-    $this->log_event_restcall();
-
-    // Respone element.
+    // Response element.
     $dom_element_response = $dom_document->createElement('response');
     $dom_document->appendChild($dom_element_response);
 

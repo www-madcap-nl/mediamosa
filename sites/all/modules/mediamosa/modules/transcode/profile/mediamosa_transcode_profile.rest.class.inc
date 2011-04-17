@@ -55,10 +55,9 @@ class mediamosa_rest_call_transcode_profile_search extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Get the listing.
     $a_transcode_profiles = mediamosa_transcode_profile::search($app_id);
@@ -117,10 +116,10 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
     $profile_id = $this->get_param_value(self::PROFILE_ID);
 
     // Get the listing.
@@ -212,11 +211,11 @@ class mediamosa_rest_call_transcode_profile_create extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Hotfix: Only global app can set default.
     // FIXME: is this ok? 2.x: added is_app_admin here.
@@ -331,11 +330,11 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Hotfix: Only global app can set default.
     // FIXME: is this ok? 2.x: added is_app_admin here.
@@ -389,13 +388,13 @@ class mediamosa_rest_call_transcode_profile_delete extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
-
-    //
+    // Get Profile ID.
     $profile_id = $this->get_param_value(self::PROFILE_ID);
 
     // Delete it.

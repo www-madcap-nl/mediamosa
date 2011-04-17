@@ -55,9 +55,9 @@ class mediamosa_db {
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
-      $f_start_time = microtime(TRUE);
+      $start_time = microtime(TRUE);
       $result = call_user_func_array('db_delete', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
+      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
       return $result;
     }
 
@@ -160,7 +160,7 @@ class mediamosa_db {
 
     // Loggin on.
     if (mediamosa::is_db_logging()) {
-      $f_start_time = microtime(TRUE);
+      $start_time = microtime(TRUE);
     }
 
     // Do the query.
@@ -168,7 +168,7 @@ class mediamosa_db {
 
     // Loggin on.
     if (mediamosa::is_db_logging()) {
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
+      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
     }
 
     return $result;
@@ -297,9 +297,9 @@ class mediamosa_db {
     );
 
     if (mediamosa::is_db_logging()) {
-      $f_start_time = microtime(TRUE);
+      $start_time = microtime(TRUE);
       $result = call_user_func_array('db_select', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -320,9 +320,9 @@ class mediamosa_db {
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
-      $f_start_time = microtime(TRUE);
+      $start_time = microtime(TRUE);
       $result = call_user_func_array('db_insert', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -356,9 +356,9 @@ class mediamosa_db {
     $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
-      $f_start_time = microtime(TRUE);
+      $start_time = microtime(TRUE);
       $result = call_user_func_array('db_update', $args);
-      mediamosa_watchdog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      mediamosa_watchdog::log_db(round(microtime(TRUE) - $start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 

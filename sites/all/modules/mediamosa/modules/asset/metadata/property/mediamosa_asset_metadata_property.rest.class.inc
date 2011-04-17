@@ -83,7 +83,9 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // limit, offset.
     $limit = $this->get_param_value(self::LIMIT);
@@ -101,7 +103,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 
     // Get all properties.
     $properties = mediamosa_asset_metadata_property::property_list(
-      $a_app_ids,
+      $app_ids,
       $include_default_definitions,
       $name,
       $offset,
@@ -174,7 +176,9 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Name of the new property.
     $name = $this->get_param_value(self::NAME);
@@ -186,7 +190,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     $is_hidden = $this->get_param_value(self::IS_HIDDEN);
 
     // Create the property. Any problems will throw exception.
-    $property_id = mediamosa_asset_metadata_property::property_create($a_app_ids, $name, $type, 0, 0, $is_hidden);
+    $property_id = mediamosa_asset_metadata_property::property_create($app_ids, $name, $type, 0, 0, $is_hidden);
 
     // Get the property.
     $property = mediamosa_asset_metadata_property::property_get_row($property_id);
@@ -237,8 +241,9 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    // The app_id(s).
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Name of the new property.
     $name = $this->get_param_value(self::NAME);
@@ -247,7 +252,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
     $delete = $this->get_param_value(self::DELETE);
 
     // Create the property. Any problems will throw exception.
-    mediamosa_asset_metadata_property::property_delete($a_app_ids, $name, $delete);
+    mediamosa_asset_metadata_property::property_delete($app_ids, $name, $delete);
 
     // If we get here, it was successful. We have no output, but we are ok.
     $mediamosa->set_result_okay();
@@ -292,11 +297,9 @@ class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_res
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    // The app_id(s).
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-
-    // The App ID.
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Range.
     $limit = $this->get_param_value_limit();

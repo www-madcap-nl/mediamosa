@@ -103,13 +103,13 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The response type.',
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_METAFILE,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_URI
           ),
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_URI
         ),
         self::ACL_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
@@ -193,7 +193,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $profile_id = $this->get_param_value_global(self::PROFILE_ID);
 
     // Is reponse is set or response type is still then mediafile_id is not required.
-    if (isset($profile_id) || $response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
+    if (isset($profile_id) || $response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
       $a_var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
     }
 
@@ -218,7 +218,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     // FIXME: hack, fixed again by checking if response was not given.
     if ($this->is_internal() && !$this->isset_given_param(self::RESPONSE)) {
-      $this->set_param_value(self::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL);
+      $this->set_param_value(self::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL);
     }
 
     $user_id = $this->get_param_value(self::USER_ID);
@@ -247,7 +247,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       }
     }
 
-    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && !$mediafile_id && $this->isset_given_param(self::TAG)) {
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL && !$mediafile_id && $this->isset_given_param(self::TAG)) {
       $mediafile_id = mediamosa_asset_mediafile_play_proxy::get_mediafile_id_on_tag($asset_id, $tag);
 
       if (!$mediafile_id) {
@@ -256,7 +256,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
 
     // Still response does not need mediafile_id.
-    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && !$mediafile_id) {
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL && !$mediafile_id) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::MEDIAFILE_ID, '@type' => mediamosa_sdk::TYPE_MEDIAFILE_ID));
     }
 
@@ -311,13 +311,13 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     // Create ticket ID.
     $ticket = mediamosa_db::uuid($app_id);
 
-    if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
+    if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
       $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
     }
 
     // If response type is still, we get all information of all stills with all details.
     $a_stills = array();
-    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
+    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
 

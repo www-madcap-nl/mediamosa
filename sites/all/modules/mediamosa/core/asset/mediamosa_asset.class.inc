@@ -871,7 +871,7 @@ class mediamosa_asset {
                 }
                 else {
                   $ticket = mediamosa_db::uuid($app_id);
-                  $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $acl_user_id, $still_id);
+                  $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL, $app_id, $acl_user_id, $still_id);
 
                   if ($ticket_id) {
                     // Create still response.

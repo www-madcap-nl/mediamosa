@@ -69,7 +69,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id_2
       )
     );
-    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+    $this->setMediafileAcl($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
 
     // Other should not work either.
     $this->toEga_2();
@@ -85,7 +85,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id
       )
     );
-    $this->setMediafileAut($mediafile_id_2, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+    $this->setMediafileAcl($mediafile_id_2, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
 
     $this->toEga_1();
 
@@ -98,7 +98,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id_2
       )
     );
-    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile');
+    $this->setMediafileAcl($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile');
 
     // Other still should not work either.
     $this->toEga_2();
@@ -114,7 +114,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id
       )
     );
-    $this->setMediafileAut($mediafile_id_2, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+    $this->setMediafileAcl($mediafile_id_2, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
 
     $this->toEga_1();
 
@@ -127,7 +127,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id_2
       )
     );
-    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
+    $this->setMediafileAcl($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array('acl_app' => array($app_id_2 => mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED)));
   }
 
   // Simple check that result of '/transcode/profile/default' is the same as deprecated call 'preview_profile_id'.

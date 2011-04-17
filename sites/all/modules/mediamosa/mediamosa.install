@@ -29,7 +29,6 @@
  * Main core installer.
  */
 
-
 // Node types.
 require_once 'core/node/mediamosa_node.class.inc';
 
@@ -2223,7 +2222,7 @@ function mediamosa_update_7105() {
   }
 }
 
-/*
+/**
  * Install mediamosa_tool_mapping table.
  * Create the tool mapping node type.
  */
@@ -2248,6 +2247,8 @@ function mediamosa_update_7106() {
     node_type_save($tool_mapping_node_type);
   }
   // Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
   registry_rebuild();
   cache_clear_all();
 }
@@ -2614,7 +2615,7 @@ function mediamosa_update_7115() {
   // Reset the update for status page, else the frontpage will be screwed.
   variable_del('mediamosa_status_last_time');
 
-  return 'New 3.0 theme is enabled. The status page might be corrupt, this will automaticly fix itself within one minute.';
+  return 'New 3.0 theme is enabled. The status page (home page) might be corrupt, this will automaticly fix itself within 10 minutes.';
 }
 
 /**
@@ -2645,7 +2646,7 @@ function mediamosa_update_7117() {
       ->fields(array(
         'name' => 'ERRORCODE_CREATING_DERIVATIVE',
         'message' => "Unable creating derivative from image with style: @style, path: @path",
-        'code' => 1157, //mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
+        'code' => 1157, // mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
       ))
     ->execute();
   }
@@ -3051,14 +3052,14 @@ function mediamosa_update_7118() {
 }
 
 /**
- * Remove AUT registration in Drupal. Module is no longer used.
+ * Remove AUT registration in Drupal. Module is renamed to ACL.
  */
 function mediamosa_update_7119() {
   // Remove from system.
   db_query("DELETE FROM {system} WHERE name = 'mediamosa_aut'");
 
   // From registry.
-  db_query("DELETE FROM {registry} WHERE name LIKE 'mediamosa\_aut%'");
+  db_query("DELETE FROM {registry} WHERE name LIKE 'mediamosa\\_aut%'");
 
   // Rename the tables.
   if (db_table_exists('mediamosa_aut_app_master_slave')) {
@@ -3074,6 +3075,24 @@ function mediamosa_update_7119() {
     db_rename_table('mediamosa_aut_object', 'mediamosa_acl_object');
   }
 
+  db_query("ALTER TABLE {mediamosa_acl_app_master_slave} CHANGE COLUMN aut_object_id acl_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_app_master_slave} CHANGE COLUMN aut_object_type acl_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_id acl_group_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_name acl_group_name varchar(128) NOT NULL DEFAULT '' COMMENT 'The group name.'");
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_type acl_group_type enum('REALM','DOMAIN') NOT NULL DEFAULT 'REALM' COMMENT 'The type of group.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_name_id acl_name_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_group_id acl_group_id int(10) unsigned DEFAULT NULL COMMENT 'The optional group ID if name is part of group.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_name acl_name varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the entity.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_prefix acl_prefix varchar(128) DEFAULT NULL COMMENT 'The optional prefix of the entity, only used with REALM type.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_type acl_type enum('DOMAIN','REALM','USER','USER_GROUP') NOT NULL DEFAULT 'DOMAIN' COMMENT 'The type of name entity.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_object_id acl_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_object_type acl_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_id acl_id int(10) unsigned NOT NULL COMMENT 'The entity ID, links to acl_name or acl_group.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_type acl_type enum('NAME','GROUP') DEFAULT NULL COMMENT 'The type of entity, links to acl_name or acl_group.'");
+
   db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_ALREADY_EXISTS' WHERE name = 'ERRORCODE_AUT_GROUP_ALREADY_EXISTS'");
   db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_GROUP_NOT_FOUND'");
   db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_NAME_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_NAME_NOT_FOUND'");
@@ -3083,4 +3102,19 @@ function mediamosa_update_7119() {
 
   return 'The AUT module has been removed in 3.0 and is now called ACL. Old module has been removed successfully.';
 }
-// TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
+
+/**
+ * Change comment on field in mediamosa_tool_params.
+ */
+function mediamosa_update_7120() {
+  db_query("ALTER TABLE {mediamosa_tool_params} CHANGE COLUMN type_parameter type_parameter enum('SELECT','CHECKBOX') NOT NULL DEFAULT 'SELECT' COMMENT 'The type of the parameter.'");
+
+  // Renaming still to thumbnail, remove exisiting upload still tickets.
+  db_query("DELETE FROM {mediamosa_ticket} WHERE ticket_type = 'STILL'");
+  try {
+    db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN ticket_type ticket_type enum('PLAY','DOWNLOAD','THUMBNAIL','UPLOAD') NOT NULL DEFAULT 'PLAY' COMMENT 'The ticket type.'");
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+}

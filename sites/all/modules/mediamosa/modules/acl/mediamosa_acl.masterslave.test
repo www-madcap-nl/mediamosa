@@ -26,7 +26,7 @@
 
 /**
   * @file
-  * Unittests for aut/ACL.
+  * Unittests for ACL.
   */
 class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
@@ -35,16 +35,16 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT - Master-Slave',
+      'name' => 'ACL - Master-Slave',
       'description' => 'Testing the AUT module, master slave, previously known as ACL.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
   // Remake of test #856
-  function testAut_MasterSlave() {
+  function testAcl_MasterSlave() {
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
     $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
 
@@ -141,7 +141,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Set rights for 'johndoe'
     $this->toEga_1();
-    $this->setMediafileAut($mediafile_id_1, array('acl_user' => array('johndoe')));
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user' => array('johndoe')));
 
     // All with 'aap' in title with owner
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
@@ -157,7 +157,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Now only for domain @surfnet.nl and user johndoe
     $this->toEga_1();
-    $this->addMediafileAut($mediafile_id_1, array('acl_domain' => array('surfnet.nl')));
+    $this->addMediafileAcl($mediafile_id_1, array('acl_domain' => array('surfnet.nl')));
 
     // All with 'aap' in title with 'johndoe'
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe');
@@ -172,7 +172,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'notjohndoe', FALSE, 'surfnet.nl');
 
     // App master slave for SIMPLETEST_APP_ID2 and remove existing.
-    $this->setMediafileAut($mediafile_id_1, array('acl_app' => $app_id_2));
+    $this->setMediafileAcl($mediafile_id_1, array('acl_app' => $app_id_2));
 
     // All with 'aap' in title master
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
@@ -185,7 +185,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Set rights for 'johndoe'
     $this->toEga_1();
-    $this->setMediafileAut($mediafile_id_1, array('acl_user' => 'johndoe'));
+    $this->setMediafileAcl($mediafile_id_1, array('acl_user' => 'johndoe'));
 
     // All with 'aap' in title with owner
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
@@ -201,7 +201,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Now only for domain @surfnet.nl and user johndoe
     $this->toEga_1();
-    $this->addMediafileAut($mediafile_id_1, array('acl_domain' => array('surfnet.nl')));
+    $this->addMediafileAcl($mediafile_id_1, array('acl_domain' => array('surfnet.nl')));
 
     // All with 'aap' in title with 'johndoe'
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), 'johndoe');
@@ -217,7 +217,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // App master slave for app 2
     $this->toEga_1();
-    $this->setMediafileAut($mediafile_id_1, array('acl_app' => $app_id_2));
+    $this->setMediafileAcl($mediafile_id_1, array('acl_app' => $app_id_2));
 
     // All with 'aap' in title master
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE), array(), self::SIMPLETEST_USER_ID);
@@ -227,14 +227,14 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Remove all rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id_1);
-    $this->deleteMediafileAut($mediafile_id_3);
-    $this->deleteMediafileAut($mediafile_id_4);
+    $this->deleteMediafileAcl($mediafile_id_1);
+    $this->deleteMediafileAcl($mediafile_id_3);
+    $this->deleteMediafileAcl($mediafile_id_4);
 
     $this->toEga_2();
-    $this->deleteMediafileAut($mediafile_id_2);
-    $this->deleteMediafileAut($mediafile_id_5);
-    $this->deleteMediafileAut($mediafile_id_6);
+    $this->deleteMediafileAcl($mediafile_id_2);
+    $this->deleteMediafileAcl($mediafile_id_5);
+    $this->deleteMediafileAcl($mediafile_id_6);
 
     // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
     $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
@@ -250,7 +250,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // App master slave for SIMPLETEST_APP_ID2 (9998) slave of SIMPLETEST_APP_ID3 (9997) so mediafile 2 is accessable through 3 (9997)
     $this->toEga_2();
-    $this->setMediafileAut($mediafile_id_2, array('acl_domain' => array('surfnet.nl'), 'acl_app' => array($app_id_1)));
+    $this->setMediafileAcl($mediafile_id_2, array('acl_domain' => array('surfnet.nl'), 'acl_app' => array($app_id_1)));
 
     // Granted = TRUE (return, even when not access to).
 
@@ -278,7 +278,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // App master slave for SIMPLETEST_APP_ID2
     $this->toEga_2();
-    $this->setMediafileAut($mediafile_id_5, array('acl_app' => array($app_id_1)));
+    $this->setMediafileAcl($mediafile_id_5, array('acl_app' => array($app_id_1)));
 
     // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_2 => FALSE, $asset_id_3 => TRUE, $asset_id_5 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE, TRUE);
@@ -292,7 +292,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Tests.
   // Test if not original is masterslaved.
   /*
-  function testAut_MasterSlave_Non_Original() {
+  function testAcl_MasterSlave_Non_Original() {
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID]; // VIP MASTER (SIMPLETEST_APP_ID3).
     $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID]; // NIBG SLAVE (SIMPLETEST_APP_ID2).
 
@@ -364,7 +364,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // App master slave for app 2
     $this->toEga_1();
-    $this->setMediafileAut($mediafile_id_not_org, array('acl_app' => $app_id_2));
+    $this->setMediafileAcl($mediafile_id_not_org, array('acl_app' => $app_id_2));
 
     // All with 'aap' in title.
     $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE));
@@ -374,7 +374,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // Remove all rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id_not_org);
+    $this->deleteMediafileAcl($mediafile_id_not_org);
 
     // With GRANTED = TRUE
 
@@ -386,7 +386,7 @@ class MediaMosaAclMasterSlaveTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // App master slave for app 2
     $this->toEga_1();
-    $this->setMediafileAut($mediafile_id_not_org, array('acl_app' => $app_id_2));
+    $this->setMediafileAcl($mediafile_id_not_org, array('acl_app' => $app_id_2));
 
     // All with 'aap' in title.
     $this->cql_do_search_test_assets_1('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);

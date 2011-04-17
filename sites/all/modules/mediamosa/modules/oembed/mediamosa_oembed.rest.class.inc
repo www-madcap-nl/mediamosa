@@ -109,11 +109,11 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
   protected function process_rest_args(array $var_setup) {
     parent::process_rest_args($var_setup);
 
-    $format = ($this->get_param_value(self::FORMAT) == self::FORMAT_JSON ? mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED : mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED);
+    $format = ($this->get_param_value(self::FORMAT) == self::FORMAT_JSON ? mediamosa_response::RESPONSE_TYPE_JSON_OEMBED : mediamosa_response::RESPONSE_TYPE_XML_OEMBED);
 
-    $this->a_rest_args[self::FORMAT][self::PARAM_ALLOWED_VALUES] = array(
-      mediamosa_rest_call::RESPONSE_TYPE_JSON_OEMBED,
-      mediamosa_rest_call::RESPONSE_TYPE_XML_OEMBED,
+    $this->rest_args[self::FORMAT][self::PARAM_ALLOWED_VALUES] = array(
+      mediamosa_response::RESPONSE_TYPE_JSON_OEMBED,
+      mediamosa_response::RESPONSE_TYPE_XML_OEMBED,
     );
 
     // Change the input value to the response value.
@@ -216,7 +216,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $type = self::TYPE_VIDEO;
 
       // Variables.
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT;
+      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT;
 
       // Check if allowed to play.
       mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
@@ -266,7 +266,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $type = self::TYPE_PHOTO;
 
       // Variables.
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL;
+      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL;
 
       // Now get the still.
       $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);

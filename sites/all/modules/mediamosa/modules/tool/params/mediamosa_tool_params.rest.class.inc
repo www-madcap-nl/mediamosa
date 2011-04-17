@@ -52,8 +52,9 @@ class mediamosa_rest_call_tool_params_search extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     // Get the listing.
     $a_transcode_mappings = mediamosa_tool_params::search();

@@ -37,7 +37,7 @@ class mediamosa_ticket {
    */
   const TICKET_TYPE_PLAY = 'PLAY';
   const TICKET_TYPE_DOWNLOAD = 'DOWNLOAD';
-  const TICKET_TYPE_STILL = 'STILL';
+  const TICKET_TYPE_THUMBNAIL = 'STILL';
   const TICKET_TYPE_UPLOAD = 'UPLOAD';
 
   const TICKET_PATH = 'ticket/';
@@ -160,7 +160,7 @@ class mediamosa_ticket {
    * @param array $a_mediafile_ext
    *  Is mediafile array with mediafile_metadata array.
    * @param string $response_type
-   *  See mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_*
+   *  See mediamosa_asset_mediafile_play_proxy::RESPONSE_*
    * @param integer $app_id
    *  Application ID.
    * @param string $user_id
@@ -172,10 +172,10 @@ class mediamosa_ticket {
 
     // Not set? Set default.
     if (!isset($response_type)) {
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     }
 
-    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
+    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
       // Find default or at least one still.
       if (!$still_id) {
         // Find default still and make sure its ok.
@@ -200,14 +200,14 @@ class mediamosa_ticket {
 
     // Based on type, set the parameters.
     switch ($response_type) {
-      case mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL:
-        $ticket_type = self::TICKET_TYPE_STILL;
+      case mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL:
+        $ticket_type = self::TICKET_TYPE_THUMBNAIL;
         $ticket_target = self::still_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
         $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION;
         $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;
         break;
 
-      case mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD:
+      case mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD:
         $ticket_type = self::TICKET_TYPE_DOWNLOAD;
         $ticket_target = self::download_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($a_mediafile_ext[mediamosa_asset_mediafile_db::ID]);
         $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id;
@@ -261,7 +261,7 @@ class mediamosa_ticket {
     }
 
     // Get the mediafile for ticket.
-    $mediafile_id = ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && $still_id ? $still_id : (isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : ''));
+    $mediafile_id = ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL && $still_id ? $still_id : (isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : ''));
 
     // Insert Ticket.
     self::create($app_id, $ticket_type, $user_id, $mediafile_id, $ticket_id);
@@ -421,7 +421,7 @@ class mediamosa_ticket {
       array(
         '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
         '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
-        ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_STILL,
+        ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL,
         '#issued' => mediamosa_ticket_db::ISSUED,
         ':now' => $db_time_now,
         '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_STILL,
@@ -466,7 +466,7 @@ class mediamosa_ticket {
         $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_PLAY;
         break;
 
-      case mediamosa_ticket_db::TICKET_TYPE_STILL:
+      case mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL:
         $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_UPLOAD;
         break;
 

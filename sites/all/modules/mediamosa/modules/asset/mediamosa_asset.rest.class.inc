@@ -551,13 +551,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       }
     }
     else {
-      // App_id.
-      $app_id = reset($app_ids);
-
-      // Get app version.
-      $app_active_version = $this->app_active_version($app_id);
-
       $add_has_streamable_mediafiles = TRUE;
+
       $items = mediamosa_asset::asset_collect(
         $asset_ids['asset_ids'],
         $app_ids,
@@ -569,7 +564,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         $this->get_param_value(self::IS_APP_ADMIN),
         $this->get_param_value(self::SHOW_STILLS),
         $this->get_param_value(self::SHOW_COLLECTIONS),
-        TRUE,
+        $add_has_streamable_mediafiles,
         $view_hidden_metadata
       );
 
@@ -829,9 +824,10 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Hotfix, we dont provide this, we always return the asset, so always supply the granted flag
     $granted = TRUE;
 
+    // Asset must exits.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id), NULL, array(), FALSE);
 
-    // Fix app_id
+    // Fix app_id.
     if (in_array($asset['app_id'], $app_ids)) {
       $app_id = $asset['app_id'];
     }
@@ -843,7 +839,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     mediamosa_asset::is_unappropriate($asset_id, $app_ids, $acl_user_id, $is_app_admin);
 
     // Is app client at 1.6 ?
-    $app_active_version = $this->app_active_version($app_id);
+    $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_ACTIVE_VERSION);
 
     // Collect.
     $add_has_streamable_mediafiles = FALSE;
@@ -858,7 +854,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
       $is_app_admin,
       $show_stills,
       $show_collections,
-      FALSE,
+      $add_has_streamable_mediafiles,
       $view_hidden_metadata
     );
 
@@ -866,7 +862,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
     // Show in old format? Yes, if the app client < 1.6.
-    $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+    $old_output = $env_active_version !== FALSE && ($env_active_version[mediamosa_version::MAJOR] == 1 && $env_active_version[mediamosa_version::MINOR] < 6);
 
     // Now enrich the output with mediafiles.
     $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
@@ -992,7 +988,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_sdk::TYPE_ASSET_ID));
       }
 
-      $cql[] = 'asset_id=="' . $asset_id . '"';
+      $cql[] = 'asset_id=="^' . $asset_id . '^"';
     }
 
     // Create the CQL.
@@ -1054,10 +1050,10 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       $app_id = reset($app_ids);
 
       // Get app version.
-      $app_active_version = $this->app_active_version($app_id);
+      $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_ACTIVE_VERSION);
 
       // Show in old format? Yes, if the app client < 1.6.
-      $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+      $old_output = $env_active_version !== FALSE && ($env_active_version[mediamosa_version::MAJOR] == 1 && $env_active_version[mediamosa_version::MINOR] < 6);
 
       // Collect.
       $add_has_streamable_mediafiles = FALSE;
@@ -1072,7 +1068,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         $is_app_admin,
         $show_stills,
         $show_collections,
-        FALSE,
+        $add_has_streamable_mediafiles,
         $view_hidden_metadata
       );
 
@@ -1089,11 +1085,11 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         // Add streamable setting on asset.
         $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
-        // Add to output.
-        $mediamosa->add_item($item);
-
         // Increase viewed.
         mediamosa_asset::asset_viewed($asset_id);
+
+        // Add to output.
+        $mediamosa->add_item($item);
       }
     }
   }

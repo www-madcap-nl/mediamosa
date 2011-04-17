@@ -34,11 +34,12 @@ class mediamosa_asset_mediafile_play_proxy {
   /*
    * Response types
    */
-  const RESPONSE_TYPE_URI = 'plain';
-  const RESPONSE_TYPE_STILL = 'still';
-  const RESPONSE_TYPE_METAFILE = 'metafile';
-  const RESPONSE_TYPE_OBJECT = 'object';
-  const RESPONSE_TYPE_DOWNLOAD = 'download';
+  const RESPONSE_URI = 'plain';
+  const RESPONSE_STILL = 'still'; // 2.x comp.
+  const RESPONSE_THUMBNAIL = 'still';
+  const RESPONSE_METAFILE = 'metafile';
+  const RESPONSE_OBJECT = 'object';
+  const RESPONSE_DOWNLOAD = 'download';
 
   // Params in URI replacements.
   const PARAM_URI_TICKET = '{TICKET}';
@@ -72,7 +73,7 @@ class mediamosa_asset_mediafile_play_proxy {
   static public function get_media_server($response_type, array $mediafile_ext = array()) {
 
     switch ($response_type) {
-      case self::RESPONSE_TYPE_STILL:
+      case self::RESPONSE_THUMBNAIL:
         return mediamosa_db::db_query(
           "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
@@ -86,7 +87,7 @@ class mediamosa_asset_mediafile_play_proxy {
           )
         )->fetchField();
 
-      case self::RESPONSE_TYPE_DOWNLOAD:
+      case self::RESPONSE_DOWNLOAD:
         return mediamosa_db::db_query(
           "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
@@ -241,7 +242,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param integer $app_id
    */
   static public function create_response_still($ticket, $app_id) {
-    return self::create_response(self::RESPONSE_TYPE_STILL, $app_id, $ticket);
+    return self::create_response(self::RESPONSE_THUMBNAIL, $app_id, $ticket);
   }
 
   /**
@@ -300,7 +301,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * 1.x: _play_proxy_create_response
    *
    * @param string $response_type
-   *  See RESPONSE_TYPE_*.
+   *  See RESPONSE_*.
    * @param integer $app_id
    *  Application ID.
    * @param string $ticket
@@ -354,7 +355,7 @@ class mediamosa_asset_mediafile_play_proxy {
     }
 
     // Replace {TICKET} with app_id / ticket.
-    if ($response_type != self::RESPONSE_TYPE_STILL) {
+    if ($response_type != self::RESPONSE_THUMBNAIL) {
       $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
     }
 
@@ -371,7 +372,7 @@ class mediamosa_asset_mediafile_play_proxy {
     $output = '';
 
     switch ($response_type) {
-      case self::RESPONSE_TYPE_METAFILE:
+      case self::RESPONSE_METAFILE:
 
         switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_MP4:
@@ -498,7 +499,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case self::RESPONSE_TYPE_URI:
+      case self::RESPONSE_URI:
         switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_FLV:
             $output = str_replace(self::PARAM_URI_SCRIPT, 'StroboScope.php?file=', $streaming_server_ticket_uri);
@@ -510,7 +511,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case self::RESPONSE_TYPE_DOWNLOAD:
+      case self::RESPONSE_DOWNLOAD:
         if (!$is_app_admin) {
           if (isset($mediafile_ext['is_downloadable']) && !mediamosa_lib::boolstr2bool($mediafile_ext['is_downloadable'])) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED);
@@ -528,7 +529,7 @@ class mediamosa_asset_mediafile_play_proxy {
         $output = $streaming_server_uri . '/' . rawurlencode($mediafile_ext['filename']);
         break;
 
-      case self::RESPONSE_TYPE_OBJECT:
+      case self::RESPONSE_OBJECT:
         $video_size = self::calc_video_size(
           isset($mediafile_ext['metadata']['width']) ? $mediafile_ext['metadata']['width'] : 0,
           isset($mediafile_ext['metadata']['height']) ? $mediafile_ext['metadata']['height'] : 0,
@@ -675,7 +676,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case self::RESPONSE_TYPE_STILL:
+      case self::RESPONSE_THUMBNAIL:
         $output = $streaming_server_uri;
         break;
     }

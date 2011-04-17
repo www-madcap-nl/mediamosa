@@ -30,9 +30,10 @@
  *
  *
  * Notes;
- * Drupal functions are mapped to this class as statics. This is done to prevent to much
- * core dependency on drupal and change behavor (if required). Exceptions are the db_*
- * (database) functions which are statics in the mediamosa_db class.
+ * Drupal functions are mapped to this class as statics. This is done to prevent
+ * to much core dependency on drupal and change behavor (if required).
+ * Exceptions are the db_* (database) functions which are statics in the
+ * mediamosa_db class.
  *
  */
 
@@ -48,21 +49,37 @@ class mediamosa {
   // Stores last error that went through error_handler.
   static private $last_php_error = NULL;
 
-  // ------------------------------------------------------------------ Constructor.
+  // Environment variables.
+  const ENV_APP_IDS = 'app_ids';
+  const ENV_APP_ID = 'app_id';
+  const ENV_TIMEZONE = 'timezone';
+  const ENV_ACTIVE_VERSION = 'active_version';
+
+  // Setup REST environment.
+  static protected $environment = array();
+
+  // -------------------------------------------------------------- Constructor.
   function __construct() {
     // Checks before we do anything.
     $this->prechecks();
+
+    // Setup environment.
+    $this->setup_environment();
   }
 
-  // ------------------------------------------------------------------ Public Functions.
+  // --------------------------------------------------------- Public Functions.
   /**
    * Do basic checks on settings
    * will throw mediamosa_exception when checks are not met.
    */
   public function prechecks() {
     global $multibyte;
+
     if ($multibyte != UNICODE_MULTIBYTE) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_PRECHECK_FAILED, array('@message' => 'unicode multibyte is not enabled'));
+      throw new mediamosa_exception_error(
+        mediamosa_error::ERRORCODE_PRECHECK_FAILED,
+        array('@message' => 'unicode multibyte is not enabled')
+      );
     }
   }
 
@@ -76,17 +93,52 @@ class mediamosa {
     return trim(implode('/', arg()), '/');
   }
 
+  // ------------------------------------------------------ Protected Functions.
+  /**
+   * Set up environment based on the input app_id(s).
+   */
+  protected function setup_environment() {
+    // Because the REST interface is not up, we are going to retrieve the
+    // app_id value.
+    $app_ids = mediamosa_rest_call::get_param_value_global(mediamosa_rest_call::APP_ID);
+    if (empty($app_ids)) {
+      $app_ids = array(0);
+    }
+    elseif (!is_array($app_ids)) {
+      $app_ids = array($app_ids);
+    }
+
+    // Get the first app_id.
+    $app_id = reset($app_ids);
+
+    // Set up.
+    self::$environment[self::ENV_APP_IDS] = $app_ids;
+    self::$environment[self::ENV_APP_ID] = $app_id;
+    self::$environment[self::ENV_TIMEZONE] = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
+    $active_version = mediamosa_version::LATEST;
+
+    // Get the app. If the app_id == 0 then we use the global app default.
+    if (!empty($app_id)) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (!empty($app)) {
+        // Copy what we need.
+        self::$environment[self::ENV_TIMEZONE] = empty($app[mediamosa_app_db::TIMEZONE]) ? mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE : $app[mediamosa_app_db::TIMEZONE];
+        $active_version = empty($app[mediamosa_app_db::ACTIVE_VERSION]) ? mediamosa_version::LATEST : $app[mediamosa_app_db::ACTIVE_VERSION];
+      }
+    }
+
+    // Set the active version array.
+    self::$environment[self::ENV_ACTIVE_VERSION] = mediamosa_version::get_version($active_version == mediamosa_version::LATEST ? mediamosa_version::MEDIAMOSA_VERSION : $active_version);
+  }
+
+  // --------------------------------------------------------- Static Functions.
   // Return the request_uri var, which can be /rest/?foo=foo
   static public function request_uri() {
     return request_uri(); // To Drupal mapped.
   }
 
-  // ------------------------------------------------------------------ Protected Functions.
-
-  // ------------------------------------------------------------------ Static Functions.
   /**
    * Retrieve the main response object.
-   * Must overridden in any child class.
    *
    * @return object
    *  The core object.
@@ -111,7 +163,8 @@ class mediamosa {
         $mediamosa_response = reset($responses);
       }
       else {
-        $mediamosa_response = new mediamosa_response();
+        // For now we create v3.
+        $mediamosa_response = new mediamosa_response_v3();
       }
     }
 
@@ -119,30 +172,45 @@ class mediamosa {
   }
 
   /**
-   * Returns the timezone of the current session. Is by default Europe/Amsterdam.
-   * Is set when REST call is run and the application timezone is used.
+   * Retrieve the current timezone of REST environment.
    */
-  static public function get_restcall_timezone($timezone = NULL) {
-    static $timezone_static = NULL;
-
-    if (isset($timezone)) {
-      $timezone_static = $timezone;
-    }
-
-    if (empty($timezone_static)) {
-      return mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE; // 'Europe/Amsterdam'
-    }
-
-    return $timezone_static;
+  static public function get_environment() {
+    return self::$environment;
   }
 
   /**
-   * Set the current timezone for this session.
+   * Retrieve supplied environment setting.
    *
-   * @param unknown_type $timezone
+   * @param string $name
    */
-  static public function set_restcall_timezone($timezone) {
-    mediamosa::get_restcall_timezone($timezone);
+  static public function get_environment_setting($name) {
+    assert(isset(self::$environment[$name]));
+    return self::$environment[$name];
+  }
+
+  /**
+   * Enables global app environment.
+   *
+   * @param string $name
+   */
+  static public function set_environment_app_ids(array $app_ids) {
+    $app_id = reset($app_ids);
+
+    // Make sure 1st app is 0.
+    if ($app_id) {
+      throw new mediamosa_exception_program_error('Not allowed to call with first app set!');
+    }
+
+    self::$environment[self::ENV_APP_IDS] = $app_ids;
+    self::$environment[self::ENV_APP_ID] = $app_id;
+  }
+
+  /**
+   * Returns the timezone of the current session. Is by default
+   * Europe/Amsterdam.
+   */
+  static public function get_environment_timezone($timezone = NULL) {
+    return self::get_environment_setting(self::ENV_TIMEZONE);
   }
 
   /**
@@ -151,7 +219,7 @@ class mediamosa {
    * @param string $utc_date
    */
   static public function utcdate2appdate($utc_date) {
-    return mediamosa_datetime::utc_date2app_date($utc_date, self::get_restcall_timezone());
+    return mediamosa_datetime::utc_date2app_date($utc_date, self::get_environment_timezone());
   }
 
   /**
@@ -213,7 +281,8 @@ class mediamosa {
 
       // Only log if error_reporting returns TRUE.
       if (error_reporting()) {
-        // Unlike drupal, we don't treat recoverable errors as fatal, preventing Drupal to display error page.
+        // Unlike drupal, we don't treat recoverable errors as fatal, preventing
+        // Drupal to display error page.
         _drupal_log_error(array(
           '%type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
           '!message' => check_plain($message),

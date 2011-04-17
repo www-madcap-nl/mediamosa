@@ -637,7 +637,7 @@ class mediamosa_asset_mediafile_thumbnail {
       $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
       $query
         ->condition('t.' . mediamosa_ticket_db::ID, $ticket_id)
-        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
+        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL)
         ->fields('t', array(mediamosa_ticket_db::MEDIAFILE_ID,));
       $result = $query->execute();
       $ticket = $result->fetchCol();
@@ -795,7 +795,7 @@ class mediamosa_asset_mediafile_thumbnail {
       $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
       $query
         ->condition('t.' . mediamosa_ticket_db::MEDIAFILE_ID, $a_row['still_id'])
-        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
+        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL)
         ->fields('t', array(mediamosa_ticket_db::ID,));
       $result = $query->execute();
       foreach ($result as $record) {
@@ -868,7 +868,7 @@ class mediamosa_asset_mediafile_thumbnail {
       // Remove tickets.
       $query = mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME);
       $query->condition(mediamosa_ticket_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN');
-      $query->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL);
+      $query->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL);
       $query->execute();
     }
 

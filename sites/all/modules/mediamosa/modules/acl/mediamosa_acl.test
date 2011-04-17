@@ -26,7 +26,7 @@
 
 /**
   * @file
-  * Unittests for aut/ACL.
+  * Unittests for ACL.
   */
 class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
@@ -35,9 +35,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT - PlayProxy play access',
+      'name' => 'ACL - PlayProxy play access',
       'description' => 'Testing the AUT module, previously known as ACL.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
       mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
@@ -77,7 +77,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   /**
-   * same as pp_call_1, except expecting aut failure.
+   * same as pp_call_1, except expecting acl failure.
    */
   private function pp_call_1_cant($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL) {
     return $this->pp_call_1($asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
@@ -94,7 +94,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   /**
-   * same as pp_call_2, except expecting aut failure.
+   * same as pp_call_2, except expecting acl failure.
    */
   private function pp_call_2_cant($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL) {
     return $this->pp_call_2($asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
@@ -112,7 +112,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   /**
-   * same as pp_call_3, except expecting aut failure.
+   * same as pp_call_3, except expecting acl failure.
    */
   private function pp_call_3_cant($asset_id, $mediafile_id, $user_id, $group_id = NULL, $domain = NULL, $realm = NULL) {
     return $this->pp_call_3($asset_id, $mediafile_id, $user_id, $group_id, $domain, $realm, array(mediamosa_error::ERRORCODE_NOT_AUTHORIZED));
@@ -120,7 +120,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
   // Remake of test #96
-  public function testAut() {
+  public function testAcl() {
     $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
     $app_id_2 = $this->a_app_2[mediamosa_app_db::APP_ID];
     $app_id_3 = $this->a_app_3[mediamosa_app_db::APP_ID];
@@ -160,11 +160,11 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array($app_id_1 => mediamosa_error::ERRORCODE_MASTERSLAVE_OWN_APP)
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters, 'May not add own app as slave', $a_expected_results);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters, 'May not add own app as slave', $a_expected_results);
 
-    // Step 1: test all user_id auts.
+    // Step 1: test all user_id acls.
 
     // test 1: default is a mediafile not protected, so playproxy ok.
     $result = $this->pp_call_1($asset_id, $mediafile_id, 'john_doe');
@@ -180,9 +180,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => array('johndoe'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -196,17 +196,17 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // check on required.
     $result = $this->pp_call_1($asset_id, $mediafile_id, '', FALSE, FALSE, FALSE, array(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER));
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER] == 'johndoe', 'Check if rights where set.');
     $this->assertTrue(count($a_xml['items']['item']) == 1, '1 rights set');
 
-    // Get the aut rules with is_app_admin.
+    // Get the acl rules with is_app_admin.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id, array(mediamosa_rest_call_acl_mediafile_get_rights::USER_ID => 'anybody', mediamosa_rest_call_acl_mediafile_get_rights::IS_APP_ADMIN => 'true'));
+    $a_xml = $this->getMediafileAcl($mediafile_id, array(mediamosa_rest_call_acl_mediafile_get_rights::USER_ID => 'anybody', mediamosa_rest_call_acl_mediafile_get_rights::IS_APP_ADMIN => 'true'));
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER] == 'johndoe', 'Check if rights where set.');
@@ -214,7 +214,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // unknown can play again.
     $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown');
@@ -264,7 +264,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // unknown can play again.
     $result = $this->pp_call_1($asset_id, $mediafile_id, 'unknown');
@@ -276,9 +276,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => array('randgroup'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, 'mygroup');
@@ -292,9 +292,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // unknown in empty group cant play.
     $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'unknown', '');
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP] == 'randgroup', 'Check if rights where set.');
@@ -302,7 +302,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -320,9 +320,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array($app_id_2),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -339,9 +339,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // new app can.
     $result = $this->pp_call_2($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP] == $app_id_2, 'Check if rights where set.');
@@ -349,7 +349,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -367,9 +367,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'johndoe',
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -386,9 +386,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // new app can.
     $result = $this->pp_call_2($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER] == 'johndoe', 'Check if rights where set.');
@@ -397,7 +397,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -416,9 +416,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array('surfnet.nl'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -444,9 +444,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // Other app cant play from surfnet.nl.
     $result = $this->pp_call_3_cant($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID, NULL, 'surfnet.nl');
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN] == 'surfnet.nl', 'Check if rights where set.');
@@ -454,7 +454,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -470,9 +470,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => array('@surfnet.nl'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -495,9 +495,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // Johndoe cant play from sub-realm.
     $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.smurfnet.nl');
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM] == '@surfnet.nl', 'Check if rights where set.');
@@ -505,7 +505,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -527,9 +527,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => array('jan@surfnet.nl'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -567,9 +567,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     // Johndoe cant play with wrong realm.
     $result = $this->pp_call_1_cant($asset_id, $mediafile_id, 'johndoe', NULL, NULL, 'john@flex.surfnet.nl');
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM] == 'jan@surfnet.nl', 'Check if rights where set.');
@@ -577,7 +577,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -590,19 +590,19 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create Aut group.
     $this->toEga_1();
-    $this->createAutGroup('HO.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN);
+    $this->createAclGroup('HO.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN);
 
     // Add hostname.
-    $this->createAutHostname('HO.group', array('surfnet.nl'));
+    $this->createAclHostname('HO.group', array('surfnet.nl'));
 
     // Step 7: acl_realm and acl_domain.
     $a_parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array('HO.group'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -621,9 +621,9 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => array('surfnet.nl'),
     );
 
-    // Check if aut isnt allowed.
+    // Check if acl isnt allowed.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -664,7 +664,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Add...
     $this->toEga_1();
-    $a_response = $this->addMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->addMediafileAcl($mediafile_id, $a_parameters);
 
     // Owner can play.
     $result = $this->pp_call_1($asset_id, $mediafile_id, self::SIMPLETEST_USER_ID);
@@ -682,11 +682,11 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set rights.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
-    // Get the aut rules.
+    // Get the acl rules.
     $this->toEga_1();
-    $a_xml = $this->getMediafileAut($mediafile_id);
+    $a_xml = $this->getMediafileAcl($mediafile_id);
 
     // Check rights.
     $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER] == 'johndoe', 'Check if rights where set.');
@@ -710,7 +710,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Delete rights.
     $this->toEga_1();
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // Create a upload test file with asset and mediafile.
     $this->toEga_1();
@@ -720,17 +720,17 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create Aut group.
     $this->toEga_1();
-    $this->createAutGroup('academia5.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN);
+    $this->createAclGroup('academia5.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN);
 
     // Add hostname.
-    $this->createAutHostname('academia5.group', array('surfnet.nl'));
+    $this->createAclHostname('academia5.group', array('surfnet.nl'));
 
     // Create Aut group.
     $this->toEga_2();
-    $this->createAutGroup('academia5.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN);
+    $this->createAclGroup('academia5.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN);
 
     // Add hostname.
-    $this->createAutHostname('academia5.group', array('xs4all.nl'));
+    $this->createAclHostname('academia5.group', array('xs4all.nl'));
 
     $a_parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
@@ -739,7 +739,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set rights.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id_2, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id_2, $a_parameters);
 
     // Unknown cant play with wrong domain.
     $result = $this->pp_call_2_cant($asset_id_2, $mediafile_id_2, 'unknown', NULL, 'foo.nl');
@@ -761,17 +761,17 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create Aut group.
     $this->toEga_1();
-    $this->createAutGroup('@ACADEMIA.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM);
+    $this->createAclGroup('@ACADEMIA.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM);
 
     // Add hostname.
-    $this->createAutHostname('@ACADEMIA.group', array('@xs4all.nl', '@madcap.nl'));
+    $this->createAclHostname('@ACADEMIA.group', array('@xs4all.nl', '@madcap.nl'));
 
     // Create Aut group.
     $this->toEga_2();
-    $this->createAutGroup('@ACADEMIA.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM);
+    $this->createAclGroup('@ACADEMIA.group', mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM);
 
     // Add hostname.
-    $this->createAutHostname('@ACADEMIA.group', array('@xs4all.nl', '@uva.nl'));
+    $this->createAclHostname('@ACADEMIA.group', array('@xs4all.nl', '@uva.nl'));
 
     $a_parameters = array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
@@ -780,7 +780,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set rights.
     $this->toEga_1();
-    $a_response = $this->setMediafileAut($mediafile_id_3, $a_parameters);
+    $a_response = $this->setMediafileAcl($mediafile_id_3, $a_parameters);
 
     // Test master.
     $a_parameters = array(
@@ -859,7 +859,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set rights.
     $this->toEga_1();
-    $a_response = $this->setCollectionAut($coll_id, $a_parameters);
+    $a_response = $this->setCollectionAcl($coll_id, $a_parameters);
 
     // Do collection search.
     $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
@@ -878,7 +878,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
 
     // Now master slave it to app-1, collection now found.
-    $this->setMediafileAut($mediafile_id_3,  array('acl_app' => array($app_id_2)));
+    $this->setMediafileAcl($mediafile_id_3,  array('acl_app' => array($app_id_2)));
 
     // Do collection search.
     $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
@@ -888,7 +888,7 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
 
     // Remove rights.
     $this->toEga_1();
-    $this->deleteCollectionAut($coll_id);
+    $this->deleteCollectionAcl($coll_id);
 
     // Do collection search.
     $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));

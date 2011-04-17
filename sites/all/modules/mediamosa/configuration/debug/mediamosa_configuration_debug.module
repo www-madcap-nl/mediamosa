@@ -42,8 +42,8 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
 
   $form['settings_debug']['mediamosa_debug_level'] = array(
     '#type' => 'select',
-    '#title' => t('Extra debug logging.'),
-    '#description' => t('Set this flag to log more information when possible.'),
+    '#title' => t('Debug level.'),
+    '#description' => t('Enable debugging by increasing its level. The higher the level, the more information is stored in log.'),
     '#required' => FALSE,
     '#options' => array(
       0 => t('Off'),

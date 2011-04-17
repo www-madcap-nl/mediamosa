@@ -81,10 +81,9 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    // Get the app_id.
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
 
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);

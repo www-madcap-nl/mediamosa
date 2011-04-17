@@ -593,17 +593,17 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_collect($re
  * Collect the information always, no caching. Only for front status page.
  */
 function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_realtime() {
-  $results_drupal = array();
+  $results_mediamosa_configuration = array();
 
   // ----------------------------------------------- sites/default/settings.php.
   global $conf;
 
-  $results_drupal['host'] = array(
+  $results_mediamosa_configuration['host'] = array(
     'title' => t('Interface host'),
     'value' => $_SERVER['SERVER_NAME'],
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
-  $results_drupal['conf'] = array(
+  $results_mediamosa_configuration['conf'] = array(
     'title' => t('Settings file used'),
     'value' => DRUPAL_ROOT . '/' . conf_path() . '/settings.php',
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
@@ -612,38 +612,38 @@ function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_re
   // If writable, drupal will create it when needed.
   $public_writable = file_exists('public://') && is_writable('public://');
 
-  $results_drupal['public_write'] = array(
+  $results_mediamosa_configuration['public_write'] = array(
     'title' => variable_get('file_public_path', conf_path() . '/files'),
     'value' => $public_writable ? t('Found & Writable') : t('@dir not writable on @server_name', array('@dir' => DRUPAL_ROOT . '/' . variable_get('file_public_path', conf_path() . '/files'), '@server_name' => $_SERVER['SERVER_NAME'])),
     'severity' => _mediamosa_maintenance_status_okerror($public_writable),
   );
 
-  $results_drupal['install_id'] = array(
+  $results_mediamosa_configuration['install_id'] = array(
     'title' => t('Interface installation ID'),
     'value' => mediamosa::get_server_id(),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
-  $results_drupal['app'] = array(
+  $results_mediamosa_configuration['app'] = array(
     'title' => t('App interface'),
     'value' => mediamosa::is_app_app_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
-  $results_drupal['app_upload'] = array(
+  $results_mediamosa_configuration['app_upload'] = array(
     'title' => t('Upload interface'),
     'value' => mediamosa::is_app_upload_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
-  $results_drupal['app_download'] = array(
+  $results_mediamosa_configuration['app_download'] = array(
     'title' => t('Download interface'),
     'value' => mediamosa::is_app_download_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
-  $results_drupal['app_openapi'] = array(
+  $results_mediamosa_configuration['app_openapi'] = array(
     'title' => t('Open API interface'),
     'value' => mediamosa::is_app_openapi_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
-  $results_drupal['admin'] = array(
+  $results_mediamosa_configuration['admin'] = array(
     'title' => t('Admin interface'),
     'value' => mediamosa::is_admin_enabled() ? t('Enabled') : t('Disabled'),
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
@@ -653,17 +653,49 @@ function  mediamosa_maintenance_status_configuration_mediamosa_status_collect_re
     // Get default search engine.
     $mediamosa_search_engine = mediamosa_search::get_search_engine();
 
-    $results_drupal['search_engine'] = array(
+    $results_mediamosa_configuration['search_engine'] = array(
       'title' => t('Selected search engine'),
       'value' => $mediamosa_search_engine['title'],
       'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
     );
   }
 
+  // Check if the select the job server is enabled.
+  $job_servers = mediamosa_server::get_enabled_job_processor();
+  $job_servers_by_name = array();
+
+  foreach ($job_servers as $job_server) {
+    if (empty($job_server[mediamosa_server_db::SERVER_NAME])) {
+      $job_server[mediamosa_server_db::SERVER_NAME] = mediamosa_server::get_server_url($job_server);
+    }
+
+    $job_servers_by_name[mediamosa_server::get_server_url($job_server)] = $job_server[mediamosa_server_db::SERVER_NAME];
+  }
+
+  // Get jobscheduler.
+  $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', '');
+
+  $value = $description = '';
+  if (empty($mediamosa_jobscheduler_uri)) {
+    $value = t('Failure');
+    $description = t('Job scheduler not setup, check your !configuration', array('!configuration' => l('MediaMosa configuration, server settings', 'admin/mediamosa/config/global')));
+  }
+  elseif (!isset($job_servers_by_name[$mediamosa_jobscheduler_uri])) {
+    $value = t('Failure');
+    $description = t('Unknown or disabled job server selected for job scheduler, check your !configuration', array('!configuration' => l('MediaMosa configuration, server settings', 'admin/mediamosa/config/global')));
+  }
+
+  $results_mediamosa_configuration['job_server'] = array(
+    'title' => t('Job scheduler'),
+    'value' => empty($value) ? t('Good') : $value,
+    'severity' => empty($value) ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR,
+    'description' => $description,
+  );
+
   return array(
     'configuration' => array(
       'title' => t('Configuration'),
-      'results' => $results_drupal,
+      'results' => $results_mediamosa_configuration,
       'in_status_output' => TRUE,
     ),
   );

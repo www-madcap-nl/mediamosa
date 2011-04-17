@@ -96,7 +96,7 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
 
     // Ok try to play them.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_URI,
       mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id_1,
       mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => 1,
     );
@@ -105,7 +105,7 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
     $this->var_export($xml);
 
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_URI,
       mediamosa_rest_call_asset_mediafile_play::ORIGINAL_MEDIAFILE_ID => $mediafile_id_2,
       mediamosa_rest_call_asset_mediafile_play::PROFILE_ID => 1,
     );

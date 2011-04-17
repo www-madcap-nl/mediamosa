@@ -172,10 +172,10 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     $a_response_types = array(
-      mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
-      mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_METAFILE,
-      mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT,
-      mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT,
+      mediamosa_asset_mediafile_play_proxy::RESPONSE_URI,
     );
 
     $a_parameters = array();
@@ -184,7 +184,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       foreach ($a_container_types as $a_mediafile_ext['metadata']['container_type']) {
 
         // FLV does not have metafile.
-        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_METAFILE &&
+        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE &&
             $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV) {
           continue;
         }
@@ -217,7 +217,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         }
 
         // Check the asx output
-        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_METAFILE && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
+        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
           $tofind = "<asx version=\"3.0\">";
           $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if asx starttag.');
 
@@ -229,14 +229,14 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         }
 
         // Check if ASX file was created (we also will remove the file again)
-        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
+        if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
           $filename = mediamosa_configuration_storage::asx_file_location($ticket);
           if (file_exists($filename)) {
             mediamosa_io::unlink($filename);
           }
         }
 
-        if (!($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV)) {
+        if (!($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV)) {
           $this->assertTrue(
             isset($a_response['output']) && strpos($a_response['output'], $ticket) !== FALSE,
             "Check if '" . $a_parameters['response']['value'] . "/" . $a_mediafile_ext['metadata']['container_type'] . "/_play_proxy_create_response()' contains the ticket: " . $ticket);
@@ -251,7 +251,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV,
     );
 
-    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT;
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT;
 
     foreach ($a_container_types as $a_mediafile_ext['metadata']['container_type']) {
       $a_mediafile_ext['filename'] = 'filename.wmv';
@@ -429,7 +429,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     // Specific codec
     $a_mediafile_ext = $a_parameters = array();
-    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     $a_mediafile_ext['mediafile_id'] = $mediafile_id;
     $a_mediafile_ext['metadata']['container_type'] = 'test_container';
     $a_mediafile_ext['metadata']['video_codec'] = 'h264';
@@ -448,7 +448,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->verbose('Response: ' . print_r($a_response, TRUE));
 
     // General container
-    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     $a_mediafile_ext['mediafile_id'] = $mediafile_id;
     $a_mediafile_ext['metadata']['container_type'] = 'test_container';
     $a_mediafile_ext['metadata']['video_codec'] = NULL;
@@ -467,7 +467,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->verbose('Response: ' . print_r($a_response, TRUE));
 
     // Codec that is not defined (should get defaukt container)
-    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_URI;
     $a_mediafile_ext['mediafile_id'] = $mediafile_id;
     $a_mediafile_ext['metadata']['container_type'] = 'test_container';
     $a_mediafile_ext['metadata']['video_codec'] = 'undef';

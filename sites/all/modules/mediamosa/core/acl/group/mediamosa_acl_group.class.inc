@@ -173,7 +173,7 @@ class mediamosa_acl_group {
   }
 
   /**
-   * Create hostname(s) for aut group.
+   * Create hostname(s) for acl group.
    *
    * @param integer $app_id
    * @param string $group_name

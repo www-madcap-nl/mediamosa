@@ -35,9 +35,9 @@ class MediaMosaTransferringOwnershipTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT - Transferring ownership',
+      'name' => 'ACL - Transferring ownership',
       'description' => 'Testing transferring ownership related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
     );
   }
 

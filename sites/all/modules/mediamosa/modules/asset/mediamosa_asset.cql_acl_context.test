@@ -149,7 +149,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // App master slave for app_id_2.
     $this->toEga_2();
-    $this->setMediafileAut($mediafile_id_5, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_3));
+    $this->setMediafileAcl($mediafile_id_5, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_3));
 
     // Both apps, only mf 5 should appear.
     $this->cql_do_search_test_assets_2(sprintf('acl_app == %d OR acl_app == %d', $app_id_2, $app_id_3), array($asset_id_5 => TRUE));
@@ -159,14 +159,14 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set acl_user.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser'));
+    $this->setMediafileAcl($mediafile_id_1, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser'));
 
     // Test if we have 'testuser' in our results.
     $this->cql_do_search_test_assets_3('acl_user == "^testuser^"', array($asset_id_1 => TRUE));
 
     // Set acl_group.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup'));
+    $this->setMediafileAcl($mediafile_id_1, array(mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup'));
 
     // Test if we have 'testgroup' in our results.
     $this->cql_do_search_test_assets_3('acl_group == "^testgroup^"', array($asset_id_1 => TRUE));
@@ -176,7 +176,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set acl_group and acl_user.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(
+    $this->setMediafileAcl($mediafile_id_1, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser',
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup',
     ));
@@ -192,7 +192,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set acl_domain.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(
+    $this->setMediafileAcl($mediafile_id_1, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => 'foo.nl',
     ));
 
@@ -201,7 +201,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set acl_realm.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(
+    $this->setMediafileAcl($mediafile_id_1, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => 'robert@foo.nl',
     ));
 
@@ -216,19 +216,19 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // Remove all rights.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_1, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
     $this->toEga_2();
-    $this->setMediafileAut($mediafile_id_2, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_2, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_3, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-    $this->setMediafileAut($mediafile_id_4, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_3, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_4, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
     $this->toEga_2();
-    $this->setMediafileAut($mediafile_id_5, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
-    $this->setMediafileAut($mediafile_id_6, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_5, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_6, array(), 'Setting ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Set acl_id, slave mediafile 1 from app 3 to 2.
     $this->toEga_3();
-    $this->setMediafileAut($mediafile_id_1, array(
+    $this->setMediafileAcl($mediafile_id_1, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
     ));
 
@@ -236,7 +236,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_3(sprintf('acl_app == %d', $app_id_2), array($asset_id_1 => TRUE));
 
     // set acl_id, slave mediafile 3 from app 3 to 2.
-    $this->setMediafileAut($mediafile_id_3, array(
+    $this->setMediafileAcl($mediafile_id_3, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
     ));
 
@@ -347,7 +347,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_3('is_master_slaved = FALSE', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_4 => TRUE));
 
     // Now master slave 3 to 2.
-    $this->setAssetAut($asset_id_3, array(
+    $this->setAssetAcl($asset_id_3, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
     ));
 
@@ -374,7 +374,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
 
     // Master slave mediafiles.
     // Now master slave 2 to 3.
-    $this->setMediafileAut($mediafile_id_2, array(
+    $this->setMediafileAcl($mediafile_id_2, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_3,
     ));
 
@@ -383,7 +383,7 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
     // Return assets that are not master slaved.
     $this->cql_do_search_test_assets_2('is_master_slaved = FALSE', array($asset_id_6 => TRUE, $asset_id_5 => TRUE));
 /*
-    $this->setAssetAut($asset_id_5, array(
+    $this->setAssetAcl($asset_id_5, array(
       mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_3,
     ));
 

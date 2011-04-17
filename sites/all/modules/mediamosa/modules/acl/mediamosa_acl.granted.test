@@ -29,21 +29,21 @@
  * Testing some parts we want to cover with granted flag.
  */
 
-class MediaMosaTestCaseAutGrantedJobTest extends MediaMosaTestCaseEgaJob {
+class MediaMosaTestCaseAclGrantedJobTest extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
   static public function getInfo() {
     return array(
-      'name' => 'AUT - Extended tests on granted flag.',
+      'name' => 'ACL - Extended tests on granted flag.',
       'description' => 'Extended test on the granted flag.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ACL,
     );
   }
 
-  // --------------------------------------------------------- Test AUT granted.
-  public function testAutGranted() {
+  // --------------------------------------------------------- Test ACL granted.
+  public function testAclGranted() {
 
     // Create upload file.
     $upload = $this->uploadTestFile();
@@ -85,18 +85,18 @@ class MediaMosaTestCaseAutGrantedJobTest extends MediaMosaTestCaseEgaJob {
     // All with 'aap' in title.
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
 
-    $this->setMediafileAut($mediafile_id, array('acl_user' => array('johndoe')));
+    $this->setMediafileAcl($mediafile_id, array('acl_user' => array('johndoe')));
 
     // All with 'aap' in title.
     $this->cql_do_search_test_assets('aap', array($asset_id => FALSE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
 
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), 'johndoe', FALSE, FALSE, FALSE, TRUE);
 
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
 
-    $this->setMediafileAut($mediafile_id_transcoded, array('acl_user' => array('johndoe')));
+    $this->setMediafileAcl($mediafile_id_transcoded, array('acl_user' => array('johndoe')));
 
     // Expect Granted TRUE because transcoded is ACL protected and original is not.
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
@@ -116,15 +116,15 @@ class MediaMosaTestCaseAutGrantedJobTest extends MediaMosaTestCaseEgaJob {
     // All with 'aap' in title.
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
 
-    $this->setMediafileAut($mediafile_id, array('acl_user' => array('johndoe')));
+    $this->setMediafileAcl($mediafile_id, array('acl_user' => array('johndoe')));
 
     // protected 1st original.
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);
 
-    $this->deleteMediafileAut($mediafile_id);
+    $this->deleteMediafileAcl($mediafile_id);
 
     // Protected 2nd original.
-    $this->setMediafileAut($mediafile_id_2, array('acl_user' => array('johndoe')));
+    $this->setMediafileAcl($mediafile_id_2, array('acl_user' => array('johndoe')));
 
     // Expect granted = TRUE, 2nd original protected, 1st not.
     $this->cql_do_search_test_assets('aap', array($asset_id => TRUE), array(), FALSE, FALSE, FALSE, FALSE, TRUE);

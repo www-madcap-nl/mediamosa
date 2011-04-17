@@ -1176,6 +1176,9 @@ function _mediamosa_migration_user() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
@@ -1292,6 +1295,9 @@ function _mediamosa_migration_ticket() {
 
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
 
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");

@@ -790,10 +790,10 @@ class OAuthUtil {
       // otherwise we don't have apache and are just going to have to hope
       // that $_SERVER actually contains what we need
       $out = array();
-      if( isset($_SERVER['CONTENT_TYPE']) )
-        $out['Content-Type'] = $_SERVER['CONTENT_TYPE'];
-      if( isset($_ENV['CONTENT_TYPE']) )
-        $out['Content-Type'] = $_ENV['CONTENT_TYPE'];
+      if( isset($_SERVER['RESPONSE_TYPE']) )
+        $out['Content-Type'] = $_SERVER['RESPONSE_TYPE'];
+      if( isset($_ENV['RESPONSE_TYPE']) )
+        $out['Content-Type'] = $_ENV['RESPONSE_TYPE'];
 
       foreach ($_SERVER as $key => $value) {
         if (substr($key, 0, 5) == "HTTP_") {
