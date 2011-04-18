@@ -95,8 +95,7 @@ function _mediamosa_app_ajax_generate_shared_key() {
   $commands = array();
 
   // Build and render the new select element, then return it in JSON format.
-  $form_state = array();
-  $form = form_builder($form['form_id']['#value'], $form, $form_state);
+  drupal_process_form($form['form_id'], $form, $form_state);
   $form['client_application'][mediamosa_app_db::SHARED_KEY]['#value'] = mediamosa_db::uuid(rand(1, 9999));
 
   $commands[] = ajax_command_replace(NULL, drupal_render($form['client_application'][mediamosa_app_db::SHARED_KEY]));
