@@ -241,10 +241,10 @@ function _mediamosa_maintenance_status_configuration_generate() {
   // Lav2yuv.
   $lav2yuv_found = mediamosa_io::command_installed('lav2yuv', $exec_output);
   $results['app_lav2yuv'] = array(
-    'title' => t('Luv2yuv'),
+    'title' => t('Lav2yuv'),
     'value' => $lav2yuv_found ? t('Installed') : t('Not installed'),
     'severity' => _mediamosa_maintenance_status_okwarning($lav2yuv_found),
-    'description' => $lav2yuv_found ? '' : t('Luv2yuv is not installed, but is optional. You can find more information how to install lav2yuv !here', array('!here' => $helper_links['lav2yuv'])),
+    'description' => $lav2yuv_found ? '' : t('Lav2yuv is not installed, but is optional. You can find more information how to install lav2yuv !here', array('!here' => $helper_links['lav2yuv'])),
   );
 
   $found_apache = drupal_substr(drupal_strtolower($_SERVER['SERVER_SOFTWARE']), 0, 7) == 'apache/';
