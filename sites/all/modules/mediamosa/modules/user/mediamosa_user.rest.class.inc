@@ -124,11 +124,22 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
     $limit = $this->get_param_value_limit();
 
     // Fetch the items.
-    $result = mediamosa_user::get_all(TRUE, $app_id, $offset, $limit, $group_id);
+    $result = mediamosa_user::get_all(TRUE, $app_id, $offset, $limit);
 
     // Fill the response.
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      // TODO: maybe we shall optimize this by caching groups.
+      $groups = mediamosa_user::get_groups($app_id, $row['user_id'], TRUE);
+      if (!empty($group_id)) {
+        // We need only menbers of certain group.
+        if (!array_search($group_id, $groups)) {
+          continue;
+        }
+      }
+      if (!empty($groups)) {
+        $row['group_id'] = $groups;
+      }
+      $o_mediamosa->add_item($row);
     }
 
     // Set total count.
@@ -165,9 +176,9 @@ class mediamosa_rest_call_user_create extends mediamosa_rest_call {
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'Name of the group the user belongs to. A user can only be member of 1 group, and the group must exist (see /group/create [POST])',
-          self::VAR_RANGE_END => mediamosa_user_db::GROUP_ID_LENGTH,
-          self::VAR_DEFAULT_VALUE => '',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DESCRIPTION => 'Name of the group the user belongs to. The group must exist (see /group/create [POST])',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
@@ -290,8 +301,9 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DESCRIPTION => 'Name of the group where the user will be.',
-          self::VAR_RANGE_END => mediamosa_user_db::GROUP_ID_LENGTH,
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,

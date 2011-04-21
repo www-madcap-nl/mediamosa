@@ -522,10 +522,10 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
     if ($group_id) {
       if ($user_id_parameter && $user_id_parameter!= self::USER_OWNER && $group_id == self::GROUP_SELF) {
         // Get the group_id.
-        $a_user = mediamosa_user::get($user_id_parameter, $app_id, array(mediamosa_user_db::GROUP_ID));
+        $a_user = mediamosa_user::get($user_id_parameter, $app_id);
 
-        if (isset($a_user['group_id']) && $a_user['group_id']) {
-          $group_id = $a_user['group_id'];
+        if (isset($a_user['group_id']) && !empty($a_user['group_id'])) {
+          $group_id = mediamosa_user::get_primary_group($app_id, $user_id_parameter);
           $cql[] = 'group_id="' . $group_id . '"';
         }
       }

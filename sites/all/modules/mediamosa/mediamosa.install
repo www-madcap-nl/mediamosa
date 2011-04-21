@@ -2420,9 +2420,16 @@ function mediamosa_update_7113() {
     'description' => 'The disk quota in MB.',
   );
 
-  // Just fix incorrect comment first.
+  // Just fix incorrect comments first.
   db_change_field(
     'mediamosa_user',
+    'quotum',
+    'quotum',
+    $spec
+  );
+
+  db_change_field(
+    'mediamosa_user_group',
     'quotum',
     'quotum',
     $spec
@@ -2443,23 +2450,6 @@ function mediamosa_update_7113() {
   // Please note last parameter - array with primary key definition.
   db_add_field('mediamosa_user', 'user_key', $spec, array('primary key' => array('user_key')));
 
-  $schema = mediamosa_user_group_schema();
-
-  $spec = array(
-    'type' => 'int',
-    'unsigned' => FALSE,
-    'not null' => TRUE,
-    'description' => 'The disk quota in MB.',
-  );
-
-  // Just fix incorrect comment.
-  db_change_field(
-    'mediamosa_user_group',
-    'quotum',
-    'quotum',
-    $spec
-  );
-
   // Primary key is downgraded to unique now.
   db_drop_primary_key('mediamosa_user_group');
   db_add_unique_key('mediamosa_user_group', 'uni_id_group_and_app', array('group_id', 'app_id'));
@@ -2474,7 +2464,7 @@ function mediamosa_update_7113() {
   // Please note last parameter - array with primary key definition.
   db_add_field('mediamosa_user_group', 'group_key', $spec, array('primary key' => array('group_key')));
 
-  // ...and user_in_group table.
+  // Our new user_in_group table.
   $schema = array(
   'description' => 'The user/group relation table.',
     'fields' => array(

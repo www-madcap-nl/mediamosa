@@ -236,8 +236,11 @@ class mediamosa_rest_call_group_delete extends mediamosa_rest_call {
     // Must exist to delete.
     mediamosa_db::db_must_exists(mediamosa_user_group_db::TABLE_NAME, array(mediamosa_user_group_db::ID => $group_id, mediamosa_user_group_db::APP_ID => $app_id));
 
+    $group_key = mediamosa_user_group::key($app_id, $group_id);
+
     // Must be empty.
-    if (mediamosa_db::db_count_rows(mediamosa_user_db::TABLE_NAME, array(mediamosa_user_group_db::ID => $group_id, mediamosa_user_group_db::APP_ID => $app_id))) {
+    if (mediamosa_db::db_count_rows(mediamosa_user_in_group_db::TABLE_NAME,
+            array(mediamosa_user_in_group_db::GROUP_KEY => $group_key))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_GROUP_NOT_EMPTY);
     }
 
