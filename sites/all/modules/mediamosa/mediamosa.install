@@ -2318,6 +2318,11 @@ function mediamosa_update_7109() {
  * Split the server_uri to two parts, and fill the server_uri and server_path in mediamosa_server table and mediamosa_node_revision table.
  */
 function mediamosa_update_7110() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+
   $query = db_select('mediamosa_server', 's');
   $query->fields('s', array('vid', 'server_uri'));
   $result = $query->execute();

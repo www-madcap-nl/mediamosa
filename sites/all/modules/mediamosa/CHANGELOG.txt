@@ -55,6 +55,7 @@ MediaMosa 3.0 (build 1672)
 - Owner check for /asset/$asset_id/joblist (See ticket #356).
 - Retranscode improvement (See ticket #467).
 - ACL problem when using replace fix (See ticket #503).
+- Users can now be in more than one (quota) group (See ticket #223).
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.
