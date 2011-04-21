@@ -569,86 +569,102 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
   const ACL_USER_ID = 'acl_user_id';
   const ACL_GROUP_ID = 'acl_group_id';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_APP = 'aut_app';
+  const ALIAS_AUT_USER = 'aut_user';
+  const ALIAS_AUT_GROUP = 'aut_group';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset IDs of mediafiles which to change the rights.',
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The asset IDs of mediafiles which to change the rights.',
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
       );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
-      mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
+    $a_var_setup[self::VARS][self::REPLACE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 'TRUE',
+      self::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_APP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_APP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_USER),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
-    );
-
-    // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_user.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_REALM),
     );
 
     // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_group.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Alias of acl_user.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_USER_ID),
+    );
+
+    // alias.
+    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Alias of acl_group.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(ALIAS_AUT_GROUP_ID),
     );
 
     // Enrich with required REST vars.
@@ -774,85 +790,101 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
   const ACL_USER_ID = 'acl_user_id';
   const ACL_GROUP_ID = 'acl_group_id';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_APP = 'aut_app';
+  const ALIAS_AUT_USER = 'aut_user';
+  const ALIAS_AUT_GROUP = 'aut_group';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID of which to change the rights.',
+    $a_var_setup[self::VARS][self::MEDIAFILE_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The mediafile ID of which to change the rights.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
       );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
-      mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
+    $a_var_setup[self::VARS][self::REPLACE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 'TRUE',
+      self::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_APP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
-    );
-
-    // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_user.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
     );
 
     // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_group.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Alias of acl_user.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
+    );
+
+    // alias.
+    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Alias of acl_group.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
     );
 
     // Enrich with required REST vars.
@@ -959,16 +991,16 @@ class mediamosa_rest_call_acl_mediafile_delete_rights extends mediamosa_rest_cal
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID where from to remove the ACL rights',
+    $a_var_setup[self::VARS][self::MEDIAFILE_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The mediafile ID where from to remove the ACL rights',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the mediafile.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The owner of the mediafile.',
     );
 
     // Enrich with required REST vars.
@@ -1015,16 +1047,16 @@ class mediamosa_rest_call_acl_mediafile_get_rights extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID from which to receive the ACL rights',
+    $a_var_setup[self::VARS][self::MEDIAFILE_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The mediafile ID from which to receive the ACL rights',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Must be the owner of the mediafile object to alter rights.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'Must be the owner of the mediafile object to alter rights.',
     );
 
     // Enrich with required REST vars.
@@ -1097,85 +1129,101 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
   const ACL_USER_ID = 'acl_user_id';
   const ACL_GROUP_ID = 'acl_group_id';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_APP = 'aut_app';
+  const ALIAS_AUT_USER = 'aut_user';
+  const ALIAS_AUT_GROUP = 'aut_group';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset_id.',
+    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The asset_id.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User ID, owner of the asset.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
-      mediamosa_rest_call::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
+    $a_var_setup[self::VARS][self::REPLACE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 'TRUE',
+      self::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_APP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
-    );
-
-    // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_user. If both are set, acl_user has priority.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
     );
 
     // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_group. If both are set, acl_group has priority.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Same as acl_user.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
+    );
+
+    // alias.
+    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Same as acl_group.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
     );
 
     // Enrich with required REST vars.
@@ -1283,86 +1331,102 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
   const ACL_USER_ID = 'acl_user_id';
   const ACL_GROUP_ID = 'acl_group_id';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_APP = 'aut_app';
+  const ALIAS_AUT_USER = 'aut_user';
+  const ALIAS_AUT_GROUP = 'aut_group';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset_ids.',
+    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'The asset_ids.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User ID, owner of the asset.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
-      mediamosa_rest_call::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
+    $a_var_setup[self::VARS][self::REPLACE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 'TRUE',
+      self::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_APP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
-    );
-
-    // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_user. If both are set, acl_user has priority.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
     );
 
     // alias.
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of acl_group. If both are set, acl_group has priority.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Alias of acl_user. If both are set, acl_user has priority.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
+    );
+
+    // alias.
+    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Alias of acl_group. If both are set, acl_group has priority.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
     );
 
     // Enrich with required REST vars.
@@ -1498,16 +1562,16 @@ class mediamosa_rest_call_acl_asset_delete_rights extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset ID where from to remove the ACL rights',
+    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The asset ID where from to remove the ACL rights',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the asset for access.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The owner of the asset for access.',
     );
 
     // Enrich with required REST vars.
@@ -1554,16 +1618,16 @@ class mediamosa_rest_call_acl_asset_get_rights extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The ID of the asset to set the rights on.',
+    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The ID of the asset to set the rights on.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'This must be the owner ID of the asset.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'This must be the owner ID of the asset.',
     );
 
     // Enrich with required REST vars.
@@ -1622,17 +1686,17 @@ class mediamosa_rest_call_acl_collection_delete_rights extends mediamosa_rest_ca
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Collection id, unique identifier of the collection.',
+    $a_var_setup[self::VARS][self::COLL_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'Collection id, unique identifier of the collection.',
 
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User id, to determine whether the applicant has the right to remove authorization or not.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'User id, to determine whether the applicant has the right to remove authorization or not.',
     );
 
     // Enrich with required REST vars.
@@ -1679,16 +1743,16 @@ class mediamosa_rest_call_acl_collection_get_rights extends mediamosa_rest_call 
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The coll id.',
+    $a_var_setup[self::VARS][self::COLL_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The coll id.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The user id.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'The user id.',
     );
 
     // Enrich with required REST vars.
@@ -1744,35 +1808,39 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
   const REPLACE = 'replace';
   const ACL_APP = 'acl_app';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_APP = 'aut_app';
+
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Collection ID',
+    $a_var_setup[self::VARS][self::COLL_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'Collection ID',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'User id, for authorization the changing  process.',
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => 'User id, for authorization the changing  process.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => 'true',
-      mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' or 'FALSE'. Whether the existing rules overwritten or not. Default is 'TRUE'. Defining it as 'FALSE', if you want to keep the old rights."
+    $a_var_setup[self::VARS][self::REPLACE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 'true',
+      self::VAR_DESCRIPTION => "'TRUE' or 'FALSE'. Whether the existing rules overwritten or not. Default is 'TRUE'. Defining it as 'FALSE', if you want to keep the old rights."
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::ACL_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that access to the collection.',
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    $a_var_setup[self::VARS][self::ACL_APP] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => 'Application(s) that access to the collection.',
+      self::VAR_DEFAULT_VALUE => array(),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
     // Enrich with required REST vars.
@@ -1866,7 +1934,7 @@ class mediamosa_rest_call_acl_get_apps extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::IS_OAI] = array(
+    $a_var_setup[self::VARS][self::IS_OAI] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_DESCRIPTION => 'The OAI is allowed to see all applications. However, the call must be made internally to work.',
       self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,

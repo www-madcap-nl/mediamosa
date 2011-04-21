@@ -48,7 +48,7 @@
       <is_favorite type="bool">false</is_favorite>
       <granted type="bool">true</granted>
       <granted_metadata type="bool">true</granted_metadata>
-      <granted_thumbnail type="bool">true</granted_thumbnail>
+      <granted_still type="bool">true</granted_still>
       <url_thumbnail_oai></url_thumbnail_oai>
       <url_thumbnail>http://app.vpcore/still/RFURBWNKOZluhUeNPtCInbM4</url_thumbnail>
       <has_streamable_mediafiles type="bool">true</has_streamable_mediafiles>
@@ -110,7 +110,7 @@
           <is_original_file type="bool">true</is_original_file>
           <is_downloadable type="bool">false</is_downloadable>
           <is_streamable type="bool">false</is_streamable>
-          <is_thumbnail type="bool">false</is_thumbnail>
+          <is_still type="bool">false</is_still>
           <filename>aac_0_channels.mov</filename>
           <uri/>
           <transcode_profile_id/>
@@ -133,7 +133,7 @@
               <is_original_file type="bool">false</is_original_file>
               <is_downloadable type="bool">false</is_downloadable>
               <is_streamable type="bool">false</is_streamable>
-              <is_thumbnail type="bool">false</is_thumbnail>
+              <is_still type="bool">false</is_still>
               <filename>aac_0_channels.mp4</filename>
               <uri/>
               <transcode_profile_id>6</transcode_profile_id>
@@ -180,7 +180,7 @@
               <is_original_file type="bool">false</is_original_file>
               <is_downloadable type="bool">false</is_downloadable>
               <is_streamable type="bool">false</is_streamable>
-              <is_thumbnail type="bool">false</is_thumbnail>
+              <is_still type="bool">false</is_still>
               <filename>aac_0_channels.mp4</filename>
               <uri/>
               <transcode_profile_id>7</transcode_profile_id>
@@ -216,7 +216,7 @@
               <response_plain_available type="bool">true</response_plain_available>
               <response_metafile_available type="bool">true</response_metafile_available>
             </mediafile>
-            <mediafile type="thumbnail" id="RFURBWNKOZluhUeNPtCInbM4">
+            <mediafile type="still" id="RFURBWNKOZluhUeNPtCInbM4">
               <mediafile_id>RFURBWNKOZluhUeNPtCInbM4</mediafile_id>
               <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
               <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
@@ -227,7 +227,7 @@
               <is_original_file type="bool">false</is_original_file>
               <is_downloadable type="bool">false</is_downloadable>
               <is_streamable type="bool">false</is_streamable>
-              <is_thumbnail type="bool">true</is_thumbnail>
+              <is_still type="bool">true</is_still>
               <filename/>
               <uri/>
               <transcode_profile_id/>
@@ -238,18 +238,18 @@
               <created type="date">2011-01-13T12:25:08Z</created>
               <changed type="date">2011-01-13T12:25:08Z</changed>
               <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
-              <thumbnail_ticket>http://app.vpcore/still/RFURBWNKOZluhUeNPtCInbM4</thumbnail_ticket>
+              <still_ticket>http://app.vpcore/still/RFURBWNKOZluhUeNPtCInbM4</still_ticket>
               <width>176</width>
               <height>144</height>
               <filesize>3870</filesize>
               <mime_type>image/jpeg</mime_type>
-              <thumbnail_time_code>303</thumbnail_time_code>
-              <thumbnail_order>0</thumbnail_order>
-              <thumbnail_type>NORMAL</thumbnail_type>
-              <thumbnail_format>jpeg</thumbnail_format>
-              <thumbnail_default type="bool">true</thumbnail_default>
+              <still_time_code>303</still_time_code>
+              <still_order>0</still_order>
+              <still_type>NORMAL</still_type>
+              <still_format>jpeg</still_format>
+              <still_default type="bool">true</still_default>
             </mediafile>
-            <mediafile type="thumbnail" id="NWCOXFPZhUNDRbIMVRDafzVN">
+            <mediafile type="still" id="NWCOXFPZhUNDRbIMVRDafzVN">
               <mediafile_id>NWCOXFPZhUNDRbIMVRDafzVN</mediafile_id>
               <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
               <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
@@ -260,7 +260,7 @@
               <is_original_file type="bool">false</is_original_file>
               <is_downloadable type="bool">false</is_downloadable>
               <is_streamable type="bool">false</is_streamable>
-              <is_thumbnail type="bool">true</is_thumbnail>
+              <is_still type="bool">true</is_still>
               <filename/>
               <uri/>
               <transcode_profile_id/>
@@ -271,18 +271,18 @@
               <created type="date">2011-01-13T12:25:08Z</created>
               <changed type="date">2011-01-13T12:25:08Z</changed>
               <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
-              <thumbnail_ticket>http://app.vpcore/still/NWCOXFPZhUNDRbIMVRDafzVN</thumbnail_ticket>
+              <still_ticket>http://app.vpcore/still/NWCOXFPZhUNDRbIMVRDafzVN</still_ticket>
               <width>176</width>
               <height>144</height>
               <filesize>4724</filesize>
               <mime_type>image/jpeg</mime_type>
-              <thumbnail_time_code>607</thumbnail_time_code>
-              <thumbnail_order>1</thumbnail_order>
-              <thumbnail_type>NORMAL</thumbnail_type>
-              <thumbnail_format>jpeg</thumbnail_format>
-              <thumbnail_default type="bool">false</thumbnail_default>
+              <still_time_code>607</still_time_code>
+              <still_order>1</still_order>
+              <still_type>NORMAL</still_type>
+              <still_format>jpeg</still_format>
+              <still_default type="bool">false</still_default>
             </mediafile>
-            <mediafile type="thumbnail" id="HJtXKHNAvhNZOn7dUxJj5BcI">
+            <mediafile type="still" id="HJtXKHNAvhNZOn7dUxJj5BcI">
               <mediafile_id>HJtXKHNAvhNZOn7dUxJj5BcI</mediafile_id>
               <asset_id>X2bfgNRJqeNtaRNCanLxlhW8</asset_id>
               <mediafile_id_source>w2ecc6TBaTUJ8S64qNMtcW30</mediafile_id_source>
@@ -293,7 +293,7 @@
               <is_original_file type="bool">false</is_original_file>
               <is_downloadable type="bool">false</is_downloadable>
               <is_streamable type="bool">false</is_streamable>
-              <is_thumbnail type="bool">true</is_thumbnail>
+              <is_still type="bool">true</is_still>
               <filename/>
               <uri/>
               <transcode_profile_id/>
@@ -304,16 +304,16 @@
               <created type="date">2011-01-13T12:25:08Z</created>
               <changed type="date">2011-01-13T12:25:08Z</changed>
               <transcode_inherits_acl type="bool">true</transcode_inherits_acl>
-              <thumbnail_ticket>http://app.vpcore/still/HJtXKHNAvhNZOn7dUxJj5BcI</thumbnail_ticket>
+              <still_ticket>http://app.vpcore/still/HJtXKHNAvhNZOn7dUxJj5BcI</still_ticket>
               <width>176</width>
               <height>144</height>
               <filesize>4672</filesize>
               <mime_type>image/jpeg</mime_type>
-              <thumbnail_time_code>911</thumbnail_time_code>
-              <thumbnail_order>2</thumbnail_order>
-              <thumbnail_type>NORMAL</thumbnail_type>
-              <thumbnail_format>jpeg</thumbnail_format>
-              <thumbnail_default type="bool">false</thumbnail_default>
+              <still_time_code>911</still_time_code>
+              <still_order>2</still_order>
+              <still_type>NORMAL</still_type>
+              <still_format>jpeg</still_format>
+              <still_default type="bool">false</still_default>
             </mediafile>
           </mediafiles>
           <metadata>

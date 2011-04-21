@@ -246,6 +246,7 @@ class mediamosa_sdk {
   const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
   const TYPE_RESPONSE_TYPE               = 'RESPONSE_TYPE';
   const TYPE_STRING                      = 'STRING';
+  const TYPE_MEDIAMOSA_VERSION           = 'MEDIAMOSA_VERSION';
   const TYPE_DATETIME                    = 'DATETIME';
   const TYPE_DATETIME_UTC                = 'DATETIME_UTC'; // Is in UTC (already).
   const TYPE_DATE                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when time values exist. REMEMBER about utc conversion.
@@ -384,6 +385,24 @@ class mediamosa_sdk {
     }
 
     return $type;
+  }
+
+  /**
+   * Parse MediaMosa version.
+   *
+   * major.minor[.release[.build[ optional info]]]
+   *
+   * @return array
+   */
+  static public function parse_version($version) {
+    list($major, $minor, $release, $build, $info) = preg_split("/[.:-]+/", $version, 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
+    return array(
+      'major' => $major,
+      'minor' => $minor,
+      'release' => $release,
+      'build' => $build,
+      'info' => $info,
+    );
   }
 
   /**

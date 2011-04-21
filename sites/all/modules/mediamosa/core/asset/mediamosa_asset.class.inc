@@ -856,7 +856,7 @@ class mediamosa_asset {
 
               // Get the still_id.
               if (!isset($items['stills'][$asset[mediamosa_asset_db::ID]])) {
-                $items['stills'][$asset[mediamosa_asset_db::ID]] = mediamosa_asset_mediafile_thumbnail::find_default($asset[mediamosa_asset_db::ID]);
+                $items['stills'][$asset[mediamosa_asset_db::ID]] = mediamosa_asset_mediafile_still::find_default($asset[mediamosa_asset_db::ID]);
               }
 
               // Found a still?
@@ -864,14 +864,14 @@ class mediamosa_asset {
 
                 $still_id = $items['stills'][$asset[mediamosa_asset_db::ID]];
 
-                if (mediamosa_asset_mediafile_thumbnail::is_still_permanent($still_id, $is_app_admin)) {
+                if (mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin)) {
                   $response = mediamosa_asset_mediafile_play_proxy::create_response_still($still_id, $app_id);
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
                   $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
                 }
                 else {
                   $ticket = mediamosa_db::uuid($app_id);
-                  $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL, $app_id, $acl_user_id, $still_id);
+                  $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL, $app_id, $acl_user_id, $still_id);
 
                   if ($ticket_id) {
                     // Create still response.
@@ -1164,9 +1164,9 @@ class mediamosa_asset {
       mediamosa_acl::app_admin_check($app_id, $asset[mediamosa_asset_db::APP_ID], $is_app_admin);
 
       // Remove the permanent still links.
-      $still_ids = mediamosa_asset_mediafile_thumbnail::find_asset_all_still($asset_id);
+      $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($asset_id);
       foreach ($still_ids as $still_id) {
-        mediamosa_asset_mediafile_thumbnail::remove_permanent_link($still_id);
+        mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
       }
     }
 
@@ -1215,9 +1215,9 @@ class mediamosa_asset {
     // permanent still links.
     if (!is_null($is_unappropriate) && $is_unappropriate == TRUE) {
       // Remove the permanent still links.
-      $still_ids = mediamosa_asset_mediafile_thumbnail::find_asset_all_still($asset_id);
+      $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($asset_id);
       foreach ($still_ids as $still_id) {
-        mediamosa_asset_mediafile_thumbnail::remove_permanent_link($still_id);
+        mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
       }
     }
 

@@ -117,6 +117,7 @@ class mediamosa_datetime {
   /**
    * Return the time in RFC 3339 format.
    * Eg. 2003-12-13T18:30:02Z
+   *
    * @link http://www.ietf.org/rfc/rfc3339.txt RFC 3339
    *
    * @param $time

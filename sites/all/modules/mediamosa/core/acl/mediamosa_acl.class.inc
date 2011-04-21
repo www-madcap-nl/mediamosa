@@ -92,7 +92,7 @@ class mediamosa_acl {
    * @param array $acl_domain
    * @param array $acl_realm
    */
-  static public function build_access($mixed_app_id, $acl_user_id = NULL, $a_acl_group_id = NULL, $acl_domain = NULL, $acl_realm = NULL, $a_slaves = NULL) {
+  static public function build_access($mixed_app_id, $acl_user_id = NULL, $acl_group_ids = NULL, $acl_domain = NULL, $acl_realm = NULL, $a_slaves = NULL) {
     $a_query = array();
 
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = '{mediamosa_acl_name}.acl_name_id';
@@ -108,10 +108,10 @@ class mediamosa_acl {
     // Prevent mysql choosing the uni index above the needed index.
     $a_query[mediamosa_db_query::A_FROM][] = '{mediamosa_acl_name}';
 
-    assert(is_array($a_acl_group_id) || is_null($a_acl_group_id));
+    assert(is_array($acl_group_ids) || is_null($acl_group_ids));
 
     // Make sure some value's are set to NULL when considered empty.
-    $a_acl_group_id = empty($a_acl_group_id) ? NULL : $a_acl_group_id;
+    $acl_group_ids = empty($acl_group_ids) ? NULL : $acl_group_ids;
     $acl_domain = $acl_domain == '' ? NULL : $acl_domain;
     $acl_realm = $acl_realm == '' ? NULL : $acl_realm;
 
@@ -131,28 +131,28 @@ class mediamosa_acl {
     }
 
     // Do we have entry for our user_id and is not in a group (group type is never in a group, we will not group groups here)
-    if (!is_null($a_acl_group_id) && !empty($a_acl_group_id)) {
+    if (!is_null($acl_group_ids) && !empty($acl_group_ids)) {
       // Make sure there are no 'empty' group_ids in our list, or else we will gain access by mistake
-      foreach ($a_acl_group_id as $key => $s_group_id) {
-        if (trim($s_group_id) == "") {
-          unset($a_acl_group_id[$key]);
+      foreach ($acl_group_ids as $key => $acl_group_id) {
+        if (trim($acl_group_id) == "") {
+          unset($acl_group_ids[$key]);
         }
       }
 
-      if (!empty($a_acl_group_id)) {
+      if (!empty($acl_group_ids)) {
         $empty_access = FALSE;
 
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "{mediamosa_acl_name}.acl_type = 'USER_GROUP'";
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "{mediamosa_acl_name}.acl_group_id IS NULL";
 
-        if (count($a_acl_group_id) == 1) {
-            $s_group_id = reset($a_acl_group_id);
-            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = sprintf("{mediamosa_acl_name}.acl_name = '%s'", mediamosa_db_query::query_escape($s_group_id));
+        if (count($acl_group_ids) == 1) {
+            $acl_group_id = reset($acl_group_ids);
+            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = sprintf("{mediamosa_acl_name}.acl_name = '%s'", mediamosa_db_query::query_escape($acl_group_id));
         }
         else {
-          foreach ($a_acl_group_id as $s_group_id) {
-            if (!empty($s_group_id)) {
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND]['group'][mediamosa_db_query::WHERE_OR][] = sprintf("{mediamosa_acl_name}.acl_name = '%s'", mediamosa_db_query::query_escape($s_group_id));
+          foreach ($acl_group_ids as $acl_group_id) {
+            if (!empty($acl_group_id)) {
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND]['group'][mediamosa_db_query::WHERE_OR][] = sprintf("{mediamosa_acl_name}.acl_name = '%s'", mediamosa_db_query::query_escape($acl_group_id));
             }
           }
         }
@@ -853,14 +853,14 @@ class mediamosa_acl {
 
           // If its a still then remove the possible link to still.
           if (mediamosa_asset_mediafile::is_still($object)) {
-            mediamosa_asset_mediafile_thumbnail::remove_permanent_link($acl_object_id);
+            mediamosa_asset_mediafile_still::remove_permanent_link($acl_object_id);
           }
           else {
             // Remove all perm. still links to stills.
-            $still_ids = mediamosa_asset_mediafile_thumbnail::find_asset_all_still($object[mediamosa_asset_mediafile_db::ASSET_ID]);
+            $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($object[mediamosa_asset_mediafile_db::ASSET_ID]);
 
             foreach ($still_ids as $still_id) {
-              mediamosa_asset_mediafile_thumbnail::remove_permanent_link($still_id);
+              mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
             }
           }
 
@@ -895,9 +895,9 @@ class mediamosa_acl {
             ->execute();
 
           // Remove the permanent still links.
-          $still_ids = mediamosa_asset_mediafile_thumbnail::find_asset_all_still($acl_object_id);
+          $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($acl_object_id);
           foreach ($still_ids as $still_id) {
-            mediamosa_asset_mediafile_thumbnail::remove_permanent_link($still_id);
+            mediamosa_asset_mediafile_still::remove_permanent_link($still_id);
           }
 
           // Reindex the asset.
@@ -1261,7 +1261,7 @@ class mediamosa_acl {
    * @param boolean $do_master_slave_null
    * @param string $app_id_table_prefix
    */
-  static public function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, array $acl_group_ids = array(), $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     if (empty($slaves)) {
@@ -1309,34 +1309,34 @@ class mediamosa_acl {
                 // Master app_id checks
                 $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND][] = "mf.app_id=" . mediamosa_db::escape_string($app_id);
 
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = "mf.is_protected = 'FALSE'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR][] = "mf.is_protected = 'FALSE'";
 
                 if (count($a_acl_ids[$app_id]['a_name'])) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type = 'NAME'";
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_name']) . ")";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type = 'NAME'";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_name']) . ")";
                 }
 
                 if (count($a_acl_ids[$app_id]['a_group'])/* || (isset($a_acl_ids['slaves']) && isset($a_acl_ids['slaves']['a_group'][$app_id]))*/) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type = 'GROUP'";
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_group']) . ")";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type = 'GROUP'";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_group']) . ")";
                 }
               }
               else {
                 // allow master app_id media when not protected only
                 $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND][] = "mf.app_id=" . mediamosa_db::escape_string($app_id);
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = "mf.is_protected = 'FALSE'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR][] = "mf.is_protected = 'FALSE'";
               }
 
               if (!is_null($acl_user_id)) {
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['user_id'] = "mf.owner_id = '" . mediamosa_db::escape_string($acl_user_id) . "'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]['user_id'] = "mf.owner_id = '" . mediamosa_db::escape_string($acl_user_id) . "'";
               }
               // group_id
               if (!is_null($acl_group_ids)) {
                 assert(is_array($acl_group_ids));
 
-                foreach ($acl_group_ids as $s_group_id) {
-                  if (!empty($s_group_id)) {
-                    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['group_id'][] = "mf.group_id = '" . mediamosa_db::escape_string($s_group_id) . "'";
+                foreach ($acl_group_ids as $acl_group_id) {
+                  if (!empty($acl_group_id)) {
+                    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]['group_id'][] = "mf.group_id = '" . mediamosa_db::escape_string($acl_group_id) . "'";
                   }
                 }
               }
@@ -1389,25 +1389,25 @@ class mediamosa_acl {
               // 2. The object is protected by other rights (is_protected == TRUE)
               //   then only access if app_id == slave_app_id and rights match with other rights
 
-              $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_FALSE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_USER_USERGROUP);
+              $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_FALSE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_USER_USERGROUP);
 
               if (isset($a_acl_ids[$app_id_slave]) && count($a_acl_ids[$app_id_slave])) {
                 if (count($a_acl_ids[$app_id_slave]['a_name'])) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
                 }
 
                 // Even if we dont have access we still want it in our result when granted == TRUE, so skip it when granted is TRUE
                 if (count($a_acl_ids[$app_id_slave]['a_name'])) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type='NAME'";
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids[$app_id_slave]['a_name']) . ")";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type='NAME'";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids[$app_id_slave]['a_name']) . ")";
                 }
               }
 
               if (isset($a_acl_ids['slaves_convert']) && isset($a_acl_ids['slaves_convert']['a_group'][$app_id_slave])) {
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(mf.is_protected='%s' OR mf.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
 
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type='GROUP'";
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids['slaves_convert']['a_group'][$app_id_slave]) . ")";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_type='GROUP'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obj.acl_id IN(" . implode(",", $a_acl_ids['slaves_convert']['a_group'][$app_id_slave]) . ")";
               }
             }
           }
@@ -1447,36 +1447,36 @@ class mediamosa_acl {
                 // Master app_id checks
                 $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND][] = "a.app_id=" . mediamosa_db::escape_string($app_id);
 
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = "a.is_protected = 'FALSE'";
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = "a.is_protected != 'FALSE'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR][] = "a.is_protected = 'FALSE'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = "a.is_protected != 'FALSE'";
 
                 if (!empty($a_acl_ids[$app_id]['a_name'])) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type = 'NAME'";
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_name']) . ")";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type = 'NAME'";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_name']) . ")";
                 }
 
                 if (!empty($a_acl_ids[$app_id]['a_group']) || !empty($a_acl_ids['slaves']['a_group'][$app_id])) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type = 'GROUP'";
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_group']) . ")";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type = 'GROUP'";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids[$app_id]['a_group']) . ")";
                 }
               }
               else {
                 // allow master app_id media when not protected only
                 $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND][] = "a.app_id=" . mediamosa_db::escape_string($app_id);
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = "a.is_protected = 'FALSE'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR][] = "a.is_protected = 'FALSE'";
               }
 
               if (!is_null($acl_user_id)) {
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['user_id'] = "a.owner_id = '" . mediamosa_db::escape_string($acl_user_id) . "'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]['user_id'] = "a.owner_id = '" . mediamosa_db::escape_string($acl_user_id) . "'";
               }
 
               // group_id
               if (!is_null($acl_group_ids)) {
                 assert(is_array($acl_group_ids));
 
-                foreach ($acl_group_ids as $s_group_id) {
-                  if (!empty($s_group_id)) {
-                    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]['group_id'][] = "a.group_id = '" . mediamosa_db::escape_string($s_group_id) . "'";
+                foreach ($acl_group_ids as $acl_group_id) {
+                  if (!empty($acl_group_id)) {
+                    $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]['group_id'][] = "a.group_id = '" . mediamosa_db::escape_string($acl_group_id) . "'";
                   }
                 }
               }
@@ -1524,23 +1524,23 @@ class mediamosa_acl {
               // 2. The object is protected by other rights (is_protected == TRUE)
               //   then only access if app_id == slave_app_id and rights match with other rights
 
-              $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_FALSE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_USER_USERGROUP);
+              $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_FALSE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_USER_USERGROUP);
 
               if (isset($a_acl_ids[$app_id_slave]) && count($a_acl_ids[$app_id_slave])) {
                 // Even if we dont have access we still want it in our result when granted == TRUE, so skip it when granted is TRUE
                 if (count($a_acl_ids[$app_id_slave]['a_name'])) {
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
 
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type='NAME'";
-                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids[$app_id_slave]['a_name']) . ")";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type='NAME'";
+                  $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['name'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids[$app_id_slave]['a_name']) . ")";
                 }
               }
 
               if (isset($a_acl_ids['slaves_convert']) && isset($a_acl_ids['slaves_convert']['a_group'][$app_id_slave])) {
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_protected='%s' OR a.is_protected='%s')", mediamosa_acl::MEDIAFILE_IS_PROTECTED_TRUE, mediamosa_acl::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM);
 
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type='GROUP'";
-                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]["is_protected"][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids['slaves_convert']['a_group'][$app_id_slave]) . ")";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_type='GROUP'";
+                $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND]['is_protected'][mediamosa_db_query::WHERE_OR]["is_protected_TRUE"][mediamosa_db_query::WHERE_AND][mediamosa_db_query::WHERE_OR]['group'][mediamosa_db_query::WHERE_AND][] = "acl_obja.acl_id IN(" . implode(",", $a_acl_ids['slaves_convert']['a_group'][$app_id_slave]) . ")";
               }
             }
           }
@@ -1654,7 +1654,7 @@ class mediamosa_acl {
    *
    * @throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
-  static public function access_check_on_object($acl_type, $asset_id, $object_id, $app_id, $acl_user_id, $acl_group_ids, $s_acl_domain, $s_acl_realm, $is_app_admin = FALSE) {
+  static public function access_check_on_object($acl_type, $asset_id, $object_id, $app_id, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
 
     if ($is_app_admin) {
       return;
@@ -1670,7 +1670,7 @@ class mediamosa_acl {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_acl::build_access_where($query, $acl_type, $object_id, array($app_id), $acl_user_id, $acl_group_ids, $s_acl_domain, $s_acl_realm, array(), $is_app_admin);
+        mediamosa_acl::build_access_where($query, $acl_type, $object_id, array($app_id), $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, array(), $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id = '%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
@@ -1704,7 +1704,7 @@ class mediamosa_acl {
         $query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        mediamosa_acl::build_access_where($query, $acl_type, $object_id, array($app_id), $acl_user_id, $acl_group_ids, $s_acl_domain, $s_acl_realm, array(), $is_app_admin);
+        mediamosa_acl::build_access_where($query, $acl_type, $object_id, array($app_id), $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, array(), $is_app_admin);
 
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id ='%s'", $asset_id);
         $query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";

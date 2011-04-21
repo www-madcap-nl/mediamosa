@@ -21,7 +21,7 @@ OpenAPI development:
 TODO: (v3.0)
 - OAI delete support (for solr).
 
-- Hotfix for .asx and .smil files;
+- Hotfix for .asx and .smil files (apache);
 <IfModule mod_alias.c>
   AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
 </IfModule>
@@ -55,10 +55,6 @@ MediaMosa 3.0 (build 1666)
 - Owner check for /asset/$asset_id/joblist (See ticket #356).
 - Retranscode improvement (See ticket #467).
 - ACL problem when using replace fix (See ticket #503).
-- The asset detail view page jobs are can now be sorted by ID.
-- Fixed speed problem when returning larger than 64k metadata. Problem was in
-  the way invalid chars are fixed in output.
-- Rewrote the usage of simplexml to domdocument for output.
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.
@@ -92,7 +88,7 @@ Other changes (not ticket related).
   spaces.
 - Errors on the Drupal status page will now give error on MediaMosa status page.
 - All files that contain class(es) are now renamed to include '.class.inc'.
-- Filenames or directories with 'still' usage, are renamed to 'thumbnail'.
+- Filenames or directories with 'still' usage, are renamed to 'still'.
 - AUT modules and files are now renamed to ACL.
 - Some settings in configure have been merged into the section 'Miscellaneous'.
 - To view and edit the Internal password you now need to have the role 
@@ -108,17 +104,31 @@ Other changes (not ticket related).
   Still download test, Permanent still link.
 - Fixed: asset-collection relation delete all REST call. Returned SQL error when
   no relations where present.
-- Removed access check on stills, this was causing access denied on stills that
-  where not master-slaved, while original mediafile was.
 - SDK code was syncronized with the SDK repository (6 and 7).
 - Streaming ticket table clean up development (See ticket #103).
-- Simpletest REST call development.
 - Work around for still_type = scene, if there isn't video duration.
-- Add install hook for mediamosa_app_dbus to migrate to new DBUS module.
+- Added install hook for mediamosa_app_dbus to migrate to new DBUS module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
 - Frametime for still upload development.
 - Lua script fix for the new ffmpeg version.
+- Added the 'mediamosa_version' variable to force the output to return in the
+  provide the output in given version. Overrides all other settings, including
+  the client application setting.
+- MediaMosa developer has been extended to include the version in which the REST
+  call needs to return its format in. By selecting 2.3.0, the REST call will
+  return its output in 2.3.0 mode.
+- The asset detail view page jobs are can now be sorted by ID.
+- Fixed speed problem when returning larger than 64k metadata. Problem was in
+  the way invalid chars are fixed in output.
+- Rewrote the usage of simplexml to domdocument for output.
+- The REST call documentation now shows alias usage for variables. Is mainly
+  for the new acl_* renames from aut_*.
+- All aut_* input variables are now depricated and replaced by acl_* versions.
+  The aut_* input variables will still work though.
+- Added lower level of debugging to include the <debug> array in the 3.0 output.
+- Added global setting to force REST call output always to output in that
+  version of MediaMosa. 
 
 MediaMosa 2.3.9 (build 1379)
 ----------------------------

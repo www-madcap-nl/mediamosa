@@ -79,7 +79,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             break;
           case 'acl':
           case 'aut':
-            $context_set = 'mediamosa:aut';
+            $context_set = 'mediamosa:acl';
             break;
           default:
             $context_set = 'mediamosa:' . $a_def['propgroup_name'];
@@ -157,11 +157,11 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
     // Special case when these keys are used.
     $acl_joins = array(
-      'aut_NAME_USER',
-      'aut_NAME_USER_GROUP',
-      'aut_GROUP_DOMAIN',
-      'aut_GROUP_REALM',
-      'aut_APP_MASTER_SLAVE',
+      'ACL_NAME_USER',
+      'ACL_NAME_USER_GROUP',
+      'ACL_GROUP_DOMAIN',
+      'ACL_GROUP_REALM',
+      'ACL_APP_MASTER_SLAVE',
     );
     if (!empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN]) && in_array($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN], $acl_joins)) {
       $result['is_acl_search'] = TRUE;

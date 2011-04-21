@@ -44,7 +44,7 @@ class mediamosa_rest {
    * @return array
    *  All version numbers
    */
-  static public function get_all_versions() {
+  static public function get_all_versions($latest = '') {
 
     // Find all REST calls of enabled modules.
     $rest_calls = module_invoke_all('mediamosa_register_rest_call');
@@ -60,7 +60,7 @@ class mediamosa_rest {
     }
 
     // Must be first.
-    $versions[mediamosa_version::LATEST] = t('Latest');
+    $versions[mediamosa_version::LATEST] = empty($latest) ? t('Latest') : $latest;
 
     // Sort on version.
     krsort($versions);
@@ -285,14 +285,6 @@ class mediamosa_rest {
         $intersec = array_intersect($current_interface, $rest_call[mediamosa_rest_call::FOR_INTERFACE]);
         if (empty($intersec)) {
           continue;
-        }
-
-        // Check for the ALIAS_FOR.
-        if (isset($rest_call[mediamosa_rest_call::ALIAS_FOR])) {
-          assert(isset($rest_calls[$rest_call[mediamosa_rest_call::ALIAS_FOR]]));
-
-          // Now add the stuff we are missing.
-          $rest_call += $rest_calls[$rest_call[mediamosa_rest_call::ALIAS_FOR]];
         }
 
         // Set method.

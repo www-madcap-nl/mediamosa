@@ -256,7 +256,7 @@ class mediamosa_asset_mediafile_upload {
     );
 
     // Create still.
-    mediamosa_asset_mediafile_thumbnail::create(
+    mediamosa_asset_mediafile_still::create(
       $mediafile['asset_id'],
       $still_id,
       $ticket[mediamosa_ticket_db::APP_ID],

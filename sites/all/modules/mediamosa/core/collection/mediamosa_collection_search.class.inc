@@ -131,7 +131,7 @@ class mediamosa_collection_search {
     $slaves_collections = mediamosa_acl_app_master_slave::slave_get($app_ids, mediamosa_acl::ACL_TYPE_COLLECTION);
 
     // Access selection is done here;
-    mediamosa_acl::build_access_where($a_query, mediamosa_acl::ACL_TYPE_COLLECTION, NULL, $app_ids, $acl_user_id, NULL, NULL, NULL, $slaves_collections, $is_app_admin);
+    mediamosa_acl::build_access_where($a_query, mediamosa_acl::ACL_TYPE_COLLECTION, NULL, $app_ids, $acl_user_id, array(), NULL, NULL, $slaves_collections, $is_app_admin);
 
     // Get the slaves based on the app ids for mediafiles.
     $slaves_mediafiles = mediamosa_acl_app_master_slave::slave_get($app_ids, mediamosa_acl::ACL_TYPE_MEDIAFILE);

@@ -347,7 +347,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
       $asset_id = $query->execute()->fetchField();
 
-      mediamosa_asset_mediafile_thumbnail::delete($asset_id, $mediafile_id);
+      mediamosa_asset_mediafile_still::delete($asset_id, $mediafile_id);
     }
 
     // Delete the mediafile.

@@ -214,3 +214,13 @@ function mediamosa_solr_schema() {
 
   return $schema;
 }
+
+/**
+ * Files renamed, rebuild Drupal registry.
+ */
+function mediamosa_solr_update_7000() {
+// Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+}

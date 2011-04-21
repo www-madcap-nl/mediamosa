@@ -12,7 +12,7 @@
  http://wiki.apache.org/solr/SchemaXml
 -->
 
-<schema name="mediamosa-2.3.4-asset" version="1.2">
+<schema name="mediamosa-3.0.0-asset" version="1.2">
 
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        Applications should change this to reflect the nature of the search collection.
@@ -304,7 +304,7 @@
     <field name="is_external" type="boolean" indexed="true" stored="false" required="true" multiValued="false" /> 
 
     <!--
-      Aut. rules.
+      ACL. rules.
       mf: [TRUE|FALSE] (TRUE: has mediafiles)
 
       mf_org:[TRUE|FALSE] (TRUE: has 1 or more original mf)
@@ -333,8 +333,8 @@
     <field name="mf_acl_master_slave" type="string_id" indexed="true" stored="false" required="false" multiValued="true" /> 
 
     <!--
-      AUT CQL context set.
-      The AUT CQL context set supports allows EGAs to search on their aut settings.
+      ACL CQL context set.
+      The ACL CQL context set supports allows EGAs to search on their acl settings.
       
       mf_acl_user: mediamosa_acl_name.USER
       mf_acl_user_group: mediamosa_acl_name.USER_GROUP

@@ -63,6 +63,11 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
   const RANGE = 'range';
   const TAG = 'tag';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
@@ -106,7 +111,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
             mediamosa_asset_mediafile_play_proxy::RESPONSE_METAFILE,
             mediamosa_asset_mediafile_play_proxy::RESPONSE_OBJECT,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
             mediamosa_asset_mediafile_play_proxy::RESPONSE_URI
           ),
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_URI
@@ -116,14 +121,17 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Group ID of the person who wants to play the video, can be used for authorization.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
         ),
         self::ACL_DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain for which the application is made. If specified it is used for authorization. The domain is checked against the acl rules of the media files, if the domain appears in the / acl / domain list, the video is played.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
         ),
         self::ACL_REALM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'If specified it is used for authorization.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
         ),
         self::DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
@@ -193,7 +201,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $profile_id = $this->get_param_value_global(self::PROFILE_ID);
 
     // Is reponse is set or response type is still then mediafile_id is not required.
-    if (isset($profile_id) || $response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
+    if (isset($profile_id) || $response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
       $a_var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
     }
 
@@ -218,7 +226,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     // FIXME: hack, fixed again by checking if response was not given.
     if ($this->is_internal() && !$this->isset_given_param(self::RESPONSE)) {
-      $this->set_param_value(self::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL);
+      $this->set_param_value(self::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL);
     }
 
     $user_id = $this->get_param_value(self::USER_ID);
@@ -247,7 +255,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       }
     }
 
-    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL && !$mediafile_id && $this->isset_given_param(self::TAG)) {
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL && !$mediafile_id && $this->isset_given_param(self::TAG)) {
       $mediafile_id = mediamosa_asset_mediafile_play_proxy::get_mediafile_id_on_tag($asset_id, $tag);
 
       if (!$mediafile_id) {
@@ -256,7 +264,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
 
     // Still response does not need mediafile_id.
-    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL && !$mediafile_id) {
+    if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL && !$mediafile_id) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::MEDIAFILE_ID, '@type' => mediamosa_sdk::TYPE_MEDIAFILE_ID));
     }
 
@@ -311,23 +319,23 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     // Create ticket ID.
     $ticket = mediamosa_db::uuid($app_id);
 
-    if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
+    if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && $response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
       $ticket = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id);
     }
 
     // If response type is still, we get all information of all stills with all details.
     $a_stills = array();
-    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL) {
+    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $app_ids, $user_id, $is_app_admin, TRUE);
 
       // Set default still.
       if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-        $still_id_default = ($still_id ? $still_id : mediamosa_asset_mediafile_thumbnail::find_default($asset_id));
+        $still_id_default = ($still_id ? $still_id : mediamosa_asset_mediafile_still::find_default($asset_id));
 
         if (!empty($still_id_default)) {
           // Generate ticket or perm link?
-          $ticket = mediamosa_asset_mediafile_thumbnail::is_still_permanent($still_id_default, $is_app_admin) ? $still_id_default : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id_default);
+          $ticket = mediamosa_asset_mediafile_still::is_still_permanent($still_id_default, $is_app_admin) ? $still_id_default : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, $response_type, $app_id, $user_id, $still_id_default);
         }
       }
 
@@ -435,7 +443,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
             // make a play or download symlink.
             if (empty($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
               // Generate ticket or perm link?
-              $ticket_still = mediamosa_asset_mediafile_thumbnail::is_still_permanent($t_stills['still_id'], $is_app_admin) ? $t_stills['still_id'] : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+              $ticket_still = mediamosa_asset_mediafile_still::is_still_permanent($t_stills['still_id'], $is_app_admin) ? $t_stills['still_id'] : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket_still, $mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
             }
 
             $t_stills['ticket'] = $ticket_still;

@@ -31,12 +31,11 @@
 
 class mediamosa_asset_mediafile_play_proxy {
   // ------------------------------------------------------------------ Consts.
-  /*
+  /**
    * Response types
    */
   const RESPONSE_URI = 'plain';
-  const RESPONSE_STILL = 'still'; // 2.x comp.
-  const RESPONSE_THUMBNAIL = 'still';
+  const RESPONSE_STILL = 'still';
   const RESPONSE_METAFILE = 'metafile';
   const RESPONSE_OBJECT = 'object';
   const RESPONSE_DOWNLOAD = 'download';
@@ -49,7 +48,7 @@ class mediamosa_asset_mediafile_play_proxy {
   CONST PP_FLASH_OBJECT_HEIGHT = 240;
   CONST PP_FLASH_OBJECT_WIDTH = 320;
 
-  /*
+  /**
    *  Container types
    */
   const CONTAINER_TYPE_WMV = 'asf';
@@ -73,7 +72,7 @@ class mediamosa_asset_mediafile_play_proxy {
   static public function get_media_server($response_type, array $mediafile_ext = array()) {
 
     switch ($response_type) {
-      case self::RESPONSE_THUMBNAIL:
+      case self::RESPONSE_STILL:
         return mediamosa_db::db_query(
           "SELECT REPLACE(#server_path, :base_uri, #server_uri) FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
@@ -242,7 +241,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param integer $app_id
    */
   static public function create_response_still($ticket, $app_id) {
-    return self::create_response(self::RESPONSE_THUMBNAIL, $app_id, $ticket);
+    return self::create_response(self::RESPONSE_STILL, $app_id, $ticket);
   }
 
   /**
@@ -283,7 +282,7 @@ class mediamosa_asset_mediafile_play_proxy {
   static function create_response_still_url($app_id, $asset_id) {
 
     // Get default still.
-    $still_id = mediamosa_asset_mediafile_thumbnail::find_default($asset_id);
+    $still_id = mediamosa_asset_mediafile_still::find_default($asset_id);
 
     // Any still?
     if (!empty($still_id)) {
@@ -355,7 +354,7 @@ class mediamosa_asset_mediafile_play_proxy {
     }
 
     // Replace {TICKET} with app_id / ticket.
-    if ($response_type != self::RESPONSE_THUMBNAIL) {
+    if ($response_type != self::RESPONSE_STILL) {
       $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
     }
 
@@ -676,7 +675,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case self::RESPONSE_THUMBNAIL:
+      case self::RESPONSE_STILL:
         $output = $streaming_server_uri;
         break;
     }

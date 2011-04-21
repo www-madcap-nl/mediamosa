@@ -464,17 +464,17 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         self::WATERMARK_DST_X => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'X-coordinate of destination point of watermark.',
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_DST_X,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_X,
         ),
         self::WATERMARK_DST_Y => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Y-coordinate of destination point of watermark.',
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_DST_Y,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_Y,
         ),
         self::WATERMARK_PCT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Alpha transparency of watermark (watermark visibility in percentage [0 - 100%]).',
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_PCT,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_PCT,
           self::VAR_RANGE_START => 0,
           self::VAR_RANGE_END => 100,
         ),
@@ -482,19 +482,19 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Vertical align of watermark.',
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_LEFT,
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_RIGHT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_LEFT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_RIGHT,
           ),
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_V_ALIGN,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_V_ALIGN,
         ),
         self::WATERMARK_H_ALIGN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Horizontal align of watermark.',
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_TOP,
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_BOTTOM,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_TOP,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
           ),
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_H_ALIGN,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_H_ALIGN,
         ),
 
         self::COMPLETED_TRANSCODING_URL => array(

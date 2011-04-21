@@ -313,7 +313,7 @@ class mediamosa_rest_call_openapi_search extends mediamosa_rest_call {
             'start_time' => NULL,
             'tagged_people' => NULL,
             'tags' => !empty($mediafile['tag']) ? array($mediafile['tag']) : NULL,
-            'thumbnail_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
+            'still_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
             'title' => !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : NULL,
             'type' => !empty($item['dublin_core']['type'][0]) ? $item['dublin_core']['type'][0] : NULL,
             'url' => !empty($mediafile['uri']) ? $mediafile['uri'] : NULL,
@@ -632,7 +632,7 @@ class mediamosa_rest_call_openapi_mediaitems_get extends mediamosa_rest_call {
           'start_time' => NULL,
           'tagged_people' => NULL,
           'tags' => !empty($mediafile['tag']) ? array($mediafile['tag']) : NULL,
-          'thumbnail_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
+          'still_url' => !empty($still['still_ticket']) ? $still['still_ticket'] : NULL,
           'title' => !empty($item['dublin_core']['title'][0]) ? $item['dublin_core']['title'][0] : NULL,
           'type' => !empty($item['dublin_core']['type'][0]) ? $item['dublin_core']['type'][0] : NULL,
           'url' => !empty($mediafile['uri']) ? $mediafile['uri'] : NULL,
@@ -680,7 +680,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
   const START_TIME = 'start_time';
   const TAGGED_PEOPLE = 'tagged_people';
   const TAGS = 'tags';
-  const THUMBNAIL_URL = 'thumbnail_url';
+  const STILL_URL = 'still_url';
   const TITLE = 'title';
   const TYPE = 'type';
   const URL = 'url';
@@ -806,9 +806,9 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Tags associated with this media item.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
-        self::THUMBNAIL_URL => array(
+        self::STILL_URL => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'URL to a thumbnail image of the media item.',
+          self::VAR_DESCRIPTION => 'URL to a still image of the media item.',
         ),
         self::TITLE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
@@ -900,7 +900,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
         $tags[$key] = strip_tags(addslashes($value));
       }
     }
-    $thumbnail_url = strip_tags(addslashes($this->get_param_value(self::THUMBNAIL_URL)));
+    $still_url = strip_tags(addslashes($this->get_param_value(self::STILL_URL)));
     $title = strip_tags(addslashes($this->get_param_value(self::TITLE)));
     $type = $this->get_param_value(self::TYPE);
     $url = strip_tags(addslashes($this->get_param_value(self::URL)));
@@ -949,7 +949,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       'language' => array($language),
       'title' => array($title),
       // Skipped fields, because we don't have metadata equivalients.
-      // $duration, $file_size, $last_updated, $location, $mime_type, $num_comments, $num_views, $num_votes, $rating, $start_time, $tagged_people, $thumbnail_url, $type,
+      // $duration, $file_size, $last_updated, $location, $mime_type, $num_comments, $num_views, $num_votes, $rating, $start_time, $tagged_people, $still_url, $type,
     );
 
     // Create the metadata.
@@ -985,7 +985,7 @@ class mediamosa_rest_call_openapi_mediaitems_post extends mediamosa_rest_call {
       'start_time' => NULL,
       'tagged_people' => NULL,
       'tags' => !empty($tags) ? $tags : NULL,
-      'thumbnail_url' => NULL,
+      'still_url' => NULL,
       'title' => $title,
       'type' => NULL,
       'url' => $url,
@@ -1033,7 +1033,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
   const START_TIME = 'start_time';
   const TAGGED_PEOPLE = 'tagged_people';
   const TAGS = 'tags';
-  const THUMBNAIL_URL = 'thumbnail_url';
+  const STILL_URL = 'still_url';
   const TITLE = 'title';
   const TYPE = 'type';
   const URL = 'url';
@@ -1143,9 +1143,9 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'Tags associated with this media item.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
-        self::THUMBNAIL_URL => array(
+        self::STILL_URL => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'URL to a thumbnail image of the media item.',
+          self::VAR_DESCRIPTION => 'URL to a still image of the media item.',
         ),
         self::TITLE => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
@@ -1233,7 +1233,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
         $tags[$key] = strip_tags(addslashes($value));
       }
     }
-    $thumbnail_url = strip_tags(addslashes($this->get_param_value(self::THUMBNAIL_URL)));
+    $still_url = strip_tags(addslashes($this->get_param_value(self::STILL_URL)));
     $title = strip_tags(addslashes($this->get_param_value(self::TITLE)));
     $type = $this->get_param_value(self::TYPE);
     $url = strip_tags(addslashes($this->get_param_value(self::URL)));
@@ -1287,7 +1287,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
       'language' => array($language),
       'title' => array($title),
       // Skipped fields, because we don't have metadata equivalients.
-      // $duration, $file_size, $last_updated, $location, $mime_type, $num_comments, $num_views, $num_votes, $rating, $start_time, $tagged_people, $thumbnail_url, $type,
+      // $duration, $file_size, $last_updated, $location, $mime_type, $num_comments, $num_views, $num_votes, $rating, $start_time, $tagged_people, $still_url, $type,
     );
 
     // Create the metadata.
@@ -1430,7 +1430,7 @@ class mediamosa_rest_call_openapi_upload extends mediamosa_rest_call {
       'start_time' => NULL,
       'tagged_people' => NULL,
       'tags' => !empty($tags) ? $tags : NULL,
-      'thumbnail_url' => NULL,
+      'still_url' => NULL,
       'title' => $title,
       'type' => $type,
       'url' => $url,

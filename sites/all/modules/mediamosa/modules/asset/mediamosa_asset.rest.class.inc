@@ -258,6 +258,12 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+
   // ------------------------------------------------------------------ Public Functions.
   static public function get_search_params() {
     return array(
@@ -326,20 +332,24 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         self::ACL_USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
         ),
         self::ACL_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-          self::VAR_DEFAULT_VALUE => array()
+          self::VAR_DEFAULT_VALUE => array(),
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
         ),
         self::ACL_DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
         ),
         self::ACL_REALM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
         ),
         self::BATCH_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BATCH_ID,
@@ -729,6 +739,12 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
@@ -752,20 +768,24 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
         self::ACL_USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The current user is used for authorization. The acl_* fields affect the [granted] field in the output, and the parameter "granted" was given the number of records.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
         ),
         self::ACL_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group(s), where the current user is in, is used for authorization.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
         ),
         self::ACL_DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN_ID),
         ),
         self::ACL_REALM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
         ),
         self::SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
@@ -839,7 +859,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     mediamosa_asset::is_unappropriate($asset_id, $app_ids, $acl_user_id, $is_app_admin);
 
     // Is app client at 1.6 ?
-    $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_ACTIVE_VERSION);
+    $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
 
     // Collect.
     $add_has_streamable_mediafiles = FALSE;
@@ -901,6 +921,12 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
   const IS_OAI = 'is_oai';
   const VIEW_HIDDEN_METADATA = 'view_hidden_metadata';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+  const ALIAS_AUT_GROUP_ID = 'aut_group_id';
+  const ALIAS_AUT_DOMAIN = 'aut_domain';
+  const ALIAS_AUT_REALM = 'aut_realm';
+
   // Unlimited.
   const LIMIT = 99999;
 
@@ -928,20 +954,24 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         self::ACL_USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The current user is used for authorization. The acl_* fields affect the [granted] field in the output, and the parameter "granted" was given the number of records.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
         ),
         self::ACL_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group(s), where the current user is in, is used for authorization.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
         ),
         self::ACL_DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
         ),
         self::ACL_REALM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
         ),
         self::SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
@@ -1050,7 +1080,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
       $app_id = reset($app_ids);
 
       // Get app version.
-      $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_ACTIVE_VERSION);
+      $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
 
       // Show in old format? Yes, if the app client < 1.6.
       $old_output = $env_active_version !== FALSE && ($env_active_version[mediamosa_version::MAJOR] == 1 && $env_active_version[mediamosa_version::MINOR] < 6);

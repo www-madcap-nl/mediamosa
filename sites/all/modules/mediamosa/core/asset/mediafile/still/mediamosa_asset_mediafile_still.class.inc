@@ -30,7 +30,7 @@
   * under mediafile.
   */
 
-class mediamosa_asset_mediafile_thumbnail {
+class mediamosa_asset_mediafile_still {
   // ------------------------------------------------------------------ Constants.
   // Watermark.
   const WATERMARK_ID = 'watermark_id';
@@ -66,7 +66,7 @@ class mediamosa_asset_mediafile_thumbnail {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_asset_mediafile_thumbnail');
+    mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_asset_mediafile_still');
   }
 
   /**
@@ -79,7 +79,7 @@ class mediamosa_asset_mediafile_thumbnail {
    * @param string $severity
    */
   static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
-    mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'mediamosa_asset_mediafile_thumbnail');
+    mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'mediamosa_asset_mediafile_still');
   }
 
   /**
@@ -90,7 +90,7 @@ class mediamosa_asset_mediafile_thumbnail {
    * @param string $severity
    */
   static public function log_debug($message, array $variables = array()) {
-    mediamosa_debug::log($message, $variables, 'mediamosa_asset_mediafile_thumbnail');
+    mediamosa_debug::log($message, $variables, 'mediamosa_asset_mediafile_still');
   }
 
   /**
@@ -101,7 +101,7 @@ class mediamosa_asset_mediafile_thumbnail {
    * @param string $severity
    */
   static public function log_debug_high($message, array $variables = array()) {
-    mediamosa_debug::log_high($message, $variables, 'mediamosa_asset_mediafile_thumbnail');
+    mediamosa_debug::log_high($message, $variables, 'mediamosa_asset_mediafile_still');
   }
 
   /**
@@ -637,7 +637,7 @@ class mediamosa_asset_mediafile_thumbnail {
       $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
       $query
         ->condition('t.' . mediamosa_ticket_db::ID, $ticket_id)
-        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL)
+        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
         ->fields('t', array(mediamosa_ticket_db::MEDIAFILE_ID,));
       $result = $query->execute();
       $ticket = $result->fetchCol();
@@ -795,7 +795,7 @@ class mediamosa_asset_mediafile_thumbnail {
       $query = mediamosa_db::db_select(mediamosa_ticket_db::TABLE_NAME, 't');
       $query
         ->condition('t.' . mediamosa_ticket_db::MEDIAFILE_ID, $a_row['still_id'])
-        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL)
+        ->condition('t.' . mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL)
         ->fields('t', array(mediamosa_ticket_db::ID,));
       $result = $query->execute();
       foreach ($result as $record) {
@@ -868,7 +868,7 @@ class mediamosa_asset_mediafile_thumbnail {
       // Remove tickets.
       $query = mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME);
       $query->condition(mediamosa_ticket_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN');
-      $query->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_THUMBNAIL);
+      $query->condition(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::TICKET_TYPE_STILL);
       $query->execute();
     }
 

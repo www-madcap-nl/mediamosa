@@ -134,7 +134,7 @@ files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metad
 files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.class.inc
 
 ; Asset Mediafile Thumnails.
-files[] = core/asset/mediafile/thumbnail/mediamosa_asset_mediafile_thumbnail.class.inc
+files[] = core/asset/mediafile/still/mediamosa_asset_mediafile_still.class.inc
 
 ; Asset Mediafile Upload.
 files[] = core/asset/mediafile/upload/mediamosa_asset_mediafile_upload.class.inc
@@ -189,17 +189,17 @@ files[] = core/job/server/mediamosa_job_server.class.inc
 ; Job Server Analyse.
 files[] = core/job/server/analyse/mediamosa_job_server_analyse_db.class.inc
 
-; Job Server Thumbnail.
-files[] = core/job/server/thumbnail/mediamosa_job_server_thumbnail_db.class.inc
-files[] = core/job/server/thumbnail/mediamosa_job_server_thumbnail.class.inc
+; Job Server Still.
+files[] = core/job/server/still/mediamosa_job_server_still_db.class.inc
+files[] = core/job/server/still/mediamosa_job_server_still.class.inc
 
 ; Job Server Transcode.
 files[] = core/job/server/transcode/mediamosa_job_server_transcode_db.class.inc
 files[] = core/job/server/transcode/mediamosa_job_server_transcode.class.inc
 
-; Job Thumbnail.
-files[] = core/job/thumbnail/mediamosa_job_thumbnail_db.class.inc
-files[] = core/job/thumbnail/mediamosa_job_thumbnail.class.inc
+; Job Still.
+files[] = core/job/still/mediamosa_job_still_db.class.inc
+files[] = core/job/still/mediamosa_job_still.class.inc
 
 ; Job Transcode.
 files[] = core/job/transcode/mediamosa_job_transcode_db.class.inc

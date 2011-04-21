@@ -311,7 +311,7 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_ACL:
-      $instant = mediamosa_solr::settingInstantlyAUT();
+      $instant = mediamosa_solr::settingInstantlyACL();
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION:

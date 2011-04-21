@@ -155,7 +155,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   $rest_calls['mediafile/$mediafile_id/still'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_still_for_mediafile',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_thumbnail',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
 
@@ -163,7 +163,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   $rest_calls['asset/$asset_id/still'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_still',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_thumbnail',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
 
@@ -530,10 +530,10 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile_still',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_thumbnail_download',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still_download',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_THUMBNAIL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_STILL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
 

@@ -2249,8 +2249,7 @@ function mediamosa_update_7106() {
   // Rebuild the registry.
   db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
   db_query('DELETE FROM {registry_file}'); // Clear it too.
-  registry_rebuild();
-  cache_clear_all();
+  drupal_flush_all_caches();
 }
 
 /**
@@ -3108,13 +3107,4 @@ function mediamosa_update_7119() {
  */
 function mediamosa_update_7120() {
   db_query("ALTER TABLE {mediamosa_tool_params} CHANGE COLUMN type_parameter type_parameter enum('SELECT','CHECKBOX') NOT NULL DEFAULT 'SELECT' COMMENT 'The type of the parameter.'");
-
-  // Renaming still to thumbnail, remove exisiting upload still tickets.
-  db_query("DELETE FROM {mediamosa_ticket} WHERE ticket_type = 'STILL'");
-  try {
-    db_query("ALTER TABLE {mediamosa_ticket} CHANGE COLUMN ticket_type ticket_type enum('PLAY','DOWNLOAD','THUMBNAIL','UPLOAD') NOT NULL DEFAULT 'PLAY' COMMENT 'The ticket type.'");
-  }
-  catch (Exception $e) {
-    // ignore.
-  }
 }

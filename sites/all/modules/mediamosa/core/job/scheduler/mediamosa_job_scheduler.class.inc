@@ -651,7 +651,7 @@ class mediamosa_job_scheduler {
       }
       $i = 0;
       foreach ($filenames as $filename) {
-        mediamosa_asset_mediafile_thumbnail::create($asset_id, $filename, $a_job['app_id'], $a_job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job['mediafile_id'], $tag);
+        mediamosa_asset_mediafile_still::create($asset_id, $filename, $a_job['app_id'], $a_job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job['mediafile_id'], $tag);
         $order++;
         if (isset($second) && is_numeric($second)) {
           $sec += $second;

@@ -236,17 +236,19 @@ function _mediamosa_user_access($perms, $one_part_test = FALSE) {
 
   // Get the roles.
   $role_permissions = user_role_permissions($user->roles);
-  if (empty($role_permissions[$user->uid])) {
+  if (empty($role_permissions)) {
     return FALSE;
   }
 
   $perms .= '|';
+
   // If part of role is there
   foreach ($user->roles as $rid => $role) {
     foreach ($role_permissions[$rid] as $role_permission => $switch) {
       if (empty($switch)) {
         continue;
       }
+
       // Part of role?
       if ($perms == substr($role_permission, 0, drupal_strlen($perms))) {
         return TRUE;
@@ -535,9 +537,17 @@ function mediamosa_mediamosa_configuration_collect() {
     '#default_value' => variable_get('mediamosa_search_engine', 'mediamosa_search'),
   );
 
+  $form['settings_mediamosa']['mediamosa_version'] = array(
+    '#type' => 'select',
+    '#title' => t('Select MediaMosa version REST output'),
+    '#description' => t('Select the version for the REST calls output format. Use this setting for compatiblitity problems with the output.'),
+    '#options' => mediamosa_rest::get_all_versions(t('Current version')),
+    '#default_value' => variable_get('mediamosa_version', mediamosa_version::LATEST),
+  );
+
   $form['settings_mediamosa']['mediamosa_cron_url_app'] = array(
     '#type' => 'textfield',
-    '#title' => t('URL REST'),
+    '#title' => t('URL REST for CRON runs'),
     '#description' => t('The URL or IP Address of the server to apply the call for CRON REST calls. For now its used to trigger update for the status page and where to run the status tests. This must be a MediaMosa REST interface or the admin URL (default http://localhost/), and open from this server, f.e. \'http://app.mediamosa.local\'. <br />Notes: <br /><em>Make sure you only trigger the CRON on one server, prefer where you host the admin interface.</em><br /><em>You must use http:// or other schema in this URL.</em>'),
     '#required' => TRUE,
     '#default_value' => variable_get('mediamosa_cron_url_app', 'http://localhost'),

@@ -1185,6 +1185,34 @@ function _mediamosa_migration_user() {
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
+   * group_id
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_user}
+      (
+        app_id,
+        name,
+        quotum,
+        created,
+        changed
+      ) (SELECT
+        app_id,
+        name,
+        quotum,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
+      FROM #db_name.quota_user)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
    * -
    * Columns renamed;
    * -
@@ -1210,12 +1238,15 @@ function _mediamosa_migration_user() {
   );
 
   $users_in_group = db_query(
-    "SELECT g.group_key, u.user_key FROM #db_name.quota_user AS u JOIN {mediamosa_user_group} AS g u.group_id = g.group_id AND u.app_id = g.app_id"
-  )->execute()->fetchAll();
+    strtr("SELECT g.group_key, mu.user_key FROM #db_name.quota_user AS u JOIN {mediamosa_user} AS mu ON mu.name = u.name JOIN {mediamosa_user_group} AS g ON u.group_id = g.group_id AND u.app_id = g.app_id",
+      array(
+        '#db_name' => $db_name
+      )
+    )
+  )->fetchAll();
 
-  $counter = 0;
   foreach ($users_in_group as $item) {
-    mediamosa_db::db_query(
+    db_query(
       strtr("INSERT INTO {mediamosa_user_in_group} (#field_user_key, #field_group_key) VALUES (#user_key, #group_key)",
         array(
           '#table_name' => 'mediamosa_user_in_group',
@@ -1224,37 +1255,9 @@ function _mediamosa_migration_user() {
           '#user_key' => $item->user_key,
           '#group_key' => $item->group_key,
         )
-      ));
-    $counter++;
+      )
+    );
   }
-
-  /**
-   * Copy from 1.x to 2.x
-   * Columns dropped;
-   * group_id
-   * -
-   * Columns renamed;
-   * -
-   */
-  db_query(strtr(
-    "INSERT INTO {mediamosa_user}
-      (
-        app_id,
-        name,
-        quotum,
-        created,
-        changed
-      ) (SELECT
-        app_id,
-        name,
-        quotum,
-        DATE_SUB(created, INTERVAL 2 HOUR),
-        DATE_SUB(changed, INTERVAL 2 HOUR)
-      FROM #db_name.quota_user)",
-    array(
-      '#db_name' => $db_name
-    ))
-  );
 
   /**
    * user_favorites -> mediamosa_user_favorite

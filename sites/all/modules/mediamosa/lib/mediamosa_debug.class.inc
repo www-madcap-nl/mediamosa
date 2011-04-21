@@ -38,7 +38,7 @@ class mediamosa_debug {
    * @param string $type
    */
   static public function log($message, array $variables = array(), $type = NULL, $link = NULL) {
-    if (self::is_debug()) {
+    if (self::is_debug_normal()) {
       mediamosa_watchdog::log($message, $variables, WATCHDOG_DEBUG, $type, $link);
     }
   }
@@ -51,7 +51,7 @@ class mediamosa_debug {
    * @param string $type
    */
   static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
-    if (self::is_debug()) {
+    if (self::is_debug_normal()) {
       mediamosa_watchdog::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
     }
   }
@@ -60,7 +60,7 @@ class mediamosa_debug {
    * Log asset ids.
    */
   static public function log_asset($asset_id, $message, array $variables = array(), $type = NULL) {
-    if (self::is_debug()) {
+    if (self::is_debug_normal()) {
       mediamosa_watchdog::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
     }
   }
@@ -69,7 +69,7 @@ class mediamosa_debug {
    * Log mediafile ids.
    */
   static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $type = NULL) {
-    if (self::is_debug()) {
+    if (self::is_debug_normal()) {
       mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, WATCHDOG_DEBUG, $type);
     }
   }
@@ -117,6 +117,13 @@ class mediamosa_debug {
    */
   static public function is_debug() {
     return (variable_get('mediamosa_debug_level', 0) > 0);
+  }
+
+  /**
+   * Returns TRUE / FALSE to indicate normal debug.
+   */
+  static public function is_debug_normal() {
+    return (variable_get('mediamosa_debug_level', 0) >= 5);
   }
 
   /**

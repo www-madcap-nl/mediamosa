@@ -190,7 +190,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     }
 
     // Handle still style.
-    $file = mediamosa_asset_mediafile_thumbnail::handle_still_style_request($file, $style, $ticket_id, $still_id);
+    $file = mediamosa_asset_mediafile_still::handle_still_style_request($file, $style, $ticket_id, $still_id);
 
     $handle = fopen($file, 'rb');
 

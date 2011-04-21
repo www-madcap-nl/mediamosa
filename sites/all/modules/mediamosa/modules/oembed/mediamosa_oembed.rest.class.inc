@@ -200,9 +200,9 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
     $title = '';
     $author_name = '';
 
-    $thumbnail_url = NULL;
-    $thumbnail_width = NULL;
-    $thumbnail_height = NULL;
+    $still_url = NULL;
+    $still_width = NULL;
+    $still_height = NULL;
     $html = NULL;
     $url = NULL;
     $width = NULL;
@@ -266,7 +266,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       $type = self::TYPE_PHOTO;
 
       // Variables.
-      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL;
+      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL;
 
       // Now get the still.
       $still = mediamosa_asset_mediafile::must_exists($still_id, $app_id);
@@ -275,7 +275,7 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       list($mediafile, $asset_id, $asset_metadata, $title, $author_name, $ticket) = $this->get_asset_mediafile_details($mediafile_id, $user_id, $group_id, $acl_domain, $acl_realm, $is_app_admin, $play_call);
 
       // Generate ticket or perm link?
-      $ticket = mediamosa_asset_mediafile_thumbnail::is_still_permanent($still_id, $is_app_admin) ? $still_id : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
+      $ticket = mediamosa_asset_mediafile_still::is_still_permanent($still_id, $is_app_admin) ? $still_id : mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $mediafile, $response_type, $app_id, $user_id, $still_id);
 
       // Create the response.
       $response = mediamosa_asset_mediafile_play_proxy::create_response(
@@ -315,10 +315,10 @@ class mediamosa_rest_call_oembed_get extends mediamosa_rest_call {
       'provider_url' => (!empty($provider_url) && $provider_url ? $provider_url : 'http://mediamosa.org/'),
     );
 
-    if (!empty($thumbnail_url)) {
-      $output['thumbnail_url'] = $thumbnail_url;
-      $output['thumbnail_width'] = $thumbnail_width;
-      $output['thumbnail_height'] = $thumbnail_height;
+    if (!empty($still_url)) {
+      $output['still_url'] = $still_url;
+      $output['still_width'] = $still_width;
+      $output['still_height'] = $still_height;
     }
 
     if (!empty($html)) {

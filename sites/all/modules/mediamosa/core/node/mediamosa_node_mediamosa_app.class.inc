@@ -394,7 +394,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#type' => 'select',
     '#title' => t('Select MediaMosa version'),
     '#description' => t('Select the version this client application can use. If your client application can only support version 2.3 and lower, then select 2.3. This setting will override the global setting.'),
-    '#options' => mediamosa_rest::get_all_versions(),
+    '#options' => mediamosa_rest::get_all_versions(t('Use global setting')),
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
 

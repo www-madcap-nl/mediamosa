@@ -53,7 +53,7 @@ class mediamosa {
   const ENV_APP_IDS = 'app_ids';
   const ENV_APP_ID = 'app_id';
   const ENV_TIMEZONE = 'timezone';
-  const ENV_ACTIVE_VERSION = 'active_version';
+  const ENV_MEDIAMOSA_VERSION = 'active_version';
 
   // Setup REST environment.
   static protected $environment = array();
@@ -103,6 +103,10 @@ class mediamosa {
     $app_ids = mediamosa_rest_call::get_param_value_global(mediamosa_rest_call::APP_ID);
     if (empty($app_ids)) {
       $app_ids = array(0);
+
+      if (isset($_SESSION['mediamosa_app']) && isset($_SESSION['mediamosa_app']['app_id'])) {
+        $app_ids = array($_SESSION['mediamosa_app']['app_id']);
+      }
     }
     elseif (!is_array($app_ids)) {
       $app_ids = array($app_ids);
@@ -115,20 +119,27 @@ class mediamosa {
     self::$environment[self::ENV_APP_IDS] = $app_ids;
     self::$environment[self::ENV_APP_ID] = $app_id;
     self::$environment[self::ENV_TIMEZONE] = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
-    $active_version = mediamosa_version::LATEST;
+    $active_version = variable_get('mediamosa_version', mediamosa_version::LATEST);
 
     // Get the app. If the app_id == 0 then we use the global app default.
     if (!empty($app_id)) {
       $app = mediamosa_app::get_by_appid($app_id);
+
       if (!empty($app)) {
         // Copy what we need.
         self::$environment[self::ENV_TIMEZONE] = empty($app[mediamosa_app_db::TIMEZONE]) ? mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE : $app[mediamosa_app_db::TIMEZONE];
-        $active_version = empty($app[mediamosa_app_db::ACTIVE_VERSION]) ? mediamosa_version::LATEST : $app[mediamosa_app_db::ACTIVE_VERSION];
+        $active_version = empty($app[mediamosa_app_db::ACTIVE_VERSION]) || $app[mediamosa_app_db::ACTIVE_VERSION] == mediamosa_version::LATEST ? $active_version : $app[mediamosa_app_db::ACTIVE_VERSION];
       }
     }
 
+    // Get possible provided version by GET/POST.
+    $mediamosa_version = mediamosa_rest_call::get_param_value_global(mediamosa_rest_call::MEDIAMOSA_VERSION);
+    if (!empty($mediamosa_version)) {
+      $active_version = $mediamosa_version;
+    }
+
     // Set the active version array.
-    self::$environment[self::ENV_ACTIVE_VERSION] = mediamosa_version::get_version($active_version == mediamosa_version::LATEST ? mediamosa_version::MEDIAMOSA_VERSION : $active_version);
+    self::$environment[self::ENV_MEDIAMOSA_VERSION] = mediamosa_version::get_version($active_version == mediamosa_version::LATEST ? mediamosa_version::MEDIAMOSA_VERSION : $active_version);
   }
 
   // --------------------------------------------------------- Static Functions.

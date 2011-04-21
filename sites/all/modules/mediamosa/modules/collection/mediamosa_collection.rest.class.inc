@@ -104,6 +104,9 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
   const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
 
+  // Aliases, do NOT use in code(!).
+  const ALIAS_AUT_USER_ID = 'aut_user_id';
+
   // --------------------------------------------------------- Public Functions.
   static public function get_search_params() {
     return array(
@@ -144,6 +147,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
         self::ACL_USER_ID => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter, for including the collections that are private.',
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
         ),
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,

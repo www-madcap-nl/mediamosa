@@ -139,7 +139,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     $o_mediamosa->set_result_okay();
 
     // Remove still.
-    mediamosa_asset_mediafile_thumbnail::delete($asset_id, $mediafile_id, $still_id);
+    mediamosa_asset_mediafile_still::delete($asset_id, $mediafile_id, $still_id);
   }
 }
 
@@ -213,7 +213,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
 
     $user_id = $this->get_param_value(self::USER_ID);
     // Set default.
-    mediamosa_asset_mediafile_thumbnail::set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id);
+    mediamosa_asset_mediafile_still::set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id);
 
     // Default all ok.
     $o_mediamosa->set_result_okay();
@@ -265,17 +265,17 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
         self::WATERMARK_DST_X => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'X-coordinate of destination point of watermark.',
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_DST_X,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_X,
         ),
         self::WATERMARK_DST_Y => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Y-coordinate of destination point of watermark.',
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_DST_Y,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_DST_Y,
         ),
         self::WATERMARK_PCT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Alpha transparency of watermark (watermark visibility in percentage [0 - 100%]).',
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_PCT,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_PCT,
           self::VAR_RANGE_START => 0,
           self::VAR_RANGE_END => 100,
         ),
@@ -283,19 +283,19 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Vertical align of watermark.',
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_LEFT,
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_RIGHT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_LEFT,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_RIGHT,
           ),
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_V_ALIGN,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_V_ALIGN,
         ),
         self::WATERMARK_H_ALIGN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Horizontal align of watermark.',
           self::VAR_ALLOWED_VALUES => array(
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_TOP,
-            mediamosa_asset_mediafile_thumbnail::WATERMARK_VALUE_BOTTOM,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_TOP,
+            mediamosa_asset_mediafile_still::WATERMARK_VALUE_BOTTOM,
           ),
-          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_thumbnail::WATERMARK_DEFAULT_H_ALIGN,
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_still::WATERMARK_DEFAULT_H_ALIGN,
         ),
 
         self::ORDER => array(
@@ -376,7 +376,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
     );
 
     $create_new_still = TRUE;
-    $still_id_new = mediamosa_asset_mediafile_thumbnail::create_watermark($still_id, $app_id, $still_parameters, $create_new_still);
+    $still_id_new = mediamosa_asset_mediafile_still::create_watermark($still_id, $app_id, $still_parameters, $create_new_still);
 
     if (!$still_id_new) {
       // TODO: Better error code?
@@ -389,7 +389,7 @@ class mediamosa_rest_call_set_still_watermark extends mediamosa_rest_call {
     );
 
     // Create still.
-    mediamosa_asset_mediafile_thumbnail::create(
+    mediamosa_asset_mediafile_still::create(
       $asset_id,
       $still_id_new,
       $app_id,
@@ -487,7 +487,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
     $order = $this->get_param_value(self::ORDER);
 
     // Set Still order.
-    mediamosa_asset_mediafile_thumbnail::set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order);
+    mediamosa_asset_mediafile_still::set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order);
 
     // Default all ok.
     $o_mediamosa->set_result_okay();
@@ -529,7 +529,7 @@ class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_as
     $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::ASSET_ID, $mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
 
     // Now fix response on still generation.
-    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL);
+    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL);
 
     // Now do play call.
     parent::do_call();
@@ -555,9 +555,9 @@ class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_
       self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       self::VAR_DESCRIPTION => 'The still response type.',
       self::VAR_ALLOWED_VALUES => array(
-        mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL,
+        mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
       ),
-      self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_THUMBNAIL
+      self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL
     );
 
     return $var_setup;

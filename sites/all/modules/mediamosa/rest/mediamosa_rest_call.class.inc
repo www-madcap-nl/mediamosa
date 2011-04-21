@@ -113,12 +113,6 @@ abstract class mediamosa_rest_call {
   // lost. This will always be true for POST rest calls.
   const NO_USER_ABORT = 'no_user_abort';
 
-  /**
-   * 'alias_for' contains the URI of the REST call that also runs on this rest URI.
-   * Any settings in this array is instead used of the original.
-   */
-  const ALIAS_FOR = 'alias_for';
-
   // Default var names / values.
   const APP_ID = 'app_id';
   const LIMIT = 'limit';
@@ -126,6 +120,7 @@ abstract class mediamosa_rest_call {
   const ORDER_BY = 'order_by';
   const ORDER_DIRECTION = 'order_direction';
   const IS_APP_ADMIN = 'is_app_admin';
+  const MEDIAMOSA_VERSION = 'mediamosa_version';
 
   // VAR array names.
   const VARS = 'vars';
@@ -143,6 +138,7 @@ abstract class mediamosa_rest_call {
   const VAR_IS_READ_ONLY = 'read_only'; // default no. Some vars may not be changed.
   const VAR_IS_INTERNAL_ONLY = 'internal_only'; // If true, then this variable is only accepted by internals.
   const VAR_OVERRIDE_VALUE = 'override_value'; // Set this to override any value given from URI/GET/POST.
+  const VAR_ALIAS_FOR = 'alias_for'; // Contains array of alt. variable names that contain the same value.
 
   const VAR_IS_HIDDEN = 'hidden'; // Hide var for outside world.
   const VAR_IS_HIDDEN_YES = 'yes';
@@ -306,9 +302,9 @@ abstract class mediamosa_rest_call {
    */
   private function do_app_authorized() {
     // Run the app_authorized hook. One TRUE is authorized.
-    $a_results = module_invoke_all('mediamosa_app_authorized');
+    $results = module_invoke_all('mediamosa_app_authorized');
     $authorized = FALSE;
-    foreach ($a_results as $result) {
+    foreach ($results as $result) {
       if ($result === TRUE) {
         $authorized = TRUE;
         break;
@@ -344,6 +340,13 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
       self::VAR_DEFAULT_VALUE => 'false',
+    );
+
+    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::MEDIAMOSA_VERSION] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAMOSA_VERSION,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DESCRIPTION => mediamosa::t("Provide the version to get the REST call returned in the format of the specified MediaMosa version. Keep empty or skip to retrieve in current (latest) version. Provide '2' to retrieve the REST call in 2.x format. Or be more specific by providing up to 3 digits; '2.3.0'. This setting will override any setting used by client application or the default setting in MediaMosa."),
+      self::VAR_DEFAULT_VALUE => '',
     );
 
     // Add default parameter descriptions
@@ -797,6 +800,27 @@ abstract class mediamosa_rest_call {
         }
 
         $this->rest_args[$key_post][self::PARAM_VALUE] = $value_post;
+      }
+    }
+
+    // Copy alias values to non-existing original values.
+    foreach ($var_setup[self::VARS] as $param => &$var) {
+
+      // Any aliases?
+      if (!empty($var[self::VAR_ALIAS_FOR])) {
+        // If the original value is not set, then maybe an alias?
+        if (!isset($this->rest_args[$param][self::PARAM_VALUE])) {
+          foreach ($var[self::VAR_ALIAS_FOR] as $param_alias) {
+            // Found for alias, then copy it to original. First come, first
+            // serve.
+            if (isset($this->rest_args[$param_alias][self::PARAM_VALUE])) {
+              $this->rest_args[$param][self::PARAM_VALUE] = $this->rest_args[$param_alias][self::PARAM_VALUE];
+            }
+
+            // Unset the alias value, so we can't ever use it directly in code.
+            unset($this->rest_args[$param_alias]);
+          }
+        }
       }
     }
 

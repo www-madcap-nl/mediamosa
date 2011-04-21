@@ -29,7 +29,7 @@
  * Solr version of MediaMosaTestCaseAutGrantedJobTest
  */
 
-class MediaMosaSolrTestCaseAutGrantedJobTest extends MediaMosaTestCaseAutGrantedJobTest {
+class MediaMosaSolrTestCaseAutGrantedJobTest extends MediaMosaTestCaseAclGrantedJobTest {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
