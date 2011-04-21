@@ -780,7 +780,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
         self::ACL_DOMAIN => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
-          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN_ID),
+          self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
         ),
         self::ACL_REALM => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
@@ -858,9 +858,6 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Check un/inappropriate flag.
     mediamosa_asset::is_unappropriate($asset_id, $app_ids, $acl_user_id, $is_app_admin);
 
-    // Is app client at 1.6 ?
-    $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
-
     // Collect.
     $add_has_streamable_mediafiles = FALSE;
     $items = mediamosa_asset::asset_collect(
@@ -881,6 +878,9 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Add mediafiles.
     $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
+    // Is app client at 1.6 ?
+    $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
+
     // Show in old format? Yes, if the app client < 1.6.
     $old_output = $env_active_version !== FALSE && ($env_active_version[mediamosa_version::MAJOR] == 1 && $env_active_version[mediamosa_version::MINOR] < 6);
 
@@ -888,7 +888,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
     // Add streamable setting on asset.
-    $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $items[0]['mediafiles'] : $items[0]['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+    $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($items[0]['mediafiles']) ? 'TRUE' : 'FALSE';
 
     // Add to response.
     foreach ($items as $item) {

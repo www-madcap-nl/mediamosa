@@ -80,7 +80,7 @@ class mediamosa_version {
    * @return array
    */
   static public function get_version($version) {
-    list($major, $minor, $release) = preg_split("/[.:]+/", $version, 3);
+    list($major, $minor, $release) = preg_split("/[.:]+/", $version, 3) + array(0 => 1, 1 => 0, 2 => 0);
     return array(
       self::MAJOR => (int) $major,
       self::MINOR => (int) $minor,

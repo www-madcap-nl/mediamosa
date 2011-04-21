@@ -197,7 +197,7 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
@@ -210,15 +210,15 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     // Asset must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
-    $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, $is_still, ($asset['app_id'] == $app_id ? array() : $app_ids));
+    $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, $is_still, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
     // Create output.
-    $a_items = mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $app_ids, $is_oai);
+    $items = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai);
 
     // Add to response.
-    if (!empty($a_items['mediafile'])) {
-      foreach ($a_items['mediafile'] as $a_item) {
-        $o_mediamosa->add_item($a_item);
+    if (!empty($items['mediafile'])) {
+      foreach ($items['mediafile'] as $item) {
+        $mediamosa->add_item($item);
       }
     }
   }

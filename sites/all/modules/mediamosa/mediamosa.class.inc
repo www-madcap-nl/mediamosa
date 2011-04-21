@@ -183,10 +183,12 @@ class mediamosa {
   }
 
   /**
-   * Retrieve the current timezone of REST environment.
+   * Returns TRUE or FALSE when v3 output is active.
    */
-  static public function get_environment() {
-    return self::$environment;
+  static public function is_v3_output() {
+    // Get the active version of current environment.
+    $env_active_version = self::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
+    return ($env_active_version[mediamosa_version::MAJOR] >= 3);
   }
 
   /**
@@ -195,6 +197,17 @@ class mediamosa {
    * @param string $name
    */
   static public function get_environment_setting($name) {
+    switch ($name) {
+      case self::ENV_APP_ID:
+        return self::get_environment_app_id();
+
+      case self::ENV_APP_IDS:
+        return self::get_environment_app_ids();
+
+      case self::ENV_TIMEZONE:
+        return self::get_environment_timezone();
+    }
+
     assert(isset(self::$environment[$name]));
     return self::$environment[$name];
   }
@@ -217,11 +230,25 @@ class mediamosa {
   }
 
   /**
+   * Returns the main app_id of the current session.
+   */
+  static public function get_environment_app_id() {
+    return self::$environment[self::ENV_APP_ID];
+  }
+
+  /**
+   * Returns all app_ids of the current session.
+   */
+  static public function get_environment_app_ids() {
+    return self::$environment[self::ENV_APP_IDS];
+  }
+
+  /**
    * Returns the timezone of the current session. Is by default
    * Europe/Amsterdam.
    */
-  static public function get_environment_timezone($timezone = NULL) {
-    return self::get_environment_setting(self::ENV_TIMEZONE);
+  static public function get_environment_timezone() {
+    return self::$environment[self::ENV_TIMEZONE];
   }
 
   /**

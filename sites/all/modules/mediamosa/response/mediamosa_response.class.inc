@@ -1092,7 +1092,7 @@ class mediamosa_response extends mediamosa {
 
       return NULL;
     }
-
+/*
     if ($first_key[0] == '#') {
       foreach ($mixed_value as $mixed_key => $value) {
         $dom_element = $this->generate_xml_add_child($dom_document, $dom_node, $key, $value, $max_depth);
@@ -1110,9 +1110,22 @@ class mediamosa_response extends mediamosa {
 
       return NULL;
     }
-
+*/
     $dom_element_child = $dom_node->appendChild(new DOMElement($key));
     foreach ($mixed_value as $mixed_key => $value) {
+      if (is_array($value)) {
+        if (isset($value['#attributes']) && !empty($value['#attributes'])) {
+          foreach ($value['#attributes'] as $attr_name => $attr_value) {
+            $dom_element_child->setAttribute($attr_name, $attr_value);
+          }
+          // Must exists?
+          $value = isset($value['#value']) ? $value['#value'] : '';
+        }
+        elseif (isset($value['#value'])) {
+          $value = $value['#value'];
+        }
+      }
+
       $this->generate_xml_add_child($dom_document, $dom_element_child, $mixed_key, $value, $max_depth);
     }
 

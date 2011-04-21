@@ -35,21 +35,10 @@
 class mediamosa_response_v3 extends mediamosa_response {
 
   /**
-   * Returns TRUE or FALSE
-   */
-  static public function is_v3_output() {
-    // Get the active version of current environment.
-    $env_active_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
-    return ($env_active_version[mediamosa_version::MAJOR] >= 3);
-  }
-
-  /**
    * Generate output.
    */
   protected function generate_output() {
-    // v2 specified, then let the v2 handle it. Note: will not fix output fixes
-    // like mediamosa_0 anymore(!).
-    if (!self::is_v3_output()) {
+    if (!mediamosa::is_v3_output()) {
       return parent::generate_output();
     }
 

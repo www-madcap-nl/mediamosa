@@ -36,7 +36,7 @@
 
 class mediamosa_response_connector extends mediamosa_response {
 
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------- Functions (static).
   /**
    * Execute REST call.
    *
@@ -55,8 +55,8 @@ class mediamosa_response_connector extends mediamosa_response {
     // If we don't provide any app_ids, then we'll need to limit the access.
     if (empty($params['app_id'])) {
       if (user_access(mediamosa_permission::ADMIN_MEDIAMOSA)) {
-        // Because the rule is the 1st is always the leading application, we don't
-        // have one here, so use 0 instead.
+        // Because the rule is the 1st is always the leading application,
+        // we don't have one here, so use 0 instead.
         $params['app_id'] = array_merge(array(0), mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol());
       }
       else {
@@ -121,7 +121,7 @@ class mediamosa_response_connector extends mediamosa_response {
     return (!empty($result['header']['request_result_id']) && $result['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY) ? TRUE : FALSE;
   }
 
-  // ------------------------------------------------------------------ Functions.
+  // ---------------------------------------------------------------- Functions.
   /**
    * Do a request, without using HTTP.
    *
@@ -136,6 +136,12 @@ class mediamosa_response_connector extends mediamosa_response {
     $this->request_uri = $uri;
     $this->request_method = $method;
 
+    // App ID.
+    $app_id = self::$environment[self::ENV_APP_ID];
+    $app_ids = self::$environment[self::ENV_APP_IDS];
+    self::$environment[self::ENV_APP_ID] = reset($params['app_id']);
+    self::$environment[self::ENV_APP_IDS] = is_array($params['app_id']) ? $params['app_id'] : array($params['app_id']);
+
     // ok reset the header.
     $this->reset();
 
@@ -148,7 +154,7 @@ class mediamosa_response_connector extends mediamosa_response {
     $GET = $_GET;
     $POST = $_POST;
 
-    $_GET = array('q' => isset($_GET['q']) ? $_GET['q'] : '');
+    $_GET = array('q' => (isset($_GET['q']) ? $_GET['q'] : ''));
     $_POST = array();
 
     try {
@@ -206,6 +212,9 @@ class mediamosa_response_connector extends mediamosa_response {
     mediamosa::get($current_mediamosa_response);
     $_GET = $GET;
     $_POST = $POST;
+    unset($GLOBALS['mediamosa_params']);
+    self::$environment[self::ENV_APP_ID] = $app_id;
+    self::$environment[self::ENV_APP_IDS] = $app_ids;
 
     // Return XML.
     return $output;

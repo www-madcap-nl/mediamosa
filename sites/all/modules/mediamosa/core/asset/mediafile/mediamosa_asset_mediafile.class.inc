@@ -227,7 +227,12 @@ class mediamosa_asset_mediafile {
    *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
    * @param boolean $show_stills
    */
-  static public function enrich_response_mediafile(array $mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE, $old_output = FALSE) {
+  static public function enrich_response_mediafile(
+    array $mediafile_ids,
+    $mixed_app_id,
+    $is_oai,
+    $show_stills = TRUE,
+    $old_output = FALSE) {
 
     // Can be empty or null.
     if (empty($mediafile_ids) || is_null(reset($mediafile_ids))) {
@@ -333,7 +338,6 @@ class mediamosa_asset_mediafile {
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
           $row['still_ticket'] = $response['output'];
 
-
           // Add still to mediafile.
           assert(!empty($row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
 
@@ -344,7 +348,7 @@ class mediamosa_asset_mediafile {
           unset($row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
           unset($row[mediamosa_asset_mediafile_metadata::FILE_DURATION]);
 
-          $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#' . $i++] = $row;
+          $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still'][$i++] = $row;
         }
         catch (mediamosa_exception_error_file_not_found $e) {
           // Ignore.
@@ -462,7 +466,10 @@ class mediamosa_asset_mediafile {
       }
       else {
         // Add to result.
-        $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
+        $items_result['mediafile'] = array(
+          '#attributes' => array('id' => $i++),
+          '#value' => $items[$mediafile_id],
+        );
       }
     }
 

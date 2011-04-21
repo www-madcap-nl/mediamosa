@@ -88,14 +88,14 @@ class mediamosa_acl_group {
    * @return db result
    *
    */
-  static function get_list(array $a_app_ids, $offset, $limit) {
+  static function get_list(array $app_ids, $offset, $limit) {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_acl_group_db::ACL_GROUP_NAME;
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_acl_group_db::ACL_GROUP_TYPE;
     $a_query[mediamosa_db_query::A_FROM][] = '{' . mediamosa_acl_group_db::TABLE_NAME . '}';
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('%s IN(%s)', mediamosa_acl_group_db::APP_ID, implode(',', $a_app_ids));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('%s IN(%s)', mediamosa_acl_group_db::APP_ID, implode(',', $app_ids));
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_acl_group_db::ACL_GROUP_TYPE . ' IS NOT NULL';// trick to keep the index in order
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_acl_group_db::ACL_GROUP_TYPE . ' IS NULL';
     $a_query[mediamosa_db_query::A_ORDER_BY][] = mediamosa_acl_group_db::ACL_GROUP_NAME . ' ASC';
@@ -117,10 +117,10 @@ class mediamosa_acl_group {
   /**
    * Get group by given name.
    *
-   * @param array $a_app_ids
+   * @param array $app_ids
    * @param string $group_name
    */
-  static function get_by_group_name(array $a_app_ids, $group_name) {
+  static function get_by_group_name(array $app_ids, $group_name) {
 
     return mediamosa_db::db_select(mediamosa_acl_group_db::TABLE_NAME, 'ag')
       ->fields('ag', array(
@@ -128,7 +128,7 @@ class mediamosa_acl_group {
         mediamosa_acl_group_db::ACL_GROUP_TYPE,
         mediamosa_acl_group_db::ID,
       ))
-      ->condition(mediamosa_acl_group_db::APP_ID, $a_app_ids, 'IN')
+      ->condition(mediamosa_acl_group_db::APP_ID, $app_ids, 'IN')
       ->condition(db_or()->isNull(mediamosa_acl_group_db::ACL_GROUP_TYPE)->isNotNull(mediamosa_acl_group_db::ACL_GROUP_TYPE))
       ->condition(mediamosa_acl_group_db::ACL_GROUP_NAME, $group_name)
       ->execute()->fetchAssoc();
@@ -137,13 +137,13 @@ class mediamosa_acl_group {
   /**
    * Retrieve hostnames from group.
    *
-   * @param array $a_app_ids
+   * @param array $app_ids
    * @param string $group_name
    * @param integer $offset
    * @param integer $limit
    * @return db result
    */
-  static function get_hostnames_by_group_name(array $a_app_ids, $group_name, $offset, $limit) {
+  static function get_hostnames_by_group_name(array $app_ids, $group_name, $offset, $limit) {
     $a_query = array();
 
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{mediamosa_acl_name}.acl_name";
@@ -151,7 +151,7 @@ class mediamosa_acl_group {
 
     $a_query[mediamosa_db_query::A_JOIN]["acl_group"] = "LEFT JOIN {mediamosa_acl_group} USING (acl_group_id)";
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('{mediamosa_acl_name}.%s IN(%s)', mediamosa_acl_group_db::APP_ID, implode(',', $a_app_ids));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('{mediamosa_acl_name}.%s IN(%s)', mediamosa_acl_group_db::APP_ID, implode(',', $app_ids));
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "acl_group_type IS NOT NULL";// trick to keep the index in order
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "acl_group_type IS NULL";
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("{mediamosa_acl_group}.acl_group_name = '%s'", mediamosa_db::escape_string($group_name));

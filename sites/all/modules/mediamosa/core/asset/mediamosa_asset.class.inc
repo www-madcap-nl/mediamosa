@@ -916,17 +916,20 @@ class mediamosa_asset {
       // Add collection data.
       if ($show_collections && isset($collections[$asset[mediamosa_asset_db::ID]])) {
         // Show in old format? Yes, if the app client < 3.0.
-        $older_output_30 = $app_active_version !== FALSE && $app_active_version[mediamosa_version::MAJOR] < 3;
+        $mediamosa_version = mediamosa::get_environment_setting(mediamosa::ENV_MEDIAMOSA_VERSION);
+        $is_version_30 =  $mediamosa_version[mediamosa_version::MAJOR] < 3;
 
-        if (!$older_output_30) {
+        if ($is_version_30) {
           $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections'] = array();
         }
         foreach ($collections[$asset[mediamosa_asset_db::ID]] as $coll_id => $collection) {
-          if ($older_output_30) {
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $collection[mediamosa_collection_db::TITLE];
+          if ($is_version_30) {
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection'][mediamosa_collection_db::TITLE]['#attributes'] = $collection[mediamosa_collection_db::TITLE];
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection'][mediamosa_collection_db::TITLE]['#value'] = $collection[mediamosa_collection_db::TITLE];
           }
           else {
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection']['#' . serialize(array('id' => $coll_id,))][mediamosa_collection_db::TITLE] = $collection[mediamosa_collection_db::TITLE];
+            // Old version.
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $collection[mediamosa_collection_db::TITLE];
           }
         }
       }
@@ -954,7 +957,12 @@ class mediamosa_asset {
     }
 
     foreach ($mediafiles as $mediafile) {
-      $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile['response_object_available'] == 'TRUE');
+      if (isset($mediafile['#value'])) {
+        $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile['#value']['response_object_available'] == 'TRUE');
+      }
+      else {
+        $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile['response_object_available'] == 'TRUE');
+      }
     }
 
     // Return boolean.

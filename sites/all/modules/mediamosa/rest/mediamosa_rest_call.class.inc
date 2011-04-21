@@ -633,7 +633,7 @@ abstract class mediamosa_rest_call {
    */
   public function get_param_value_app() {
     // Get the environment setting.
-    return mediamosa::get_environment_setting(mediamosa::ENV_APP_IDS);
+    return mediamosa::get_environment_app_ids();
   }
 
   /**

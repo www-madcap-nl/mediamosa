@@ -30,6 +30,37 @@
   */
 
 /**
+ * Helper to fix acl_ rename to 2.x version (aut_).
+
+ * @param array $row
+ */
+function fix_vars_acl_2_aut($row) {
+  // Is v3 output?
+  $is_v3_output = mediamosa::is_v3_output();
+
+  if ($is_v3_output) {
+    return $row;
+  }
+
+  // Its a name.
+  if (!is_array($row)) {
+    return (substr($row, 0, 4) == 'acl_' ? 'aut_' . substr($row, 4) : $row);
+  }
+
+  foreach ($row as $key => $value) {
+    if (substr($key, 0, 4) != 'acl_') {
+      continue;
+    }
+
+    $row['aut_' . substr($key, 4)] = $value;
+    unset($row[$key]); // Remove ACL version.
+  }
+
+  return $row;
+}
+
+
+/**
  * URI: /autorisation_group
  * Method: GET
  *
@@ -43,29 +74,29 @@ class mediamosa_rest_call_acl_group_list extends mediamosa_rest_call {
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     // Enrich with limit and offset vars.
-    $a_var_setup = $this->get_var_setup_range();
+    $var_setup = $this->get_var_setup_range();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $offset = $this->get_param_value_offset();
     $limit = $this->get_param_value_limit();
 
     // Get the list.
-    $result = mediamosa_acl_group::get_list($a_app_ids, $offset, $limit);
+    $result = mediamosa_acl_group::get_list($app_ids, $offset, $limit);
 
     // Total rows?
-    $o_mediamosa->item_count_total = $result->found_rows;
+    $mediamosa->item_count_total = $result->found_rows;
 
     // Set result.
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      $mediamosa->add_item(fix_vars_acl_2_aut($row));
     }
   }
 }
@@ -82,33 +113,33 @@ class mediamosa_rest_call_acl_group_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The group name to retrieve',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
 
     // Get the list.
-    $a_row = mediamosa_acl_group::get_by_group_name($a_app_ids, $group_name);
-    if (!$a_row) {
+    $row = mediamosa_acl_group::get_by_group_name($app_ids, $group_name);
+    if (!$row) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND, array('@group' => $group_name));
     }
 
     // Add to result.
-    $o_mediamosa->add_item($a_row);
+    $mediamosa->add_item(fix_vars_acl_2_aut($row));
   }
 }
 
@@ -127,45 +158,45 @@ class mediamosa_rest_call_acl_group_get_hostnames extends mediamosa_rest_call {
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     // Enrich with limit and offset vars.
-    $a_var_setup = $this->get_var_setup_range();
+    $var_setup = $this->get_var_setup_range();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
 
     $offset = $this->get_param_value_offset();
     $limit = $this->get_param_value_limit();
 
     // Get the group.
-    $a_row = mediamosa_acl_group::get_by_group_name($a_app_ids, $group_name);
-    if (!$a_row) {
+    $row = mediamosa_acl_group::get_by_group_name($app_ids, $group_name);
+    if (!$row) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND, array('@group' => $group_name));
     }
 
     // Get the group.
-    $result = mediamosa_acl_group::get_hostnames_by_group_name($a_app_ids, $group_name, $offset, $limit);
+    $result = mediamosa_acl_group::get_hostnames_by_group_name($app_ids, $group_name, $offset, $limit);
 
     // Add to result.
-    foreach ($result as $a_row) {
-      $a_row['hostname'] = $a_row['acl_name'];
-      unset($a_row['acl_name']);
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      $row['hostname'] = $row['acl_name'];
+      unset($row['acl_name']);
+      $mediamosa->add_item(fix_vars_acl_2_aut($row));
     }
 
-    $o_mediamosa->item_count_total = $result->found_rows;
+    $mediamosa->item_count_total = $result->found_rows;
 
   }
 }
@@ -183,14 +214,14 @@ class mediamosa_rest_call_acl_group_create_hostnames extends mediamosa_rest_call
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group, which shared the hostname(s).',
     );
-    $a_var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
@@ -198,25 +229,25 @@ class mediamosa_rest_call_acl_group_create_hostnames extends mediamosa_rest_call
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
-    $a_host_names = $this->get_param_value(self::HOSTNAME);
+    $host_names = $this->get_param_value(self::HOSTNAME);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Get the group.
-    $a_result = mediamosa_acl_group::create_hostnames_for_group($app_id, $group_name, $a_host_names);
+    $result = mediamosa_acl_group::create_hostnames_for_group($app_id, $group_name, $host_names);
 
-    foreach ($a_result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      $mediamosa->add_item(fix_vars_acl_2_aut($row));
     }
   }
 }
@@ -234,14 +265,14 @@ class mediamosa_rest_call_acl_group_delete_hostnames extends mediamosa_rest_call
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to delete from.',
     );
-    $a_var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
@@ -249,24 +280,24 @@ class mediamosa_rest_call_acl_group_delete_hostnames extends mediamosa_rest_call
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
-    $a_host_names = $this->get_param_value(self::HOSTNAME);
+    $host_names = $this->get_param_value(self::HOSTNAME);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
-    $a_result = mediamosa_acl_group::delete_hostname_for_group($app_id, $group_name, $a_host_names);
+    $result = mediamosa_acl_group::delete_hostname_for_group($app_id, $group_name, $host_names);
 
-    foreach ($a_result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      $mediamosa->add_item(fix_vars_acl_2_aut($row));
     }
   }
 }
@@ -284,14 +315,14 @@ class mediamosa_rest_call_acl_group_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to create.',
     );
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ACL_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The type of the group to create.',
@@ -299,19 +330,19 @@ class mediamosa_rest_call_acl_group_create extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
     $group_type = $this->get_param_value(self::GROUP_TYPE);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     if (mediamosa_db::db_exists(
       mediamosa_acl_group_db::TABLE_NAME,
@@ -327,10 +358,10 @@ class mediamosa_rest_call_acl_group_create extends mediamosa_rest_call {
     mediamosa_acl_group::create($app_id, $group_name, $group_type);
 
     // Get created group.
-    $a_row = mediamosa_acl_group::get_by_group_name($a_app_ids, $group_name);
+    $row = mediamosa_acl_group::get_by_group_name($app_ids, $group_name);
 
     // Add created group.
-    $o_mediamosa->add_item($a_row);
+    $mediamosa->add_item(fix_vars_acl_2_aut($row));
   }
 }
 
@@ -348,39 +379,39 @@ class mediamosa_rest_call_acl_group_update extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to update.',
     );
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ACL_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The type of the group.',
     );
-    $a_var_setup[mediamosa_rest_call::VARS][self::NEW_GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::NEW_GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The new name of the group.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
     $new_group_type = $this->get_param_value(self::GROUP_TYPE);
     $new_group_name = $this->get_param_value(self::NEW_GROUPNAME);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Test of de groep bestaat
     mediamosa_db::db_must_exists(mediamosa_acl_group_db::TABLE_NAME, array(mediamosa_acl_group_db::APP_ID => $app_id, mediamosa_acl_group_db::ACL_GROUP_NAME => $group_name));
@@ -400,7 +431,7 @@ class mediamosa_rest_call_acl_group_update extends mediamosa_rest_call {
     // Change of type.
     if ($this->isset_given_param(self::GROUP_TYPE) && $new_group_type != '') {
 
-      $a_acl_group = mediamosa_acl_group::get_by_group_name($a_app_ids, $group_name);
+      $a_acl_group = mediamosa_acl_group::get_by_group_name($app_ids, $group_name);
       assert($a_acl_group);
 
       if (mediamosa_unicode::strtoupper($a_acl_group[mediamosa_acl_group_db::ACL_GROUP_TYPE]) != mediamosa_unicode::strtoupper($new_group_type)) {
@@ -422,7 +453,7 @@ class mediamosa_rest_call_acl_group_update extends mediamosa_rest_call {
     }
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -439,15 +470,15 @@ class mediamosa_rest_call_acl_group_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to delete.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::DELETE] = array(
+    $var_setup[mediamosa_rest_call::VARS][self::DELETE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Provide value "cascade" to delete also contents of group. Will fail if group is not empty and this value is not set to "cascade".',
@@ -455,19 +486,19 @@ class mediamosa_rest_call_acl_group_delete extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
     $delete = $this->get_param_value(self::DELETE);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     mediamosa_db::db_must_exists(mediamosa_acl_group_db::TABLE_NAME, array(mediamosa_acl_group_db::APP_ID => $app_id, mediamosa_acl_group_db::ACL_GROUP_NAME => $group_name));
 
@@ -546,7 +577,7 @@ class mediamosa_rest_call_acl_group_delete extends mediamosa_rest_call {
     );
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -580,29 +611,29 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+    $var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The asset IDs of mediafiles which to change the rights.',
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
       );
 
-    $a_var_setup[self::VARS][self::REPLACE] = array(
+    $var_setup[self::VARS][self::REPLACE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 'TRUE',
       self::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
-    $a_var_setup[self::VARS][self::ACL_APP] = array(
+    $var_setup[self::VARS][self::ACL_APP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -611,7 +642,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(ALIAS_AUT_APP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_USER] = array(
+    $var_setup[self::VARS][self::ACL_USER] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -620,7 +651,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(ALIAS_AUT_USER),
     );
 
-    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+    $var_setup[self::VARS][self::ACL_GROUP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -629,7 +660,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+    $var_setup[self::VARS][self::ACL_DOMAIN] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -638,7 +669,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+    $var_setup[self::VARS][self::ACL_REALM] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -648,7 +679,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+    $var_setup[self::VARS][self::ACL_USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -658,7 +689,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+    $var_setup[self::VARS][self::ACL_GROUP_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -668,19 +699,19 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $asset_ids = $this->get_param_value('asset_id');
     $user_id = $this->get_param_value('user_id');
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Validate the asset_ids.
     $a_mediafile_ids = array();
@@ -689,12 +720,31 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       $a_mediafile_ids[$asset_id] = mediamosa_asset_mediafile::mediafiles_search($asset_id);
     }
 
+    if (mediamosa::is_v3_output()) {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
+        mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
+        mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
+        mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
+        mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
+      );
+    }
+    else {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'aut_app',
+        mediamosa_acl::ACL_NAME_TYPE_USER => 'aut_user',
+        mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'aut_group',
+        mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'aut_domain',
+        mediamosa_acl::ACL_NAME_TYPE_REALM => 'aut_realm',
+      );
+    }
+
     // Set the rights.
     foreach ($asset_ids as $asset_id) {
       foreach ($a_mediafile_ids[$asset_id] as $mediafile_id) {
         // Change the ACL rule for the mediafile.
 
-        $a_app_ids = $this->get_param_value('acl_app');
+        $app_ids = $this->get_param_value('acl_app');
         $a_acl_user_ids = $this->get_param_value('acl_user');
         $a_acl_group_ids = $this->get_param_value('acl_group');
         $a_acl_domains = $this->get_param_value('acl_domain');
@@ -724,26 +774,18 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
         }
 
         // Set access rights
-        $a_result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $a_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
+        $result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
 
-        $a_types = array(
-          mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
-          mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
-          mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
-          mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
-          mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
-        );
+        foreach ($result_rights_set as $error) {
+          $type = (isset($types[$error['type']]) ? $types[$error['type']] : 'unknown');
 
-        foreach ($a_result_rights_set as $a_error) {
-          $type = (isset($a_types[$a_error['type']]) ? $a_types[$a_error['type']] : 'unknown');
-
-          if ($a_error['a_error'] === FALSE) {
-            $o_mediamosa->add_item(
+          if ($error['a_error'] === FALSE) {
+            $mediamosa->add_item(
               array(
                 $type => array(
                   'asset_id' => $asset_id,
                   'mediafile_id' => $mediafile_id,
-                  'value' => $a_error['value'],
+                  'value' => $error['value'],
                   'result' => mediamosa_response::SUCCESS,
                   'result_id' => mediamosa_error::ERRORCODE_OKAY,
                   'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
@@ -752,15 +794,15 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
             );
           }
           else {
-            $o_mediamosa->add_item(
+            $mediamosa->add_item(
               array(
                 $type => array(
                   'asset_id' => $asset_id,
                   'mediafile_id' => $mediafile_id,
-                  'value' => $a_error['value'],
+                  'value' => $error['value'],
                   'result' => mediamosa_response::ERROR,
-                  'result_id' => $a_error['a_error']['code'],
-                  'result_description' => $a_error['a_error']['message'],
+                  'result_id' => $error['a_error']['code'],
+                  'result_description' => $error['a_error']['message'],
                 )
               )
             );
@@ -801,28 +843,28 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::MEDIAFILE_ID] = array(
+    $var_setup[self::VARS][self::MEDIAFILE_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The mediafile ID of which to change the rights.',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
       );
 
-    $a_var_setup[self::VARS][self::REPLACE] = array(
+    $var_setup[self::VARS][self::REPLACE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 'TRUE',
       self::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
-    $a_var_setup[self::VARS][self::ACL_APP] = array(
+    $var_setup[self::VARS][self::ACL_APP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -831,7 +873,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_USER] = array(
+    $var_setup[self::VARS][self::ACL_USER] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -840,7 +882,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
-    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+    $var_setup[self::VARS][self::ACL_GROUP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -849,7 +891,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+    $var_setup[self::VARS][self::ACL_DOMAIN] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -858,7 +900,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+    $var_setup[self::VARS][self::ACL_REALM] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -868,7 +910,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+    $var_setup[self::VARS][self::ACL_USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -878,7 +920,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+    $var_setup[self::VARS][self::ACL_GROUP_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -888,24 +930,24 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $mediafile_id = $this->get_param_value('mediafile_id');
     $user_id = $this->get_param_value('user_id');
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the media file exists.
     mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
-    $a_app_ids = $this->get_param_value('acl_app');
+    $app_ids = $this->get_param_value('acl_app');
     $a_acl_user_ids = $this->get_param_value('acl_user');
     $a_acl_group_ids = $this->get_param_value('acl_group');
     $a_acl_domains = $this->get_param_value('acl_domain');
@@ -935,24 +977,35 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     }
 
     // Set access rights
-    $a_result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $a_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
+    $result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
 
-    $a_types = array(
-      mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
-      mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
-      mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
-      mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
-      mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
-    );
+    if (mediamosa::is_v3_output()) {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
+        mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
+        mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
+        mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
+        mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
+      );
+    }
+    else {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'aut_app',
+        mediamosa_acl::ACL_NAME_TYPE_USER => 'aut_user',
+        mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'aut_group',
+        mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'aut_domain',
+        mediamosa_acl::ACL_NAME_TYPE_REALM => 'aut_realm',
+      );
+    }
 
-    foreach ($a_result_rights_set as $a_error) {
-      $type = (isset($a_types[$a_error['type']]) ? $a_types[$a_error['type']] : 'unknown');
+    foreach ($result_rights_set as $error) {
+      $type = (isset($types[$error['type']]) ? $types[$error['type']] : 'unknown');
 
-      if ($a_error['a_error'] === FALSE) {
-        $o_mediamosa->add_item(
+      if ($error['error'] === FALSE) {
+        $mediamosa->add_item(
           array(
             $type => array(
-              'value' => $a_error['value'],
+              'value' => $error['value'],
               'result' => mediamosa_response::SUCCESS,
               'result_id' => mediamosa_error::ERRORCODE_OKAY,
               'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
@@ -961,13 +1014,13 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
         );
       }
       else {
-        $o_mediamosa->add_item(
+        $mediamosa->add_item(
           array(
             $type => array(
-              'value' => $a_error['value'],
+              'value' => $error['value'],
               'result' => mediamosa_response::ERROR,
-              'result_id' => $a_error['a_error']['code'],
-              'result_description' => $a_error['a_error']['message'],
+              'result_id' => $error['a_error']['code'],
+              'result_description' => $error['a_error']['message'],
             )
           )
         );
@@ -989,46 +1042,46 @@ class mediamosa_rest_call_acl_mediafile_delete_rights extends mediamosa_rest_cal
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::MEDIAFILE_ID] = array(
+    $var_setup[self::VARS][self::MEDIAFILE_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The mediafile ID where from to remove the ACL rights',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The owner of the mediafile.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the media file exists.
     mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     // Get the media file
-    $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
 
     // Remove rights.
-    mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile);
+    mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile);
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -1045,35 +1098,35 @@ class mediamosa_rest_call_acl_mediafile_get_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::MEDIAFILE_ID] = array(
+    $var_setup[self::VARS][self::MEDIAFILE_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The mediafile ID from which to receive the ACL rights',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'Must be the owner of the mediafile object to alter rights.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $mediafile_id = $this->get_param_value('mediafile_id');
     $user_id = $this->get_param_value('user_id');
     $is_app_admin = $this->get_param_value('is_app_admin');
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the media file exists.
     // Removed the app_id so the mediafile can be accessed by other app.
@@ -1083,28 +1136,28 @@ class mediamosa_rest_call_acl_mediafile_get_rights extends mediamosa_rest_call {
     // Get the media file
     // Removed the app_id so the mediafile can be accessed by other app.
     // vpx_acl_rights_get() will check if its in the right app or you have access through slave.
-    $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
     // Get rights.
-    $a_rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $is_app_admin);
+    $rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile, $is_app_admin);
 
     // Fill response.
-    if (isset($a_rights[mediamosa_acl::OBJ_LINK_TYPE_NAME])) {
-      foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $a_right) {
-        $a_right['type'] = ($a_right['type'] == 'acl_user_group' ? 'acl_group' : $a_right['type']);
-        $o_mediamosa->add_item(array($a_right['type'] => $a_right['name']));
+    if (isset($rights[mediamosa_acl::OBJ_LINK_TYPE_NAME])) {
+      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $right) {
+        $right['type'] = ($right['type'] == 'acl_user_group' ? 'acl_group' : $right['type']);
+        $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
       }
     }
 
-    if (isset($a_rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP])) {
-      foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $a_right) {
-        $o_mediamosa->add_item(array($a_right['type'] => $a_right['name']));
+    if (isset($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP])) {
+      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $a_right) {
+        $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
       }
     }
 
-    if (isset($a_rights[mediamosa_acl::OBJ_LINK_TYPE_APP])) {
-      foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $a_right) {
-        $o_mediamosa->add_item(array($a_right['type'] => $a_right['app_id_master']));
+    if (isset($rights[mediamosa_acl::OBJ_LINK_TYPE_APP])) {
+      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $a_right) {
+        $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['app_id_master']));
       }
     }
   }
@@ -1140,28 +1193,28 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+    $var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The asset_id.',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
-    $a_var_setup[self::VARS][self::REPLACE] = array(
+    $var_setup[self::VARS][self::REPLACE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 'TRUE',
       self::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
-    $a_var_setup[self::VARS][self::ACL_APP] = array(
+    $var_setup[self::VARS][self::ACL_APP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1170,7 +1223,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_USER] = array(
+    $var_setup[self::VARS][self::ACL_USER] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1179,7 +1232,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
-    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+    $var_setup[self::VARS][self::ACL_GROUP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1188,7 +1241,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+    $var_setup[self::VARS][self::ACL_DOMAIN] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1197,7 +1250,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+    $var_setup[self::VARS][self::ACL_REALM] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1207,7 +1260,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+    $var_setup[self::VARS][self::ACL_USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1217,7 +1270,7 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+    $var_setup[self::VARS][self::ACL_GROUP_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1227,19 +1280,19 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the asset exists
     $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::APP_ID => $app_id, mediamosa_asset_db::ID => $asset_id));
@@ -1271,24 +1324,35 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
     }
 
     // Set access rights
-    $a_result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset, $a_acl_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
+    $result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset, $a_acl_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
 
-    $a_types = array(
-      mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
-      mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
-      mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
-      mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
-      mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
-    );
+    if (mediamosa::is_v3_output()) {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
+        mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
+        mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
+        mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
+        mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
+      );
+    }
+    else {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'aut_app',
+        mediamosa_acl::ACL_NAME_TYPE_USER => 'aut_user',
+        mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'aut_group',
+        mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'aut_domain',
+        mediamosa_acl::ACL_NAME_TYPE_REALM => 'aut_realm',
+      );
+    }
 
-    foreach ($a_result_rights_set as $a_error) {
-      $type = (isset($a_types[$a_error['type']]) ? $a_types[$a_error['type']] : 'unknown');
+    foreach ($result_rights_set as $error) {
+      $type = (isset($types[$error['type']]) ? $types[$error['type']] : 'unknown');
 
-      if ($a_error['a_error'] === FALSE) {
-        $o_mediamosa->add_item(
+      if ($error['a_error'] === FALSE) {
+        $mediamosa->add_item(
           array(
             $type => array(
-              'value' => $a_error['value'],
+              'value' => $error['value'],
               'result' => mediamosa_response::SUCCESS,
               'result_id' => mediamosa_error::ERRORCODE_OKAY,
               'result_description' => '',
@@ -1297,13 +1361,13 @@ class mediamosa_rest_call_acl_asset_set_rights extends mediamosa_rest_call {
         );
       }
       else {
-        $o_mediamosa->add_item(
+        $mediamosa->add_item(
           array(
             $type => array(
-              'value' => $a_error['value'],
+              'value' => $error['value'],
               'result' => mediamosa_response::ERROR,
-              'result_id' => $a_error['a_error']['code'],
-              'result_description' => $a_error['a_error']['message'],
+              'result_id' => $error['a_error']['code'],
+              'result_description' => $error['a_error']['message'],
             )
           )
         );
@@ -1342,29 +1406,29 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+    $var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'The asset_ids.',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
-    $a_var_setup[self::VARS][self::REPLACE] = array(
+    $var_setup[self::VARS][self::REPLACE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 'TRUE',
       self::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
-    $a_var_setup[self::VARS][self::ACL_APP] = array(
+    $var_setup[self::VARS][self::ACL_APP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1373,7 +1437,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_USER] = array(
+    $var_setup[self::VARS][self::ACL_USER] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1382,7 +1446,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
-    $a_var_setup[self::VARS][self::ACL_GROUP] = array(
+    $var_setup[self::VARS][self::ACL_GROUP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1391,7 +1455,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
-    $a_var_setup[self::VARS][self::ACL_DOMAIN] = array(
+    $var_setup[self::VARS][self::ACL_DOMAIN] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1400,7 +1464,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
       self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
-    $a_var_setup[self::VARS][self::ACL_REALM] = array(
+    $var_setup[self::VARS][self::ACL_REALM] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1410,7 +1474,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_USER_ID] = array(
+    $var_setup[self::VARS][self::ACL_USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1420,7 +1484,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     // alias.
-    $a_var_setup[self::VARS][self::ACL_GROUP_ID] = array(
+    $var_setup[self::VARS][self::ACL_GROUP_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1430,21 +1494,21 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $asset_ids = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
-    $a_app_ids = $this->get_param_value('acl_app');
+    $app_ids = $this->get_param_value('acl_app');
     $a_acl_user_ids = $this->get_param_value('acl_user');
     $a_acl_group_ids = $this->get_param_value('acl_group');
     $a_acl_domains = $this->get_param_value('acl_domain');
@@ -1488,27 +1552,39 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
         '#asset_id' => mediamosa_asset_db::ID,
         ':asset_id' => $asset_id,
       ));
-      foreach ($result as $mediafile) {
-        $mediafile_id = $mediafile['mediafile_id'];
-        // Get the media file.
-        $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
 
-        // Set access rights
-        $a_result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $a_app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
-
-        $a_types = array(
+      if (mediamosa::is_v3_output()) {
+        $types = array(
           mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
           mediamosa_acl::ACL_NAME_TYPE_USER => 'acl_user',
           mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'acl_group',
           mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'acl_domain',
           mediamosa_acl::ACL_NAME_TYPE_REALM => 'acl_realm',
         );
+      }
+      else {
+        $types = array(
+          mediamosa_acl::ACL_NAME_TYPE_APP => 'aut_app',
+          mediamosa_acl::ACL_NAME_TYPE_USER => 'aut_user',
+          mediamosa_acl::ACL_NAME_TYPE_USER_GROUP => 'aut_group',
+          mediamosa_acl::ACL_NAME_TYPE_DOMAIN => 'aut_domain',
+          mediamosa_acl::ACL_NAME_TYPE_REALM => 'aut_realm',
+        );
+      }
 
-        foreach ($a_result_rights_set as $a_error) {
-          $type = (isset($a_types[$a_error['type']]) ? $a_types[$a_error['type']] : 'unknown');
+      foreach ($result as $mediafile) {
+        $mediafile_id = $mediafile['mediafile_id'];
+        // Get the media file.
+        $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
 
-          if ($a_error['a_error'] === FALSE) {
-            $o_mediamosa->add_item(
+        // Set access rights
+        $a_result_rights_set = mediamosa_acl::rights_set($app_id, $user_id, mediamosa_acl::ACL_TYPE_MEDIAFILE, $a_mediafile, $app_ids, $a_acl_user_ids, $a_acl_group_ids, $a_acl_domains, $a_acl_realms, $b_replace);
+
+        foreach ($a_result_rights_set as $error) {
+          $type = (isset($types[$error['type']]) ? $types[$error['type']] : 'unknown');
+
+          if ($error['a_error'] === FALSE) {
+            $mediamosa->add_item(
               array(
                 'asset_id' => $asset_id,
                 'mediafile_id' => $mediafile_id,
@@ -1516,7 +1592,7 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
                 'result_id' => mediamosa_error::ERRORCODE_OKAY,
                 'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
                 $type => array(
-                  'value' => $a_error['value'],
+                  'value' => $error['value'],
                   'result' => mediamosa_response::SUCCESS,
                   'result_id' => mediamosa_error::ERRORCODE_OKAY,
                   'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
@@ -1525,18 +1601,18 @@ class mediamosa_rest_call_acl_asset_mediafile_set_rights extends mediamosa_rest_
             );
           }
           else {
-            $o_mediamosa->add_item(
+            $mediamosa->add_item(
               array(
                 'asset_id' => $asset_id,
                 'mediafile_id' => $mediafile_id,
                 'result' => mediamosa_response::ERROR,
-                'result_id' => $a_error['a_error']['code'],
-                'result_description' => $a_error['a_error']['message'],
+                'result_id' => $error['a_error']['code'],
+                'result_description' => $error['a_error']['message'],
                 $type => array(
-                  'value' => $a_error['value'],
+                  'value' => $error['value'],
                   'result' => mediamosa_response::ERROR,
-                  'result_id' => $a_error['a_error']['code'],
-                  'result_description' => $a_error['a_error']['message'],
+                  'result_id' => $error['a_error']['code'],
+                  'result_description' => $error['a_error']['message'],
                 )
               )
             );
@@ -1560,34 +1636,34 @@ class mediamosa_rest_call_acl_asset_delete_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+    $var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The asset ID where from to remove the ACL rights',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The owner of the asset for access.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the asset exists.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
@@ -1599,7 +1675,7 @@ class mediamosa_rest_call_acl_asset_delete_rights extends mediamosa_rest_call {
     mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset);
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -1616,35 +1692,35 @@ class mediamosa_rest_call_acl_asset_get_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+    $var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The ID of the asset to set the rights on.',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'This must be the owner ID of the asset.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the asset exists.
     // Removed the app_id so the asset can be accessed by other app.
@@ -1652,22 +1728,22 @@ class mediamosa_rest_call_acl_asset_get_rights extends mediamosa_rest_call {
     $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Get the rights on asset.
-    $a_rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset, $is_app_admin);
+    $rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_ASSET, $a_asset, $is_app_admin);
 
-    foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $a_right) {
-      $a_right['type'] = ($a_right['type'] == 'acl_user_group' ? 'acl_group' : $a_right['type']);
-      $o_mediamosa->add_item(array($a_right['type'] => $a_right['name']));
+    foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $right) {
+      $right['type'] = ($right['type'] == 'acl_user_group' ? 'acl_group' : $right['type']);
+      $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
     }
 
-    foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $a_right) {
-      $o_mediamosa->add_item(array($a_right['type'] => $a_right['name']));
+    foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $right) {
+      $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
     }
 
-    foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $a_right) {
-      $o_mediamosa->add_item(array($a_right['type'] => $a_right['app_id_master']));
+    foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $right) {
+      $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['app_id_master']));
     }
 
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -1684,47 +1760,47 @@ class mediamosa_rest_call_acl_collection_delete_rights extends mediamosa_rest_ca
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::COLL_ID] = array(
+    $var_setup[self::VARS][self::COLL_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'Collection id, unique identifier of the collection.',
 
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'User id, to determine whether the applicant has the right to remove authorization or not.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $coll_id = $this->get_param_value(self::COLL_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the media file exists.
     mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::APP_ID => $app_id, mediamosa_collection_db::ID => $coll_id));
 
     // Get the media file
-    $a_collection = mediamosa_collection::get($coll_id, $app_id);
+    $collection = mediamosa_collection::get($coll_id, $app_id);
 
     // Remove rights.
-    mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_COLLECTION, $a_collection);
+    mediamosa_acl::rights_clear($app_id, $user_id, mediamosa_acl::ACL_TYPE_COLLECTION, $collection);
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -1741,55 +1817,55 @@ class mediamosa_rest_call_acl_collection_get_rights extends mediamosa_rest_call 
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::COLL_ID] = array(
+    $var_setup[self::VARS][self::COLL_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The coll id.',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'The user id.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $collection_id = $this->get_param_value(self::COLL_ID);
     $user_id = $this->get_param_value(self::USER_ID);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the collection exists.
     // Removed the app_id so the collection can be accessed by other app.
     // vpx_acl_rights_get() will check if its in the right app or you have access through slave.
-    $a_collection = mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $collection_id));
+    $collection = mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $collection_id));
 
     // Get the rights.
-    $a_rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_COLLECTION, $a_collection, $is_app_admin);
+    $rights = mediamosa_acl::rights_get($app_id, $user_id, mediamosa_acl::ACL_TYPE_COLLECTION, $collection, $is_app_admin);
 
-    foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $a_right) {
-      $a_right['type'] = ($a_right['type'] == 'acl_user_group' ? 'acl_group' : $a_right['type']);
-      $o_mediamosa->add_item(array($a_right['type'] => $a_right['name']));
+    foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_NAME] as $right) {
+      $right['type'] = ($right['type'] == 'acl_user_group' ? 'acl_group' : $right['type']);
+      $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
     }
 
-    foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $a_right) {
-      $o_mediamosa->add_item(array($a_right['type'] => $a_right['name']));
+    foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $right) {
+      $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
     }
 
-    foreach ($a_rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $a_right) {
-      $o_mediamosa->add_item(array($a_right['type'] => $a_right['app_id_master']));
+    foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $right) {
+      $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['app_id_master']));
     }
   }
 }
@@ -1813,28 +1889,28 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::COLL_ID] = array(
+    $var_setup[self::VARS][self::COLL_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'Collection ID',
     );
 
-    $a_var_setup[self::VARS][self::USER_ID] = array(
+    $var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_DESCRIPTION => 'User id, for authorization the changing  process.',
     );
 
-    $a_var_setup[self::VARS][self::REPLACE] = array(
+    $var_setup[self::VARS][self::REPLACE] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 'true',
       self::VAR_DESCRIPTION => "'TRUE' or 'FALSE'. Whether the existing rules overwritten or not. Default is 'TRUE'. Defining it as 'FALSE', if you want to keep the old rights."
     );
 
-    $a_var_setup[self::VARS][self::ACL_APP] = array(
+    $var_setup[self::VARS][self::ACL_APP] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -1844,20 +1920,20 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $collection_id = $this->get_param_value(self::COLL_ID);
     $user_id = $this->get_param_value(self::USER_ID);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Make sure the media file exists
     $a_collection = mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $collection_id));
@@ -1866,7 +1942,7 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
     $b_replace = $this->get_param_value(self::REPLACE);
 
     // Set access rights
-    $a_result_rights_set = mediamosa_acl::rights_set(
+    $result_rights_set = mediamosa_acl::rights_set(
       $app_id,
       $user_id,
       mediamosa_acl::ACL_TYPE_COLLECTION,
@@ -1881,18 +1957,25 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
       $is_app_admin
     );
 
-    $a_types = array(
-      mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
-    );
+    if (mediamosa::is_v3_output()) {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'acl_app',
+      );
+    }
+    else {
+      $types = array(
+        mediamosa_acl::ACL_NAME_TYPE_APP => 'aut_app',
+      );
+    }
 
-    foreach ($a_result_rights_set as $a_error) {
-      $type = (isset($a_types[$a_error['type']]) ? $a_types[$a_error['type']] : 'unknown');
+    foreach ($result_rights_set as $error) {
+      $type = (isset($types[$error['type']]) ? $types[$error['type']] : 'unknown');
 
-      if ($a_error['a_error'] === FALSE) {
-        $o_mediamosa->add_item(
+      if ($error['a_error'] === FALSE) {
+        $mediamosa->add_item(
           array(
             $type => array(
-              'value' => $a_error['value'],
+              'value' => $error['value'],
               'result' => mediamosa_response::SUCCESS,
               'result_id' => mediamosa_error::ERRORCODE_OKAY,
               'result_description' => '',
@@ -1901,13 +1984,13 @@ class mediamosa_rest_call_acl_collection_set_rights extends mediamosa_rest_call 
         );
       }
       else {
-        $o_mediamosa->add_item(
+        $mediamosa->add_item(
           array(
             $type => array(
-              'value' => $a_error['value'],
+              'value' => $error['value'],
               'result' => mediamosa_response::ERROR,
-              'result_id' => $a_error['a_error']['code'],
-              'result_description' => $a_error['a_error']['message'],
+              'result_id' => $error['a_error']['code'],
+              'result_description' => $error['a_error']['message'],
             )
           )
         );
@@ -1932,9 +2015,9 @@ class mediamosa_rest_call_acl_get_apps extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[self::VARS][self::IS_OAI] = array(
+    $var_setup[self::VARS][self::IS_OAI] = array(
       self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_DESCRIPTION => 'The OAI is allowed to see all applications. However, the call must be made internally to work.',
       self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
@@ -1942,7 +2025,7 @@ class mediamosa_rest_call_acl_get_apps extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
