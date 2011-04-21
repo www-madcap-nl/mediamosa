@@ -626,6 +626,10 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
 
   $build = array();
   foreach ($result['items'] as $item) {
+    if (isset($item['#value'])) {
+      $item = $item['#value'];
+    }
+
     $actions = array();
 
     $actions[] = '<b>' . trim($item['filename']) . '</b>';

@@ -293,11 +293,6 @@ class mediamosa_response extends mediamosa {
     $tabs = $options['formatOutput'] ? str_repeat('  ', $tab) : '';
 
     foreach ($array as $key => $value) {
-      //if (is_numeric($key)) {
-      //  $key = $value;
-      //  $value = '';
-      //}
-
       if ( ($value === '' && !is_array($value)) || (is_array($value) && empty($value)) ) {
         $output .= $tabs . '<' . $key . '/>' . $linefeed;
         continue;
@@ -1011,7 +1006,6 @@ class mediamosa_response extends mediamosa {
     $dom_element_items = $dom_document->createElement('items');
     $dom_element_response->appendChild($dom_element_items);
 
-    $item_counter = 0;
     if (!empty($this->response['errors'])) {
       $dom_element_errors = $dom_document->createElement('errors');
 
@@ -1020,17 +1014,19 @@ class mediamosa_response extends mediamosa {
       }
     }
 
+    $item_counter = 1;
     foreach ($this->response['items'] as $item) {
-      $dom_element_item = $dom_document->createElement('item');
-      $dom_element_item->setAttribute('id', ++$item_counter);
-
-      $dom_element_items->appendChild($dom_element_item);
-
-      // Process items with a maximum recursion depth (last parameter).
-      //
-      foreach ($item as $key => $value) {
-        $this->generate_xml_add_child($dom_document, $dom_element_item, $key, $value);
+      if (isset($item['#attributes']) || isset($item['#value'])) {
+        $item['#attributes']['id'] = $item_counter++;
       }
+      else {
+        $item = array(
+          '#attributes' => array('id' => $item_counter++),
+          '#value' => $item,
+        );
+      }
+
+      $this->generate_xml_add_child($dom_document, $dom_element_items, 'item', $item);
     }
 
     // Add header items at last.
@@ -1092,40 +1088,24 @@ class mediamosa_response extends mediamosa {
 
       return NULL;
     }
-/*
-    if ($first_key[0] == '#') {
-      foreach ($mixed_value as $mixed_key => $value) {
-        $dom_element = $this->generate_xml_add_child($dom_document, $dom_node, $key, $value, $max_depth);
 
-        if ($mixed_key != '#0') {
-          $attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
-          if (is_array($attributes)) {
-            foreach ($attributes as $attr_name => $attr_value) {
-              assert(count($attr_name));
-              $dom_element->setAttribute($attr_name, $attr_value);
-            }
-          }
-        }
-      }
-
-      return NULL;
-    }
-*/
     $dom_element_child = $dom_node->appendChild(new DOMElement($key));
-    foreach ($mixed_value as $mixed_key => $value) {
-      if (is_array($value)) {
-        if (isset($value['#attributes']) && !empty($value['#attributes'])) {
-          foreach ($value['#attributes'] as $attr_name => $attr_value) {
-            $dom_element_child->setAttribute($attr_name, $attr_value);
-          }
-          // Must exists?
-          $value = isset($value['#value']) ? $value['#value'] : '';
-        }
-        elseif (isset($value['#value'])) {
-          $value = $value['#value'];
-        }
-      }
 
+    // Fix attributes.
+    if (isset($mixed_value['#attributes']) || isset($mixed_value['#value'])) {
+      if (isset($mixed_value['#attributes']) && !empty($mixed_value['#attributes'])) {
+        foreach ($mixed_value['#attributes'] as $attr_name => $attr_value) {
+          $dom_element_child->setAttribute($attr_name, $attr_value);
+        }
+        // Must exists?
+        $mixed_value = isset($mixed_value['#value']) ? $mixed_value['#value'] : '';
+      }
+      elseif (isset($mixed_value['#value'])) {
+        $mixed_value = $mixed_value['#value'];
+      }
+    }
+
+    foreach ($mixed_value as $mixed_key => $value) {
       $this->generate_xml_add_child($dom_document, $dom_element_child, $mixed_key, $value, $max_depth);
     }
 

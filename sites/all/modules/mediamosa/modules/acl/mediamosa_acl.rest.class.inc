@@ -47,6 +47,11 @@ function fix_vars_acl_2_aut($row) {
     return (substr($row, 0, 4) == 'acl_' ? 'aut_' . substr($row, 4) : $row);
   }
 
+  if (isset($row['#value'])) {
+    $row['#value'] = fix_vars_acl_2_aut($row['value']);
+    return $row;
+  }
+
   foreach ($row as $key => $value) {
     if (substr($key, 0, 4) != 'acl_') {
       continue;
@@ -1150,13 +1155,13 @@ class mediamosa_rest_call_acl_mediafile_get_rights extends mediamosa_rest_call {
     }
 
     if (isset($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP])) {
-      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $a_right) {
+      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_GROUP] as $right) {
         $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['name']));
       }
     }
 
     if (isset($rights[mediamosa_acl::OBJ_LINK_TYPE_APP])) {
-      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $a_right) {
+      foreach ($rights[mediamosa_acl::OBJ_LINK_TYPE_APP] as $right) {
         $mediamosa->add_item(array(fix_vars_acl_2_aut($right['type']) => $right['app_id_master']));
       }
     }

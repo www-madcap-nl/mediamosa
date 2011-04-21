@@ -139,7 +139,7 @@ class mediamosa_response_connector extends mediamosa_response {
     // App ID.
     $app_id = self::$environment[self::ENV_APP_ID];
     $app_ids = self::$environment[self::ENV_APP_IDS];
-    self::$environment[self::ENV_APP_ID] = reset($params['app_id']);
+    self::$environment[self::ENV_APP_ID] = is_array($params['app_id']) ? reset($params['app_id']) : $params['app_id'];
     self::$environment[self::ENV_APP_IDS] = is_array($params['app_id']) ? $params['app_id'] : array($params['app_id']);
 
     // ok reset the header.
