@@ -27,7 +27,7 @@ TODO: (v3.0)
 </IfModule>
 
 
-MediaMosa 3.0 (build 1666)
+MediaMosa 3.0 (build 1672)
 --------------------------
 - Parameter name "acl_group_id" added in /asset/{asset_id}/play, and
   "group_id" is marked as depricated (See ticket #238).
@@ -128,7 +128,10 @@ Other changes (not ticket related).
   The aut_* input variables will still work though.
 - Added lower level of debugging to include the <debug> array in the 3.0 output.
 - Added global setting to force REST call output always to output in that
-  version of MediaMosa. 
+  version of MediaMosa.
+- Rewrote the output using domdocument into own code. Needed because domdocument
+  will throw exceptions when it can't verify the namespace uri used in the
+  output.
 
 MediaMosa 2.3.9 (build 1379)
 ----------------------------
