@@ -305,14 +305,14 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
 
     // App master slave for SIMPLETEST_APP_ID2
     $a_parameters = array(
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => array(
         $app_id_2,
       ),
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => array(
         self::SIMPLETEST_USER_ID,
       ),
     );
-    $a_xml = $this->setMediafileAut($mediafile_id, $a_parameters);
+    $a_xml = $this->setMediafileAcl($mediafile_id, $a_parameters);
 
     // Go to app 2
     $this->toEga_2();

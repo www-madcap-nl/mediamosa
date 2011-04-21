@@ -29,7 +29,7 @@
   * Installer for ftp_batch_asset.
   */
 
-require_once 'mediamosa_ftp_batch_asset_db.inc';
+require_once 'mediamosa_ftp_batch_asset_db.class.inc';
 
 /**
  * Implements hook_ininstall().

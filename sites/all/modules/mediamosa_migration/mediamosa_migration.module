@@ -40,7 +40,7 @@ function mediamosa_migration_permission() {
   return array(
     mediamosa_permission::ACCESS_CONFIG . '|migration' =>  array(
       'title' => t('Access MediaMosa migration module'),
-      'description' => t('Enables the user to convert mediamosa 1.7.x database to 2.x database.'),
+      'description' => t('Enables the user to convert mediamosa 1.7.x database to 3.x database.'),
     ),
   );
 }
@@ -53,7 +53,7 @@ function mediamosa_migration_menu() {
 
   $items['admin/mediamosa/config/migration'] = array(
     'title' => 'MediaMosa 1.7.x migration tool',
-    'description' => 'This migration tool enables you to convert your 1.7.x database to 2.x database.',
+    'description' => 'This migration tool enables you to convert your 1.7.x database to 3.x database.',
     'page callback' => 'mediamosa_migration_page_form',
     'access callback' => mediamosa_permission::CALLBACK_USER_ACCESS,
     'access arguments' => array(mediamosa_permission::ACCESS_CONFIG . '|migration'),

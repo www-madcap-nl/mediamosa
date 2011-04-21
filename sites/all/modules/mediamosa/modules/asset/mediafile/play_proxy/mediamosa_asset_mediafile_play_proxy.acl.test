@@ -97,7 +97,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
 
     // Ask mediafile download url.
     $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
     $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
@@ -148,7 +148,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
 
     // Ask mediafile download url.
     $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
     $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
@@ -201,7 +201,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
 
     // Ask mediafile download url.
     $a_parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
     $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));

@@ -28,7 +28,7 @@
   * @file
   * Installer for user favorite.
   */
-require_once 'mediamosa_user_favorite_db.inc';
+require_once 'mediamosa_user_favorite_db.class.inc';
 
 /**
  * Implements hook_install().

@@ -139,7 +139,7 @@ function _mediamosa_migration_process($callback, $part, &$context) {
   $context['sandbox']['progress'] = 0;
   $context['sandbox']['current_node'] = 0;
   $context['sandbox']['max'] = 1;
-  $context['message'] = t('Migrating: @part', array('@part' => $part));
+  $context['message'] = t('Migrated: @part', array('@part' => $part));
 
   // Run callback.
   $callback();

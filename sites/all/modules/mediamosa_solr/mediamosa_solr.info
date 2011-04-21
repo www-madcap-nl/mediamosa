@@ -28,14 +28,14 @@ files[] = tests/mediamosa_solr.asset.cql.isprivate.test
 files[] = tests/mediamosa_solr.asset.cql.app.coll.test
 files[] = tests/mediamosa_solr.asset.cql.acl.context.test
 files[] = tests/mediamosa_solr.asset.collection.cql.test
-files[] = tests/mediamosa_solr.aut.ega.test
-files[] = tests/mediamosa_solr.aut.granted.test
-files[] = tests/mediamosa_solr.aut.groups.master.slave.test
-files[] = tests/mediamosa_solr.aut.groups.test
-files[] = tests/mediamosa_solr.aut.master.slave.test
-files[] = tests/mediamosa_solr.aut.mediafiles.test
-files[] = tests/mediamosa_solr.aut.slave.rights.test
-files[] = tests/mediamosa_solr.aut.test
+files[] = tests/mediamosa_solr.acl.ega.test
+files[] = tests/mediamosa_solr.acl.granted.test
+files[] = tests/mediamosa_solr.acl.groups.master.slave.test
+files[] = tests/mediamosa_solr.acl.groups.test
+files[] = tests/mediamosa_solr.acl.master.slave.test
+files[] = tests/mediamosa_solr.acl.mediafiles.test
+files[] = tests/mediamosa_solr.acl.slave.rights.test
+files[] = tests/mediamosa_solr.acl.test
 
 ; Add 3rdparty so class are autoload by Drupal
 files[] = 3rdparty/SolrPhpClient/Apache/Solr/Service.php

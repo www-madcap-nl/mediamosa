@@ -29,7 +29,7 @@
   *
   */
 
-require_once 'mediamosa_ftp_batch_db.inc';
+require_once 'mediamosa_ftp_batch_db.class.inc';
 require_once 'asset/mediamosa_ftp_batch_asset.install.inc';
 
 /**

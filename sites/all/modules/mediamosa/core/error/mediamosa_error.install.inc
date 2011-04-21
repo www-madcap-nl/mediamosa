@@ -29,8 +29,19 @@
  * Error installer.
  */
 
-require_once 'mediamosa_error_db.inc';
-require_once 'mediamosa_error.inc';
+require_once 'mediamosa_error_db.class.inc';
+
+// In case of update mode, we need to skip this file (else will give fatal
+// error when upgrading from 2.x to 3.x.
+if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update') {
+  return;
+}
+
+// Needed for mediamosa_error.class.inc.
+require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa_sdk/mediamosa_sdk.class.inc';
+
+require_once 'mediamosa_error.class.inc';
+
 
 /**
  * Implements hook_install().
@@ -125,9 +136,9 @@ function _mediamosa_error_install() {
     'ERRORCODE_METADATA_DEFINITION_NOT_EMPTY' => 'There are still one or more properties present in this property definition',
     'ERRORCODE_INVALID_METADATA_DEFINITION' => 'Invalid metadata definition',
     'ERRORCODE_HOSTNAME_TYPE_NO_MATCH_GROUP_TYPE' => 'The hostname (@hostname) with type (@hostname_type) must be the same type as the group (@group) with type (@group_type)',
-    'ERRORCODE_AUT_GROUP_ALREADY_EXISTS' => 'The authorization group (@group) already exists',
-    'ERRORCODE_AUT_GROUP_NOT_FOUND' => 'The authorization group (@group) was not found',
-    'ERRORCODE_AUT_NAME_NOT_FOUND' => 'The authorization hostname (@hostname) was not found',
+    'ERRORCODE_ACL_GROUP_ALREADY_EXISTS' => 'The authorization group (@group) already exists',
+    'ERRORCODE_ACL_GROUP_NOT_FOUND' => 'The authorization group (@group) was not found',
+    'ERRORCODE_ACL_NAME_NOT_FOUND' => 'The authorization hostname (@hostname) was not found',
     'ERRORCODE_INVALID_DATA_PARAMETER' => "The parameter '@parameter' contains invalid data, expecting @data",
     'ERRORCODE_FTP_BATCH_NOT_FOUND' => 'The FTP batch id (@batch_id) was not found',
     'ERRORCODE_CANT_RETYPE_GROUP_MUST_BE_EMPTY' => "You can not change the type of group '@group' when it contains hostnames",
@@ -186,7 +197,7 @@ function _mediamosa_error_install() {
 
     'ERRORCODE_STARTING_JOB_FAILED' => 'Jobserver is unable to start job',
 
-    'ERRORCODE_MASTERSLAVE_DISALLOWED' => 'Master/slave relations for @aut_id disabled',
+    'ERRORCODE_MASTERSLAVE_DISALLOWED' => 'Master/slave relations for @acl_id disabled',
 
     'ERRORCODE_INVALID_UPLOAD_TICKET' => 'Upload failed, invalid upload ticket used',
     'ERRORCODE_CREATE_MEDIAFILE_DURING_UPLOAD' => 'Upload failed, unable to create mediafile during upload',

@@ -217,6 +217,19 @@ function mediamosa_app_menu() {
  */
 function _mediamosa_app_list() {
 
+  global $user;
+  $role_permissions = user_role_permissions($user->roles);
+
+  // Collect all the app_ids.
+  foreach ($role_permissions as $rid => $roles) {
+    foreach ($roles as $role => $switch) {
+      if (empty($switch) || (drupal_substr($role, 0, 14) != 'mediamosa|app|')) {
+        continue;
+      }
+      $access_app_ids[] = drupal_substr($role, 14);
+    }
+  }
+
   // Reset the breadcrum.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
@@ -237,12 +250,16 @@ function _mediamosa_app_list() {
   );
 
   // Get the app nodes.
-  $apps = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
+  $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
     ->fields('a')
     ->limit(mediamosa_settings::maintenance_items_per_page())
-    ->orderByHeader($header)
-    ->execute()
-    ->fetchAll();
+    ->orderByHeader($header);
+
+  if (!empty($access_app_ids)) {
+    $query->condition(mediamosa_app_db::APP_ID, $access_app_ids, 'IN');
+  }
+
+  $apps = $query->execute()->fetchAll();
 
   // Collect the node IDs.
   $nids = array();

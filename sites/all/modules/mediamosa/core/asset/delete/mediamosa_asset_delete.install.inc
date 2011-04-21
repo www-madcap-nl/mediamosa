@@ -29,8 +29,8 @@
   * The installation file of the asset module.
   */
 
-require_once 'mediamosa_asset_delete.inc';
-require_once 'mediamosa_asset_delete_db.inc';
+require_once 'mediamosa_asset_delete.class.inc';
+require_once 'mediamosa_asset_delete_db.class.inc';
 
 /**
  * Implements hook_install().

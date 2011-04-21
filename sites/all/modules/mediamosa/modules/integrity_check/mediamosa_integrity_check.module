@@ -140,7 +140,7 @@ function mediamosa_integrity_check_page() {
     $type = $result->fetchField();
   }
 
-  // Check whether the mediamosa_integrity_check.inc is running or not.
+  // Check whether the mediamosa_integrity_check is running or not.
   $output = array();
   mediamosa_io::exec('ps ax | grep mediamosa_integrity_check | grep -v grep', $output);
   if (!empty($output) > 0) {

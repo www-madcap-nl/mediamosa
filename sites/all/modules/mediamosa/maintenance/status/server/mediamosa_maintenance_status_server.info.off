@@ -10,6 +10,3 @@ core = 7.x
 dependencies[] = mediamosa
 dependencies[] = mediamosa_maintenance
 dependencies[] = mediamosa_maintenance_status
-
-; Used files.
-files[] = mediamosa_maintenance_status_server.module

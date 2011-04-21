@@ -43,15 +43,15 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
 
       $replace = array(
         'mime_type' => 'mime_type',
-        'aut_app' => 'mf_app_id_master',
+        'acl_app' => 'mf_app_id_master',
         'is_master_slaved' => 'asset_is_master_slaved',
         'is_protected' => 'mf_is_protected',
-        'aut_app' => 'mf_app_id_master',
-        'aut_user' => 'mf_aut_user',
-        'aut_group' => 'mf_aut_user_group',
-        'aut_domain' => 'mf_aut_domain',
-        'aut_realm' => 'mf_aut_realm',
-        'aut_realm_prefix' => 'mf_aut_realm_prefix',
+        'acl_app' => 'mf_app_id_master',
+        'acl_user' => 'mf_acl_user',
+        'acl_group' => 'mf_acl_user_group',
+        'acl_domain' => 'mf_acl_domain',
+        'acl_realm' => 'mf_acl_realm',
+        'acl_realm_prefix' => 'mf_acl_realm_prefix',
       );
 
       foreach ($mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES] as $context_set => &$lvl1) {
@@ -79,7 +79,7 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
             break;
           case 'acl':
           case 'aut':
-            $context_set = 'mediamosa:aut';
+            $context_set = 'mediamosa:acl';
             break;
           default:
             $context_set = 'mediamosa:' . $a_def['propgroup_name'];
@@ -156,15 +156,15 @@ class mediamosa_solr_asset_cql_context extends mediamosa_asset_cql_context {
     // Solr does not support having.
     $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
     // Special case when these keys are used.
-    $aut_joins = array(
-      'AUT_NAME_USER',
-      'AUT_NAME_USER_GROUP',
-      'AUT_GROUP_DOMAIN',
-      'AUT_GROUP_REALM',
-      'AUT_APP_MASTER_SLAVE',
+    $acl_joins = array(
+      'ACL_NAME_USER',
+      'ACL_NAME_USER_GROUP',
+      'ACL_GROUP_DOMAIN',
+      'ACL_GROUP_REALM',
+      'ACL_APP_MASTER_SLAVE',
     );
-    if (!empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN]) && in_array($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN], $aut_joins)) {
-      $result['is_aut_search'] = TRUE;
+    if (!empty($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN]) && in_array($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN], $acl_joins)) {
+      $result['is_acl_search'] = TRUE;
     }
 
     // Is case sensitive only?

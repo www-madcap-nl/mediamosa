@@ -99,9 +99,9 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Add ACL rule.
     $parameters = array(
-      'aut_user' => 'some_user',
+      'acl_user' => 'some_user',
     );
-    $this->setMediafileAut($still_id, $parameters);
+    $this->setMediafileAcl($still_id, $parameters);
 
 
     // Get the file.
@@ -156,7 +156,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Remove ACL rule.
     $parameters = array(
     );
-    $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -169,9 +169,9 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Add ACL rule.
     $parameters = array(
-      'aut_user' => 'some_user',
+      'acl_user' => 'some_user',
     );
-    $this->setMediafileAut($mediafile_id_original, $parameters);
+    $this->setMediafileAcl($mediafile_id_original, $parameters);
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -185,7 +185,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Remove ACL rule.
     $parameters = array(
     );
-    $this->setMediafileAut($mediafile_id_original, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($mediafile_id_original, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Get the file.
     $result = mediamosa_http::drupal_http_request($permanent_still_url);
@@ -235,7 +235,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     //
 
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
 
@@ -245,13 +245,13 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Add ACL rule.
     $parameters = array(
-      'aut_domain' => 'foo.nl',
+      'acl_domain' => 'foo.nl',
     );
-    $this->setMediafileAut($still_id, $parameters);
+    $this->setMediafileAcl($still_id, $parameters);
 
     // Again.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'Not owner!',
     );
     // FIXME: turned off, no longer needed.
@@ -259,7 +259,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Again with owner (link must now be like ticket).
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
 
@@ -270,10 +270,10 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Remove ACL rule.
     $parameters = array(
     );
-    $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
 
@@ -296,20 +296,20 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Again.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
       mediamosa_rest_call_asset_mediafile_play::USER_ID => 'Not owner!',
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
     // Again with owner.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters, array(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE));
 
     // Again with owner.
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
       mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'TRUE',
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
@@ -326,7 +326,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     $this->updateAsset($asset_id, $parameters, 'Setting is unappropriate == FALSE');
 
     $parameters = array(
-      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL,
     );
     $response = $this->play_proxy(__FILE__, __LINE__, $asset_id, $parameters);
 
@@ -346,13 +346,13 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Add ACL rule.
     $parameters = array(
-      'aut_domain' => 'foo.nl',
+      'acl_domain' => 'foo.nl',
     );
-    $this->setMediafileAut($still_id, $parameters);
+    $this->setMediafileAcl($still_id, $parameters);
 
     $parameters = array(
       mediamosa_rest_call_asset_get::USER_ID => 'Not owner!',
-      mediamosa_rest_call_asset_get::AUT_USER_ID => 'Not owner!',
+      mediamosa_rest_call_asset_get::ACL_USER_ID => 'Not owner!',
     );
     $asset = $this->getAsset($asset_id, $parameters);
 
@@ -369,7 +369,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
     // Remove ACL rule.
     $parameters = array(
     );
-    $this->setMediafileAut($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $this->setMediafileAcl($still_id, $parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
 
     // Perm. again.
     $asset = $this->getAsset($asset_id);

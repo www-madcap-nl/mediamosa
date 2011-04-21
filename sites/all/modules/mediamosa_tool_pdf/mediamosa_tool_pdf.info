@@ -13,4 +13,4 @@ dependencies[] = mediamosa_server
 dependencies[] = mediamosa_app
 
 ; Used files.
-files[] = mediamosa_tool_pdf.inc
+files[] = mediamosa_tool_pdf.class.inc

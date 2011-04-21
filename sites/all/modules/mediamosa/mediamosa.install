@@ -29,19 +29,20 @@
  * Main core installer.
  */
 
-
 // Node types.
-require_once 'core/node/mediamosa_node.inc';
+require_once 'core/node/mediamosa_node.class.inc';
 
 // Include the class we need. During install nothing can be autoloaded (yet).
-require_once 'mediamosa.inc';
-require_once 'mediamosa.settings.inc';
-require_once 'lib/mediamosa_db.inc';
-require_once 'lib/mediamosa_datetime.inc';
-require_once 'lib/mediamosa_unicode.inc';
+require_once 'mediamosa.class.inc';
+require_once 'mediamosa.settings.class.inc';
+require_once 'lib/mediamosa_db.class.inc';
+require_once 'lib/mediamosa_datetime.class.inc';
+require_once 'lib/mediamosa_unicode.class.inc';
+
+// Our children install files.
 require_once 'core/error/mediamosa_error.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
-require_once 'core/aut/mediamosa_aut.install.inc';
+require_once 'core/acl/mediamosa_acl.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
 require_once 'core/watchdog/mediamosa_watchdog.install.inc';
@@ -84,8 +85,8 @@ function mediamosa_install() {
   // Install the asset db.
   _mediamosa_asset_install();
 
-  // Install the aut dbs.
-  _mediamosa_aut_install();
+  // Install the acl dbs.
+  _mediamosa_acl_install();
 
   // Install the user dbs.
   _mediamosa_user_install();
@@ -155,8 +156,8 @@ function mediamosa_uninstall() {
   // Uninstall the user dbs.
   _mediamosa_user_uninstall();
 
-  // Install the aut dbs.
-  _mediamosa_aut_uninstall();
+  // Install the acl dbs.
+  _mediamosa_acl_uninstall();
 
   // Remove the app db.
   _mediamosa_asset_uninstall();
@@ -2221,7 +2222,7 @@ function mediamosa_update_7105() {
   }
 }
 
-/*
+/**
  * Install mediamosa_tool_mapping table.
  * Create the tool mapping node type.
  */
@@ -2246,8 +2247,9 @@ function mediamosa_update_7106() {
     node_type_save($tool_mapping_node_type);
   }
   // Rebuild the registry.
-  registry_rebuild();
-  cache_clear_all();
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
 }
 
 /**
@@ -2316,6 +2318,11 @@ function mediamosa_update_7109() {
  * Split the server_uri to two parts, and fill the server_uri and server_path in mediamosa_server table and mediamosa_node_revision table.
  */
 function mediamosa_update_7110() {
+  // Rebuild the registry.
+  db_query('DELETE FROM {registry}'); // Don't worry, I know what I'm doing.
+  db_query('DELETE FROM {registry_file}'); // Clear it too.
+  drupal_flush_all_caches();
+
   $query = db_select('mediamosa_server', 's');
   $query->fields('s', array('vid', 'server_uri'));
   $result = $query->execute();
@@ -2418,9 +2425,16 @@ function mediamosa_update_7113() {
     'description' => 'The disk quota in MB.',
   );
 
-  // Just fix incorrect comment first.
+  // Just fix incorrect comments first.
   db_change_field(
     'mediamosa_user',
+    'quotum',
+    'quotum',
+    $spec
+  );
+
+  db_change_field(
+    'mediamosa_user_group',
     'quotum',
     'quotum',
     $spec
@@ -2441,23 +2455,6 @@ function mediamosa_update_7113() {
   // Please note last parameter - array with primary key definition.
   db_add_field('mediamosa_user', 'user_key', $spec, array('primary key' => array('user_key')));
 
-  $schema = mediamosa_user_group_schema();
-
-  $spec = array(
-    'type' => 'int',
-    'unsigned' => FALSE,
-    'not null' => TRUE,
-    'description' => 'The disk quota in MB.',
-  );
-
-  // Just fix incorrect comment.
-  db_change_field(
-    'mediamosa_user_group',
-    'quotum',
-    'quotum',
-    $spec
-  );
-
   // Primary key is downgraded to unique now.
   db_drop_primary_key('mediamosa_user_group');
   db_add_unique_key('mediamosa_user_group', 'uni_id_group_and_app', array('group_id', 'app_id'));
@@ -2472,7 +2469,7 @@ function mediamosa_update_7113() {
   // Please note last parameter - array with primary key definition.
   db_add_field('mediamosa_user_group', 'group_key', $spec, array('primary key' => array('group_key')));
 
-  // ...and user_in_group table.
+  // Our new user_in_group table.
   $schema = array(
   'description' => 'The user/group relation table.',
     'fields' => array(
@@ -2545,7 +2542,7 @@ function mediamosa_update_7113() {
 
   // Migration goes here.
   $query = mediamosa_db::db_select('mediamosa_user', 'u');
-  $query->fields('u');
+  $query->fields('u', array('user_key'));
   $query->join('mediamosa_user_group', 'g', 'u.group_id = g.group_id AND u.app_id = g.app_id');
   $query->addField('g', 'group_key');
   $users_in_group = $query->execute()->fetchAll();
@@ -2578,7 +2575,7 @@ function mediamosa_update_7113() {
  */
 function mediamosa_update_7114() {
 
-  module_disable(array('mediamosa_app_authentication'), FALSE);
+  module_disable(array('mediamosa_app_dbus'), FALSE);
 
   module_enable(array('mediamosa_app_dbus'));
   module_enable(array('mediamosa_app_oauth'));
@@ -2612,7 +2609,7 @@ function mediamosa_update_7115() {
   // Reset the update for status page, else the frontpage will be screwed.
   variable_del('mediamosa_status_last_time');
 
-  return 'New 3.0 theme is enabled. The status page might be corrupt, this will automaticly fix itself within one minute.';
+  return 'New 3.0 theme is enabled. The status page (home page) might be corrupt, this will automaticly fix itself within 10 minutes.';
 }
 
 /**
@@ -2643,7 +2640,7 @@ function mediamosa_update_7117() {
       ->fields(array(
         'name' => 'ERRORCODE_CREATING_DERIVATIVE',
         'message' => "Unable creating derivative from image with style: @style, path: @path",
-        'code' => 1157, //mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
+        'code' => 1157, // mediamosa_error::ERRORCODE_CREATING_DERIVATIVE,
       ))
     ->execute();
   }
@@ -2783,7 +2780,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement_id supplement_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN asset_id asset_id varbinary(32) NOT NULL COMMENT 'Primary Key: Unique ID.'");
-  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement supplement blob COMMENT 'Contens of the supplement.'");
+  db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN supplement supplement longblob COMMENT 'Contents of the supplement.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN tag tag varchar(255) DEFAULT NULL COMMENT 'Tag for fast search and lookup.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_prefix oai_prefix varchar(25) DEFAULT NULL COMMENT 'OAI Prefix.'");
   db_query("ALTER TABLE {mediamosa_asset_supplement} CHANGE COLUMN oai_namespaceuri oai_namespaceuri varchar(255) DEFAULT NULL COMMENT 'OAI namespace URI.'");
@@ -3021,7 +3018,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN name name varchar(255) NOT NULL COMMENT 'The name of user.'");
-  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The disk quota in MB.'");
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when user was created.'");
   db_query("ALTER TABLE {mediamosa_user} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when user was changed last.'");
 
@@ -3032,7 +3029,7 @@ function mediamosa_update_7118() {
 
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN app_id app_id int(10) unsigned NOT NULL COMMENT 'The application ID of the user.'");
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN group_id group_id varchar(255) NOT NULL COMMENT 'The name of group.'");
-  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The application ID of the asset.'");
+  db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN quotum quotum int(11) NOT NULL COMMENT 'The disk quota in MB.'");
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN created created datetime NOT NULL COMMENT 'The date and time when user was created.'");
   db_query("ALTER TABLE {mediamosa_user_group} CHANGE COLUMN changed changed datetime DEFAULT NULL COMMENT 'The date and time when user was changed last.'");
 
@@ -3048,4 +3045,61 @@ function mediamosa_update_7118() {
   db_query("ALTER TABLE {mediamosa_webservice_app} CHANGE COLUMN status status enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'The webservice application switch.'");
 }
 
-// TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
+/**
+ * Remove AUT registration in Drupal. Module is renamed to ACL.
+ */
+function mediamosa_update_7119() {
+  // Remove from system.
+  db_query("DELETE FROM {system} WHERE name = 'mediamosa_aut'");
+
+  // From registry.
+  db_query("DELETE FROM {registry} WHERE name LIKE 'mediamosa\\_aut%'");
+
+  // Rename the tables.
+  if (db_table_exists('mediamosa_aut_app_master_slave')) {
+    db_rename_table('mediamosa_aut_app_master_slave', 'mediamosa_acl_app_master_slave');
+  }
+  if (db_table_exists('mediamosa_aut_group')) {
+    db_rename_table('mediamosa_aut_group', 'mediamosa_acl_group');
+  }
+  if (db_table_exists('mediamosa_aut_name')) {
+    db_rename_table('mediamosa_aut_name', 'mediamosa_acl_name');
+  }
+  if (db_table_exists('mediamosa_aut_object')) {
+    db_rename_table('mediamosa_aut_object', 'mediamosa_acl_object');
+  }
+
+  db_query("ALTER TABLE {mediamosa_acl_app_master_slave} CHANGE COLUMN aut_object_id acl_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_app_master_slave} CHANGE COLUMN aut_object_type acl_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_id acl_group_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_name acl_group_name varchar(128) NOT NULL DEFAULT '' COMMENT 'The group name.'");
+  db_query("ALTER TABLE {mediamosa_acl_group} CHANGE COLUMN aut_group_type acl_group_type enum('REALM','DOMAIN') NOT NULL DEFAULT 'REALM' COMMENT 'The type of group.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_name_id acl_name_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_group_id acl_group_id int(10) unsigned DEFAULT NULL COMMENT 'The optional group ID if name is part of group.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_name acl_name varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the entity.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_prefix acl_prefix varchar(128) DEFAULT NULL COMMENT 'The optional prefix of the entity, only used with REALM type.'");
+  db_query("ALTER TABLE {mediamosa_acl_name} CHANGE COLUMN aut_type acl_type enum('DOMAIN','REALM','USER','USER_GROUP') NOT NULL DEFAULT 'DOMAIN' COMMENT 'The type of name entity.'");
+
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_object_id acl_object_id varbinary(32) NOT NULL DEFAULT '' COMMENT 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_object_type acl_object_type enum('MEDIAFILE','ASSET','COLLECTION') DEFAULT 'MEDIAFILE' COMMENT 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_id acl_id int(10) unsigned NOT NULL COMMENT 'The entity ID, links to acl_name or acl_group.'");
+  db_query("ALTER TABLE {mediamosa_acl_object} CHANGE COLUMN aut_type acl_type enum('NAME','GROUP') DEFAULT NULL COMMENT 'The type of entity, links to acl_name or acl_group.'");
+
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_ALREADY_EXISTS' WHERE name = 'ERRORCODE_AUT_GROUP_ALREADY_EXISTS'");
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_GROUP_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_GROUP_NOT_FOUND'");
+  db_query("UPDATE {mediamosa_error} SET name = 'ERRORCODE_ACL_NAME_NOT_FOUND' WHERE name = 'ERRORCODE_AUT_NAME_NOT_FOUND'");
+
+  // Enable the new ACL module.
+  module_enable(array('mediamosa_acl'));
+
+  return 'The AUT module has been removed in 3.0 and is now called ACL. Old module has been removed successfully.';
+}
+
+/**
+ * Change comment on field in mediamosa_tool_params.
+ */
+function mediamosa_update_7120() {
+  db_query("ALTER TABLE {mediamosa_tool_params} CHANGE COLUMN type_parameter type_parameter enum('SELECT','CHECKBOX') NOT NULL DEFAULT 'SELECT' COMMENT 'The type of the parameter.'");
+}

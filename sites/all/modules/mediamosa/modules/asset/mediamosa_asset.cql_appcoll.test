@@ -85,10 +85,10 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
 
     // Set mediafile aut.
     $a_parameters = array(
-      'aut_app' => $app_id_2,
+      'acl_app' => $app_id_2,
     );
-    $a_xml = $this->setMediafileAut($a_mediafile_id[1][1], $a_parameters);
-    $a_xml = $this->setMediafileAut($a_mediafile_id[3][1], $a_parameters);
+    $a_xml = $this->setMediafileAcl($a_mediafile_id[1][1], $a_parameters);
+    $a_xml = $this->setMediafileAcl($a_mediafile_id[3][1], $a_parameters);
 
     // Change Ega.
     $this->toEga_2();

@@ -105,10 +105,10 @@ function _mediamosa_requirements_test() {
     'mediamosa_asset_metadata',
     'mediamosa_asset_metadata_property',
     'mediamosa_asset_metadata_property_group',
-    'mediamosa_aut_app_master_slave',
-    'mediamosa_aut_group',
-    'mediamosa_aut_name',
-    'mediamosa_aut_object',
+    'mediamosa_acl_app_master_slave',
+    'mediamosa_acl_group',
+    'mediamosa_acl_name',
+    'mediamosa_acl_object',
     'mediamosa_app',
     'mediamosa_collection',
     'mediamosa_server_streaming_container',
@@ -121,10 +121,10 @@ function _mediamosa_requirements_test() {
   $table_names_dest_empty = array(
     'mediamosa_asset',
     'mediamosa_asset_mediafile',
-    'mediamosa_aut_app_master_slave',
-    'mediamosa_aut_group',
-    'mediamosa_aut_name',
-    'mediamosa_aut_object',
+    'mediamosa_acl_app_master_slave',
+    'mediamosa_acl_group',
+    'mediamosa_acl_name',
+    'mediamosa_acl_object',
     'mediamosa_collection',
     'mediamosa_ticket',
     'mediamosa_ftp_batch',
@@ -919,14 +919,14 @@ function _mediamosa_migration_aut() {
    * -
    */
   db_query(strtr(
-    'INSERT INTO {mediamosa_aut_name}
+    'INSERT INTO {mediamosa_acl_name}
       (
-        aut_name_id,
+        acl_name_id,
         app_id,
-        aut_group_id,
-        aut_name,
-        aut_prefix,
-        aut_type
+        acl_group_id,
+        acl_name,
+        acl_prefix,
+        acl_type
       ) (SELECT
         aut_name_id,
         app_id,
@@ -950,12 +950,12 @@ function _mediamosa_migration_aut() {
    * -
    */
   db_query(strtr(
-    'INSERT INTO {mediamosa_aut_group}
+    'INSERT INTO {mediamosa_acl_group}
       (
-        aut_group_id,
+        acl_group_id,
         app_id,
-        aut_group_name,
-        aut_group_type
+        acl_group_name,
+        acl_group_type
       ) (SELECT
         aut_group_id,
         app_id,
@@ -977,12 +977,12 @@ function _mediamosa_migration_aut() {
    * -
    */
   db_query(strtr(
-    'INSERT INTO {mediamosa_aut_object}
+    'INSERT INTO {mediamosa_acl_object}
       (
-        aut_object_id,
-        aut_object_type,
-        aut_id,
-        aut_type
+        acl_object_id,
+        acl_object_type,
+        acl_id,
+        acl_type
       ) (SELECT
         aut_object_id,
         aut_object_type,
@@ -999,16 +999,16 @@ function _mediamosa_migration_aut() {
    * Columns dropped;
    * -
    * Columns renamed;
-   * aut_id_slave -> aut_slave_id
-   * aut_id_master -> aut_master_id
+   * acl_id_slave -> acl_slave_id
+   * acl_id_master -> acl_master_id
    * Columns new;
    * -
    */
   db_query(strtr(
-    'INSERT INTO {mediamosa_aut_app_master_slave}
+    'INSERT INTO {mediamosa_acl_app_master_slave}
       (
-        aut_object_id,
-        aut_object_type,
+        acl_object_id,
+        acl_object_type,
         app_id_slave,
         app_id_master
       ) (SELECT
@@ -1176,12 +1176,16 @@ function _mediamosa_migration_user() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
+   * group_id
    * -
    * Columns renamed;
    * -
@@ -1191,14 +1195,12 @@ function _mediamosa_migration_user() {
       (
         app_id,
         name,
-        group_id,
         quotum,
         created,
         changed
       ) (SELECT
         app_id,
         name,
-        group_id,
         quotum,
         DATE_SUB(created, INTERVAL 2 HOUR),
         DATE_SUB(changed, INTERVAL 2 HOUR)
@@ -1234,6 +1236,28 @@ function _mediamosa_migration_user() {
       '#db_name' => $db_name
     ))
   );
+
+  $users_in_group = db_query(
+    strtr("SELECT g.group_key, mu.user_key FROM #db_name.quota_user AS u JOIN {mediamosa_user} AS mu ON mu.name = u.name JOIN {mediamosa_user_group} AS g ON u.group_id = g.group_id AND u.app_id = g.app_id",
+      array(
+        '#db_name' => $db_name
+      )
+    )
+  )->fetchAll();
+
+  foreach ($users_in_group as $item) {
+    db_query(
+      strtr("INSERT INTO {mediamosa_user_in_group} (#field_user_key, #field_group_key) VALUES (#user_key, #group_key)",
+        array(
+          '#table_name' => 'mediamosa_user_in_group',
+          '#field_user_key' => 'user_key',
+          '#field_group_key' => 'group_key',
+          '#user_key' => $item->user_key,
+          '#group_key' => $item->group_key,
+        )
+      )
+    );
+  }
 
   /**
    * user_favorites -> mediamosa_user_favorite
@@ -1274,6 +1298,9 @@ function _mediamosa_migration_ticket() {
 
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
 
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");

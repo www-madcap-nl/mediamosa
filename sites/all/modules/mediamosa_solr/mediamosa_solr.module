@@ -310,8 +310,8 @@ function mediamosa_solr_mediamosa_asset_reindex($reindex_info, $search_index_typ
       $instant = mediamosa_solr::settingInstantlyMasterSlave();
       break;
 
-    case mediamosa_settings::SEARCH_INDEX_TYPE_AUT:
-      $instant = mediamosa_solr::settingInstantlyAUT();
+    case mediamosa_settings::SEARCH_INDEX_TYPE_ACL:
+      $instant = mediamosa_solr::settingInstantlyACL();
       break;
 
     case mediamosa_settings::SEARCH_INDEX_TYPE_ASSET_COLLECTION:
@@ -468,7 +468,7 @@ function mediamosa_solr_mediamosa_configuration_collect() {
     '#default_value' => mediamosa_solr::settingInstantlyMasterSlave(),
   );
 
-  $form['mediamosa_solr']['queue']['mediamosa_solr_aut_instantly'] = array(
+  $form['mediamosa_solr']['queue']['mediamosa_solr_acl_instantly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Process access (ACL/AUT) changes of assets instantly'),
     '#default_value' => mediamosa_solr::settingInstantlyAUT(),

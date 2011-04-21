@@ -32,7 +32,7 @@
   * file hierargy for future logic.
   */
 
-require_once 'mediamosa_user_in_group_db.inc';
+require_once 'mediamosa_user_in_group_db.class.inc';
 
 /**
  * Implements hook_install().
@@ -87,44 +87,4 @@ function mediamosa_user_in_group_schema() {
   );
 
   return $schema;
-}
-
-/**
- * Implements hook_update_N().
- */
-function _mediamosa_user_in_group_update_7100() {
-
-  $schema = mediamosa_user_in_group_schema();
-
-  // Create our new table.
-  db_create_table(mediamosa_user_in_group_db::TABLE_NAME, $schema[mediamosa_user_in_group_db::TABLE_NAME]);
-  // Manually add foreign key.
-  // Sooner or later Drupal 7 will add foreign key support, so we will just silently catch exceptions.
-  $fk_template = "ALTER TABLE {#table_name} ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)";
-  $query_fk1 = strtr($fk_template,
-    array(
-      '#table_name' => mediamosa_user_in_group_db::TABLE_NAME,
-      '#column' => mediamosa_user_in_group_db::USER_KEY,
-      '#foreign_table_name' => mediamosa_user_db::TABLE_NAME,
-      '#foreign_column' => mediamosa_user_db::KEY,
-    )
-  );
-
-  $query_fk2 = strtr($fk_template,
-    array(
-      '#table_name' => mediamosa_user_in_group_db::TABLE_NAME,
-      '#column' => mediamosa_user_in_group_db::GROUP_KEY,
-      '#foreign_table_name' => mediamosa_user_group_db::TABLE_NAME,
-      '#foreign_column' => mediamosa_user_group_db::KEY,
-    )
-  );
-
-  try {
-    db_query($query_fk1);
-    db_query($query_fk2);
-  }
-  catch (Exception $e) {
-    // ignore.
-  }
-
 }

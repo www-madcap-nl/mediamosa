@@ -29,8 +29,8 @@
   * Installer for the App module.
   */
 
-require_once 'mediamosa_watchdog.inc';
-require_once 'mediamosa_watchdog_db.inc';
+require_once 'mediamosa_watchdog.class.inc';
+require_once 'mediamosa_watchdog_db.class.inc';
 
 /**
  * Implements hook_install().

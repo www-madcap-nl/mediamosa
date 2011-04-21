@@ -23,6 +23,10 @@ DIV.form-item-mediafile-id {
   clear:both;
 }
 
+SMALL {
+	font-size:11px;
+}
+
 /**
  * Icons
  */

@@ -86,7 +86,7 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
         mt_rand(0, 100),
         mt_rand(0, 100),
       ),
-      'thumbnail_url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
+      'still_url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
       'title' => mediamosa_db::uuid(0),
       'type' => 'video',
       'url' => 'http://mediamosa.org/test/thumnail/url/' . mediamosa_db::uuid(0),
@@ -97,7 +97,7 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get the mediafile with /openapi/mediaItems [GET] call.
     $parameters = array(
-      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_ATOM,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_ATOM,
     );
     $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $parameters);
     // Check response.
@@ -108,7 +108,7 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get the mediafile with /openapi/mediaItems [GET] call.
     $parameters = array(
-      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_RSS,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_RSS,
     );
     $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $parameters);
     // Check response.
@@ -120,7 +120,7 @@ class MediaMosaOpenAPIOutputTestCaseEga extends MediaMosaTestCaseEga {
 
     // Get the mediafile with /openapi/mediaItems [GET] call.
     $parameters = array(
-      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_rest_call::RESPONSE_TYPE_XML,
+      mediamosa_rest_call_openapi_mediaitems_get::REQUEST_PARAMETER_FORMAT_VALUE => mediamosa_response::RESPONSE_TYPE_XML,
     );
     $assets = $this->getMediaItems($item_user_id, $group_id, $album_id, $mediafile_id, $parameters);
     // Check response.

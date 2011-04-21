@@ -519,7 +519,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_DOWNLOAD,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
 
@@ -533,9 +533,10 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still_download',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_STILL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_STILL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
+
   $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
   $rest_calls['still/$still_prefix/$still_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
   // Style.
@@ -573,7 +574,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_3_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_PLAIN,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_response::RESPONSE_TYPE_PLAIN,
   );
 
   // In sandbox we have /still as special REST call so we don't have problems
@@ -2042,7 +2043,7 @@ function mediamosa_asset_mediamosa_configuration_collect() {
   $form['settings_supplement'] = array(
     '#type' => 'fieldset',
     '#title' => t('Supplement settings'),
-    '#description' => t('You can set maximum supplement size here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
+    '#description' => t('You can set maximum supplement size for assets here. Please note that supplements are stored in BLOBs, so you probably need to fine tune your DB if you plan to store large data.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -2050,9 +2051,9 @@ function mediamosa_asset_mediamosa_configuration_collect() {
   $form['settings_supplement']['mediamosa_asset_supplement_max_size_kb'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum size of a supplement object, KB'),
-    '#description' => t('Enter a limitaion in kilobytes.'),
+    '#description' => t('Enter the maximum size of the asset supplement to store in kilobytes.'),
     '#required' => TRUE,
-    '#default_value' => variable_get('mediamosa_asset_supplement_max_size_kb', 64),
+    '#default_value' => variable_get('mediamosa_asset_supplement_max_size_kb', mediamosa_asset_supplement::DEFAULT_ASSET_SUPPLEMENT_MAX_SIZE),
     '#element_validate' => array('_mediamosa_asset_mediamosa_configuration_collect_validate'),
   );
 

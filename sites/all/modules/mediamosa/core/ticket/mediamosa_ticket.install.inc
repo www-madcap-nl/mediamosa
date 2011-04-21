@@ -29,8 +29,8 @@
   * The ticket DB class.
   */
 
-require_once 'mediamosa_ticket.inc';
-require_once 'mediamosa_ticket_db.inc';
+require_once 'mediamosa_ticket.class.inc';
+require_once 'mediamosa_ticket_db.class.inc';
 
 /**
  * Implements hook_install().

@@ -41,7 +41,7 @@ define('MEDIAMOSA_PROFILE_TEST_LUA_LPEG', 'lua works');
  * Retrieve the version.
  */
 function _mediamosa_profile_get_version() {
-  $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.inc');
+  $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.class.inc');
 
   // Try to include the settings file.
   return $inc ? mediamosa_version::get_current_version_str(TRUE) : '';
@@ -150,7 +150,7 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
     <p>
         You may change the 'mediamosa' database prefix and the database user name.<br />
         <br />
-        If you want to migrate your current MediaMosa v1.7 database to the new 2.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
+        If you want to migrate your current MediaMosa v1.7 database to the new 3.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
    ", array(
     '!mysql' => l('MySQL', 'http://mysql.com/'),
     '!mariadb' => l('MariaDB', 'http://mariadb.org/'),
@@ -881,7 +881,7 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
 }
 
 /**
- * Information about 1.7 -> 2.x migration.
+ * Information about 1.7 -> 3.x migration.
  * Task callback.
  */
 function mediamosa_profile_migration_form() {
@@ -899,18 +899,18 @@ function mediamosa_profile_migration_form() {
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Migrating your 1.7.x database to 2.x'),
-    '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 2.x database format. Migrate 1.7.x database from your current 1.7.x MediaMosa installation to 2.x database by following these steps:
+    '#title' => t('Migrating your 1.7.x database to 3.x'),
+    '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 3.x database format. Migrate 1.7.x database from your current 1.7.x MediaMosa installation to 2.x database by following these steps:
     <ol>
-      <li>Open the <code>/default/settings.php</code> in your new MediaMosa 2.x installation in the <code>sites</code> directory.</li>
+      <li>Open the <code>/default/settings.php</code> in your new MediaMosa 3.x installation in the <code>sites</code> directory.</li>
       <li>Insert the content below from the text box and change the settings to match your 1.7.x MySQL setup for the MediaMosa 1.x MySQL user. In the file there is already an commented out version you can edit.</li>
     </ol><p>You can start the migration process once you have completed the installation. To start the migration, go to MediaMosa home, then click on tab 'Configuration'. Click on the link 'MediaMosa 1.7.x migration tool' to open up the migration tool. The migration tool will pre-check before you can start the migration.</p>
     <p><b>Important notes:</b></p>
     <ul>
-      <li>Both databases (1.7.x and 2.x) must be on the same MySQL database server. You can not migrate with 2 servers.</li>
+      <li>Both databases (1.7.x and 3.x) must be on the same MySQL database server. You can not migrate with 2 servers.</li>
       <li>Before you migrate, at least do the migration once for testing before planning the final migration to be sure the migration will be successful.</li>
       <li>All data will be migrated, except for the ticket and jobs tables. The ticket table holds current session for downloading and play tickets of mediafiles. The job tables hold information about running jobs and old jobs. So make sure that your server is no longer running any jobs when you migrate.</li>
-      <li>The 1.7.x database will only be used for reading, nothing will change on your 1.7.x database. However, the 2.x database needs to be clean install for migration to be successful.</li>
+      <li>The 1.7.x database will only be used for reading, nothing will change on your 1.7.x database. However, the 3.x database needs to be clean install for migration to be successful.</li>
     </ul>"),
   );
 

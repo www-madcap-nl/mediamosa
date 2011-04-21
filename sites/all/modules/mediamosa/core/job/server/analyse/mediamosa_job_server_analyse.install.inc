@@ -28,7 +28,7 @@
  * @file
  * Install for mediamosa_job_server_analyse table.
  */
-require_once 'mediamosa_job_server_analyse_db.inc';
+require_once 'mediamosa_job_server_analyse_db.class.inc';
 
 /**
  * Implements hook_install().

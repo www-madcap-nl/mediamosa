@@ -28,7 +28,7 @@
  * @file
  *
  */
-require_once 'mediamosa_transcode_profile_db.inc';
+require_once 'mediamosa_transcode_profile_db.class.inc';
 
 /**
  * Implements hook_install().

@@ -28,7 +28,7 @@
   * @file
   * Installer for asset supplement.
   */
-require_once 'mediamosa_asset_supplement_db.inc';
+require_once 'mediamosa_asset_supplement_db.class.inc';
 
 /**
  * Implements hook_install().

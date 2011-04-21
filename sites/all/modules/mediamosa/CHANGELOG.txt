@@ -18,13 +18,18 @@ OpenAPI development:
 - OpenSocial GET
 - OpenSocial POST
 
-TODO: (v2.4)
+TODO: (v3.0)
 - OAI delete support (for solr).
 
+- Hotfix for .asx and .smil files (apache);
+<IfModule mod_alias.c>
+  AliasMatch ^/still/(.*)(.asx|.smil)$ /[sannas path]/still_links/$1$2
+</IfModule>
 
-MediaMosa 3.0 (build 1666)
+
+MediaMosa 3.0 (build 1672)
 --------------------------
-- Parameter name "aut_group_id" added in /asset/{asset_id}/play, and
+- Parameter name "acl_group_id" added in /asset/{asset_id}/play, and
   "group_id" is marked as depricated (See ticket #238).
 - Play request with "tag" development (See ticket #216).
 - Variable for custom control bar height in objectcode (See ticket #326).
@@ -41,6 +46,16 @@ MediaMosa 3.0 (build 1666)
 - Image style development (See ticket #371).
 - Granted flag not correct with non-original master slaved mediafiles fix. 
   (See ticket #432).
+- Watermarking stills (See ticket #82).
+- oEmbed provider functionality (See ticket #413).
+  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
+- Added support for OpenApi. OpenApi has its own core module and needs to be
+  turned on to be used. (See ticket #428).
+- oAuth development (See ticket #10).
+- Owner check for /asset/$asset_id/joblist (See ticket #356).
+- Retranscode improvement (See ticket #467).
+- ACL problem when using replace fix (See ticket #503).
+- Users can now be in more than one (quota) group (See ticket #223).
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.
@@ -61,7 +76,7 @@ Other changes (not ticket related).
 - Streaming ticket table clean up development (See ticket #103).
 - Simpletest REST call development.
 - Work around for still_type = scene, if there isn't video duration.
-- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
+- Add install hook for mediamosa_app_dbus to migrate to new DBUS 
   module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
@@ -72,24 +87,13 @@ Other changes (not ticket related).
 - Fixed problem on rewrite xml output where errors in header would stop script.
 - Changed the description in the profile by removing all line feeds and unused
   spaces.
-
-MediaMosa 2.4 (unreleased) (build 1609)
----------------------------------------
-- Watermarking stills (See ticket #82).
-- oEmbed provider functionality (See ticket #413).
-  "HTTP 501 Not implemented" error was introduced. Code was reorganized.
-- Added support for OpenApi. OpenApi has its own core module and needs to be
-  turned on to be used. (See ticket #428).
-- oAuth development (See ticket #10).
-- Owner check for /asset/$asset_id/joblist (See ticket #356).
-- Retranscode improvement (See ticket #467).
-- ACL problem when using replace fix (See ticket #503).
-- The asset detail view page jobs are can now be sorted by ID.
-- Fixed speed problem when returning larger than 64k metadata. Problem was in
-  the way invalid chars are fixed in output.
-- Rewrote the usage of simplexml to domdocument for output.
-
-Other changes (not ticket related).
+- Errors on the Drupal status page will now give error on MediaMosa status page.
+- All files that contain class(es) are now renamed to include '.class.inc'.
+- Filenames or directories with 'still' usage, are renamed to 'still'.
+- AUT modules and files are now renamed to ACL.
+- Some settings in configure have been merged into the section 'Miscellaneous'.
+- To view and edit the Internal password you now need to have the role 
+  'Administer MediaMosa'.
 - Better REST call match: match_uri() static function was introduced, and check 
   wildchar numbers.
 - Added to node_load for mediamosa_app, that timezone is always set to default 
@@ -101,19 +105,34 @@ Other changes (not ticket related).
   Still download test, Permanent still link.
 - Fixed: asset-collection relation delete all REST call. Returned SQL error when
   no relations where present.
-- Removed access check on stills, this was causing access denied on stills that
-  where not master-slaved, while original mediafile was.
 - SDK code was syncronized with the SDK repository (6 and 7).
 - Streaming ticket table clean up development (See ticket #103).
-- Simpletest REST call development.
 - Work around for still_type = scene, if there isn't video duration.
-- Add install hook for mediamosa_app_authentication to migrate to new DBUS 
-  module.
+- Added install hook for mediamosa_app_dbus to migrate to new DBUS module.
 - Better text for FRAMETIME parameter.
 - FFMpeg 2 pass encoding fix.
 - Frametime for still upload development.
 - Lua script fix for the new ffmpeg version.
-
+- Added the 'mediamosa_version' variable to force the output to return in the
+  provide the output in given version. Overrides all other settings, including
+  the client application setting.
+- MediaMosa developer has been extended to include the version in which the REST
+  call needs to return its format in. By selecting 2.3.0, the REST call will
+  return its output in 2.3.0 mode.
+- The asset detail view page jobs are can now be sorted by ID.
+- Fixed speed problem when returning larger than 64k metadata. Problem was in
+  the way invalid chars are fixed in output.
+- Rewrote the usage of simplexml to domdocument for output.
+- The REST call documentation now shows alias usage for variables. Is mainly
+  for the new acl_* renames from aut_*.
+- All aut_* input variables are now depricated and replaced by acl_* versions.
+  The aut_* input variables will still work though.
+- Added lower level of debugging to include the <debug> array in the 3.0 output.
+- Added global setting to force REST call output always to output in that
+  version of MediaMosa.
+- Rewrote the output using domdocument into own code. Needed because domdocument
+  will throw exceptions when it can't verify the namespace uri used in the
+  output.
 
 MediaMosa 2.3.9 (build 1379)
 ----------------------------
@@ -435,7 +454,7 @@ Other changes (not ticket related).
   size vs actualy file size.
 - Still tickets are no longer removed once the image was served. Still tickets
   will be removed after # of minutes depending on the setting 
-  TICKET_EXPIRATION_STILL in mediamosa.settings.inc.
+  TICKET_EXPIRATION_STILL in mediamosa.settings.class.inc.
 - Added try/catch around crons.
 - Added 'X-MediaMosa-Version' to http header output to indicate call was 
   processed by MediaMosa.
@@ -795,7 +814,7 @@ Other changes (not ticket related)
   migrating database with IDs. Fixed by adding varbinary type to schema creation
   code of mediamosa. All IDs that are varchar and have the 32 character length
   are now varbinary type.
-- Fixed problem migrating aut_object table when it contained double rows.
+- Fixed problem migrating acl_object table when it contained double rows.
 - Fixed notice in admin when view asset with no mediafiles.
 - Job status REST call now returns correct started time for jobs as server time
   and not +0400.
@@ -921,7 +940,7 @@ MediaMosa 2.1.0
 - /collection/{id}/asset doesn't exist (See MediaMosa ticket #245).
 - Version does not exists. (See MediaMosa ticket #246).
 - /asset/{id}/collection/count is broken (See MediaMosa ticket #249).
-- 'aut_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
+- 'acl_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
 - /autorisation_group?limit=10 broken (See MediaMosa ticket #253).
 - Assets of other apps visible (See MediaMosa ticket #254).
 - /asset owner_id does not work (See 

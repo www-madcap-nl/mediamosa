@@ -28,7 +28,7 @@
  * @file
  * Install for mediamosa_job_transcode table.
  */
-require_once 'mediamosa_job_transcode_db.inc';
+require_once 'mediamosa_job_transcode_db.class.inc';
 
 /**
  * Implements hook_install().

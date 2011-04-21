@@ -1,7 +1,7 @@
 Release Checklist (mediamosa.org release):
 
  1. Check patch files in patch dir (make sure they are up to date).
- 2. Create clean directory (mediamosa-2.x[-RCx])
+ 2. Create clean directory (mediamosa-3.x[-RCx])
  3. Do hg -clone or hg init with hg pull -u of the release.
  4. Throw away /debian
  5. Throw away /.hg
@@ -10,9 +10,10 @@ Release Checklist (mediamosa.org release):
  8. Throw away /sites/all/modules/coder
  9. Throw away /sites/all/modules/devel
 10. Make sure the core hacks are in place (cookie, simpletest, robots.txt).
-10. cd ..
-11. tar -zcvf mediamosa-2.x[.x].tgz mediamosa-2.x[.x]/ 
-12. Done!
+11. cd ..
+12. sudo chown root:root -R mediamosa-3.x
+13. tar zcvf mediamosa-3.x[.x].tgz mediamosa-3.x[.x]/ 
+14. Done!
 
 
 

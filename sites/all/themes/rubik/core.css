@@ -210,23 +210,34 @@ table tr.draggable span.tabledrag-changed { display:none; }
 
   .admin-list { margin:0px; }
 
-.block .item-list,
+table .form-item,
+table .item-list,
 .block .form-item,
+.block .item-list,
 .admin-panel .item-list,
 .admin-panel .admin-list,
-.teaser-checkbox .form-item,
-.form-item .form-item,
 .fieldset .form-item,
-table .form-item {
-  background:transparent;
-  padding:5px;
-  margin:0px;
-  border:0px;
-  }
+.fieldset .form-type-radio,
+.fieldset .form-type-checkbox,
+.form-item .form-item,
+.form-item .form-type-radio,
+.form.item .form-type-checkbox,
+.form-checkboxes .form-type-checkbox {
+    background:transparent;
+    padding:0px;
+    border:0px;
+    }
 
+  table .form-item,
+  table .item-list,
   .block .item-list,
   .admin-panel .item-list,
-  .admin-panel .admin-list { padding:0px; }
+  .admin-panel .admin-list,
+  .fieldset .form-type-radio,
+  .fieldset .form-type-checkbox,
+  .form-item .form-type-radio,
+  .form.item .form-type-checkbox,
+  .form-checkboxes .form-type-checkbox { margin-bottom:0px; }
 
 .form-item label {
   margin:0px;
@@ -328,19 +339,6 @@ input.form-submit {
     }
 
   input.button-no:active { background-position:-3601px 50%; }
-
-  /* Teaser splitter */
-  .teaser-checkbox {
-    position:relative;
-    z-index:2;
-    }
-
-  .teaser-checkbox div { margin:5px 0px 0px; }
-
-  input.teaser-button {
-    padding:0px 5px;
-    font-size:11px;
-    }
 
 input.form-autocomplete,
 input.form-text,

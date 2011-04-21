@@ -29,8 +29,9 @@
  * Installer for job table.
  */
 
-require_once 'mediamosa_job.inc';
-require_once 'mediamosa_job_db.inc';
+require_once 'mediamosa_job.class.inc';
+require_once 'mediamosa_job_db.class.inc';
+
 require_once 'still/mediamosa_job_still.install.inc';
 require_once 'server/mediamosa_job_server.install.inc';
 require_once 'transcode/mediamosa_job_transcode.install.inc';

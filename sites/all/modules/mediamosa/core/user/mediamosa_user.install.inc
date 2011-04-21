@@ -29,7 +29,7 @@
   * The user installer.
   */
 
-require_once 'mediamosa_user_db.inc';
+require_once 'mediamosa_user_db.class.inc';
 
 require_once 'favorite/mediamosa_user_favorite.install.inc';
 require_once 'group/mediamosa_user_group.install.inc';

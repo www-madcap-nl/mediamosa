@@ -212,29 +212,29 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
     // Put asset(s) in collection.
     $this->createCollectionAssetRelation($coll_id_1, array($asset_id_1));
     // Some rigths
-    $this->setMediafileAut($mediafile_id_1, array(
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => 'testuser',
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP => 'testgroup',
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@foo.nl',
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => 'foo.nl',
+    $this->setMediafileAcl($mediafile_id_1, array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => '@foo.nl',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => 'foo.nl',
     ));
 
-    $this->setAssetAut($asset_id_1, array(
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_USER => 'testuser',
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_GROUP => 'testgroup',
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_REALM => '@foo.nl',
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => 'foo.nl',
+    $this->setAssetAcl($asset_id_1, array(
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER => 'testuser',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_GROUP => 'testgroup',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_REALM => '@foo.nl',
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_DOMAIN => 'foo.nl',
     ));
 
     $a_parameters = array(
-      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP => $app_id_2,
     );
 
     // Set rights.
-    $a_response = $this->setCollectionAut($coll_id_1, $a_parameters);
+    $a_response = $this->setCollectionAcl($coll_id_1, $a_parameters);
 
     // Create aut group.
-    $this->createAutGroup('fooocom.group', mediamosa_aut::AUT_NAME_TYPE_DOMAIN);
+    $this->createAclGroup('fooocom.group', mediamosa_acl::ACL_NAME_TYPE_DOMAIN);
 
     // ID values we use inside the URI.
     $ids = array(

@@ -184,6 +184,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
 
 /**
  * Sort the files returned by file_scan_directory().
+ *
  * @param $files
  * @param $function
  * @return array $files

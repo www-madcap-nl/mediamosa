@@ -29,8 +29,8 @@
   * Install file for webservice module.
   */
 
-require_once 'mediamosa_webservice.inc';
-require_once 'mediamosa_webservice_db.inc';
+require_once 'mediamosa_webservice.class.inc';
+require_once 'mediamosa_webservice_db.class.inc';
 require_once 'app/mediamosa_webservice_app.install.inc';
 
 /**

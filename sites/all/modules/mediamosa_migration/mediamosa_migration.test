@@ -28,14 +28,14 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION', 'MediaMosa Migration');
 
 /**
  * @file
- * Unittests the migration from 1.x to 2.x
+ * Unittests the migration from 1.x to 3.x
  */
 class MediaMosaMigrationTestCase extends MediaMosaTestCaseEga {
 
   public static function getInfo() {
     return array(
       'name' => 'Migrated REST calls ping',
-      'description' => 'Check if all 1.7.x REST calls are present in 2.x.',
+      'description' => 'Check if all 1.7.x REST calls are present in 3.x.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION,
     );
   }
@@ -98,7 +98,7 @@ class MediaMosaMigrationTestCase extends MediaMosaTestCaseEga {
         mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND,
         mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER,
         mediamosa_error::ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS,
-        mediamosa_error::ERRORCODE_AUT_GROUP_NOT_FOUND,
+        mediamosa_error::ERRORCODE_ACL_GROUP_NOT_FOUND,
         mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND,
         mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION,
         mediamosa_error::ERRORCODE_NO_CHANGES,

@@ -180,6 +180,7 @@ class mediamosa_connector {
       'fatal' => FALSE, // Default is not to react to problems with exceptions.
       'user_id' => '',
       'group_id' => '',
+      'mediamosa_version' => '', // Latest.
     );
 
     // Use user_id?
@@ -192,6 +193,12 @@ class mediamosa_connector {
     if (!empty($options['group_id'])) {
       assert(empty($options['data']['group_id']));
       $options['data']['group_id'] = $options['group_id'];
+    }
+
+    // Use mediamosa_version?
+    if (!empty($options['mediamosa_version'])) {
+      assert(empty($options['data']['mediamosa_version']));
+      $options['data']['mediamosa_version'] = $options['mediamosa_version'];
     }
 
     // Copy settings.
@@ -471,6 +478,15 @@ class mediamosa_connector {
     if ((int) $response->code != 200) {
       return FALSE;
     }
+
+    // Basic version.
+    $version = '1.0.0';
+    if (!empty($response->xml->header->version)) {
+      $version = $response->xml->header->version; // Position is the same on all MediaMosa versions.
+    }
+
+    // Store an version array in the response object.
+    $response->mediamosa_version = mediamosa_sdk::parse_version($version);
 
     // Return result.
     return $response;

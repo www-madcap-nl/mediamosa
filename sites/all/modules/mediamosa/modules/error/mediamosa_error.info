@@ -3,12 +3,11 @@
 name = "Error handling"
 description = "The error module handles all maintenance and usage for error messaging for MediaMosa."
 package = "MediaMosa - Modules"
-version = "2.4.0"
+version = "3.0.0"
 core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_error.module
-files[] = mediamosa_error.rest.inc
+files[] = mediamosa_error.rest.class.inc

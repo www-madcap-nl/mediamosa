@@ -28,7 +28,7 @@
  * @file
  * Install for mediamosa_job_server_still table.
  */
-require_once 'mediamosa_job_server_still_db.inc';
+require_once 'mediamosa_job_server_still_db.class.inc';
 
 /**
  * Implements hook_install().

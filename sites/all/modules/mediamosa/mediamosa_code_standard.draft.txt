@@ -69,17 +69,17 @@ Draft for starting code standard for MediaMosa 2.x and higher.
     must have a asset, but an asset does not require a collection. That is why 
     collection is on same level as assets.
   * (strongly) Suggested files in core; [subpart/]mediamosa_(part)[_subparts]
-    (.inc/.install.inc/_db.inc);
-    mediamosa_asset_db.inc (DB definitions)
-    mediamosa_asset.inc (asset code)
+    (.class.inc/.inc/.install.inc/_db.class.inc);
+    mediamosa_asset_db.class.inc (DB definitions)
+    mediamosa_asset.class.inc (asset code (class))
     mediamosa_asset.install.inc (install code)
-    mediafile/mediamosa_asset_mediafile_db.inc (DB definitions)
-    mediafile/mediamosa_asset_mediafile.inc (asset code)
+    mediafile/mediamosa_asset_mediafile_db.class.inc (DB definitions)
+    mediafile/mediamosa_asset_mediafile.class.inc (asset code)
     mediafile/mediamosa_asset_mediafile.install.inc (install code)
   * Suggested files in modules; mediamosa_(part)[_subparts]
     (.info/.module/.rest.inc/.test);
     mediamosa_asset.module (Drupal module file)
-    mediamosa_asset.rest.inc (REST functions)
+    mediamosa_asset.rest.class.inc (REST functions)
     mediamosa_asset.info (Drupal module info file)
   
   

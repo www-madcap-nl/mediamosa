@@ -136,7 +136,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
       $this->assertTrue($collection['numofvideos'] == 0, 'Found no videos in collection');
 
       // Share
-      $this->setMediafileAut($upload_1['mediafile_id'],  array('aut_app' => array($app_id_2)));
+      $this->setMediafileAcl($upload_1['mediafile_id'],  array('acl_app' => array($app_id_2)));
     }
 
     // Search using app_2.
@@ -153,7 +153,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
 
     // Back to 2.
     $this->toEga_1();
-    $this->setCollectionAut($coll_id_4, array('aut_app' => array($app_id_2)));
+    $this->setCollectionAcl($coll_id_4, array('acl_app' => array($app_id_2)));
 
     // Back to 2.
     $this->toEga_2();
@@ -185,7 +185,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
 
     // Remove it again.
-    $this->deleteMediafileAut($upload_1['mediafile_id']);
+    $this->deleteMediafileAcl($upload_1['mediafile_id']);
 
     // Delete collection 4
     $this->deleteCollection($coll_id_4);
@@ -234,7 +234,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
 
     // Now master slave collection 2 to app 1.
     $this->toEga_2();
-    $this->addCollectionAut($coll_id_2, array('aut_app' => array($app_id_1)));
+    $this->addCollectionAcl($coll_id_2, array('acl_app' => array($app_id_1)));
 
     // Back to 1.
     $this->toEga_1();
@@ -264,7 +264,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
 
     // Now master-slave mediafile from asset_3 to app_1
     $this->toEga_2();
-    $this->setMediafileAut($upload_3['mediafile_id'],  array('aut_app' => array($app_id_1)));
+    $this->setMediafileAcl($upload_3['mediafile_id'],  array('acl_app' => array($app_id_1)));
     $this->toEga_1();
 
     // Now search collection app 1, numofvideos should be 1.
@@ -304,7 +304,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
 
     // Now master-slave mediafile from asset_4 to app_1.
     $this->toEga_2();
-    $this->setMediafileAut($upload_4['mediafile_id'],  array('aut_app' => array($app_id_1)));
+    $this->setMediafileAcl($upload_4['mediafile_id'],  array('acl_app' => array($app_id_1)));
     $this->toEga_1();
 
     // Now search collection app 1, numofvideos should be 1.
@@ -345,7 +345,7 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
     // Now master-slave mediafile from asset_4 to app_1.
     // Put domain protection on it. The asset should still end up as counted.
     $this->toEga_2();
-    $this->setMediafileAut($upload_4['mediafile_id'],  array('aut_app' => array($app_id_1), 'aut_realm' => array('foo@fooland.com'), 'aut_domain' => array('fooland.boo'), 'aut_user' => array('john doe'), 'aut_group' => array('john doe')));
+    $this->setMediafileAcl($upload_4['mediafile_id'],  array('acl_app' => array($app_id_1), 'acl_realm' => array('foo@fooland.com'), 'acl_domain' => array('fooland.boo'), 'acl_user' => array('john doe'), 'acl_group' => array('john doe')));
     $this->toEga_1();
 
     // Now search collection app 1, numofvideos should be 1.
