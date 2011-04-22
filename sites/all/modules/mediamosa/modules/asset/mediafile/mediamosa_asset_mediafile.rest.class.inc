@@ -141,7 +141,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     $items = mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $app_ids, FALSE, $show_stills);
 
     // Add to response.
-    foreach ($items['mediafile'] as $item) {
+    foreach ($items as $item) {
       $mediamosa->add_item(array($item));
     }
 

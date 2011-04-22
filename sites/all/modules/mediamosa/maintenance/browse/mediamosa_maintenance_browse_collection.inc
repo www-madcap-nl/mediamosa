@@ -366,7 +366,7 @@ function _mediamosa_browse_collection_page_view($coll_id) {
   // Get the collection.
   $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('collection/@coll_id', array('@coll_id' => rawurlencode($coll_id))) , 'GET');
 
-  if ((int) $response->header->request_result_id != mediamosa_error::ERRORCODE_OKAY) {
+  if ((int) $response['header']['request_result_id'] != mediamosa_error::ERRORCODE_OKAY) {
     return '<h1>Collection not found</h1>';
   }
 
@@ -389,7 +389,7 @@ function _mediamosa_browse_collection_page_view($coll_id) {
   $params = array('limit' => 10, 'offset' => $page * 10);
   $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('collection/@coll_id/asset', array('@coll_id' => rawurlencode($coll_id))) , 'GET', $params);
 
-  if (in_array((int) $response->header->request_result_id, array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT))) {
+  if (in_array((int) $response['header']['request_result_id'], array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT))) {
     $variables['collection_assets']['title'] = t('Assets (@total)', array('@total' => $response['header']['item_count_total']));
     $variables['collection_assets']['coll_id'] = $coll_id;
 

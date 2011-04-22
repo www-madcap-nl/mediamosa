@@ -1284,7 +1284,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
-mediamosa_watchdog::log_export(__FILE__);
+
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);

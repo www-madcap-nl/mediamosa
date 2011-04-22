@@ -426,7 +426,7 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   );
   $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET', $params);
 
-  if ((int) $response->header->request_result_id != mediamosa_error::ERRORCODE_OKAY) {
+  if ((int) $response['header']['request_result_id'] != mediamosa_error::ERRORCODE_OKAY) {
     return '<h1>Asset not found</h1>';
   }
 

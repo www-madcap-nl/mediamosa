@@ -312,8 +312,13 @@ class mediamosa_response extends mediamosa {
           continue;
         }
         elseif ($first_key[0] == '#') {
-          $attributes = drupal_attributes(@unserialize(mediamosa_unicode::substr($first_key, 1)));
-          $value = reset($value);
+          foreach ($value as $attribute => $value2) {
+            $attributes = drupal_attributes(@unserialize(mediamosa_unicode::substr($attribute, 1)));
+            $output .= $tabs . '<' . $key . $attributes;
+            $output .= '>' . $linefeed . self::render_array2xml($value2, $tab + 1, $options) . $tabs;
+            $output .= '</' . $key . '>' . $linefeed;
+          }
+          continue;
         }
       }
 
