@@ -688,9 +688,20 @@ class MediaMosaAclTestCaseEga extends MediaMosaTestCaseEga {
     $this->toEga_1();
     $a_xml = $this->getMediafileAcl($mediafile_id);
 
+    // Output in 3.0 is different.
+    if (mediamosa::variable_get('mediamosa_version_aut', FALSE)) {
+      $acl_user = mediamosa_rest_call_acl_mediafile_set_rights::ALIAS_AUT_USER;
+      $acl_app = mediamosa_rest_call_acl_mediafile_set_rights::ALIAS_AUT_APP;
+    }
+    else {
+      $acl_user = mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER;
+      $acl_app = mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP;
+    }
+
     // Check rights.
-    $this->assertTrue($a_xml['items']['item'][0][mediamosa_rest_call_acl_mediafile_set_rights::ACL_USER] == 'johndoe', 'Check if rights where set.');
-    $this->assertTrue($a_xml['items']['item'][1][mediamosa_rest_call_acl_mediafile_set_rights::ACL_APP] == $app_id_2, 'Check if rights where set.');
+    $this->assertTrue($a_xml['items']['item'][0][$acl_user] == 'johndoe', 'Check if rights where set.');
+    $this->assertTrue($a_xml['items']['item'][1][$acl_app] == $app_id_2, 'Check if rights where set.');
+
     $this->assertTrue(count($a_xml['items']['item']) == 2, '2 rights set');
 
     // Owner can play.

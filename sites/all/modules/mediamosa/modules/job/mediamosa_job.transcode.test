@@ -111,8 +111,6 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
         strtr("The mediafile was successfuly retranscoded: @filename", array('@filename' => $filename))
       );
     }
-
-    // TODO: Windows transcoding
   }
 
   // (see ticket 228)

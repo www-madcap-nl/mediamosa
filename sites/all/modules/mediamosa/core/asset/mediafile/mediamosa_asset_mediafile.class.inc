@@ -466,10 +466,7 @@ class mediamosa_asset_mediafile {
       }
       else {
         // Add to result.
-        $items_result['mediafile'] = array(
-          '#attributes' => array('id' => $i++),
-          '#value' => $items[$mediafile_id],
-        );
+        $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
       }
     }
 

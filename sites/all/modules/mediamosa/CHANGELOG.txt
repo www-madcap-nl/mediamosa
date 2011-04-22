@@ -29,8 +29,12 @@ TODO: (v3.0)
 
 MediaMosa 3.0 (build 1672)
 --------------------------
-- Parameter name "acl_group_id" added in /asset/{asset_id}/play, and
-  "group_id" is marked as depricated (See ticket #238).
+- Owner check for /asset/$asset_id/joblist (See ticket #356).
+- Granted flag not correct with non-original master slaved mediafiles fix. 
+  (See ticket #432).
+  
+- Parameter name "acl_group_id/aut_group_id" added in /asset/{asset_id}/play, 
+  and "group_id" is marked as depricated (See ticket #238).
 - Play request with "tag" development (See ticket #216).
 - Variable for custom control bar height in objectcode (See ticket #326).
 - Asset, assets and asset/$asset_id GET REST call show the collection data
@@ -44,15 +48,12 @@ MediaMosa 3.0 (build 1672)
 - Fixed problem with migration script when quota_user created timestamps
   contains NULL values (See ticket #513).
 - Image style development (See ticket #371).
-- Granted flag not correct with non-original master slaved mediafiles fix. 
-  (See ticket #432).
 - Watermarking stills (See ticket #82).
 - oEmbed provider functionality (See ticket #413).
   "HTTP 501 Not implemented" error was introduced. Code was reorganized.
 - Added support for OpenApi. OpenApi has its own core module and needs to be
   turned on to be used. (See ticket #428).
 - oAuth development (See ticket #10).
-- Owner check for /asset/$asset_id/joblist (See ticket #356).
 - Retranscode improvement (See ticket #467).
 - ACL problem when using replace fix (See ticket #503).
 - Users can now be in more than one (quota) group (See ticket #223).

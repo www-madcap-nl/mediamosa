@@ -76,12 +76,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     $coll_id = $response['xml']->items->item[0]->coll_id;
 
     // test header request result
-    $request_result = $response['xml']->header->request_result;
+    $request_result = (string) $response['xml']->header->request_result;
     $this->assertTrue(
       $request_result == (string) mediamosa_response::SUCCESS,
       t("Create collection response is succes: @request_result", array('@request_result' => print_r($request_result, TRUE)))
     );
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Create collection response is succes: @request_result_id", array('@request_result_id' => print_r($request_result_id, TRUE)))
@@ -125,13 +125,13 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // Do GET /collection call.
     $response = $this->restCallGet('collection', $parameters);
 
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection?limit=1 [GET]")
     );
     $this->assertTrue(
-      $response['xml']->header->item_count_total == 1,
+      (int) $response['xml']->header->item_count_total == 1,
       t("Call /collection?limit=1 Total should be 1 [GET]")
     );
     $this->assertTrue(
@@ -146,7 +146,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do GET /collection/{coll_id} call.
     $response = $this->restCallGet('collection/' . $coll_id, $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id?limit=1 [GET]")
@@ -167,7 +167,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do GET /collection/{coll_id}/asset/count call.
     $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id/asset/count [GET]")
@@ -193,7 +193,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do POST /collection/{coll_id}/asset_relation call.
     $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation', $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id/asset_relation [POST]")
@@ -211,7 +211,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do GET /collection/{coll_id} call.
     $response = $this->restCallGet('collection/' . $coll_id, $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id?limit=1 [GET]")
@@ -232,7 +232,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do GET /collection/{coll_id}/asset/count call.
     $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id/asset/count [GET]")
@@ -270,14 +270,14 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
     $response = $this->restCallGet('collection/' . $coll_id . '/asset', $parameters);
 
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
-      $response['xml']->header->request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      (int) $response['xml']->header->request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/id/asset [GET]")
     );
 
     $this->assertTrue(
-      $response['xml']->header->item_count_total == 1,
+      (int) $response['xml']->header->item_count_total == 1,
       t("Call /collection/id/asset [GET]")
     );
 
@@ -294,7 +294,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     $response = $this->restCallPOST('collection/' . $coll_id , $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/[id] [POST]")
@@ -330,7 +330,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_collection_delete_relation::ASSET_ID => $asset_id,
     );
     $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation/delete', $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/[id]/asset_relation/delete [POST]")
@@ -362,7 +362,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do GET /collection/{coll_id} call.
     $response = $this->restCallGet('collection/' . $coll_id, $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id?limit=1 [GET]")
@@ -383,7 +383,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Do GET /collection/{coll_id}/asset/count call.
     $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
-    $request_result_id = $response['xml']->header->request_result_id;
+    $request_result_id = (int) $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
       t("Call /collection/coll_id/asset/count [GET]")

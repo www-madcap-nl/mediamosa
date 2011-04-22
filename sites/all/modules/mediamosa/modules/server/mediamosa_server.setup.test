@@ -122,8 +122,8 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
       $this->assertTrue($response->code == '200', t('Call to version REST returned a 200 result (header: @header)', array('@header' => var_export($response, TRUE))));
 
       try {
-        $xml = new SimpleXMLElement($response->data);
-        $this->assertTrue(in_array($xml->header->request_result_id, $expecting_codes), t('MediaMosa XML returned, got @result_id.', array('@result_id' => $xml->header->request_result_id)));
+        $xml = new mediamosa_connector_response($response->data);
+        $this->assertTrue(in_array($xml->header->request->resultId, $expecting_codes), t('MediaMosa XML returned, got @result_id.', array('@result_id' => $xml->header->request->resultId)));
 
         // Now compare versions.
         $xml_ver = isset($xml->header->vpx_version) ? $xml->header->vpx_version : $xml->header->version;

@@ -58,6 +58,10 @@ class mediamosa_response_v3 extends mediamosa_response {
    * @return string
    */
   public function xml() {
+    if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
+      self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
+    }
+
     // Get default template.
     $xml = self::render_template(drupal_get_path('module', 'mediamosa') . '/response/mediamosa_response.v3.tpl.inc');
 

@@ -300,23 +300,21 @@ class mediamosa_response extends mediamosa {
 
       $attributes = '';
 
-      // Optional #attributes.
-      if (is_array($value) && !empty($value['#attributes'])) {
-        $attributes .= drupal_attributes($value['#attributes']);
-        $value = isset($value['#value']) ? $value['#value'] : '';
-      }
-      elseif (is_array($value) && isset($value['#value'])) {
-        $value = $value['#value'];
-      }
-
       // If value is array and contains numeric keys, then we need to repeat the
       // tag with that value. But the value can again be an array itself.
-      if (is_array($value) && is_numeric(key($value))) {
-        foreach ($value as $line) {
-          $output .= self::render_array2xml(array($key => array('#attributes' => $attributes, '#value' => $line)), $tab + 1, $options);
-        }
+      if (is_array($value)) {
+        $first_key = key($value);
+        if (is_numeric($first_key)) {
+          foreach ($value as $line) {
+            $output .= self::render_array2xml(array($key => $line), $tab + 1, $options);
+          }
 
-        continue;
+          continue;
+        }
+        elseif ($first_key[0] == '#') {
+          $attributes = drupal_attributes(@unserialize(mediamosa_unicode::substr($first_key, 1)));
+          $value = reset($value);
+        }
       }
 
       $output .= $tabs . '<' . $key . $attributes;
@@ -1016,16 +1014,6 @@ class mediamosa_response extends mediamosa {
 
     $item_counter = 1;
     foreach ($this->response['items'] as $item) {
-      if (isset($item['#attributes']) || isset($item['#value'])) {
-        $item['#attributes']['id'] = $item_counter++;
-      }
-      else {
-        $item = array(
-          '#attributes' => array('id' => $item_counter++),
-          '#value' => $item,
-        );
-      }
-
       $this->generate_xml_add_child($dom_document, $dom_element_items, 'item', $item);
     }
 
@@ -1089,22 +1077,25 @@ class mediamosa_response extends mediamosa {
       return NULL;
     }
 
-    $dom_element_child = $dom_node->appendChild(new DOMElement($key));
+    if ($first_key[0] == '#') {
+      foreach ($mixed_value as $mixed_key => $value) {
+        $dom_element = $this->generate_xml_add_child($dom_document, $dom_node, $key, $value, $max_depth);
 
-    // Fix attributes.
-    if (isset($mixed_value['#attributes']) || isset($mixed_value['#value'])) {
-      if (isset($mixed_value['#attributes']) && !empty($mixed_value['#attributes'])) {
-        foreach ($mixed_value['#attributes'] as $attr_name => $attr_value) {
-          $dom_element_child->setAttribute($attr_name, $attr_value);
+        if ($mixed_key != '#0') {
+          $attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
+          if (is_array($attributes)) {
+            foreach ($attributes as $attr_name => $attr_value) {
+              assert(count($attr_name));
+              $dom_element->setAttribute($attr_name, $attr_value);
+            }
+          }
         }
-        // Must exists?
-        $mixed_value = isset($mixed_value['#value']) ? $mixed_value['#value'] : '';
       }
-      elseif (isset($mixed_value['#value'])) {
-        $mixed_value = $mixed_value['#value'];
-      }
+
+      return NULL;
     }
 
+    $dom_element_child = $dom_node->appendChild(new DOMElement($key));
     foreach ($mixed_value as $mixed_key => $value) {
       $this->generate_xml_add_child($dom_document, $dom_element_child, $mixed_key, $value, $max_depth);
     }

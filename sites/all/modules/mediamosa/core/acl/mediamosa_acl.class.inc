@@ -1261,7 +1261,7 @@ class mediamosa_acl {
    * @param boolean $do_master_slave_null
    * @param string $app_id_table_prefix
    */
-  static public function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, array $acl_group_ids = array(), $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
+  static public function build_access_where(array &$query, $acl_type, $object_id, array $app_ids, $acl_user_id, $acl_group_ids = array(), $acl_domain, $acl_realm, array $slaves = array(), $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     if (empty($slaves)) {
@@ -1654,7 +1654,7 @@ class mediamosa_acl {
    *
    * @throws mediamosa_exception_error_access_denied (ERRORCODE_NOT_AUTHORIZED) when access is denied
    */
-  static public function access_check_on_object($acl_type, $asset_id, $object_id, $app_id, $acl_user_id, array $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
+  static public function access_check_on_object($acl_type, $asset_id, $object_id, $app_id, $acl_user_id, $acl_group_ids, $acl_domain, $acl_realm, $is_app_admin = FALSE) {
 
     if ($is_app_admin) {
       return;

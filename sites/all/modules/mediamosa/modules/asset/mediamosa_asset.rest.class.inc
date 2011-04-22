@@ -1113,7 +1113,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         $item['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
         // Add streamable setting on asset.
-        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+        $item['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $item['mediafiles'] : $item['mediafiles']) ? 'TRUE' : 'FALSE';
 
         // Increase viewed.
         mediamosa_asset::asset_viewed($asset_id);
@@ -1284,7 +1284,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
-
+mediamosa_watchdog::log_export(__FILE__);
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);

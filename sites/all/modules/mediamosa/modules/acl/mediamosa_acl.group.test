@@ -59,13 +59,23 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
     // Get the acl group.
     $a_acl_group = $this->getAclGroup($groupname);
 
+    // Output in 3.0 is different.
+    if (mediamosa::variable_get('mediamosa_version_aut', FALSE)) {
+      $group_type = 'aut_group_type';
+      $group_name = 'aut_group_name';
+    }
+    else {
+      $group_type = mediamosa_acl_group_db::ACL_GROUP_TYPE;
+      $group_name = mediamosa_acl_group_db::ACL_GROUP_NAME;
+    }
+
     // Check the result.
     $this->assertTrue(
-      $a_acl_group[mediamosa_acl_group_db::ACL_GROUP_TYPE] == mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM,
+      $a_acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_REALM,
       t('Acl group type: REALM')
     );
     $this->assertTrue(
-      $a_acl_group[mediamosa_acl_group_db::ACL_GROUP_NAME] == $groupname,
+      $a_acl_group[$group_name] == $groupname,
       t('Acl group name has the good value')
     );
 
@@ -86,11 +96,11 @@ class MediaMosaAclGroupsTestCaseEga extends MediaMosaTestCaseEga {
 
     // Check the result.
     $this->assertTrue(
-      $a_acl_group[mediamosa_acl_group_db::ACL_GROUP_TYPE] == mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN,
+      $a_acl_group[$group_type] == mediamosa_acl_group_db::ACL_GROUP_TYPE_DOMAIN,
       t("Aut group type: REALM")
     );
     $this->assertTrue(
-      $a_acl_group[mediamosa_acl_group_db::ACL_GROUP_NAME] == $new_groupname,
+      $a_acl_group[$group_name] == $new_groupname,
       t("Aut group name has the good value")
     );
 

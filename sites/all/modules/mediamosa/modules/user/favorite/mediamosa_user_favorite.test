@@ -167,7 +167,7 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     // Count it, we should find 1 asset.
     $response = $this->restCallGET('asset/' . $asset_id . '/favorites/count');
     $this->assertTrue(
-      $response['xml']->header->item_count_total == 1,
+      (int) $response['xml']->header->item_count_total == 1,
       t("Call /asset/{asset_id}/favorites/count [GET]")
     );
 
@@ -181,7 +181,7 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     // Count it, we should find 1 collection and 1 asset.
     $response = $this->restCallGET('collection/' . $coll_id . '/favorites/count');
     $this->assertTrue(
-      $response['xml']->header->item_count_total == 1,
+      (int) $response['xml']->header->item_count_total == 1,
       t("Call /collection/{coll_id}/favorites/count [GET]")
     );
 
@@ -193,7 +193,7 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
     $response = $this->restCallGET('collection/' . $coll_id . '/favorites/count');
     $this->assertTrue(
-      $response['xml']->header->item_count_total == 0,
+      (int) $response['xml']->header->item_count_total == 0,
       t("Call /collection/{coll_id}/favorites/count [GET]")
     );
 
@@ -205,7 +205,7 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
     $response = $this->restCallGET('asset/' . $asset_id . '/favorites/count');
     $this->assertTrue(
-      $response['xml']->header->item_count_total == 0,
+      (int) $response['xml']->header->item_count_total == 0,
       t("Call /asset/{asset_id}/favorites/count [GET]")
     );
   }

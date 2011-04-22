@@ -56,7 +56,7 @@ class MediaMosaAppAuthenticationDbusTestCase extends MediaMosaTestCase {
 
     // Step 1: start auth and capture cookie
     $response = $this->restCall('login', 'POST', array('dbus' => 'AUTH DBUS_COOKIE_SHA1 ' . $app_name));
-    $this->pass(check_plain(var_export($response['xml'], TRUE)));
+    $this->var_export($response['xml']->get());
     $dbus_data = explode(' ', $response['xml']->items->item->dbus);
 
     $this->assertTrue(drupal_substr($response['xml']->items->item->dbus, 0, 5) == 'DATA ', 'Login fase 1 success');

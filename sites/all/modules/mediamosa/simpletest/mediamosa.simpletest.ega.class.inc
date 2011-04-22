@@ -657,7 +657,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $response = preg_split("/\r\n|\n|\r/", $response);
 
     try {
-      $xml = new SimpleXMLElement($data);
+      $xml = new mediamosa_connector_response($data);
     }
     catch (Exception $e) {
       $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
@@ -749,7 +749,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $response = preg_split("/\r\n|\n|\r/", $response);
 
     try {
-      $xml = new SimpleXMLElement($data);
+      $xml = new mediamosa_connector_response($data);
     }
     catch (Exception $e) {
       $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
@@ -831,7 +831,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->verbose(print_r($response, TRUE));
 
     try {
-      $xml = new SimpleXMLElement($response->data);
+      $xml = new mediamosa_connector_response($response->data);
     }
     catch (Exception $e) {
       $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
@@ -2282,7 +2282,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
       strtr("Change ownership: got result @result (@result_description)", array(
         '@result' => (string) $response['xml']->header->request_result_id,
-        '@result_description' => $response['xml']->header->request_result_description
+        '@result_description' => (string) $response['xml']->header->request_result_description
       ))
     );
 
@@ -2348,7 +2348,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Test response.
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
-      strtr("Updated mediafile with ID: @mediafile_id, got result @result (@result_description)", array('@mediafile_id' => $mediafile_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+      strtr("Updated mediafile with ID: @mediafile_id, got result @result (@result_description)", array('@mediafile_id' => $mediafile_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => (string) $response['xml']->header->request_result_description))
     );
 
     // Return response.
@@ -2377,7 +2377,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr("Updated collection with ID: @collection_id, got result @result (@result_description)", array(
         '@collection_id' => $collection_id,
         '@result' => (string) $response['xml']->header->request_result_id,
-        '@result_description' => $response['xml']->header->request_result_description
+        '@result_description' => (string) $response['xml']->header->request_result_description
       ))
     );
 
@@ -2609,6 +2609,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
       $found = FALSE;
       foreach ($items as $item) {
+        self::var_export($item);
+        self::var_export($type);
         if (isset($item[$type])) {
           $found = TRUE;
 
@@ -2893,7 +2895,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr("Set isprivate with ID: @asset_id, got result @result (@result_description)", array(
         '@asset_id' => $asset_id,
         '@result' => (string) $response['xml']->header->request_result_id,
-        '@result_description' => $response['xml']->header->request_result_description
+        '@result_description' => (string) $response['xml']->header->request_result_description
       ))
     );
 
@@ -2924,7 +2926,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr("Set isprivate with ID: @asset_id, got result @result (@result_description)", array(
         '@asset_id' => $asset_id,
         '@result' => (string) $response['xml']->header->request_result_id,
-        '@result_description' => $response['xml']->header->request_result_description
+        '@result_description' => (string) $response['xml']->header->request_result_description
       ))
     );
 
@@ -3312,7 +3314,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Test response.
     $this->assertTrue(
       in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
-      strtr("Watermark still with ID: @still_id, got result @result (@result_description)", array('@still_id' => $still_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+      strtr("Watermark still with ID: @still_id, got result @result (@result_description)", array('@still_id' => $still_id, '@result' => (string) $response['xml']->header->request_result_id, '@result_description' => (string) $response['xml']->header->request_result_description))
     );
 
     // Get path to still.

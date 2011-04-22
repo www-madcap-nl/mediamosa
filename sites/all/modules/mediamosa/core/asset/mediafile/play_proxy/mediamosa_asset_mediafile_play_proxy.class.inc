@@ -693,10 +693,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
     $i = 1;
     foreach ($stills as $key => $value) {
-      $result['stills'] = array(
-        '#attributes' => array('id' => $i++),
-        '#value' => $value,
-      );
+      $result['stills']['#' . serialize(array('id' => $i++))] = $value;
     }
 
     return $result;

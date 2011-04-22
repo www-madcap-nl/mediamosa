@@ -47,11 +47,6 @@ function fix_vars_acl_2_aut($row) {
     return (substr($row, 0, 4) == 'acl_' ? 'aut_' . substr($row, 4) : $row);
   }
 
-  if (isset($row['#value'])) {
-    $row['#value'] = fix_vars_acl_2_aut($row['value']);
-    return $row;
-  }
-
   foreach ($row as $key => $value) {
     if (substr($key, 0, 4) != 'acl_') {
       continue;
@@ -644,7 +639,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_APP),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_APP),
     );
 
     $var_setup[self::VARS][self::ACL_USER] = array(
@@ -653,7 +648,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_USER),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER),
     );
 
     $var_setup[self::VARS][self::ACL_GROUP] = array(
@@ -662,7 +657,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_GROUP),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP),
     );
 
     $var_setup[self::VARS][self::ACL_DOMAIN] = array(
@@ -671,7 +666,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_DOMAIN),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_DOMAIN),
     );
 
     $var_setup[self::VARS][self::ACL_REALM] = array(
@@ -680,7 +675,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_REALM),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_REALM),
     );
 
     // alias.
@@ -690,7 +685,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'Alias of acl_user.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_USER_ID),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_USER_ID),
     );
 
     // alias.
@@ -700,7 +695,7 @@ class mediamosa_rest_call_acl_mediafile_set_multi_rights extends mediamosa_rest_
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => 'Alias of acl_group.',
       self::VAR_DEFAULT_VALUE => array(),
-      self::VAR_ALIAS_FOR => array(ALIAS_AUT_GROUP_ID),
+      self::VAR_ALIAS_FOR => array(self::ALIAS_AUT_GROUP_ID),
     );
 
     // Enrich with required REST vars.
@@ -1006,7 +1001,7 @@ class mediamosa_rest_call_acl_mediafile_set_rights extends mediamosa_rest_call {
     foreach ($result_rights_set as $error) {
       $type = (isset($types[$error['type']]) ? $types[$error['type']] : 'unknown');
 
-      if ($error['error'] === FALSE) {
+      if ($error['a_error'] === FALSE) {
         $mediamosa->add_item(
           array(
             $type => array(

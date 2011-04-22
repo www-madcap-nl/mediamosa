@@ -140,7 +140,7 @@ class mediamosa_server {
       }
 
       if (!empty($response->data)) {
-        $xml = new SimpleXMLElement($response->data);
+        $xml = new mediamosa_connector_response($response->data);
 
         $result[] = array(
           'enabled_server' => $server,

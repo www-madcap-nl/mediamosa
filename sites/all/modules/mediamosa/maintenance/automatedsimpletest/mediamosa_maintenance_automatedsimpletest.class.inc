@@ -165,7 +165,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * Retrieve the test results.
    */
   static function get_test_results($name = NULL, array $value = NULL, $remove = FALSE) {
-    static $test_results = NULL;
+    static $test_results = array();
 
     if (!empty($name)) {
       // Split the name.
@@ -203,7 +203,7 @@ class mediamosa_maintenance_automatedsimpletest {
         );
       }
 
-      if (!isset($test_results) && !empty($run) && !empty($class_name)) {
+      if (empty($test_results) && !empty($run) && !empty($class_name)) {
         $result = mediamosa_db::db_select(mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME, 'mms')
           ->fields('mms')
           ->execute();
@@ -412,13 +412,13 @@ class mediamosa_maintenance_automatedsimpletest {
     $response = mediamosa_http::do_internal_call_cron('internal/simpletest/run', FALSE, $options);
     $end = microtime(TRUE);
     try {
-      $response->xml = new SimpleXMLElement($response->data);
+      $response->xml = new mediamosa_connector_response($response->data);
     }
     catch (Exception $e) {
       mediamosa_debug::log_export($response->data);
     }
 
-    if (isset($response->xml) && isset($response->xml->header) && $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY) {
+    if (isset($response->xml) && isset($response->xml->header) && (int) $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY) {
       // As array is easier.
       $response = mediamosa_lib::responsexml2array($response->xml);
       $item = reset($response['items']['item']);

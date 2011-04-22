@@ -243,7 +243,7 @@ class mediamosa_job_scheduler {
     }
 
     try {
-      $response_data = new SimpleXMLElement($response->data);
+      $response_data = new mediamosa_connector_response($response->data);
     }
     catch (Exception $e) {
       mediamosa_debug::log_export($response->data);
@@ -855,12 +855,13 @@ class mediamosa_job_scheduler {
 
     if ($response->code == '201' || $response->code == '200') {
       try {
-        $response_data = new SimpleXMLElement($response->data);
+        $simple_xml_response = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
         self::log_mediafile($mediafile_id, 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), NULL, WATCHDOG_ERROR);
       }
-      return $response_data->header->request_result_id;
+
+      return (int) $simple_xml_response->header->request_result_id;
     }
 
     self::log_mediafile($mediafile_id, 'errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
@@ -895,12 +896,13 @@ class mediamosa_job_scheduler {
 
     if ($response->code == "201" || $response->code == "200") {
       try {
-        $response_data = new SimpleXMLElement($response->data);
+        $simple_xml_response = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
         self::log_mediafile($mediafile_id, 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), NULL, WATCHDOG_ERROR);
       }
-      return $response_data->header->request_result_id;
+
+      return (int) $simple_xml_response->header->request_result_id;
     }
 
     self::log_mediafile($mediafile_id, 'errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
@@ -971,13 +973,13 @@ class mediamosa_job_scheduler {
 
     if ($response->code == '201' || $response->code == '200') {
       try {
-        $response_data = new SimpleXMLElement($response->data);
+        $simple_xml_response = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
         self::log_mediafile($mediafile_id, 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), NULL, WATCHDOG_ERROR);
       }
 
-      return $response_data->header->request_result_id;
+      return (int) $simple_xml_response->header->request_result_id;
     }
 
     self::log_mediafile($mediafile_id, 'errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));

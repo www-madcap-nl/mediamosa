@@ -140,7 +140,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('simpletest', 'mediamosa', 'mediamosa_app'), $args));
+    $args = array_unique(array_merge(array('mediamosa_sdk', 'simpletest', 'mediamosa', 'mediamosa_app'), $args));
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
     }
@@ -394,7 +394,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     if ($is_response_xml) {
       try {
-        $response->xml = new SimpleXMLElement($response->data);
+        $response->xml = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
         $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
@@ -500,7 +500,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     try {
-      $out['xml'] = new SimpleXMLElement($out['body']);
+      $out['xml'] = new mediamosa_connector_response($out['body']);
     }
     catch (Exception $e) {
       $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
@@ -509,8 +509,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Get the result ID.
     if (!empty($out['xml']->header)) {
-      $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int) $out['xml']->header->request_result_id;
-      $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string) $out['xml']->header->request_result_description;
+      $result_id = empty($out['xml']->header->request->resultId) ? 0 : (int) $out['xml']->header->request->resultId;
+      $result_description = empty($out['xml']->header->request->description) ? 'no description' : (string) $out['xml']->header->request->description;
     }
     elseif (!empty($out['xml']->extension)) {
       $result_id = empty($out['xml']->extension->request_result_id) ? 0 : (int) $out['xml']->extension->request_result_id;

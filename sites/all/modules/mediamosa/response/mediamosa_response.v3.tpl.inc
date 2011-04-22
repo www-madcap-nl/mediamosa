@@ -28,7 +28,7 @@
     <request>
       <resultId><?php print mediamosa_unicode::xmlentities($header['request_result_id']); ?></resultId>
       <result><?php print mediamosa_unicode::xmlentities($header['request_result']); ?></result>
-      <description><?php print mediamosa_unicode::xmlentities($header['request_result_description']); ?></description>
+      <resultDescription><?php print mediamosa_unicode::xmlentities($header['request_result_description']); ?></resultDescription>
       <method><?php print mediamosa_unicode::xmlentities($this->request_method); ?></method>
       <uri><?php print (substr($this->request_uri, 0, 1) == '/' ? '' : '/') . mediamosa_unicode::xmlentities($this->request_uri); ?></uri>
       <time><?php print mediamosa_unicode::xmlentities($this->get_processed_time()); ?></time>
@@ -36,15 +36,15 @@
 <?php if (mediamosa_debug::is_debug()): ?>
     <debug>
       <class><?php print mediamosa_unicode::xmlentities($header['request_class']); ?></class>
-      <mediamosa_version><?php
+      <mediamosaVersion><?php
         print $mediamosa_version[mediamosa_version::MAJOR] . '.' . $mediamosa_version[mediamosa_version::MINOR] . '.' . $mediamosa_version[mediamosa_version::RELEASE]
-        ?></mediamosa_version>
+        ?></mediamosaVersion>
       <matched>
         <method><?php print mediamosa_unicode::xmlentities($header['request_matched_method']); ?></method>
         <uri><?php print mediamosa_unicode::xmlentities($header['request_matched_uri']); ?></uri>
       </matched>
 <?php
-      $debug_app = array('login' => array('app_id' => mediamosa::get_environment_setting(mediamosa::ENV_APP_ID), 'app_ids' => mediamosa::get_environment_setting(mediamosa::ENV_APP_IDS), 'timezone' => mediamosa::get_environment_setting(mediamosa::ENV_TIMEZONE)));
+      $debug_app = array('clientApplication' => array('appId' => mediamosa::get_environment_setting(mediamosa::ENV_APP_ID), 'appIds' => mediamosa::get_environment_setting(mediamosa::ENV_APP_IDS), 'timezone' => mediamosa::get_environment_setting(mediamosa::ENV_TIMEZONE)));
 
       print mediamosa_response::render_array2xml($debug_app, 3);
 

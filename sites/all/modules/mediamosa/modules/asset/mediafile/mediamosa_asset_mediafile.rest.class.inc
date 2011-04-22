@@ -121,7 +121,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
 
@@ -138,11 +138,11 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     mediamosa_acl::read_single_object(mediamosa_acl::ACL_TYPE_MEDIAFILE, $mediafile_id, $app_ids);
 
     // Now enrich response with mediafile data.
-    $a_items = mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $app_ids, FALSE, $show_stills);
+    $items = mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $app_ids, FALSE, $show_stills);
 
     // Add to response.
-    foreach ($a_items['mediafile'] as $a_item) {
-      $o_mediamosa->add_item($a_item);
+    foreach ($items['mediafile'] as $item) {
+      $mediamosa->add_item(array($item));
     }
 
     // Done.
@@ -215,12 +215,13 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     // Create output.
     $items = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai);
 
+
     // Add to response.
-    //if (!empty($items)) {
-      foreach ($items as $item) {
+    if (!empty($items['mediafile'])) {
+      foreach ($items['mediafile'] as $item) {
         $mediamosa->add_item($item);
       }
-   // }
+    }
   }
 }
 

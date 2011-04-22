@@ -108,7 +108,7 @@ class mediamosa_response_connector extends mediamosa_response {
 
     if ($result['header']['request_result'] != self::SUCCESS) {
       drupal_set_message($uri);
-      drupal_set_message($result['header']['request_result_id'] . ': ' . $result['header']['request_result_description'], 'error');
+      drupal_set_message($result['header']['request_result__id'] . ': ' . $result['header']['request_result_description'], 'error');
     }
 
     return $result;
@@ -118,7 +118,7 @@ class mediamosa_response_connector extends mediamosa_response {
    * Test if the result is okay. (empty result is not okay).
    */
   static public function static_result_okay($result) {
-    return (!empty($result['header']['request_result_id']) && $result['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY) ? TRUE : FALSE;
+    return (!empty($result->request_result_id) && (int) $result->request_result_id == mediamosa_error::ERRORCODE_OKAY) ? TRUE : FALSE;
   }
 
   // ---------------------------------------------------------------- Functions.

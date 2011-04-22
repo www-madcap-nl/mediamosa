@@ -924,8 +924,7 @@ class mediamosa_asset {
         }
         foreach ($collections[$asset[mediamosa_asset_db::ID]] as $coll_id => $collection) {
           if ($is_version_30) {
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection'][mediamosa_collection_db::TITLE]['#attributes'] = $collection[mediamosa_collection_db::TITLE];
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection'][mediamosa_collection_db::TITLE]['#value'] = $collection[mediamosa_collection_db::TITLE];
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]]['collections']['collection']['#' . serialize(array('id' => $coll_id,))][mediamosa_collection_db::TITLE] = $collection[mediamosa_collection_db::TITLE];
           }
           else {
             // Old version.
@@ -957,8 +956,10 @@ class mediamosa_asset {
     }
 
     foreach ($mediafiles as $mediafile) {
-      if (isset($mediafile['#value'])) {
-        $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile['#value']['response_object_available'] == 'TRUE');
+      if (substr(key($mediafile), 0, 1) == '#') { // Serialize attributes?
+        foreach ($mediafile as $attributes => $mediafile2) {
+          $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile2['response_object_available'] == 'TRUE');
+        }
       }
       else {
         $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile['response_object_available'] == 'TRUE');

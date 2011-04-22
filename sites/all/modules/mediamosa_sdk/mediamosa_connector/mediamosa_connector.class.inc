@@ -87,6 +87,7 @@ class mediamosa_connector {
     $this->cookie = !empty($cookies[$this->url][$this->username][$this->password]) ? $cookies[$this->url][$this->username][$this->password] : NULL;
   }
 
+  // --------------------------------------------------------- Public Functions.
   /**
    * Return the last error.
    */
@@ -137,7 +138,6 @@ class mediamosa_connector {
     $this->last_error_text = '';
   }
 
-  // --------------------------------------------------------- Public Functions.
   /**
    * @param string $uri
    *  The REST uri.
@@ -234,7 +234,7 @@ class mediamosa_connector {
       // Check the final response.
       if (!empty($response) && !empty($response->xml) && !empty($response->xml->header)) {
         $result_id = (int) $response->xml->header->request_result_id;
-        $result_description = $response->xml->header->request_result_description;
+        $result_description = (string) $response->xml->header->request_result_description;
 
         if ($fatal && !in_array($result_id, array(mediamosa_sdk::ERRORCODE_OKAY, mediamosa_sdk::ERRORCODE_EMPTY_RESULT))) {
 
@@ -451,7 +451,7 @@ class mediamosa_connector {
     // If we detect xml output, fill the xml member.
     if ((int) $response->code == 200 && (strpos($response->headers['content-type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, drupal_strlen('<?xml')) == '<?xml')) {
       try {
-        $response->xml = new SimpleXMLElement($response->data);
+        $response->xml = new mediamosa_connector_response($response->data);
       }
       catch (Exception $e) {
         // Dont care.

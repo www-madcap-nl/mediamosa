@@ -192,6 +192,10 @@ class mediamosa_lib {
       return $xml;
     }
 
+    if (get_class($xml) == 'mediamosa_connector_response') {
+      return self::responsexml2array($xml->get());
+    }
+
     // Convert to nice array.
     $xml = self::simplexml2array($xml);
 
