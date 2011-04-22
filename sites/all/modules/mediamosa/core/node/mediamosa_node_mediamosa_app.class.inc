@@ -203,7 +203,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
   );
 
   // Get all apps.
-  $apps = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME);
+  $apps = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME, mediamosa_app_db::NID), mediamosa_app_db::APP_NAME);
 
   $allow_masterslave_apps = array();
   foreach ($apps as $app) {
@@ -523,8 +523,9 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_PADDING, $node, mediamosa_app_db::STILL_PADDING_YES),
   );
 
-  $nid = $node->nid;
-  if ($nid) {
+  if (isset($node->nid) && $node->nid) {
+    $nid = $node->nid;
+
     $query = 'admin/mediamosa/config/app/' . $nid . '/edit';
     require_once('modules/image/image.admin.inc');
     $app_id = mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node);
