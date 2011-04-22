@@ -27,7 +27,7 @@ TODO: (v3.0)
 </IfModule>
 
 
-MediaMosa 3.0 (build 1672)
+MediaMosa 3.0 (build 1698)
 --------------------------
 - oAuth development (See ticket #10).
 - Owner check for /asset/$asset_id/joblist (See ticket #356).
