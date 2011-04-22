@@ -86,6 +86,15 @@ class mediamosa_connector_response {
   }
 
   /**
+   * Magic function to support -> on object.
+   *
+   * @param $name
+   */
+  public function __isset($name) {
+    return isset($this->xml->$name);
+  }
+
+  /**
    * Return the SimpleXML object.
    */
   public function get() {

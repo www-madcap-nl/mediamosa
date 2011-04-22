@@ -29,34 +29,46 @@ TODO: (v3.0)
 
 MediaMosa 3.0 (build 1672)
 --------------------------
+- oAuth development (See ticket #10).
 - Owner check for /asset/$asset_id/joblist (See ticket #356).
-- Granted flag not correct with non-original master slaved mediafiles fix. 
-  (See ticket #432).
-  
-- Parameter name "acl_group_id/aut_group_id" added in /asset/{asset_id}/play, 
-  and "group_id" is marked as depricated (See ticket #238).
-- Play request with "tag" development (See ticket #216).
-- Variable for custom control bar height in objectcode (See ticket #326).
-- Asset, assets and asset/$asset_id GET REST call show the collection data
-  in better format (See ticket #332).
-- Optimize /assets REST call (See ticket #360).
-- Mediafile delete REST call with new parameter: new_original (mediafile_id).
-  If the deleted mediafile is original, then the new original mediafile is
-  the new_original (See ticket #393).
-- Server URI is separated to URI and path (See ticket #367).
-- Video without bitrate fix (See ticket #394).
-- Fixed problem with migration script when quota_user created timestamps
-  contains NULL values (See ticket #513).
-- Image style development (See ticket #371).
 - Watermarking stills (See ticket #82).
+- Users can now be in more than one (quota) group (See ticket #223).
 - oEmbed provider functionality (See ticket #413).
   "HTTP 501 Not implemented" error was introduced. Code was reorganized.
 - Added support for OpenApi. OpenApi has its own core module and needs to be
   turned on to be used. (See ticket #428).
-- oAuth development (See ticket #10).
-- Retranscode improvement (See ticket #467).
+- oAuth can now be used to indentify your client application (See tickets #462,
+  #463, #464).
+- Retranscode option in admin (See ticket #467).
+- Granted flag not correct with non-original master slaved mediafiles fix. 
+  (See ticket #432).  
+- Play request with "tag" development (See ticket #216).
+- Parameter name "acl_group_id/aut_group_id" added in /asset/{asset_id}/play, 
+  and "group_id" is marked as depricated (See ticket #238).
+- Variable for custom control bar height in objectcode (See ticket #326).
+- Asset, assets and asset/$asset_id GET REST call show the collection data
+  in better format (See ticket #332).
+- REST call preview_profile_id is now depricated, use 
+  /transcode/profile/default REST call instead (See ticket #337).
+- Using is_app_admin to view other client apps jobs is no longer possible (See
+  ticket #357).
+- Optimized /assets REST call (See ticket #360).
+- Added REST call 'app/quota' for retrieving quota information of the client
+  app (See ticket #366).
+- Server URI is separated to URI and path (See ticket #367).
+- Image style development using the response object. (See ticket #371).
+- Supplements will no longer trim input without warning. Also the limit of the
+  supplement can be increased on the configuration page (See ticket #377).
+- Fixed divided by zero fatal (See ticket #379).
+- Re-analyse and re-transcode added to admin asset/mediafile page (See ticket 
+  #391).
+- Mediafile delete REST call with new parameter: new_original (mediafile_id).
+  If the deleted mediafile is original, then the new original mediafile is
+  the new_original (See ticket #393).
+- Video without bitrate fix (See ticket #394).
 - ACL problem when using replace fix (See ticket #503).
-- Users can now be in more than one (quota) group (See ticket #223).
+- Fixed problem with migration script when quota_user created timestamps
+  contains NULL values (See ticket #513).
 
 Other changes (not ticket related).
 - Favicon.ico was added to rubik theme.

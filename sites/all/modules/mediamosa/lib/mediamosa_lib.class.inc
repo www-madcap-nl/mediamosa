@@ -153,6 +153,10 @@ class mediamosa_lib {
    * @param object $xml
    */
   static public function simplexml2array($xml) {
+    if (is_object($xml) && get_class($xml) == 'mediamosa_connector_response') {
+      return self::simplexml2array($xml->get());
+    }
+
     $xml_copy = $xml;
     if (is_object($xml) && get_class($xml) == 'SimpleXMLElement') {
       foreach ($xml->attributes() as $key => $value) {

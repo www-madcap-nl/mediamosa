@@ -3445,8 +3445,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Make array.
-    $found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
-    $found = !isset($found['items']['item'][0]) && !empty($found['items']['item']) ? array(0 => $found['items']['item']) : $found['items']['item'];
+    $xml_array = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
+
+    $found = array();
+    if (!empty($xml_array['items']) && !empty($xml_array['items']['item'])) {
+      $found = isset($xml_array['items']['item'][0]) ? $xml_array['items']['item'] : array($xml_array['items']['item']);
+    }
 
     $expected = $this->cql_expected_ids($found, $expected_asset_ids, 'asset_id', $granted);
 
@@ -3489,8 +3493,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Make array.
-    $found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
-    $found = !isset($found['items']['item'][0]) && !empty($found['items']['item']) ? array(0 => $found['items']['item']) : $found['items']['item'];
+    $xml_array = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
+
+    $found = array();
+    if (!empty($xml_array['items']) && !empty($xml_array['items']['item'])) {
+      $found = isset($xml_array['items']['item'][0]) ? $xml_array['items']['item'] : array($xml_array['items']['item']);
+    }
 
     $expected = $this->cql_expected_ids($found, $expected_collection_ids, 'coll_id');
 
