@@ -822,6 +822,9 @@ class mediamosa_job_scheduler {
           self::log_mediafile($mediafile_id, 'Making @job_type server job has stoped, job @job_id was deleted during the process.', array('@job_type' => $job_type, '@job_id' => $job_id));
         }
       }
+      else {
+        self::log_mediafile($mediafile_id, 'Error (@errorcode) was reponsed during sending @job_type (ID: @job_id) to server @uri.', array('@errorcode' => $errorcode, '@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
+      }
     }
   }
 

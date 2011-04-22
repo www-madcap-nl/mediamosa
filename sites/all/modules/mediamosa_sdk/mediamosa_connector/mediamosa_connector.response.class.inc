@@ -62,7 +62,7 @@ class mediamosa_connector_response {
     $this->xml = new SimpleXMLElement($data);
 
     // Map old header items of 2.x to 3.x.
-    if ($this->mediaosa_is_version_3()) {
+    if ($this->mediamosa_is_version_3() && isset($this->xml->header->request->result)) {
       $this->xml->header->request_result = $this->xml->header->request->result;
       $this->xml->header->request_result_id = $this->xml->header->request->resultId;
       $this->xml->header->request_result_description = $this->xml->header->request->resultDescription;
@@ -104,7 +104,7 @@ class mediamosa_connector_response {
   /**
    * Look if we are version 3 or higher.
    */
-  public function mediaosa_is_version_3() {
+  public function mediamosa_is_version_3() {
     $version = $this->mediamosa_get_version();
     return $version[self::VERSION_MAJOR] >= 3;
   }

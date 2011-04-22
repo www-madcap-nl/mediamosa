@@ -308,7 +308,7 @@ class mediamosa_job_server {
   static public function create_job($job_id, $job_type, $mediafile_id_src) {
 
     // Get the job_server_job, make sure its not already created.
-    $job_server_job = mediamosa_job_server::get($job_id);
+    $job_server_job = mediamosa_job_server::get_with_jobid($job_id);
 
     if (!empty($job_server_job)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STARTING_JOB_FAILED);
