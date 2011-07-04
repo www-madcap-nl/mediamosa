@@ -198,8 +198,28 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       throw new mediamosa_exception(mediamosa_error::HTTP_FORBIDDEN, 'Unable to open file!');
     }
 
+    // Get the content-type of the image file.
+    $type = NULL;
+    // First try with finfo_file function.
+    if (function_exists('finfo_file')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $type = finfo_file($finfo, $file);
+        finfo_close($finfo);
+    }
+    // Second try with "file" command.
+    if (!$type || $type == 'application/octet-stream') {
+        $file_mime = exec('file -b -L --mime-type ' . escapeshellarg($file), $output, $return_var);
+        if ($return_var == '0' && $file_mime) {
+            $type = $file_mime;
+        }
+    }
+    // No more possibility. Fall back to "image/jpeg".
+    if (!$type || $type == 'application/octet-stream') {
+      $type = 'image/jpeg';
+    }
+
     // Set headers.
-    header('Content-Type: image/jpeg');
+    header('Content-Type: ' . $type);
 
     // Make sure we send the header now.
     ob_clean();

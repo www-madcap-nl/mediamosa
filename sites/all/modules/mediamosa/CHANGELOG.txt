@@ -65,6 +65,7 @@ Other changes (not ticket related).
   by flyapen, GitHub)
 - Added missing installer for errorcode 1156.
 - Added still generation for image files using the image tool module.
+- Content-type in still donwload REST call was fixed.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
