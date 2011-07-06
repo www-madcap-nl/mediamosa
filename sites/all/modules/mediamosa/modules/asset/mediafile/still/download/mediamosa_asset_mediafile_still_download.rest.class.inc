@@ -218,8 +218,19 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       $type = 'image/jpeg';
     }
 
+    // Check the current settings.
+    $options = array(
+      'absolute' => TRUE,
+    );
+    $response = drupal_http_request(url(mediamosa_settings::STILL_REST_TEST_IMAGE, $options));
+
     // Set headers.
     header('Content-Type: ' . $type);
+    header('Cache-Control: ' . (isset($response->headers['cache-control']) ? $response->headers['cache-control'] : mediamosa_settings::STILL_REST_CACHE));
+    header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . " GMT");
+    if (isset($response->headers['expires'])) {
+      header('Expires: ' . $response->headers['expires']);
+    }
 
     // Make sure we send the header now.
     ob_clean();
@@ -237,6 +248,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
     // Close the file.
     fclose($handle);
+    die;
 
     // Set the result, reponse object will know what to do.
     $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
