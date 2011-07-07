@@ -226,10 +226,13 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
     // Set headers.
     header('Content-Type: ' . $type);
-    header('Cache-Control: ' . (isset($response->headers['cache-control']) ? $response->headers['cache-control'] : mediamosa_settings::STILL_REST_CACHE));
-    header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . " GMT");
-    if (isset($response->headers['expires'])) {
-      header('Expires: ' . $response->headers['expires']);
+    // Set the cache header in case of permanent stills.
+    if ($still_id) {
+      header('Cache-Control: ' . (isset($response->headers['cache-control']) ? $response->headers['cache-control'] : mediamosa_settings::STILL_REST_CACHE));
+      header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . " GMT");
+      if (isset($response->headers['expires'])) {
+        header('Expires: ' . $response->headers['expires']);
+      }
     }
 
     // Make sure we send the header now.
