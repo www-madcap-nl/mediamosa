@@ -260,38 +260,59 @@ function mediamosa_app_view($node, $view_mode = 'full') {
 }
 
 /**
- * Form validate for image style.
+ * Form submit for adding image style.
  */
-function mediamosa_node_mediamosa_app_image_style_validate($form, &$form_state) {
-  $app_id = arg(5);
+function mediamosa_node_mediamosa_app_image_style_add_submit($form, &$form_state) {
+  $values = $form_state['values'];
 
-  if (!is_numeric($app_id)) {
-    $pos = strpos($app_id, mediamosa_settings::IMAGE_STYLE_SEPARATOR);
-    if ($pos === FALSE) {
-      return;
-    }
+  $style = $values['name'];
+  $app_id = $values['app_id'];
 
-    $app_id = drupal_substr($app_id, 0, $pos);
-  }
-
-  $form_state['values']['name'] = $form_state['input']['name'];
-  $new_name = explode(mediamosa_settings::IMAGE_STYLE_SEPARATOR, $form_state['values']['name']);
-  if (count($new_name) != 2 || $new_name[0] != $app_id || empty($new_name[1])) {
-    form_set_error($form_state['values']['name'], t('The image style name %name is not valid. It should be %app_id%separator{name}', array(
-      '%name' => $form_state['values']['name'],
-      '%app_id' => $app_id,
-      '%separator' => mediamosa_settings::IMAGE_STYLE_SEPARATOR,
-    )));
-  }
+  $fields = array(
+    mediamosa_asset_mediafile_still_style_db::ID => $style,
+    mediamosa_asset_mediafile_still_style_db::APP_ID => $app_id,
+  );
+  mediamosa_asset_mediafile_still_style::insert($fields);
 }
 
 /**
- * Form submit for image style.
+ * Form submit for editing image style.
  */
-function mediamosa_node_mediamosa_app_image_style_submit($form, &$form_state) {
-  $args = arg();
-  $args[5] = $form_state['input']['name'];
-  drupal_goto(implode('/', $args));
+function mediamosa_node_mediamosa_app_image_style_edit_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  $style = $values['style'];
+  $app_id = $values['app_id'];
+  $style_new = $values['name'];
+
+  // Remove style image files.
+  $dir_symlink = mediamosa_configuration_storage::ticket_still_style_location_get($style);
+  mediamosa_io::delete_style_directory($dir_symlink, $style);
+  $dir_style = mediamosa_configuration_storage::still_style_location_get_full($style);
+  mediamosa_io::delete_style_directory($dir_style, $style);
+
+  $fields = array(
+    mediamosa_asset_mediafile_still_style_db::ID => $style_new,
+  );
+  mediamosa_asset_mediafile_still_style::update($style, $app_id, $fields);
+}
+
+/**
+ * Form submit for deleting image style.
+ */
+function mediamosa_node_mediamosa_app_image_style_delete_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  $style = $values['style'];
+  $app_id = $values['app_id'];
+
+  mediamosa_asset_mediafile_still_style::delete($style, $app_id);
+
+  // Remove style image files.
+  $dir_symlink = mediamosa_configuration_storage::ticket_still_style_location_get($style);
+  mediamosa_io::delete_style_directory($dir_symlink, $style);
+  $dir_style = mediamosa_configuration_storage::still_style_location_get_full($style);
+  mediamosa_io::delete_style_directory($dir_style, $style);
 }
 
 /**
@@ -539,6 +560,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_PADDING, $node, mediamosa_app_db::STILL_PADDING_YES),
   );
 
+  // Image styles.
   if (isset($node->nid) && $node->nid) {
     $nid = $node->nid;
 
@@ -549,7 +571,8 @@ function mediamosa_app_form($node, &$form_state) {
 
     // Unset styles not created by this app.
     foreach ($styles as $style_key => $style) {
-      if (drupal_substr($style_key, 0, drupal_strlen($app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR)) != $app_id . mediamosa_settings::IMAGE_STYLE_SEPARATOR) {
+      $still_style = mediamosa_asset_mediafile_still_style::get($style_key, $app_id);
+      if (!$still_style) {
         unset($styles[$style_key]);
       }
     }

@@ -3174,3 +3174,14 @@ function mediamosa_update_7125() {
     db_query("ALTER TABLE {mediamosa_server} ADD server_cupertino_path VARCHAR(255) COMMENT 'The path of the Cupertino / Silverlight server.' AFTER server_path");
   }
 }
+
+/**
+ * MediaMosa ticket #371 (object code enhancement).
+ * New table mediamosa_asset_mediafile_still_style was added.
+ */
+function mediamosa_update_7126() {
+  if (!db_table_exists('mediamosa_asset_mediafile_still_style')) {
+    // Install mediamosa_asset_mediafile_still_style table.
+    mediamosa::drupal_install_schema('mediamosa_asset_mediafile_still_style');
+  }
+}

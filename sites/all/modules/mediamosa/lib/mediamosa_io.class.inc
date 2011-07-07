@@ -88,6 +88,48 @@ class mediamosa_io {
   }
 
   /**
+   * Remove complete style directory with content.
+   *
+   * @param string $dir
+   * @param string $style
+   */
+  static public function delete_style_directory($dir, $style = NULL) {
+    if (!is_dir($dir)) {
+      return;
+    }
+
+    // Security checks before we do anything.
+
+    // Relative path is not allowed.
+    if (drupal_substr($dir, 0, 1) != '/') {
+      return;
+    }
+
+    $dir_array = explode(DIRECTORY_SEPARATOR, $dir);
+    $dir_count = count($dir_array);
+
+    // Directory parts.
+    // /SANNAS/still_links/style/style_name/
+    // /SANNAS/data/still/style/style_name/
+    if ($dir_count < 6) {
+      return;
+    }
+
+    // It should be /.../style/style_name/.
+    if ($dir_array[$dir_count - 3] != mediamosa_settings::STILL_LINK_STYLE_LOCATION && $dir_array[$dir_count - 3] != mediamosa_settings::STILL_DATA_STYLE_LOCATION) {
+      return;
+    }
+
+    // The last part should be the style name.
+    if (!$style || $dir_array[$dir_count - 2] != $style) {
+      return;
+    }
+
+    $command = 'rm -r ' . $dir;
+    $last_line = mediamosa_io::exec($command, $output, $return_var);
+  }
+
+  /**
    * Clears file status cache.
    */
   static public function clearstatcache() {
