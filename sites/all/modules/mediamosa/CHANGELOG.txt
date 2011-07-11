@@ -68,6 +68,7 @@ Other changes (not ticket related).
 - Added missing installer for errorcode 1156.
 - Added still generation for image files using the image tool module.
 - Content-type in still donwload REST call was fixed.
+- OpenAPI config page bug fix.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
