@@ -172,7 +172,7 @@ class mediamosa_response extends mediamosa {
               set_error_handler($previous_handler, E_ALL);
             }
             return;
-          } 
+          }
         }
       }
 
