@@ -29,6 +29,7 @@ MediaMosa 3.0.2 (build 1732)
 - Additional response-types on asset/{id}/play call (See ticket #389).
 - Add expire setting for stills for client apps (See ticket #472).
 - Object code enhancement (See ticket #371). Still images with styles.
+- Transcoding issues in existing assets (nibg) (See ticket #267).
 
 Other changes (not ticket related).
 - Upgraded Drupal 7.0 to Drupal 7.2 release.
