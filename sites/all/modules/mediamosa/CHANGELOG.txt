@@ -71,6 +71,7 @@ Other changes (not ticket related).
 - Content-type in still donwload REST call was fixed.
 - OpenAPI config page bug fix.
 - Transcode profile tool select box fix.
+- Corrected MediaMosa version check for collection, see ticket #332.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
