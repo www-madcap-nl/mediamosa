@@ -73,6 +73,7 @@ Other changes (not ticket related).
 - Transcode profile tool select box fix.
 - Corrected MediaMosa version check for collection, see ticket #332.
 - Corrected the replacement in image style, see ticket #371.
+- Corrected incorrect reporting of max_execution_time during cron runs, see ticket #412.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
