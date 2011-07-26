@@ -129,7 +129,7 @@ function mediamosa_asset_form_alter(&$form, &$form_state, $form_id) {
     }
 
     $still_style = mediamosa_asset_mediafile_still_style::get($style);
-    $app_id = $still_style[mediamosa_asset_mediafile_still_style_db::APP_ID];
+    $app_id = ($still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] ? $still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] : '');
 
     if (!$still_style || (!user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) && !$mediamosa_admin)) {
       drupal_access_denied();
@@ -144,6 +144,19 @@ function mediamosa_asset_form_alter(&$form, &$form_state, $form_id) {
       $form['#submit'][] = 'mediamosa_node_mediamosa_app_image_style_edit_submit';
     }
     elseif ($form_id == 'image_style_delete_form') {
+      foreach ($form['replacement']['#options'] as $key => $value) {
+        if ($key) {
+          if ($key == 'thumbnail' || $key == 'medium' || $key == 'large') {
+            // We want to delete the default ones too.
+            //continue;
+          }
+          $still_style = mediamosa_asset_mediafile_still_style::get($key);
+          $app_id_replace = ($still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] ? $still_style[mediamosa_asset_mediafile_still_style_db::APP_ID] : '');
+          if (!$still_style || !user_access(mediamosa_permission::ADMIN_MEDIAMOSA . '|app|' . $app_id) || $app_id != $app_id_replace) {
+            unset($form['replacement']['#options'][$key]);
+          }
+        }
+      }
       // If delete, then we delete the style - app_id data and delete style images.
       $form['#submit'][] = 'mediamosa_node_mediamosa_app_image_style_delete_submit';
     }
