@@ -813,6 +813,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
 
     // @todo: if app have no access at all we just return empty list now. If exception needed - add it here.
     // mediamosa_acl::owner_check was here earlier.
+    // mediamosa_aut::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     $item_count_total = NULL;
 
