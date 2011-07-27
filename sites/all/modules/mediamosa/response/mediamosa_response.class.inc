@@ -141,6 +141,12 @@ class mediamosa_response extends mediamosa {
       // Find the rest call.
       $this->rest_call = $this->mediamosa_rest->match_call();
 
+      // This is for later development / test.
+      // See: hook_menu() of sites/all/modules/mediamosa/modules/app/oauth/mediamosa_app_oauth.module
+      //if (mediamosa_unicode::substr(mediamosa::request_uri(), 0, 24) == '/openapi/oauth/authorize') {
+      //  return;
+      //}
+
       if (!$this->rest_call) {
         // No REST call: proceed with Drupal.
         if (mediamosa::is_admin_enabled()) {
