@@ -75,6 +75,8 @@ Other changes (not ticket related).
 - Corrected the replacement in image style, see ticket #371.
 - Corrected incorrect reporting of max_execution_time during cron runs, see ticket #412.
 - Don't store invalid bitrate, see ticket #394.
+- Support alt parameter for openapi/search.
+- Support Request-Parameter-Formet-Value paramter too for openapi REST calls.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
