@@ -77,6 +77,7 @@ Other changes (not ticket related).
 - Don't store invalid bitrate, see ticket #394.
 - Support alt parameter for openapi/search.
 - Support Request-Parameter-Formet-Value paramter too for openapi REST calls.
+- Warning fix: htmlspecialchars() expects parameter 1 to be string.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
