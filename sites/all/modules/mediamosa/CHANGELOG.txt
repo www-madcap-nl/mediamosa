@@ -23,7 +23,7 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.2 (build 1742)
+MediaMosa 3.0.3 (build 1743)
 ----------------------------
 - VP-Core productie: nieuwe FTP user onmogelijk (See ticket #244). New user with appropriate rights fix.
 - Additional response-types on asset/{id}/play call (See ticket #389).
@@ -31,6 +31,21 @@ MediaMosa 3.0.2 (build 1742)
 - Object code enhancement (See ticket #371). Still images with styles.
 - Transcoding issues in existing assets (nibg) (See ticket #267).
 
+Other changes (not ticket related).
+- Different typo fixes.
+- Content-type in still donwload REST call was fixed.
+- OpenAPI config page bug fix.
+- Transcode profile tool select box fix.
+- Corrected MediaMosa version check for collection, see ticket #332.
+- Corrected the replacement in image style, see ticket #371.
+- Corrected incorrect reporting of max_execution_time during cron runs, see ticket #412.
+- Don't store invalid bitrate, see ticket #394.
+- Support alt parameter fix for openapi/search, see ticket #435.
+- Support Request-Parameter-Formet-Value paramter too for openapi REST calls, see ticket $436-#437.
+- Warning fix: htmlspecialchars() expects parameter 1 to be string.
+
+MediaMosa 3.0.2 (build 1732)
+----------------------------
 Other changes (not ticket related).
 - Upgraded Drupal 7.0 to Drupal 7.2 release.
 - REST calls in combination with Drupal login now works.
@@ -68,16 +83,6 @@ Other changes (not ticket related).
   by flyapen, GitHub)
 - Added missing installer for errorcode 1156.
 - Added still generation for image files using the image tool module.
-- Content-type in still donwload REST call was fixed.
-- OpenAPI config page bug fix.
-- Transcode profile tool select box fix.
-- Corrected MediaMosa version check for collection, see ticket #332.
-- Corrected the replacement in image style, see ticket #371.
-- Corrected incorrect reporting of max_execution_time during cron runs, see ticket #412.
-- Don't store invalid bitrate, see ticket #394.
-- Support alt parameter for openapi/search.
-- Support Request-Parameter-Formet-Value paramter too for openapi REST calls.
-- Warning fix: htmlspecialchars() expects parameter 1 to be string.
 
 MediaMosa 3.0.1 (build 1722)
 ----------------------------
