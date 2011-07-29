@@ -23,6 +23,11 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
+MediaMosa 3.0.4 (build ----)
+----------------------------
+Other changes (not ticket related).
+- CZP simpletest and dependency bug fix.
+
 MediaMosa 3.0.3 (build 1743)
 ----------------------------
 - VP-Core productie: nieuwe FTP user onmogelijk (See ticket #244). New user with appropriate rights fix.
