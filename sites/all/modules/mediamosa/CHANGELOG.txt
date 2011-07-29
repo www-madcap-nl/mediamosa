@@ -23,7 +23,7 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.2 (build 1732)
+MediaMosa 3.0.2 (build 1742)
 ----------------------------
 - VP-Core productie: nieuwe FTP user onmogelijk (See ticket #244). New user with appropriate rights fix.
 - Additional response-types on asset/{id}/play call (See ticket #389).
