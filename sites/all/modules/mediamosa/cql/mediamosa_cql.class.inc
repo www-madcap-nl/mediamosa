@@ -759,7 +759,7 @@ abstract class mediamosa_cql {
       $time = mktime($date_parsed['hour'], $date_parsed['minute'], $date_parsed['second'], $date_parsed['month'], $date_parsed['day'], $date_parsed['year']);
 
       // Back to GMT date again, make it valid.
-      $result = gmdate('Y-m-d H:i:s', $time);
+      $result = gmdate('Y-m-d\TH:i:s', $time);
     }
     catch (Exception $e) {
       // Make sure we return to old time zone.
