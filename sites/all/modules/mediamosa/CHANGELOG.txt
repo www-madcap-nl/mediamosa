@@ -27,6 +27,9 @@ MediaMosa 3.0.4 (build ----)
 ----------------------------
 Other changes (not ticket related).
 - CZP simpletest and dependency bug fix.
+- Added two Solr schema files, usage depends on the version of Solr used.
+- Removed old Solr schema.xml, use one of the two mentioned above.
+- Updates Solr installation and configuration instructions
 
 MediaMosa 3.0.3 (build 1743)
 ----------------------------
