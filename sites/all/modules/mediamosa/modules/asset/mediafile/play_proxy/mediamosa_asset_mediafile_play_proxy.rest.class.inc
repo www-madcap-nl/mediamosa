@@ -456,8 +456,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       }
     }
 
-    // If the request is for a still but we have no stills, then we fail.
-    if ( ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) && (empty($a_stills)) ){
+    // If the request is for a still but we have no stills, then it throw an exception.
+    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL && empty($a_stills)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
