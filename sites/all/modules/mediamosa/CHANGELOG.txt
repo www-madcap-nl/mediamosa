@@ -26,6 +26,7 @@ Known issues;
 MediaMosa 3.0.4 (build ----)
 ----------------------------
 - Fixed problem of MM generating still links for assets without stills (See ticket #270).
+- Granted field fix (See ticket #521).
 
 Other changes (not ticket related).
 - CZP simpletest and dependency bug fix.
