@@ -35,6 +35,7 @@ Other changes (not ticket related).
 - Updates Solr installation and configuration instructions
 - Fixed bug with missing T seperator in datetime field, causing Solr to fail queries.
 - Fixed user id varbinary size in mediamosa_ftp_user table.
+- Solr class path fix.
 
 MediaMosa 3.0.3 (build 1743)
 ----------------------------
