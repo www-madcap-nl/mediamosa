@@ -38,6 +38,7 @@ Other changes (not ticket related).
 - Solr class path fix.
 - Typo fix for Solr ACL layer.
 - Timezone test fix.
+- REST call: rest/$id "class_file_name" fix.
 
 MediaMosa 3.0.3 (build 1743)
 ----------------------------
