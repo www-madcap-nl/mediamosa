@@ -967,11 +967,11 @@ class mediamosa_solr {
 
     // Walk through the mediafiles.
     foreach ($asset_for_index['mediafiles'] as $mediafile_id => $mediafile) {
-      if (!empty($asset_for_index['acl']['acl_app_master_slave']['mediafile'][$mediafile_id])) {
+      if (!empty($asset_for_index['aut']['acl_app_master_slave']['mediafile'][$mediafile_id])) {
         $mf_acl_master_slave = array();
 
         // Add master/slave rules.
-        foreach ($asset_for_index['acl']['acl_app_master_slave']['mediafile'][$mediafile_id] as $acl_app_master_slave) {
+        foreach ($asset_for_index['aut']['acl_app_master_slave']['mediafile'][$mediafile_id] as $acl_app_master_slave) {
 
           // Is protected has 2 values here.
           $is_protected = in_array($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED], array(mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM)) ? mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE : mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
@@ -983,8 +983,8 @@ class mediamosa_solr {
 
           if ($is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE) {
             // Make sure is_protected and acl rules are matching.
-            assert(!empty($asset_for_index['acl']['acl_object']['mediafile'][$mediafile_id]));
-            foreach ($asset_for_index['acl']['acl_object']['mediafile'][$mediafile_id] as $acl_object) {
+            assert(!empty($asset_for_index['aut']['acl_object']['mediafile'][$mediafile_id]));
+            foreach ($asset_for_index['aut']['acl_object']['mediafile'][$mediafile_id] as $acl_object) {
               $master_slave_2 = $master_slave;
               $master_slave_2[] = $acl_object[mediamosa_acl_object_db::ACL_TYPE];
               $master_slave_2[] = $acl_object[mediamosa_acl_object_db::ACL_ID];
@@ -1037,10 +1037,10 @@ class mediamosa_solr {
       }
 
       // Has acl_object rules for mediafile?
-      if (!empty($asset_for_index['acl']['acl_object']['mediafile'][$mediafile_id])) {
+      if (!empty($asset_for_index['aut']['acl_object']['mediafile'][$mediafile_id])) {
         $mf_org_acl_obj_acl_name = $mf_org_acl_obj_acl_group = array();
 
-        foreach ($asset_for_index['acl']['acl_object']['mediafile'][$mediafile_id] as $acl_object) {
+        foreach ($asset_for_index['aut']['acl_object']['mediafile'][$mediafile_id] as $acl_object) {
           // Is protected has 2 values here.
           $is_protected = in_array($mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED], array(mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM)) ? mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE : mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
 
@@ -1088,11 +1088,11 @@ class mediamosa_solr {
       $is_protected[] = $mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED];
 
       // Has acl_object rules for mediafile?
-      if (!empty($asset_for_index['acl']['acl_app_master_slave']['mediafile'][$mediafile_id])) {
+      if (!empty($asset_for_index['aut']['acl_app_master_slave']['mediafile'][$mediafile_id])) {
         $is_master_slaved = TRUE;
 
         // Add master/slave rules.
-        foreach ($asset_for_index['acl']['acl_app_master_slave']['mediafile'][$mediafile_id] as $acl_app_master_slave) {
+        foreach ($asset_for_index['aut']['acl_app_master_slave']['mediafile'][$mediafile_id] as $acl_app_master_slave) {
           // For ACL CQL context.
           $app_id_masters[] = $acl_app_master_slave[mediamosa_acl_app_master_slave_db::APP_ID_MASTER];
           $app_id_slaves[] = $acl_app_master_slave[mediamosa_acl_app_master_slave_db::APP_ID_SLAVE];
@@ -1103,20 +1103,20 @@ class mediamosa_solr {
     // Either the asset is master slaved, or not.
     $document->asset_is_master_slaved = $is_master_slaved;
 
-    if (!empty($asset_for_index['acl']['acl_user']['mediafile'])) {
-      $document->mf_acl_user = array_unique($asset_for_index['acl']['acl_user']['mediafile']);
+    if (!empty($asset_for_index['aut']['acl_user']['mediafile'])) {
+      $document->mf_acl_user = array_unique($asset_for_index['aut']['acl_user']['mediafile']);
     }
-    if (!empty($asset_for_index['acl']['acl_user_group']['mediafile'])) {
-      $document->mf_acl_user_group = array_unique($asset_for_index['acl']['acl_user_group']['mediafile']);
+    if (!empty($asset_for_index['aut']['acl_user_group']['mediafile'])) {
+      $document->mf_acl_user_group = array_unique($asset_for_index['aut']['acl_user_group']['mediafile']);
     }
-    if (!empty($asset_for_index['acl']['acl_domain']['mediafile'])) {
-      $document->mf_acl_domain = array_unique($asset_for_index['acl']['acl_domain']['mediafile']);
+    if (!empty($asset_for_index['aut']['acl_domain']['mediafile'])) {
+      $document->mf_acl_domain = array_unique($asset_for_index['aut']['acl_domain']['mediafile']);
     }
-    if (!empty($asset_for_index['acl']['acl_realm']['mediafile'])) {
-      $document->mf_acl_realm = array_unique($asset_for_index['acl']['acl_realm']['mediafile']);
+    if (!empty($asset_for_index['aut']['acl_realm']['mediafile'])) {
+      $document->mf_acl_realm = array_unique($asset_for_index['aut']['acl_realm']['mediafile']);
     }
-    if (!empty($asset_for_index['acl']['acl_realm_prefix']['mediafile'])) {
-      $document->mf_acl_realm_prefix = array_unique($asset_for_index['acl']['acl_realm_prefix']['mediafile']);
+    if (!empty($asset_for_index['aut']['acl_realm_prefix']['mediafile'])) {
+      $document->mf_acl_realm_prefix = array_unique($asset_for_index['aut']['acl_realm_prefix']['mediafile']);
     }
 
     // ACL CQL.
