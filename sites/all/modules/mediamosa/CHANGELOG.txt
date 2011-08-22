@@ -37,6 +37,7 @@ Other changes (not ticket related).
 - Fixed user id varbinary size in mediamosa_ftp_user table.
 - Solr class path fix.
 - Typo fix for Solr ACL layer.
+- Timezone test fix.
 
 MediaMosa 3.0.3 (build 1743)
 ----------------------------
