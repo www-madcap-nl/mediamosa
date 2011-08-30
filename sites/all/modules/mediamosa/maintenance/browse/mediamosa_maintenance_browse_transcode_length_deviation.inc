@@ -30,7 +30,7 @@
  * Deviant length transcoding browser.
  */
 
-define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
+define('MEDIAMOSA_BROWSE_FILTER_COLLECTION_DEVIATION', 'mediafile_browse_collection');
 
 /**
  * Build the form for browsing collections.
@@ -215,7 +215,7 @@ function _mediamosa_browse_transcode_length_deviation_execute() {
  */
 function _mediamosa_browse_transcode_length_deviation_session($filter_form_state = array()) {
   // Get session.
-  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
+  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_DEVIATION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_DEVIATION] : array();
   // Get these from _GET if present.
   foreach (array('order', 'sort', 'page') as $param) {
     unset($session[$param]);
@@ -243,7 +243,7 @@ function _mediamosa_browse_transcode_length_deviation_session($filter_form_state
   }
 
   // Set it again.
-  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_DEVIATION] = $session;
 
   return $session;
 }

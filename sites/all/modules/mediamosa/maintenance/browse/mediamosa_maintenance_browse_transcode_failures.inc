@@ -30,7 +30,7 @@
  * Failure browser, based on Collection browser.
  */
 
-define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
+define('MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES', 'mediafile_browse_collection');
 
 /**
  * Build the form for browsing collections.
@@ -175,7 +175,7 @@ function _mediamosa_browse_transcode_failures_hidejobs($jobs) {
 
 function _mediamosa_browse_transcode_failures_toggle_hidden() {
   
-  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
+  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES] : array();
 
   // Toggle hidden attribute
   if($session['visibility'] == 'HIDDEN'){
@@ -185,7 +185,7 @@ function _mediamosa_browse_transcode_failures_toggle_hidden() {
     $session['visibility'] = 'HIDDEN';
   }
 
-  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES] = $session;
 }
 
 function _mediamosa_browse_transcode_failures_reanalyse_transcode($jobs = array()) {
@@ -233,7 +233,7 @@ function _mediamosa_browse_transcode_failures_execute() {
  */
 function _mediamosa_browse_transcode_failures_session($filter_form_state = array()) {
   // Get session.
-  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
+  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES] : array();
   // Get these from _GET if present.
   foreach (array('order', 'sort', 'page') as $param) {
     unset($session[$param]);
@@ -261,7 +261,7 @@ function _mediamosa_browse_transcode_failures_session($filter_form_state = array
   }
 
   // Set it again.
-  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION_FAILURES] = $session;
 
   return $session;
 }

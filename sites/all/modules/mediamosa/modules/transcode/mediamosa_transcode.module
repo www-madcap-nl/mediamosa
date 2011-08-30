@@ -103,6 +103,14 @@ function mediamosa_transcode_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
+  $rest_calls['transcode/failures'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Overview of failed transcoding jobs.',
+    mediamosa_rest_call::DESCRIPTION => 'Failed transcoding jobs.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/failures',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
   $rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a profile.',
     mediamosa_rest_call::DESCRIPTION => 'Create a transcode profile.',
