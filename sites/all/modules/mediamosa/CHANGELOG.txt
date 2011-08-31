@@ -27,6 +27,7 @@ MediaMosa 3.0.4 (build ----)
 ----------------------------
 - Fixed problem of MM generating still links for assets without stills (See ticket #270).
 - Granted field fix (See ticket #521).
+- Openapi links were changed to mediaItems [GET] pages (See ticket #433).
 
 Other changes (not ticket related).
 - CZP simpletest and dependency bug fix.
@@ -37,6 +38,8 @@ Other changes (not ticket related).
 - Fixed user id varbinary size in mediamosa_ftp_user table.
 - Solr class path fix.
 - Typo fix for Solr ACL layer.
+- Timezone test fix.
+- REST call: rest/$id "class_file_name" fix.
 
 MediaMosa 3.0.3 (build 1743)
 ----------------------------
