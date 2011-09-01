@@ -49,24 +49,34 @@ class mediamosa_job_display {
    * @param $job_id
    */
   static public function hide($job_id) {
-    if (!self::get($job_id)) {
-      $query = mediamosa_db::db_insert(mediamosa_job_display_db::TABLE_NAME);
-      $query->fields(array(
-        mediamosa_job_display_db::ID => $job_id,
-        mediamosa_job_display_db::VISIBILITY => mediamosa_job_display_db::VISIBILITY_HIDDEN,
-      ));
-      $query->execute();
+    // Hide all the jobs with the same mediafile id.
+    $job = mediamosa_job::get($job_id, array(mediamosa_job_db::MEDIAFILE_ID));
+    $result = mediamosa_job::get_by_mediafileid_all($job[mediamosa_job_db::MEDIAFILE_ID], array(mediamosa_job_db::ID));
+    foreach ($result as $record) {
+      if (!self::get($record[mediamosa_job_db::ID])) {
+        $query = mediamosa_db::db_insert(mediamosa_job_display_db::TABLE_NAME);
+        $query->fields(array(
+          mediamosa_job_display_db::ID => $record[mediamosa_job_db::ID],
+          mediamosa_job_display_db::VISIBILITY => mediamosa_job_display_db::VISIBILITY_HIDDEN,
+        ));
+        $query->execute();
+      }
     }
   }
 
   /**
-   * Set hide attribute.
+   * Set unhide attribute.
    *
    * @param $job_id
    */
   static public function unhide($job_id) {
-    $num_deleted = mediamosa_db::db_delete(mediamosa_job_display_db::TABLE_NAME)
-      ->condition(mediamosa_job_display_db::ID, $job_id)
-      ->execute();
+    // Unhide all the jobs with the same mediafile id.
+    $job = mediamosa_job::get($job_id, array(mediamosa_job_db::MEDIAFILE_ID));
+    $result = mediamosa_job::get_by_mediafileid_all($job[mediamosa_job_db::MEDIAFILE_ID], array(mediamosa_job_db::ID));
+    foreach ($result as $record) {
+      $num_deleted = mediamosa_db::db_delete(mediamosa_job_display_db::TABLE_NAME)
+        ->condition(mediamosa_job_display_db::ID, $record[mediamosa_job_db::ID])
+        ->execute();
+    }
   }
 }

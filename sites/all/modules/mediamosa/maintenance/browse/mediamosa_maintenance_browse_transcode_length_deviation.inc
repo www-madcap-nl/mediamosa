@@ -30,6 +30,8 @@
  * Deviant length transcoding browser.
  */
 
+define('MEDIAMOSA_BROWSE_TRANSCODE_LENGTH_DEVIATION_PREFIX', 'mediafile_id-');
+
 /**
  * Build the form for browsing transcode length deviation.
  */
@@ -103,7 +105,7 @@ function mediamosa_browse_transcode_length_deviation_page_submit($form, $form_st
   $mediafiles = array();
   $op = $form_state['values']['op'];
 
-  $prefix = 'mediafile_id-';
+  $prefix = MEDIAMOSA_BROWSE_TRANSCODE_LENGTH_DEVIATION_PREFIX;
   $prefix_length = drupal_strlen($prefix);
 
   foreach ($form_state['values'] as $form_key => $form_value) {
@@ -125,7 +127,9 @@ function _mediamosa_browse_transcode_length_deviation_retranscode($mediafiles = 
   foreach ($mediafiles as $mediafile_id) {
     $mediafile_details = mediamosa_asset_mediafile::get($mediafile_id);
     $asset_id = $mediafile_details['asset_id'];
-    $all_ok &= _mediamosa_browse_transcode_length_deviation_process_retranscode($asset_id, $mediafile_id);
+    if ($all_ok) {
+      $all_ok = _mediamosa_browse_transcode_length_deviation_process_retranscode($asset_id, $mediafile_id);
+    }
   }
 
   if ($all_ok) {
