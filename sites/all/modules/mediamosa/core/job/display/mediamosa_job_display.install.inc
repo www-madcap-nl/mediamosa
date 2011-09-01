@@ -26,32 +26,50 @@
 
 /**
  * @file
- * Installer for job display table.
+ * Install for mediamosa_job_display table.
  */
-
-require_once 'display/mediamosa_job_display.install.inc';
-
+require_once 'mediamosa_job_display_db.class.inc';
 
 /**
  * Implements hook_install().
  */
-function _mediamosa_job_install() {
+function _mediamosa_job_display_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_job_display_db::TABLE_NAME);
-
-  // Create Job Display table.
-  _mediamosa_job_display_install();
-
 }
 
 /**
  * Implements hook_uninstall().
  */
-function _mediamosa_job_uninstall() {
-  // Drop Job Display table.
-  _mediamosa_job_display_uninstall();
-
+function _mediamosa_job_display_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_job_display_db::TABLE_NAME);
 }
 
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_job_display_schema() {
+
+  $schema[mediamosa_job_display_db::TABLE_NAME] = array(
+  'description' => 'The job display table.',
+    'fields' => array(
+      mediamosa_job_display_db::ID => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'description' => 'Primary Key: Unique ID.',
+      ),
+      mediamosa_job_display_db::VISIBILITY => array(
+        'description' => 'The visibility attribute.',
+        'type' => "enum('" . implode("','", array(mediamosa_job_display_db::VISIBILITY_DISPLAY, mediamosa_job_display_db::VISIBILITY_HIDDEN)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_display_db::VISIBILITY_DISPLAY, mediamosa_job_display_db::VISIBILITY_HIDDEN)) . "')",
+        'default' => mediamosa_job_display_db::VISIBILITY_DISPLAY,
+      ),
+    ),
+    'primary key' => array(mediamosa_job_display_db::ID),
+  );
+
+  return $schema;
+}

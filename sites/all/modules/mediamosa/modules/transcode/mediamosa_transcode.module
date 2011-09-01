@@ -103,14 +103,6 @@ function mediamosa_transcode_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
-  $rest_calls['transcode/failures'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::TITLE => 'Overview of failed transcoding jobs.',
-    mediamosa_rest_call::DESCRIPTION => 'Failed transcoding jobs.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/failures',
-    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
-    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
-  );
-
   $rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a profile.',
     mediamosa_rest_call::DESCRIPTION => 'Create a transcode profile.',
@@ -189,14 +181,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
-  );
-
-  // Failures list.
-  $rest_calls['transcode/failures'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_failures',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_failure',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
 

@@ -3185,3 +3185,14 @@ function mediamosa_update_7126() {
     mediamosa::drupal_install_schema('mediamosa_asset_mediafile_still_style');
   }
 }
+
+/**
+ * MediaMosa ticket #391 (Maintenance app: function for re-analyse and re-transcode mediafiles).
+ * New table mediamosa_job_display was added.
+ */
+function mediamosa_update_7127() {
+  if (!db_table_exists('mediamosa_job_display')) {
+    // Install mediamosa_job_display table.
+    mediamosa::drupal_install_schema('mediamosa_job_display');
+  }
+}
