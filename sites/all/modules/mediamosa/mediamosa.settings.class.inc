@@ -144,7 +144,8 @@ class mediamosa_settings {
 
   // Still REST call.
   const STILL_REST_TEST_IMAGE = 'sites/all/modules/mediamosa/lib/misc/1px.png';
-  const STILL_REST_CACHE = 'no-cache, must-revalidate, post-check=0, pre-check=0';
+  // Image cache max time: 60*60*24*30 = 2592000 sec.
+  const STILL_REST_CACHE_SECOND = 2592000;
 
   // FFmpeg.
 
