@@ -174,7 +174,7 @@ class mediamosa_job {
     }
 
     // Filtering the same failed jobs.
-    $query->groupBy('job.' . mediamosa_job_db::MEDIAFILE_ID);
+    $query->groupBy('job.' . mediamosa_job_db::MEDIAFILE_ID . ', job.' . mediamosa_job_db::JOB_TYPE);
 
     // Number of total result.
     $num_rows = $query->countQuery()->execute()->fetchField();
