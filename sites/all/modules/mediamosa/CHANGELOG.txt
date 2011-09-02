@@ -23,7 +23,7 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.4 (build ----)
+MediaMosa 3.0.4 (build 1771)
 ----------------------------
 - Fixed problem of MM generating still links for assets without stills (See ticket #270).
 - Granted field fix (See ticket #521).
