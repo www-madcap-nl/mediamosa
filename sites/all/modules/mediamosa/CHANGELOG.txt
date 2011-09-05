@@ -23,7 +23,7 @@ Known issues;
 - Add metadata module enable on migration 1.7->3.x scripts.
 
 
-MediaMosa 3.0.5 (build ----)
+MediaMosa 3.0.5 (build 1775)
 ----------------------------
 - Better still image cache mechanizme (See ticket #472).
 
