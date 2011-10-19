@@ -686,7 +686,7 @@ class mediamosa_asset_mediafile_play_proxy {
                   }
 
                   // Create new streaming server URI based on asx file.
-                  $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, urlencode($ticket) . '.asx', $uri);
+                  $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, urlencode($ticket) . mediamosa_settings::ASX_FILE_EXTENTION, $uri);
 
                   // Changed to text/html for ticket #188.
                   //'video/x-ms-asx';

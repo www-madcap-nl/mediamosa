@@ -22,6 +22,10 @@ Known issues;
 
 - Add metadata module enable on migration 1.7->3.x scripts.
 
+MediaMosa 3.0.7 (build ----)
+----------------------------
+- Getting the asx file fix (See ticket #528).
+
 MediaMosa 3.0.6 (build 1780)
 ----------------------------
 - Webservice management fix (See ticket #527).

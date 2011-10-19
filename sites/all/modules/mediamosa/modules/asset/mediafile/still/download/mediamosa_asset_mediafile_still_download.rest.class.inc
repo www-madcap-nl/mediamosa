@@ -120,6 +120,9 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       //throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
     }
 
+    // Is it an asx file?
+    $is_asx = FALSE;
+
     if ($ticket_id) {
       //
       // Temporary link.
@@ -133,17 +136,27 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       }
     }
     elseif ($still_id) {
+
+      $is_asx = (drupal_substr($still_id, -4) == mediamosa_settings::ASX_FILE_EXTENTION);
+
+      if ($is_asx) {
+        // ASX file.
+        $file = mediamosa_configuration_storage::asx_file_location_no_ext($still_id);
+      }
+      else {
+        // Permanent still link.
+        // Get symlink to still.
+        $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
+      }
+
       //
       // Permanent link.
       //
 
       // Check if the permanent link is here. If not, then we re-eval the access.
 
-      // Get symlink to still.
-      $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
-
       // No perm link? Then check access, based on that create a perm link.
-      if (!file_exists($file)) {
+      if (!$is_asx && !file_exists($file)) {
 
         // Check access.
         try {
@@ -189,8 +202,10 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       }
     }
 
-    // Handle still style.
-    $file = mediamosa_asset_mediafile_still::handle_still_style_request($file, $style, $ticket_id, $still_id);
+    if (!$is_asx) {
+      // Handle still style.
+      $file = mediamosa_asset_mediafile_still::handle_still_style_request($file, $style, $ticket_id, $still_id);
+    }
 
     $handle = fopen($file, 'rb');
 
@@ -198,39 +213,41 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       throw new mediamosa_exception(mediamosa_error::HTTP_FORBIDDEN, 'Unable to open file!');
     }
 
-    // Get the content-type of the image file.
-    $type = NULL;
-    // First try with finfo_file function.
-    if (function_exists('finfo_file')) {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $type = finfo_file($finfo, $file);
-        finfo_close($finfo);
-    }
-    // Second try with "file" command.
-    if (!$type || $type == 'application/octet-stream') {
-        $file_mime = exec('file -b -L --mime-type ' . escapeshellarg($file), $output, $return_var);
-        if ($return_var == '0' && $file_mime) {
-            $type = $file_mime;
-        }
-    }
-    // No more possibility. Fall back to "image/jpeg".
-    if (!$type || $type == 'application/octet-stream') {
-      $type = 'image/jpeg';
-    }
+    if (!$is_asx) {
+      // Get the content-type of the image file.
+      $type = NULL;
+      // First try with finfo_file function.
+      if (function_exists('finfo_file')) {
+          $finfo = finfo_open(FILEINFO_MIME_TYPE);
+          $type = finfo_file($finfo, $file);
+          finfo_close($finfo);
+      }
+      // Second try with "file" command.
+      if (!$type || $type == 'application/octet-stream') {
+          $file_mime = exec('file -b -L --mime-type ' . escapeshellarg($file), $output, $return_var);
+          if ($return_var == '0' && $file_mime) {
+              $type = $file_mime;
+          }
+      }
+      // No more possibility. Fall back to "image/jpeg".
+      if (!$type || $type == 'application/octet-stream') {
+        $type = 'image/jpeg';
+      }
 
-    // Check the current settings.
-    $options = array(
-      'absolute' => TRUE,
-    );
-    $response = drupal_http_request(url(mediamosa_settings::STILL_REST_TEST_IMAGE, $options));
+      // Check the current settings.
+      $options = array(
+        'absolute' => TRUE,
+      );
+      $response = drupal_http_request(url(mediamosa_settings::STILL_REST_TEST_IMAGE, $options));
 
-    // Set headers.
-    header('Content-Type: ' . $type);
-    // Set the cache header in case of permanent stills.
-    if ($still_id) {
-      header('Cache-Control: ' . (isset($response->headers['cache-control']) ? $response->headers['cache-control'] : 'public, max-age=' . mediamosa_settings::STILL_REST_CACHE_SECOND . ', must-revalidate'));
-      header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . " GMT");
-      header('Expires: ' . (isset($response->headers['expires']) ? $response->headers['expires'] : gmdate('D, d M Y H:i:s', time() + mediamosa_settings::STILL_REST_CACHE_SECOND) . " GMT"));
+      // Set headers.
+      header('Content-Type: ' . $type);
+      // Set the cache header in case of permanent stills.
+      if ($still_id) {
+        header('Cache-Control: ' . (isset($response->headers['cache-control']) ? $response->headers['cache-control'] : 'public, max-age=' . mediamosa_settings::STILL_REST_CACHE_SECOND . ', must-revalidate'));
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . " GMT");
+        header('Expires: ' . (isset($response->headers['expires']) ? $response->headers['expires'] : gmdate('D, d M Y H:i:s', time() + mediamosa_settings::STILL_REST_CACHE_SECOND) . " GMT"));
+      }
     }
 
     // Make sure we send the header now.

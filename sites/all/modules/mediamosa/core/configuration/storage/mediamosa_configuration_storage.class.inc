@@ -216,8 +216,19 @@ class mediamosa_configuration_storage {
    * @return string
    *  path to ticket location
    */
-  function asx_file_location($ticket) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket . '.asx';
+  static public function asx_file_location($ticket) {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket . mediamosa_settings::ASX_FILE_EXTENTION;
+  }
+
+  /**
+   * Return file location of asx file.
+   * The ASX file is stored in still directory, true, must be downloadable.
+   *
+   * @return string
+   *  path to ticket location
+   */
+  static public function asx_file_location_no_ext($ticket_ext) {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_ext;
   }
 
   /**

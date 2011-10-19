@@ -84,6 +84,9 @@ class mediamosa_settings {
   const STILL_DATA_STYLE_LOCATION = 'style';
   const STILL_LINK_STYLE_LOCATION = 'style';
 
+  // ASX.
+  const ASX_FILE_EXTENTION = '.asx';
+
   // Expiration settings, in seconds.
   const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
   const TICKET_EXPIRATION_DOWNLOAD = 600; // 10 minutes
