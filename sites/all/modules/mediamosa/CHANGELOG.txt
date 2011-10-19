@@ -27,6 +27,9 @@ MediaMosa 3.0.6 (build ----)
 - Webservice management fix (See ticket #527).
 Other changes (not ticket related).
 - FFMpeg patch development.
+- FFMpeg pad recognition development for the latest version of FFMpeg.
+- Vpx-transcode frametime development for the latest version of FFMpeg.
+- Vpx-transcode "parsing additional info in codes" development for the latest version of FFMpeg.
 
 MediaMosa 3.0.5 (build 1775)
 ----------------------------
