@@ -24,6 +24,7 @@ Known issues;
 
 MediaMosa 3.0.6 (build ----)
 ----------------------------
+- Webservice management fix (See ticket #527).
 Other changes (not ticket related).
 - FFMpeg patch development.
 
