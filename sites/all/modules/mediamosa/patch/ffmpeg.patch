@@ -36,24 +36,39 @@ Index: ffmpeg.c
  //fprintf(stderr, "vdelta:%f, ost->sync_opts:%"PRId64", ost->sync_ipts:%f nb_frames:%d\n", vdelta, ost->sync_opts, get_sync_ipts(ost), nb_frames);
          if (nb_frames == 0){
              ++nb_frames_drop;
-@@ -1275,7 +1283,15 @@
+@@ -1226,7 +1234,13 @@
+             pkt.pts= av_rescale_q(ost->sync_opts, enc->time_base, ost->st->time_base);
+             pkt.flags |= AV_PKT_FLAG_KEY;
+ 
+-            write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
++            if (imp_image[0] == -1 || (imp_image[imp_pointer] == frame_num)) {
++              //if (dec->coded_frame->pict_type == 1) {
++              write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
++               imp_pointer++;
++            }
++            frame_num++;
++
+             enc->coded_frame = old_frame;
+         } else {
+             AVFrame big_picture;
+@@ -1275,7 +1289,15 @@
  
                  if(enc->coded_frame->key_frame)
                      pkt.flags |= AV_PKT_FLAG_KEY;
 -                write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
 +
++
++                //write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
 +                if (imp_image[0] == -1 || (imp_image[imp_pointer] == frame_num)) {
-+                //if (dec->coded_frame->pict_type == 1) {
-+                  //write_frame(s, &pkt, ost->st->codec, bitstream_filters[ost->file_index][pkt.stream_index]);
 +                  write_frame(s, &pkt, ost->st->codec, ost->bitstream_filters);
-+                  imp_pointer++;
++                   imp_pointer++;
 +                }
 +                frame_num++;
 +
                  *frame_size = ret;
                  video_size += ret;
                  //fprintf(stderr,"\nFrame: %3d size: %5d type: %d",
-@@ -1438,7 +1454,7 @@
+@@ -1438,7 +1460,7 @@
                    nb_frames_dup, nb_frames_drop);
  
          if (verbose >= 0)
@@ -62,7 +77,7 @@ Index: ffmpeg.c
  
          fflush(stderr);
      }
-@@ -3073,6 +3089,13 @@
+@@ -3073,6 +3095,38 @@
      return 0;
  }
  
@@ -70,13 +85,38 @@ Index: ffmpeg.c
 +{
 +    scene_changes = 1;
 +    scene_file = arg;
++
++    if(!scene_file){
++        fprintf(stderr, "Missing =\n");
++        ffmpeg_exit(1);
++    }
++
++    FILE *file;
++    file = fopen(scene_file, "r"); 
++    if(file==NULL) {
++        fprintf(stderr, "Not existing file: = %s\n", scene_file);
++        ffmpeg_exit(1);
++    }
++
++    char c[10];
++    int iter;
++
++    iter = 0;
++    while(fgets(c, 10, file)!=NULL && iter < max_image) {
++      imp_image[iter] = atoi(c);
++      iter++;
++    }
++    imp_image[iter] = -1;
++
++    fclose(file);
++
 +    return 0;
 +}
 +
  static int opt_recording_timestamp(const char *opt, const char *arg)
  {
      recording_timestamp = parse_time_or_die(opt, arg, 0) / 1000000;
-@@ -4192,6 +4215,7 @@
+@@ -4192,6 +4246,7 @@
      { "t", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_time}, "record or transcode \"duration\" seconds of audio/video", "duration" },
      { "fs", HAS_ARG | OPT_INT64, {(void*)&limit_filesize}, "set the limit file size in bytes", "limit_size" }, //
      { "ss", OPT_FUNC2 | HAS_ARG, {(void*)opt_start_time}, "set the start time offset", "time_off" },
@@ -84,7 +124,7 @@ Index: ffmpeg.c
      { "itsoffset", OPT_FUNC2 | HAS_ARG, {(void*)opt_input_ts_offset}, "set the input ts offset", "time_off" },
      { "itsscale", HAS_ARG, {(void*)opt_input_ts_scale}, "set the input ts scale", "stream:scale" },
      { "timestamp", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_timestamp}, "set the recording timestamp ('now' to set the current time)", "time" },
-@@ -4337,9 +4361,28 @@
+@@ -4337,6 +4392,9 @@
  
      show_banner();
  
@@ -94,25 +134,6 @@ Index: ffmpeg.c
      /* parse options */
      parse_options(argc, argv, options, opt_output_file);
  
-+    if (strcmp(scene_file, "")) {
-+      char c[10];
-+      FILE *file;
-+      int iter;
-+      file = fopen(scene_file, "r"); 
-+      if(file!=NULL) {
-+        iter = 0;
-+        while(fgets(c, 10, file)!=NULL && iter < max_image) {
-+          imp_image[iter] = atoi(c);
-+          iter++;
-+        }
-+        imp_image[iter] = -1;
-+        fclose(file);
-+      }
-+    }
-+
-     if(nb_output_files <= 0 && nb_input_files == 0) {
-         show_usage();
-         fprintf(stderr, "Use -h to get full help or, even better, run 'man ffmpeg'\n");
 Index: libavcodec/rawenc.c
 ===================================================================
 --- libavcodec/rawenc.c	(revision 26402)
