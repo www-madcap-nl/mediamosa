@@ -415,7 +415,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       );
       $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
       $query->condition('m.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
-      $query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+      //$query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
       if (!empty($still_id)) {
         $query->condition('m.' . mediamosa_asset_mediafile_db::ID, $still_id);
       }
@@ -457,8 +457,13 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
 
     // If the request is for a still but we have no stills, then it throw an exception.
-    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL && empty($a_stills)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
+    if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_STILL) {
+      if (empty($a_stills)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
+      }
+
+      // @todo Later we can consider to remove it. It just cleans up the detailed still response to be compatible with the previous fase.
+      $a_stills = $asset[mediamosa_asset_db::APP_ID] == $app_id ? $a_stills : array();
     }
 
     // Collect the metadata of the asset.
