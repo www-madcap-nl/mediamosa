@@ -3196,3 +3196,38 @@ function mediamosa_update_7127() {
     mediamosa::drupal_install_schema('mediamosa_job_display');
   }
 }
+
+/**
+ * MediaMosa ticket #391 (Maintenance app: function for re-analyse and re-transcode mediafiles).
+ * New index is added for mediamosa_job.
+ */
+function mediamosa_update_7128() {
+  if (!db_index_exists('mediamosa_job', 'idx_mediafileid_jobtype')) {
+    db_add_index(
+      'mediamosa_job',
+      'idx_mediafileid_jobtype',
+      array(
+        mediamosa_job_db::MEDIAFILE_ID,
+        mediamosa_job_db::JOB_TYPE,
+      )
+    );
+  }
+}
+
+/**
+ * MediaMosa ticket #391 (Maintenance app: function for re-analyse and re-transcode mediafiles).
+ * New index is added for mediamosa_asset_mediafile.
+ */
+function mediamosa_update_7129() {
+  if (!db_index_exists('mediamosa_asset_mediafile', 'idx_changed_asset_mfs')) {
+    db_add_index(
+      'mediamosa_asset_mediafile',
+      'idx_changed_asset_mfs',
+      array(
+        mediamosa_asset_mediafile_db::CHANGED,
+        mediamosa_asset_mediafile_db::ASSET_ID,
+        mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+      )
+    );
+  }
+}

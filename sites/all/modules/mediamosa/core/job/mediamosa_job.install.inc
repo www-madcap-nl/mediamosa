@@ -208,6 +208,7 @@ function mediamosa_job_schema() {
       'idx_jobtype' => array(mediamosa_job_db::JOB_TYPE),
       'idx_status_assetid_jobtype_jobid' => array(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::ASSET_ID, mediamosa_job_db::JOB_TYPE, mediamosa_job_db::ID),
       'idx_jobid_status' => array(mediamosa_job_db::JOB_STATUS, mediamosa_job_db::ID),
+      'idx_mediafileid_jobtype' => array(mediamosa_job_db::MEDIAFILE_ID, mediamosa_job_db::JOB_TYPE),
     ),
     'foreign keys' => array(
       mediamosa_job_db::ASSET_ID => array(mediamosa_asset_db::TABLE_NAME => mediamosa_asset_db::ID),

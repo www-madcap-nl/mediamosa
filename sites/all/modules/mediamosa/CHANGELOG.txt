@@ -27,6 +27,7 @@ MediaMosa 3.0.7 (build ----)
 - Getting the asx file fix (See ticket #528).
 - Development for the latest ffmpeg version (See ticket #529).
 - Asset without stills won't response a play link fix (See ticket #270).
+- Maintenance app: function for re-analyse and re-transcode mediafiles fix (See ticket #391).
 
 MediaMosa 3.0.6 (build 1780)
 ----------------------------

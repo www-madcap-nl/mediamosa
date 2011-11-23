@@ -216,6 +216,7 @@ function mediamosa_asset_mediafile_schema() {
       'idx_mediafileid_appid_original_protected' => array(mediamosa_asset_mediafile_db::ID, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::IS_PROTECTED),
       'idx_filename' => array(mediamosa_asset_mediafile_db::FILENAME),
       'idx_protected' => array(mediamosa_asset_mediafile_db::IS_PROTECTED),
+      'idx_changed_asset_mfs' => array(mediamosa_asset_mediafile_db::CHANGED, mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE),
     ),
     'foreign keys' => array(
       mediamosa_asset_mediafile_db::ASSET_ID => array(mediamosa_asset_db::TABLE_NAME => mediamosa_asset_db::ID),
