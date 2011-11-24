@@ -22,7 +22,7 @@ Known issues;
 
 - Add metadata module enable on migration 1.7->3.x scripts.
 
-MediaMosa 3.0.7 (build ----)
+MediaMosa 3.0.7 (build 1787)
 ----------------------------
 - Getting the asx file fix (See ticket #528).
 - Development for the latest ffmpeg version (See ticket #529).
