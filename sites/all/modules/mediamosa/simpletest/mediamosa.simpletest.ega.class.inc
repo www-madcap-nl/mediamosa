@@ -1270,6 +1270,53 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $stills;
   }
 
+  /**
+   * Get the still(s) from an asset.
+   * Based on the rest call /asset/$asset_id/still (GET)
+   */
+  protected function getAssetStill($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters still.
+    $parameters += array(
+      mediamosa_rest_call_get_still_for_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set uri.
+    $uri = strtr('asset/@asset_id/still', array('@asset_id' => $asset_id));
+
+    // Do Get call.
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string) $response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Get asset still with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $asset_id,
+          '@result' => (string) $response['xml']->header->request_result_id,
+          '@result_description' => (string) $response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    if ((int) $response['xml']->header->request_result_id != mediamosa_error::ERRORCODE_OKAY) {
+      return FALSE;
+    }
+
+    // Get response.
+    $response = mediamosa_lib::responsexml2array($response['xml']);
+    $stills = $response['items']['item'];
+
+    // Did we get something?
+    $this->assertTrue(
+      count($stills),
+      'Got the asset stills'
+    );
+
+    // Return data.
+    return $stills;
+  }
+
 
   /**
    * Get metadata definitions.
