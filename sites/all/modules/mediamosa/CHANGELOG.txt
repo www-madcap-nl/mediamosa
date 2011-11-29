@@ -26,7 +26,8 @@ Known issues;
 MediaMosa 3.0.8 (build ----)
 ----------------------------
 Other changes (not ticket related).
-- The links are fixed in the install profiel.
+- The links are fixed in the install profiel (See http://mediamosa.org/node/264195). 
+- Default timezone fix for new Client applications (See http://mediamosa.org/node/264193).
 
 MediaMosa 3.0.7 (build 1787)
 ----------------------------
