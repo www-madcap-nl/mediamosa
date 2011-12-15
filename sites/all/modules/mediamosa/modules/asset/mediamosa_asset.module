@@ -1808,7 +1808,7 @@ tag=Best',
   <item id="1">
     <action>http://upload.mediamosa.local/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD&X-Progress-ID=12345</action>
     <uploadprogress_url>http://upload.mediamosa.local/mediafile/uploadprogress?id=12345</uploadprogress_url>
-    <ticket_id>8474096 Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
+    <ticket_id>Z1ZmZMMNhLHIfGj9cgSvAd2R</ticket_id>
     <progress_id>1234567</progress_id>
   </item>
 </items>',
